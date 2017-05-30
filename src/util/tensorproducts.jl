@@ -3,9 +3,9 @@
 """
 Create a tensor product of the supplied arguments.
 """
-function tensorproduct()
-end
+tensorproduct() = nothing
 
+# Use \otimes as notation for tensor product.
 ⊗ = tensorproduct
 
 # Flatten a sequence of elements that may be recursively composite

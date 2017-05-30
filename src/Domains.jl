@@ -10,8 +10,9 @@ using StaticArrays
 ## Exhaustive list of imports
 ################################
 
-import Base: *, +, -, /, |, &, ∪
+import Base: *, +, -, /, \, |, &, ∪
 import Base: ==
+import Base: inv
 
 import Base: in
 
@@ -25,30 +26,37 @@ import Base: ndims, getindex
 
 # from util/common.jl
 export elements, element, nb_elements, composite_length
-
 # from util/tensorproducts.jl
 export flatten, tensorproduct, ⊗
-
 # from util/box.jl
 export BBox, BBox1, BBox2, BBox3, BBox4
 
+# from maps/maps.jl
+export AbstractMap, forward_map, inverse_map, jacobian, linearize, is_linear
+# from maps/affine_maps.jl
+export AffineMap, translation, rotation, linear_map, interval_map, scaling_map
+# from maps/productmap.jl
+export ProductMap
+# from maps/coordinates.jl
+export CartToPolarMap, PolarToCartMap
+# from maps/basic_maps.jl
+export IdentityMap
+# from maps/composite_map.jl
+export CompositeMap
+
+
 # from generic/domain.jl
 export Domain, indomain, boundingbox
-
 # from generic/productdomain.jl
 export ProductDomain, tensorproduct, ⊗
 
-# Functions related to composite structures
-export element, elements, nb_elements
-
 # from domains/trivial.jl
 export EmptyDomain, EuclideanSpace
-
 # from domains/interval.jl
 export Interval
-
 # from domains/simple.jl
 export Ball, Cube
+
 
 include("util/common.jl")
 include("util/tensorproducts.jl")

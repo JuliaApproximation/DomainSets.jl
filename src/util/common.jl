@@ -4,7 +4,7 @@
 """
 Return all the elements of a composite structure.
 """
-function elements() end
+elements() = nothing
 
 """
 Return the i-th element of a composite structure.

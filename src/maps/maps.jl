@@ -5,6 +5,8 @@ A map is any transformation of the form y = f(x).
 """
 abstract type AbstractMap end
 
+forward_map(map::AbstractMap, x) = nothing
+
 inverse_map(map::AbstractMap, y) = forward_map(inv(map), y)
 
 (*)(map::AbstractMap, x) = forward_map(map, x)
