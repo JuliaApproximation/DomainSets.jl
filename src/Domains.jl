@@ -11,7 +11,7 @@ using StaticArrays
 ################################
 
 # Operator symbols
-import Base: *, +, -, /, \, |, &
+import Base: *, +, -, /, \, ^, |, &
 import Base: ∪, ∩
 import Base: ==
 
@@ -19,7 +19,13 @@ import Base: ==
 import Base: intersect, union, setdiff, in
 
 # Arrays
-import Base: inv, length, ndims, getindex
+import Base: size, length, ndims, getindex
+import Base: inv
+
+import Base: broadcast
+
+# Iteration protocol
+import Base: start, next, done
 
 # Display
 import Base: show

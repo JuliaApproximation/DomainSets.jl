@@ -36,29 +36,29 @@ function mandelbrotiteration(x, maxiter, threshold)
     abs(z) < threshold
 end
 
-# function computemandelbrotgrid(g::AbstractGrid{2}, maxiter, threshold)
-#     mask = zeros(Bool, size(g))
-#     for i_2 = 1:size(g, 2)
-#         for i_1 = 1:size(g, 1)
-#             mask[i_1,i_2] = mandelbrotiteration(g[i_1,i_2], maxiter, threshold)
-#         end
-#     end
-#     mask
-# end
+function computemandelbrotgrid(grid, maxiter, threshold)
+    mask = zeros(Bool, size(grid))
+    for i_2 = 1:size(grid, 2)
+        for i_1 = 1:size(grid, 1)
+            mask[i_1,i_2] = mandelbrotiteration(grid[i_1,i_2], maxiter, threshold)
+        end
+    end
+    mask
+end
 
-# function indomain(g::AbstractGrid{2}, m::Mandelbrot)
-#     if (left(g) ≈ left(m.box)) && (right(g) ≈ right(m.box))
-#         if haskey(m.maskcache, size(g,1))
-#             mask = m.maskcache[size(g,1)]
-#         else # compute mask and cache it
-#             mask = computemandelbrotgrid(g, m.maxiter, m.threshold)
-#             m.maskcache[size(g,1)] = mask
-#         end
-#     else # Don't cache if the grid doesn't match the bounding box
-#         mask = computemandelbrotgrid(g, m.maxiter, m.threshold)
-#     end
-#     mask
-# end
+function indomain_grid(grid, m::Mandelbrot)
+    if (left(grid) ≈ left(m.box)) && (right(grid) ≈ right(m.box))
+        if haskey(m.maskcache, size(grid,1))
+            mask = m.maskcache[size(grid,1)]
+        else # compute mask and cache it
+            mask = computemandelbrotgrid(grid, m.maxiter, m.threshold)
+            m.maskcache[size(grid,1)] = mask
+        end
+    else # Don't cache if the grid doesn't match the bounding box
+        mask = computemandelbrotgrid(grid, m.maxiter, m.threshold)
+    end
+    mask
+end
 
 function isapprox{T}(t::Tuple{T,T}, v::SVector{2,T})
     return t[1]≈v[1] && t[2]≈v[2]
@@ -105,31 +105,31 @@ function juliasetiteration(x, c, maxiter)
     abs(z) < 1000
 end
 
-# function computejuliasetgrid(g::AbstractGrid{2}, c, maxiter)
-#     m = size(g)
-#     mask = zeros(Bool, m)
-#     for i_2 = 1:m[2]
-#         for i_1 = 1:m[1]
-#             a,b = g[i_1,i_2]
-#             mask[i_1,i_2] = juliasetiteration(g[i_1,i_2], c, maxiter)
-#         end
-#     end
-#     mask
-# end
-#
-# function indomain(g::AbstractGrid{2}, js::JuliaSet)
-#     if isequal(left(g),left(js.box)) && isequal(right(g),right(js.box))
-#         if haskey(js.maskcache, size(g,1))
-#             mask = js.maskcache[size(g,1)]
-#         else # compute mask and cache it
-#             mask = computejuliasetgrid(g, js.c, js.maxiter)
-#             js.maskcache[size(g,1)] = mask
-#         end
-#     else # Don't cache if the grid doesn't match the bounding box
-#         mask = computejuliasetgrid(g, js.c, js.maxiter)
-#     end
-#     mask
-# end
+function computejuliasetgrid(grid, c, maxiter)
+    m = size(grid)
+    mask = zeros(Bool, m)
+    for i_2 = 1:m[2]
+        for i_1 = 1:m[1]
+            a,b = grid[i_1,i_2]
+            mask[i_1,i_2] = juliasetiteration(grid[i_1,i_2], c, maxiter)
+        end
+    end
+    mask
+end
+
+function indomain_grid(grid, js::JuliaSet)
+    if isequal(left(grid),left(js.box)) && isequal(right(grid),right(js.box))
+        if haskey(js.maskcache, size(grid,1))
+            mask = js.maskcache[size(grid,1)]
+        else # compute mask and cache it
+            mask = computejuliasetgrid(grid, js.c, js.maxiter)
+            js.maskcache[size(grid,1)] = mask
+        end
+    else # Don't cache if the grid doesn't match the bounding box
+        mask = computejuliasetgrid(grid, js.c, js.maxiter)
+    end
+    mask
+end
 
 indomain(x::SVector{2}, js::JuliaSet) = juliasetiteration(x, js.c, js.maxiter)
 

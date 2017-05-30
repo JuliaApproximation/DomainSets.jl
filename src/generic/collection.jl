@@ -29,12 +29,12 @@ function indomain(x, dc::DomainCollection)
     z
 end
 
-# function indomain_grid!(z, g::AbstractGrid, dc::DomainCollection)
-#     for d in dc
-#         indomain_grid!(z, g, d)
-#     end
-#     z
-# end
+function indomain_grid!(z, grid, dc::DomainCollection)
+    for d in dc
+        indomain_grid!(z, grid, d)
+    end
+    z
+end
 
 push!(dc::DomainCollection, d::Domain) = push!(dc.list, d)
 

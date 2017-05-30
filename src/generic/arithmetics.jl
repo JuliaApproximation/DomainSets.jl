@@ -28,11 +28,11 @@ union(d1::Domain, d2::Domain) = (d1 == d2 ? d1 : DomainUnion(d1,d2))
 # The union of two domains corresponds to a logical OR of their characteristic functions
 indomain(x, d::DomainUnion) = in(x, d.d1) || in(x, d.d2)
 
-# function indomain_grid(g::AbstractGrid, d::DomainUnion)
-#     z1 = indomain_grid(g, d.d1)
-#     z2 = indomain_grid(g, d.d2)
-#     z1 .| z2
-# end
+function indomain_grid(grid, d::DomainUnion)
+    z1 = indomain_grid(grid, d.d1)
+    z2 = indomain_grid(grid, d.d2)
+    z1 .| z2
+end
 
 (+)(d1::Domain, d2::Domain) = union(d1,d2)
 (|)(d1::Domain, d2::Domain) = union(d1,d2)
@@ -63,11 +63,11 @@ DomainIntersection{N}(d1::Domain{N},d2::Domain{N}) = DomainIntersection{typeof(d
 # The intersection of two domains corresponds to a logical AND of their characteristic functions
 indomain(x, d::DomainIntersection) = in(x, d.d1) && in(x, d.d2)
 
-# function indomain_grid(g::AbstractGrid, d::DomainIntersection)
-#     z1 = indomain_grid(g, d.d1)
-#     z2 = indomain_grid(g, d.d2)
-#     z1 .& z2
-# end
+function indomain_grid(grid, d::DomainIntersection)
+    z1 = indomain_grid(grid, d.d1)
+    z2 = indomain_grid(grid, d.d2)
+    z1 .& z2
+end
 
 (&)(d1::Domain, d2::Domain) = intersect(d1,d2)
 
@@ -111,11 +111,11 @@ setdiff(d1::Domain, d2::Domain) = DomainDifference(d1, d2)
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
 indomain(x, d::DomainDifference) = indomain(x, d.d1) && (~indomain(x, d.d2))
 
-# function indomain_grid(g::AbstractGrid, d::DomainDifference)
-#     z1 = indomain_grid(g, d.d1)
-#     z2 = indomain_grid(g, d.d2)
-#     z1 .& (~z2)
-# end
+function indomain_grid(grid, d::DomainDifference)
+    z1 = indomain_grid(grid, d.d1)
+    z2 = indomain_grid(grid, d.d2)
+    z1 .& (~z2)
+end
 
 (-)(d1::Domain, d2::Domain) = setdiff(d1, d2)
 (\ )(d1::Domain, d2::Domain) = setdiff(d1, d2)

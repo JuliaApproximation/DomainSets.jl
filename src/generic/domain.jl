@@ -45,19 +45,20 @@ in{N}(x::AbstractVector, d::Domain{N}) = in(SVector{N}(x), d)
 in{T <: AbstractFloat}(x::Number, a::T, b::T) = (a-10eps(T) <= x <= b+10eps(T))
 in{T <: Number}(x::Number, a::T, b::T) = a <= x <= b
 
-# # Evaluation on a grid should be implemented by indomain_grid for each domain
-# # TODO: rely on broadcast instead, and use .∈
-# in{N}(g::AbstractGrid{N}, d::Domain{N}) = indomain_grid(g, d)
+# Intercept a broadcasted call to indomain. We assume that the user wants evaluation
+# in a set of points (a grid), rather than in a single point.
+broadcast(::typeof(in), grid, d::Domain) = indomain_grid(grid, d)
 
 # # Default methods for evaluation on a grid: the default is to call eval on the domain with
 # # points as arguments. Domains that have faster grid evaluation routines may define their own version.
-# indomain_grid(g::AbstractGrid, d::Domain) = indomain_grid!(zeros(Bool, size(g)), g, d)
+indomain_grid(grid, d::Domain) = indomain_grid!(zeros(Bool, size(grid)), grid, d)
 
-# # Note that indomain_grid! only updates the result - it should be initialized to all false!
-# # The idea is that you can chain different calls to indomain_grid (as used in DomainCollection)
-# function indomain_grid!{N}(result, grid::AbstractGrid{N}, domain::Domain{N})
-#     for (i,x) in enumerate(grid)
-#         result[i] |= indomain(x, domain)
-#     end
-#     result
-# end
+# Note that indomain_grid! only updates the result - it should be initialized to all false!
+# The idea is that you can chain different calls to indomain_grid (as used in DomainCollection)
+# TODO: that was a bad idea, change
+function indomain_grid!(result, grid, domain::Domain)
+    for (i,x) in enumerate(grid)
+        result[i] |= indomain(x, domain)
+    end
+    result
+end
