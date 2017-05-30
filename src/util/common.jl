@@ -15,6 +15,3 @@ element(s, i) = elements(s)[i]
 Return the number of elements of a composite structure.
 """
 nb_elements(s) = length(elements(s))
-
-# for legacy reasons - remove soon
-composite_length = nb_elements

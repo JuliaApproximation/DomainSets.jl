@@ -10,29 +10,41 @@ using StaticArrays
 ## Exhaustive list of imports
 ################################
 
-import Base: *, +, -, /, \, |, &, ∪
+# Operator symbols
+import Base: *, +, -, /, \, |, &
+import Base: ∪, ∩
 import Base: ==
-import Base: inv
 
-import Base: in
+# Set operations
+import Base: intersect, union, setdiff, in
 
+# Arrays
+import Base: inv, length, ndims, getindex
+
+# Display
 import Base: show
 
-import Base: ndims, getindex
 
 ################################
 ## Exhaustive list of exports
 ################################
 
+## Utils
+
 # from util/common.jl
-export elements, element, nb_elements, composite_length
+export elements, element, nb_elements
 # from util/tensorproducts.jl
 export flatten, tensorproduct, ⊗
 # from util/box.jl
 export BBox, BBox1, BBox2, BBox3, BBox4
+export ⊂
+
+
+## Maps
 
 # from maps/maps.jl
-export AbstractMap, forward_map, inverse_map, jacobian, linearize, is_linear
+export AbstractMap, forward_map, inverse_map, jacobian, linearize
+export is_linear, is_compatible
 # from maps/affine_maps.jl
 export AffineMap, translation, rotation, linear_map, interval_map, scaling_map
 # from maps/productmap.jl
@@ -45,17 +57,47 @@ export IdentityMap
 export CompositeMap
 
 
+## Generic domains
+
 # from generic/domain.jl
-export Domain, indomain, boundingbox
+export Domain, Domain1d, Domain2d, Domain3d, Domain4d
+export indomain, boundingbox
+export left, right
+
 # from generic/productdomain.jl
 export ProductDomain, tensorproduct, ⊗
+
+# from generic/arithmetics.jl
+export DomainDifference, DomainUnion, DomainIntersection, RevolvedDomain, RotatedDomain,
+    TranslatedDomain
+export rotate, revolve
+
+# from generic/collection.jl
+export DomainCollection
+
+# from generic/derived_domain.jl
+export DerivedDomain
+export superdomain
+
+# from generic/mapped_domain.jl
+export MappedDomain
+
+
+## Specific domains
 
 # from domains/trivial.jl
 export EmptyDomain, EuclideanSpace
 # from domains/interval.jl
 export Interval
 # from domains/simple.jl
-export Ball, Cube
+export UnitBall, Disk, Ball, Cube
+export rectangle, cube, cylinder, randomcircles
+# from domains/fractals.jl
+export Mandelbrot, JuliaSet
+# from domains/characteristic.jl
+export Characteristic
+# from domains/atomium.jl
+export atomium
 
 
 include("util/common.jl")

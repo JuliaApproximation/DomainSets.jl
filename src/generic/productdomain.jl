@@ -84,7 +84,7 @@ indomain{N}(x::SVector{N}, d::Vararg{Domain,N}) =
 boundingbox(d::ProductDomain) = tensorproduct(map(boundingbox, elements(d))...)
 
 function show(io::IO, t::ProductDomain)
-    L = composite_length(t)
+    L = nb_elements(t)
     for i in 1:L-1
         show(io, element(t, i))
         print(io, " x ")

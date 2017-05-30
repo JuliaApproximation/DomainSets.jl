@@ -75,8 +75,8 @@ intersect(d1::Domain, d2::Domain) = (d1 == d2 ? d1 : DomainIntersection(d1,d2))
 
 function intersect(d1::ProductDomain, d2::ProductDomain)
     @assert ndims(d1) == ndims(d2)
-    if composite_length(d1) == composite_length(d2)
-        Product([intersect(element(d1,i), element(d2,i)) for i in 1:composite_length(d1)]...)
+    if nb_elements(d1) == nb_elements(d2)
+        Product([intersect(element(d1,i), element(d2,i)) for i in 1:nb_elements(d1)]...)
     else
         DomainIntersection(d1, d2)
     end
