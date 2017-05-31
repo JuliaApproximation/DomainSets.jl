@@ -16,10 +16,10 @@ ndims{D <: Domain}(::Type{D}) = ndims(supertype(D))
 ndims{N}(::Domain{N}) = N
 
 # Convenient aliases
-Domain1d = Domain{1}
-Domain2d = Domain{2}
-Domain3d = Domain{3}
-Domain4d = Domain{4}
+const Domain1d = Domain{1}
+const Domain2d = Domain{2}
+const Domain3d = Domain{3}
+const Domain4d = Domain{4}
 
 # left and right of domains falls back to bounding box domains
 # TODO: these should go away

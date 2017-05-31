@@ -26,19 +26,19 @@ show(io::IO, d::EmptyDomain) = print(io, "the empty domain")
 ### The whole space R^N (or C^N)
 ##################################
 
-struct EuclideanSpace{N} <: Domain{N}
+struct FullSpace{N} <: Domain{N}
 end
 
-EuclideanSpace() = EuclideanSpace{1}()
-EuclideanSpace{N}(::Val{N}) = EuclideanSpace{N}()
+FullSpace() = FullSpace{1}()
+FullSpace{N}(::Val{N}) = FullSpace{N}()
 
-indomain(x, d::EuclideanSpace) = true
+indomain(x, d::FullSpace) = true
 
 # Arithmetic operations
 
-(+)(d::EuclideanSpace, x::Number) = d
+(+)(d::FullSpace, x::Number) = d
 
-(*)(d::EuclideanSpace, x::Number) = d
+(*)(d::FullSpace, x::Number) = d
 
 
-show(io::IO, e::EuclideanSpace) = print(io, "the ", ndims(e), "-dimensional Euclidean space")
+show(io::IO, e::FullSpace) = print(io, "the ", ndims(e), "-dimensional Euclidean space")

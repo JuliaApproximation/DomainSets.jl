@@ -19,9 +19,15 @@ import Base: ==
 import Base: intersect, union, setdiff, in
 
 # Arrays
-import Base: size, length, ndims, getindex
+import Base: size, length, ndims, getindex, eltype, ndims
 import Base: inv
+import Base: isreal
+import Base: one, zero
 
+# Types, promotions and conversions
+import Base: convert, widen
+
+# The broadcast mechanism
 import Base: broadcast
 
 # Iteration protocol
@@ -44,6 +50,20 @@ export flatten, tensorproduct, ⊗
 # from util/box.jl
 export BBox, BBox1, BBox2, BBox3, BBox4
 export ⊂
+
+
+## Spaces
+
+# from spaces/space.jl
+export Space, UnivariateSpace
+# from spaces/embeddings.jl
+export embedded, isomorphic, promote_space, convert_space
+# from spaces/basic_spaces.jl
+export IntegerSpace, RealSpace, ComplexPlane, ℝ, ℤ, ℂ
+# from spaces/euclidean.jl
+export EuclideanSpace
+# from spaces/arrayspace.jl
+export ArraySpace, VectorSpace, MatrixSpace, TensorSpace
 
 
 ## Maps
@@ -92,7 +112,7 @@ export MappedDomain
 ## Specific domains
 
 # from domains/trivial.jl
-export EmptyDomain, EuclideanSpace
+export EmptyDomain, FullSpace
 # from domains/interval.jl
 export Interval
 # from domains/simple.jl
@@ -109,6 +129,12 @@ export atomium
 include("util/common.jl")
 include("util/tensorproducts.jl")
 include("util/box.jl")
+
+include("spaces/space.jl")
+include("spaces/embeddings.jl")
+include("spaces/basic_spaces.jl")
+include("spaces/euclidean.jl")
+include("spaces/arrayspace.jl")
 
 include("maps/maps.jl")
 include("maps/productmap.jl")
