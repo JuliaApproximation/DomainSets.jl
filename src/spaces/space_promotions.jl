@@ -67,4 +67,4 @@ isomorphic(a::GeometricSpace, b::GeometricSpace) = isomorphic(typeof(a), typeof(
 isomorphic(A::Type{GeometricSpace{T}}, B::Type{GeometricSpace{S}}) where {T,S} = result(isomorphism_rule(A, B))
 
 "The symbol ≅ (\cong) is a synonym for `isomorphic`."
-≅ = iosomorphic
+≅ = isomorphic

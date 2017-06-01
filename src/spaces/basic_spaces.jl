@@ -52,8 +52,13 @@ embedding_rule(::Type{GeometricSpace{S}}, ::Type{EuclideanSpace{1,T}}) where {S 
 # and vice-versa
 embedding_rule(::Type{EuclideanSpace{1,S}}, ::Type{GeometricSpace{T}}) where {S,T <: Number} = _embedding_via_promotion(T,promote_type(S,T))
 
+convert_space(::Type{GeometricSpace{T}}, x::SVector{1,S}) where {T <: Number,S} = T(x[1])
+convert_space(::Type{EuclideanSpace{1,T}}, x::S) where {T,S <: Number} = SVector{1,T}(x)
 
 # The complex plane can be identified with ℝ^2
-embedding_rule(::Type{ComplexPlane{Complex{S}}}, ::Type{EuclideanSpace{2,T}}) where {S <: Number,T} = _embedding_via_promotion(T,promote_type(S,T))
+embedding_rule(::Type{ComplexPlane{Complex{S}}}, ::Type{EuclideanSpace{2,T}}) where {S,T} = _embedding_via_promotion(T,promote_type(S,T))
 # and vice-versa
-embedding_rule(::Type{EuclideanSpace{2,S}}, ::Type{ComplexPlane{Complex{T}}}) where {S, T <: Number} = _embedding_via_promotion(T,promote_type(S,T))
+embedding_rule(::Type{EuclideanSpace{2,S}}, ::Type{ComplexPlane{Complex{T}}}) where {S,T} = _embedding_via_promotion(T,promote_type(S,T))
+
+convert_space(::Type{ComplexPlane{Complex{T}}}, x::SVector{2,S}) where {T,S} = T(x[1]) + im*T(x[2])
+convert_space(::Type{EuclideanSpace{2,T}}, x::Complex{S}) where {T,S} = SVector{2,T}(real(x), imag(x))
