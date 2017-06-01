@@ -55,15 +55,14 @@ export ⊂
 ## Spaces
 
 # from spaces/space.jl
-export Space, UnivariateSpace
-# from spaces/embeddings.jl
-export embedded, isomorphic, promote_space, convert_space
+export Space
+export space
+# from spaces/space_promotions.jl
+export convert_space, promote_space
+export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
-export IntegerSpace, RealSpace, ComplexPlane, ℝ, ℤ, ℂ
-# from spaces/euclidean.jl
-export EuclideanSpace
-# from spaces/arrayspace.jl
-export ArraySpace, VectorSpace, MatrixSpace, TensorSpace
+export IntegerSpace, RealSpace, ComplexPlane, ℝ, ℤ, ℂ, ℝ2, ℝ3, ℝ4
+export EuclideanSpace, ArraySpace
 
 
 ## Maps
@@ -131,10 +130,8 @@ include("util/tensorproducts.jl")
 include("util/box.jl")
 
 include("spaces/space.jl")
-include("spaces/embeddings.jl")
+include("spaces/space_promotions.jl")
 include("spaces/basic_spaces.jl")
-include("spaces/euclidean.jl")
-include("spaces/arrayspace.jl")
 
 include("maps/maps.jl")
 include("maps/productmap.jl")

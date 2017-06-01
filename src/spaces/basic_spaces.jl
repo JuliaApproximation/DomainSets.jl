@@ -1,32 +1,59 @@
 # basic_spaces.jl
 
-"""
-A univariate space is the simplest possible space. It only has an element type
-`T`, and all possible values of `T` belong to the space.
-"""
-struct UnivariateSpace{T} <: GeometricSpace{T}
-end
+##############################
+# Definitions of basic spaces
+##############################
 
-UnivariateSpace() = UnivariateSpace{Float64}()
+"AnySpace is the superset of all possible geometric spaces."
+const AnySpace = GeometricSpace{Any}
+
+"A geometric space with integer type."
+const IntegerSpace{T <: Integer} = GeometricSpace{T}
+
+"A geometric space with floating point type."
+const RealSpace{T <: AbstractFloat} = GeometricSpace{T}
+
+"A geometric space with complex type."
+const ComplexPlane{T <: Complex} = GeometricSpace{T}
 
 
-widen(space::UnivariateSpace) = UnivariateSpace{widen(eltype(space))}()
-
-# The symbol is \BbbZ
-const IntegerSpace{T <: Integer} = UnivariateSpace{T}
+"The set of integers of type Int (ℤ = \BbbZ)."
 const ℤ = IntegerSpace{Int}()
 
-# The symbol is \BbbR
-const RealSpace{T <: AbstractFloat} = UnivariateSpace{T}
+"The set of reals of type Float64 (ℝ = \BbbR)."
 const ℝ = RealSpace{Float64}()
 
-# The symbol is \BbbC
-const ComplexPlane{T <: AbstractFloat} = UnivariateSpace{Complex{T}}
-const ℂ = ComplexPlane{Float64}()
+"The complex plane with Float64 real and imaginar parts (ℂ = \BbbC)."
+const ℂ = ComplexPlane{Complex{Float64}}()
 
-# All univariate spaces are embedded to the same space with a broader T
-embedded{S <: UnivariateSpace}(s1::S, s2::S) = promote_type(eltype(s1),eltype(s2)) == eltype(s2)
+"""
+A Euclidean space with static vector types. It is the space of all vectors
+of fixed length `N`, with entries of type `T`.
+"""
+const EuclideanSpace{N,T} = GeometricSpace{SVector{N,T}}
 
-embedded{T1,T2}(s1::IntegerSpace{T1}, s2::RealSpace{T2}) = promote_type(T1,T2) == T2
+"""
+A general Array space, with arrays of dimension `N` and element type `T`.
+Note that the arrays can have any size. Thus, `ArraySpace{2,Float64}` contains
+all possible matrices of size `m × n` for any combination of `m,n ∈ ℕ`.
+"""
+const ArraySpace{N,T} = GeometricSpace{Array{T,N}}
 
-embedded{T1,T2}(s1::RealSpace{T1}, s2::ComplexPlane{T2}) = promote_type(T1,T2) == T2
+^(s::GeometricSpace{T}, ::Val{N}) where {T <: Number,N} = EuclideanSpace{N,T}()
+
+const ℝ2 = ℝ^Val{2}()
+const ℝ3 = ℝ^Val{3}()
+const ℝ4 = ℝ^Val{4}()
+
+## Isomorphism between scalars and 1D vectors
+
+# Any space with a numeric type can be identified with a 1D euclidean space
+embedding_rule(::Type{GeometricSpace{S}}, ::Type{EuclideanSpace{1,T}}) where {S <: Number,T} = _embedding_via_promotion(T,promote_type(S,T))
+# and vice-versa
+embedding_rule(::Type{EuclideanSpace{1,S}}, ::Type{GeometricSpace{T}}) where {S,T <: Number} = _embedding_via_promotion(T,promote_type(S,T))
+
+
+# The complex plane can be identified with ℝ^2
+embedding_rule(::Type{ComplexPlane{Complex{S}}}, ::Type{EuclideanSpace{2,T}}) where {S <: Number,T} = _embedding_via_promotion(T,promote_type(S,T))
+# and vice-versa
+embedding_rule(::Type{EuclideanSpace{2,S}}, ::Type{ComplexPlane{Complex{T}}}) where {S, T <: Number} = _embedding_via_promotion(T,promote_type(S,T))

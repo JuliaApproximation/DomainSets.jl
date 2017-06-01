@@ -4,6 +4,9 @@
 ### An interval
 ##################
 
+abstract type AbstractInterval <: Domain{1}
+end
+
 struct Interval{T} <: Domain{1}
     a     ::  T
     b     ::  T
