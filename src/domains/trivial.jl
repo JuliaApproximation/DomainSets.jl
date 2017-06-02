@@ -4,22 +4,22 @@
 ## The empty domain
 ######################
 
-struct EmptyDomain{N} <: Domain{N}
+struct EmptySpace{N} <: Domain{N}
 end
 
-EmptyDomain() = EmptyDomain{1}()
-EmptyDomain{N}(::Val{N}) = EmptyDomain{N}()
+EmptySpace() = EmptySpace{1}()
+EmptySpace{N}(::Val{N}) = EmptySpace{N}()
 
-indomain(x, d::EmptyDomain) = false
+indomain(x, d::EmptySpace) = false
 
 # Arithmetic operations
 
-(+)(d::EmptyDomain, x::Number) = d
+(+)(d::EmptySpace, x::Number) = d
 
-(*)(d::EmptyDomain, x::Number) = d
+(*)(d::EmptySpace, x::Number) = d
 
 
-show(io::IO, d::EmptyDomain) = print(io, "the empty domain")
+show(io::IO, d::EmptySpace) = print(io, "the empty space")
 
 
 ##################################

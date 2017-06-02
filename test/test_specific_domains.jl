@@ -2,8 +2,8 @@
 
 function test_specific_domains()
     @testset "$(rpad("Specific domains",80))" begin
-        test_emptydomain()
-        test_euclideanspace()
+        test_emptyspace()
+        test_fullspace()
         test_interval()
         test_unitball()
         test_cube()
@@ -13,21 +13,21 @@ function test_specific_domains()
     end
 end
 
-function test_emptydomain()
-    println("- an empty domain")
-    d1 = EmptyDomain()
+function test_emptyspace()
+    println("- an empty space")
+    d1 = EmptySpace()
     @test 0.5 ∉ d1
 
-    d2 = EmptyDomain(Val{2}())
+    d2 = EmptySpace(Val{2}())
     @test [0.1,0.2] ∉ d2
 end
 
-function test_euclideanspace()
-    println("- Euclidean space")
-    d1 = EuclideanSpace()
+function test_fullspace()
+    println("- a full Euclidean space")
+    d1 = FullSpace()
     @test 0.5 ∈ d1
 
-    d2 = EuclideanSpace(Val{2}())
+    d2 = FullSpace(Val{2}())
     @test [0.1,0.2] ∈ d2
 end
 

@@ -34,6 +34,11 @@ New spaces can be defined by defining a new numeric type.
 struct GeometricSpace{T}
 end
 
+"AnySpace is the superset of all possible geometric spaces."
+const AnySpace = GeometricSpace{Any}
+"BottomSpace is a non-existent space."
+const BottomSpace = GeometricSpace{Base.Bottom}
+
 eltype{T}(::GeometricSpace{T}) = T
 eltype{T}(::Type{GeometricSpace{T}}) = T
 eltype{S <: GeometricSpace}(::Type{S}) = eltype(supertype(S))
@@ -41,17 +46,22 @@ eltype{S <: GeometricSpace}(::Type{S}) = eltype(supertype(S))
 isreal{T}(space::GeometricSpace{T}) = isreal(T)
 
 # Return the zero element
-zero{T}(space::GeometricSpace{T}) = zero(T)
+zero(space::GeometricSpace{T}) where {T} = zero(T)
+zero(::Type{GeometricSpace{T}}) where {T} = zero(T)
+
+"The origin of a space is its zero element."
+origin(space::GeometricSpace) = zero(space)
 
 # Definition of element membership is based only on type:
+in(x, A::GeometricSpace) = in(x, typeof(A))
 # - x is in the space of the type of x equals that of the space
-in{T}(x::T, space::GeometricSpace{T}) = true
+in(x::T, ::Type{GeometricSpace{T}}) where {T} = true
 # - or if its type can be promoted to that of the space
-in{S,T}(x::S, space::GeometricSpace{T}) = promote_type(S,T) == T
+in(x::S, ::Type{GeometricSpace{T}}) where {S,T} = promote_type(S,T) == T
+
 
 # Make the space bigger by widening the numeric type
 widen{T}(::GeometricSpace{T}) = GeometricSpace{widen(T)}()
 
-"Return the space of all elements with the same type as `x`."
-space(x) = space(typeof(x))
-space(::Type{T}) where {T} = GeometricSpace{T}()
+"Return the geometric space of all elements with the same type as `x`."
+spaceof(x::T) where {T} = GeometricSpace{T}

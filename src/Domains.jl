@@ -22,7 +22,7 @@ import Base: intersect, union, setdiff, in
 import Base: size, length, ndims, getindex, eltype, ndims
 import Base: inv
 import Base: isreal
-import Base: one, zero
+import Base: zero
 
 # Types, promotions and conversions
 import Base: convert, widen
@@ -55,14 +55,15 @@ export ⊂
 ## Spaces
 
 # from spaces/space.jl
-export Space
-export space
+export GeometricSpace, AnySpace
+export spaceof, origin
 # from spaces/space_promotions.jl
-export convert_space, promote_space
+export convert_space, promote_space, superspace
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
-export IntegerSpace, RealSpace, ComplexPlane, ℝ, ℤ, ℂ, ℝ2, ℝ3, ℝ4
-export EuclideanSpace, ArraySpace
+export IntegerSpace, RationalSpace, RealSpace, ComplexPlane
+export VectorSpace, EuclideanSpace, ArraySpace
+export ℤ, ℚ, ℝ, ℂ, ℝ2, ℝ3, ℝ4
 
 
 ## Maps
@@ -111,9 +112,10 @@ export MappedDomain
 ## Specific domains
 
 # from domains/trivial.jl
-export EmptyDomain, FullSpace
+export EmptySpace, FullSpace
 # from domains/interval.jl
-export Interval
+export AbstractInterval, Interval, UnitInterval, ChebyshevInterval
+export interval
 # from domains/simple.jl
 export UnitBall, Disk, Ball, Cube
 export rectangle, cube, cylinder, randomcircles
