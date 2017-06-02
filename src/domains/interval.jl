@@ -65,6 +65,7 @@ rightendpoint(d::RealLine{T}) where {T} = T(Inf)
 
 iscompact(d::RealLine) = false
 
+indomain(x::T, d::RealLine{T}) where {T} = true
 
 "The half-open positive halfline `[0,∞)`."
 struct HalfLine{T} <: FixedInterval{T}
@@ -79,6 +80,7 @@ isopen(d::HalfLine) = false
 
 iscompact(d::HalfLine) = false
 
+indomain(x, d::HalfLine) = x >= 0
 
 "The open negative halfline `(-∞,0)`."
 struct NegativeHalfLine{T} <: FixedInterval{T}
@@ -92,7 +94,7 @@ isopen(d::NegativeHalfLine) = true
 
 iscompact(d::NegativeHalfLine) = false
 
-
+indomain(x, d::NegativeHalfLine) = x < 0
 
 """
 A general interval with endpoints `a` and `b`. The interval can be open or
@@ -116,7 +118,7 @@ end
 const ClosedInterval{T} = Interval{:closed,:closed,T}
 
 "An open interval `(a,b)`."
-const OpenInterval{T} = Interval{:closed,:closed,T}
+const OpenInterval{T} = Interval{:open,:open,T}
 
 "A half-open interval `(a,b]`."
 const HalfOpenLeftInterval{T} = Interval{:open,:closed,T}
@@ -145,6 +147,11 @@ isclosed(d::Interval) = false
 isopen(d::Interval) = false
 
 iscompact(d::Interval) = true
+
+indomain(x, d::OpenInterval) = d.a < x < d.b
+indomain(x, d::ClosedInterval) = d.a <= x <= d.b
+indomain(x, d::HalfOpenLeftInterval) = d.a < x <= d.b
+indomain(x, d::HalfOpenRightInterval) = d.a <= x < d.b
 
 
 #################################
