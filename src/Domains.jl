@@ -56,14 +56,16 @@ export ⊂
 
 # from spaces/space.jl
 export GeometricSpace, AnySpace
-export spaceof, origin
+export spaceof, origin, superspace, issubspace, subeltype
 # from spaces/space_promotions.jl
-export convert_space, promote_space, superspace
+export convert_space, promote_space
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
-export IntegerSpace, RationalSpace, RealSpace, ComplexPlane
+export IntegerSpace, RationalSpace, RealSpace, ComplexSpace
 export VectorSpace, EuclideanSpace, ArraySpace
 export ℤ, ℚ, ℝ, ℂ, ℝ2, ℝ3, ℝ4
+# from spaces/productspace.jl
+export ProductSpace
 
 
 ## Maps
@@ -134,6 +136,7 @@ include("util/box.jl")
 include("spaces/space.jl")
 include("spaces/space_promotions.jl")
 include("spaces/basic_spaces.jl")
+include("spaces/productspace.jl")
 
 include("maps/maps.jl")
 include("maps/productmap.jl")

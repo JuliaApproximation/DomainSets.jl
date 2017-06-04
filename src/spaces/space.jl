@@ -34,16 +34,35 @@ New spaces can be defined by defining a new numeric type.
 struct GeometricSpace{T}
 end
 
+# An internal shorthand in order to avoid excessively long lines when there
+# are several arguments of type GeometricSpace :-)
+# We export a longer name in order to avoid name clashes with other Space types
+const GSpace = GeometricSpace
+
 "AnySpace is the superset of all possible geometric spaces."
 const AnySpace = GeometricSpace{Any}
-"BottomSpace is a non-existent space."
-const BottomSpace = GeometricSpace{Base.Bottom}
 
-eltype{T}(::GeometricSpace{T}) = T
-eltype{T}(::Type{GeometricSpace{T}}) = T
-eltype{S <: GeometricSpace}(::Type{S}) = eltype(supertype(S))
+eltype(::GeometricSpace{T}) where {T} = T
+eltype(::Type{GeometricSpace{T}}) where {T} = T
+eltype(::Type{S}) where {S <: GeometricSpace} = eltype(supertype(S))
 
-isreal{T}(space::GeometricSpace{T}) = isreal(T)
+"""
+Some geometric spaces have an eltype that is composed in terms of an underlying
+eltype. For example, `Complex{Float64}` and `SVector{2,Float64}` are based on
+`Float64`, which is their `subeltype`.
+"""
+subeltype(::Type{GeometricSpace{T}}) where {T} = T
+
+"""
+Create a space that is similar to the given space, but with a different `subeltype`.
+
+For example, `similar_space(ComplexSpace{Float64}, BigFloat)` yields a
+`ComplexSpace{BigFloat}`.
+"""
+similar_space(::Type{GeometricSpace{T}}, ::Type{S}) where {T,S} = GeometricSpace{S}
+
+
+isreal(space::GeometricSpace{T}) where {T} = isreal(T)
 
 # Return the zero element
 zero(space::GeometricSpace{T}) where {T} = zero(T)
@@ -61,7 +80,40 @@ in(x::S, ::Type{GeometricSpace{T}}) where {S,T} = promote_type(S,T) == T
 
 
 # Make the space bigger by widening the numeric type
-widen{T}(::GeometricSpace{T}) = GeometricSpace{widen(T)}()
+widen(A::Type{GeometricSpace{T}}) where {T} = _widen(A, eltype(A), subeltype(A))
+# eltype and subeltype are the same: widen those
+_widen(A, ::Type{T}, ::Type{T}) where {T} = GeometricSpace{widen(T)}
+# eltype and subeltype are different: widen the subeltype
+_widen(A, ::Type{T}, ::Type{S}) where {T,S} = similar_space(A, widen(S))
+
 
 "Return the geometric space of all elements with the same type as `x`."
 spaceof(x::T) where {T} = GeometricSpace{T}
+# For convenience
+spaceof(x::GeometricSpace{T}) where {T} = typeof(x)
+
+
+"""
+Return the superspace of the given geometric space `A`. The superspace of `A`
+should be larger than `A`, and `A` should be embedded in it.
+
+Superspaces are used to automatically discover embeddings and promotion rules.
+Its role is analogous to that of `supertype` in the Julia type system. Indeed,
+`AnySpace` is a superspace of all spaces, much like `Any` is a supertype of
+all types.
+"""
+superspace(::Type{GeometricSpace{T}}) where {T} = AnySpace
+
+superspaceof(x) = superspace(spaceof(x))
+
+"""
+A space `A` is a subspace of space `B` if `B` is a supertype of `A`.
+"""
+# Any space is a subspace of itself
+issubspace(A::Type{GeometricSpace{T}}, B::Type{GeometricSpace{T}}) where {T} = true
+# So is AnySpace. This is covered by the line above, but we make it explicit for clarity
+issubspace(A::Type{AnySpace}, B::Type{AnySpace}) = true
+# AnySpace is not a subspace of any other space
+issubspace(A::Type{AnySpace}, B::Type{GeometricSpace{T}}) where {T} = false
+# In all other cases, we replace A by its superspace and recurse
+issubspace(A::Type{GeometricSpace{T}}, B::Type{GeometricSpace{S}}) where {T,S} = issubspace(superspace(A), B)
