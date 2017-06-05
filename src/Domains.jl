@@ -56,7 +56,7 @@ export ⊂
 
 # from spaces/space.jl
 export GeometricSpace, AnySpace
-export spaceof, origin, superspace, issubspace, subeltype
+export spaceof, spacetype, origin, superspace, issubspace, subeltype
 # from spaces/space_promotions.jl
 export convert_space, promote_space
 export isomorphic, ≅, embedded, ↪
@@ -114,7 +114,8 @@ export MappedDomain
 ## Specific domains
 
 # from domains/trivial.jl
-export EmptySpace, FullSpace
+export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
+export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval
 export interval

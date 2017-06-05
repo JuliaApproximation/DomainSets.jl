@@ -86,9 +86,11 @@ _widen(A, ::Type{T}, ::Type{T}) where {T} = GeometricSpace{widen(T)}
 # eltype and subeltype are different: widen the subeltype
 _widen(A, ::Type{T}, ::Type{S}) where {T,S} = similar_space(A, widen(S))
 
+"Return the geometric space type with eltype `T`."
+spacetype(::Type{T}) where {T} = GeometricSpace{T}
 
 "Return the geometric space of all elements with the same type as `x`."
-spaceof(x::T) where {T} = GeometricSpace{T}
+spaceof(x::T) where {T} = spacetype(T)
 # For convenience
 spaceof(x::GeometricSpace{T}) where {T} = typeof(x)
 

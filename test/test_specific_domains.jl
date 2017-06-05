@@ -18,7 +18,7 @@ function test_emptyspace()
     d1 = EmptySpace()
     @test 0.5 ∉ d1
 
-    d2 = EmptySpace(Val{2}())
+    d2 = EmptySpace(SVector{2,Float64})
     @test [0.1,0.2] ∉ d2
 end
 
@@ -27,14 +27,14 @@ function test_fullspace()
     d1 = FullSpace()
     @test 0.5 ∈ d1
 
-    d2 = FullSpace(Val{2}())
+    d2 = FullSpace(SVector{2,Float64})
     @test [0.1,0.2] ∈ d2
 end
 
 function test_interval()
     println("- intervals")
 
-    d = Interval(0, 1)
+    d = Interval(0.0, 1.0)
     @test 0.5 ∈ d
     @test 1.1 ∉ d
 

@@ -1,25 +1,41 @@
 # domain.jl
 # Contains the definition of the abstract type Domain and its interface.
 
-"""
-A domain is a subset of N-dimensional Euclidean space.
 
-The most important functionality of a domain is its indicator function: the
-function that decides whether or not a point belongs to the domain.
-This is implemented by overriding `in`: e.g. one can write `x ∈ D` and this evaluates
-to true or false.
 """
-abstract type Domain{N} end
+`Domain{T}` is the abstract supertype of all subsets of the geometric space
+`GeometricSpace{T}`.
 
-ndims{N}(::Type{Domain{N}}) = N
-ndims{D <: Domain}(::Type{D}) = ndims(supertype(D))
-ndims{N}(::Domain{N}) = N
+Memberschip of a subset can be determined in several ways, depending on the
+type of the domain. For many domains it is implemented via the indicator or
+characteristic function, which overrides `in`: one can write `x ∈ D` or
+`in(x,D)`, and this evaluates to true or false.
+"""
+abstract type Domain{T}
+end
+
+spaceof(::Domain{T}) where {T} = spacetype(T)
+
+eltype(::Type{Domain{T}}) where {T} = T
+eltype(::Type{D}) where {D <: Domain} = eltype(supertype(D))
+
+"We use `Point{N,T}` as a synonym for `SVector{N,T}`."
+const Point{N,T} = SVector{N,T}
+
+abstract type EuclideanDomain{N,T} <: Domain{Point{N,T}}
+end
+
+ndims(::Type{EuclideanDomain{N,T}}) where {N,T} = N
+ndims(::Type{D}) where {D <: EuclideanDomain} = ndims(supertype(D))
+ndims(d::Domain) = ndims(typeof(d))
+
+
 
 # Convenient aliases
-const Domain1d = Domain{1}
-const Domain2d = Domain{2}
-const Domain3d = Domain{3}
-const Domain4d = Domain{4}
+const Domain1d{T} = EuclideanDomain{1,T}
+const Domain2d{T} = EuclideanDomain{2,T}
+const Domain3d{T} = EuclideanDomain{3,T}
+const Domain4d{T} = EuclideanDomain{4,T}
 
 # left and right of domains falls back to bounding box domains
 # TODO: these should go away
@@ -31,32 +47,28 @@ right(d::Domain, i::Int) = right(boundingbox(d), i)
 
 # We implement the indicator function by overriding `in`.
 # The implementation of `in` at the level of Domain converts the point into
-# an SVector, and calls `indomain`. The latter can be implemented by concrete
-# domains, with fewer chance of ambiguities than when directly implementing `in`.
-in{N}(x::SVector{N}, d::Domain{N}) = indomain(x, d)
-in(x::Number, d::Domain1d) = indomain(x, d)
-in(x::SVector{1}, d::Domain1d) = indomain(x[1], d)
-
-# Convert a point given as any other vector into a SVector. This will throw an
-# error if the dimension of x was wrong.
-in{N}(x::AbstractVector, d::Domain{N}) = in(SVector{N}(x), d)
+# the element type of the domain, and calls `indomain`. Concrete subtypes
+# should implement `indomain`, rather than `in`.
+in(x::T, d::Domain{T}) where {T} = indomain(x, d)
+in(x::S, d::Domain{T}) where {T,S} = in(convert(T, x), d)
 
 # Check whether a value is in an interval, up to 10 times machine precision
-in{T <: AbstractFloat}(x::Number, a::T, b::T) = (a-10eps(T) <= x <= b+10eps(T))
-in{T <: Number}(x::Number, a::T, b::T) = a <= x <= b
+in(x::Number, a::T, b::T) where {T <: AbstractFloat} = (a-10eps(T) <= x <= b+10eps(T))
+in(x::Number, a::T, b::T) where {T <: Number} = a <= x <= b
 
 # Intercept a broadcasted call to indomain. We assume that the user wants evaluation
-# in a set of points (a grid), rather than in a single point.
-broadcast(::typeof(in), grid, d::Domain) = indomain_grid(grid, d)
+# in a set of points (which we call a grid), rather than in a single point.
+broadcast(::typeof(in), grid, d::Domain) = indomain_broadcast(grid, d)
 
 # # Default methods for evaluation on a grid: the default is to call eval on the domain with
 # # points as arguments. Domains that have faster grid evaluation routines may define their own version.
-indomain_grid(grid, d::Domain) = indomain_grid!(zeros(Bool, size(grid)), grid, d)
+indomain_broadcast(grid, d::Domain) = indomain_broadcast!(zeros(Bool, size(grid)), grid, d)
+# TODO: use BitArray here
 
-# Note that indomain_grid! only updates the result - it should be initialized to all false!
-# The idea is that you can chain different calls to indomain_grid (as used in DomainCollection)
+# Note that indomain_broadcast! only updates the result - it should be initialized to all false!
+# The idea is that you can chain different calls to indomain_broadcast (as used in DomainCollection)
 # TODO: that was a bad idea, change
-function indomain_grid!(result, grid, domain::Domain)
+function indomain_broadcast!(result, grid, domain::Domain)
     for (i,x) in enumerate(grid)
         result[i] |= indomain(x, domain)
     end

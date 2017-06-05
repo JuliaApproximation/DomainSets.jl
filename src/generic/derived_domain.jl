@@ -7,9 +7,15 @@ of another domain using composition. DerivedDomain transfers the interface of
 Domain to this superdomain. Concrete subtypes may modify any function, but without
 modifications the domain acts exactly like the superdomain.
 """
-abstract type DerivedDomain{N} <: Domain{N} end
+abstract type DerivedDomain{T} <: Domain{T}
+end
 
 # We assume that the underlying domain is stored in a field called superdomain
 superdomain(d::DerivedDomain) = d.superdomain
 
 indomain(x, d::DerivedDomain) = indomain(x, superdomain(d))
+indomain_broadcast(grid, d::DerivedDomain) = indomain_broadcast(grid, superdomain(d))
+
+indomain_broadcast!(result, grid, d::DerivedDomain) = indomain_broadcast!(result, grid, superdomain(d))
+
+boundingbox(d::DerivedDomain) = boundingbox(superdomain(d))

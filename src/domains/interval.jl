@@ -4,8 +4,10 @@
 ### An interval
 ##################
 
-abstract type AbstractInterval{T} <: Domain{1}
+abstract type AbstractInterval{T} <: Domain{T}
 end
+
+ndims(::Type{D}) where {D <: AbstractInterval} = 1
 
 "The left endpoint of the interval."
 leftendpoint(d::AbstractInterval) = d.a

@@ -13,14 +13,14 @@
 ### The union of two domains
 ################################################################################
 
-struct DomainUnion{D1,D2,N} <: Domain{N}
+struct DomainUnion{D1,D2,T} <: Domain{T}
     d1    ::  D1
     d2    ::  D2
 
-    DomainUnion{D1,D2,N}(d1::Domain{N}, d2::Domain{N}) where {D1,D2,N} = new(d1, d2)
+    DomainUnion{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
 end
 
-DomainUnion{N}(d1::Domain{N}, d2::Domain{N}) = DomainUnion{typeof(d1),typeof(d2),N}(d1, d2)
+DomainUnion(d1::Domain{T}, d2::Domain{T}) where {T} = DomainUnion{typeof(d1),typeof(d2),T}(d1, d2)
 
 union(d1::Domain, d2::Domain) = (d1 == d2 ? d1 : DomainUnion(d1,d2))
 
@@ -51,14 +51,14 @@ end
 ### The intersection of two domains
 ################################################################################
 
-struct DomainIntersection{D1,D2,N} <: Domain{N}
+struct DomainIntersection{D1,D2,T} <: Domain{T}
     d1    ::  D1
     d2    ::  D2
 
-    DomainIntersection{D1,D2,N}(d1::Domain{N}, d2::Domain{N}) where {D1,D2,N} = new(d1, d2)
+    DomainIntersection{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
 end
 
-DomainIntersection{N}(d1::Domain{N},d2::Domain{N}) = DomainIntersection{typeof(d1),typeof(d2),N}(d1, d2)
+DomainIntersection(d1::Domain{T},d2::Domain{T}) where {T} = DomainIntersection{typeof(d1),typeof(d2),T}(d1, d2)
 
 # The intersection of two domains corresponds to a logical AND of their characteristic functions
 indomain(x, d::DomainIntersection) = in(x, d.d1) && in(x, d.d2)
@@ -97,14 +97,14 @@ end
 ### The difference between two domains
 ################################################################################
 
-struct DomainDifference{D1,D2,N} <: Domain{N}
+struct DomainDifference{D1,D2,T} <: Domain{T}
     d1    ::  D1
     d2    ::  D2
 
-    DomainDifference{D1,D2,N}(d1::Domain{N}, d2::Domain{N}) where {D1,D2,N} = new(d1, d2)
+    DomainDifference{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
 end
 
-DomainDifference{N}(d1::Domain{N}, d2::Domain{N}) = DomainDifference{typeof(d1),typeof(d2),N}(d1,d2)
+DomainDifference(d1::Domain{T}, d2::Domain{T}) where {T} = DomainDifference{typeof(d1),typeof(d2),T}(d1,d2)
 
 setdiff(d1::Domain, d2::Domain) = DomainDifference(d1, d2)
 
@@ -134,7 +134,7 @@ end
 ### A revolved domain is a 2D-domain rotated about the X-axis
 ################################################################################
 
-struct RevolvedDomain{D} <: Domain{3}
+struct RevolvedDomain{T,D <: Domain{T}} <: Domain{T}
     d     ::  D
 end
 

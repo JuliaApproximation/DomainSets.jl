@@ -11,17 +11,17 @@ A point lies in the mapped domain, if the inverse map of that point lies in the
 original domain.
 """
 # TODO: experiment with leaving out the type parameters and implement fast indomain_grid
-struct MappedDomain{DOMAIN <: Domain,MAP,N} <: Domain{N}
+struct MappedDomain{DOMAIN <: Domain,MAP,T} <: Domain{T}
     domain  ::  DOMAIN
     # The forward map, from the underlying domain to the mapped domain
     fmap    ::  MAP
 
     # With this inner constructor we enforce that N is the dimension of the domain
-    MappedDomain{DOMAIN,MAP,N}(domain::Domain{N}, fmap) where {DOMAIN <: Domain,MAP,N} = new(domain, fmap)
+    MappedDomain{DOMAIN,MAP,T}(domain::Domain{T}, fmap) where {DOMAIN <: Domain,MAP,T} = new{DOMAIN,MAP,T}(domain, fmap)
 end
 
-MappedDomain{N}(domain::Domain{N}, fmap) =
-    MappedDomain{typeof(domain),typeof(fmap),N}(domain, fmap)
+MappedDomain(domain::Domain{T}, fmap) where {T} =
+    MappedDomain{typeof(domain),typeof(fmap),T}(domain, fmap)
 
 domain(d::MappedDomain) = d.domain
 
@@ -62,8 +62,9 @@ apply_map(d::MappedDomain, map::AbstractMap) = MappedDomain(domain(d), map*mappi
 
 (*)(map::AbstractMap, domain::Domain) = apply_map(domain, map)
 
-(*){N,T}(domain::Domain{N}, a::T) = scaling_map(a*ones(SVector{N,T})...) * domain
+(*)(domain::Domain, a::Number) = scaling_map(a*ones(eltype(domain))) * domain
 
+# TODO: revise
 (+){N,T}(d::Domain{N}, x::SVector{N,T}) = AffineMap(eye(SMatrix{N,N,T}),x) * d
 (+){N}(d::Domain{N}, x::AbstractVector) = d + SVector{N}(x)
 

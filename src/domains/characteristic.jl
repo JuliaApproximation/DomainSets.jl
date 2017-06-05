@@ -3,12 +3,12 @@
 """
 A domain that is described by its characteristic function.
 """
-struct Characteristic{N,T} <: Domain{N}
+struct Characteristic{N,T} <: Domain{T}
     char    ::  Function
     box     ::  BBox{N,T}
 end
 
-Characteristic{N}(char::Function, dom::Domain{N}) = Characteristic(char,boundingbox(dom))
+Characteristic(char::Function, dom::Domain{T}) where {T} = Characteristic(char,boundingbox(dom))
 
 indomain(x, c::Characteristic) = c.char(x)
 

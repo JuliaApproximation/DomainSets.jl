@@ -4,7 +4,7 @@
 ### The unit ball in N dimensions
 ################################################################################
 
-struct UnitBall{N} <: Domain{N}
+struct UnitBall{N,T} <: EuclideanDomain{N,T}
 end
 
 indomain(x, ::UnitBall{1}) = -1 <= x <= 1
@@ -15,9 +15,9 @@ indomain{N}(x, ::UnitBall{N}) = sum(map(t->t^2, x)) <= 1
 
 boundingbox{N}(::UnitBall{N}) = BBox{N,Int}(-ones(SVector{N,Int}), ones(SVector{N,Int}))
 
-Disk() = UnitBall{2}()
-Disk(radius) = radius * Disk()
-Disk(radius, center) = radius * Disk() + center
+Disk(::Type{T} = Float64) where {T} = UnitBall{2,T}()
+Disk(radius) = radius * Disk(float(typeof(radius)))
+Disk(radius, center) = radius * Disk(promote_type(typeof(radius),eltype(center))) + center
 
 show(io::IO, d::UnitBall) = print(io, "the $(ndims(d))-dimensional unit ball")
 
@@ -29,7 +29,7 @@ const unitdisk = Disk()
 ### A 3D ball
 ################################################################################
 
-struct Ball{S,T} <: Domain{3}
+struct Ball{S,T} <: EuclideanDomain{3,T}
     radius    ::  S
     center    ::  SVector{3,T}
 

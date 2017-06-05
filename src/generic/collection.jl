@@ -3,8 +3,8 @@
 """
 A collection of domains.
 """
-type DomainCollection{N} <: Domain{N}
-    list    ::  Array{Domain{N},1}
+type DomainCollection{T} <: Domain{T}
+    list    ::  Array{Domain{T},1}
 end
 
 DomainCollection(d::Domain) = DomainCollection([d])

@@ -4,7 +4,8 @@
 ## The Mandelbrot set
 ###############################################################################
 
-struct Mandelbrot{T} <: Domain{2}
+# TODO: fractals should be subsets of the complex plane
+struct Mandelbrot{T} <: EuclideanDomain{2,T}
     maxiter     ::  Int
     threshold   ::  T
     maskcache   ::  Dict
@@ -77,7 +78,7 @@ show(io::IO, m::Mandelbrot) = print(io, "The Mandelbrot set")
 ## Julia sets
 ################
 
-struct JuliaSet{T} <: Domain{2}
+struct JuliaSet{T} <: EuclideanDomain{2,T}
     c           ::  Complex{T}
     maxiter     ::  Int
     maskcache   ::  Dict
