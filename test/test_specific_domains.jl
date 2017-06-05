@@ -69,7 +69,7 @@ function test_cube()
     D = Cube(2)
     @test [0.9, 0.9] ∈ D
     @test [1.1, 1.1] ∉ D
-    @test boundingbox(D) == BBox((0,0),(1,1))
+    @test boundingbox(D) == BBox((0.0,0.0),(1.0,1.0))
 
     #Cube
     D = Cube((-1.5,0.5,-3.0),(2.2,0.7,-1.0))

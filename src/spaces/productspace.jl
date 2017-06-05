@@ -16,41 +16,40 @@ tensorproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}) where {T,S} 
 tensorproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{GeometricSpace{U}}) where {T,S,U} = ProductSpace{Tuple{T,S,U}}
 tensorproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{GeometricSpace{U}}, ::Type{GeometricSpace{V}}) where {T,S,U,V} = ProductSpace{Tuple{T,S,U,V}}
 
-## Superspaces
+zero(::Type{ProductSpace{Tuple{T}}}) where {T} = (zero(T),)
+zero(::Type{ProductSpace{Tuple{T,S}}}) where {T,S} = (zero(T), zero(S))
+zero(::Type{ProductSpace{Tuple{T,S,U}}}) where {T,S,U} = (zero(T), zero(S), zero(U))
+zero(::Type{ProductSpace{Tuple{T,S,U,V}}}) where {T,S,U,V} = (zero(T), zero(S), zero(U), zero(V))
 
-# Tensor product spaces may be nested, and we intend to flatten them. We proceed
-# by removing tuples one at a time. We do this manually, and only for cases up
-# to four dimensions in total.
-#
-# The most natural isomorphism is between tuples with homogeneous types, and
-# static vectors: (T,T,T) and [T,T,T].
-# A nested example is (T,(T,T)), which we identify with (T,T,T).
-# A more nested case is (T,(T,(T,))), which we identify with (T,(T,T)), and so on.
-# We try to be general but focus on numeric types T in most cases,
-# i.e. we restrict to T <: Number, because T might otherwise match a Tuple.
 
-# The correspondence between (T,T,...T) and [T,T,T] is a one-liner.
-# Up to 4D this covers (T,), (T,T), (T,T,T), (T,T,T,T)
-superspace(::Type{GeometricSpace{NTuple{N,T}}}) where {N,T <: Number} = VectorSpace{N,T}
+## Isomorphisms
 
-# In 1D we can have nested tuples ((T,),)
-superspace(::Type{GeometricSpace{Tuple{Tuple{T}}}}) where {T} = GeometricSpace{Tuple{T}}
+# We can identify a product space with equal types with a vector space of the
+# same dimension and type. The agreement is between NTuple{N,T} and SVector{N,T}.
 
-##
-# We can identify a product space with equal types with a vector space of the same dimension and type
-# The agreement is between NTuple{N,T} and SVector{N,T}.
-##
+isomorphism_reduction(::Type{VectorSpace{N,T}}, ::Type{ProductSpace{NTuple{N,S}}}) where {N,T,S} =
+    (GeometricSpace{T}, GeometricSpace{S})
 
-embedding(::Type{ProductSpace{NTuple{N,S}}}, ::VectorSpace{N,T}) where {N,S,T} = promotes_to(S,T)
-embedding(::VectorSpace{N,S}, ::Type{ProductSpace{NTuple{N,T}}}) where {N,S,T} = promotes_to(S,T)
+convert_space(::Type{ProductSpace{NTuple{1,T}}}, x::SVector{1,T}) where {T} = Tuple(x)
+convert_space(::Type{ProductSpace{NTuple{2,T}}}, x::SVector{2,T}) where {T} = Tuple(x)
+convert_space(::Type{ProductSpace{NTuple{3,T}}}, x::SVector{3,T}) where {T} = Tuple(x)
+convert_space(::Type{ProductSpace{NTuple{4,T}}}, x::SVector{4,T}) where {T} = Tuple(x)
+# convert_space(::Type{ProductSpace{NTuple{N,T}}}, x::SVector{N,T}) where {N,T} = Tuple(x)
+convert_space(::Type{VectorSpace{N,T}}, x::NTuple{N,T}) where {N,T} = SVector{N,T}(x)
 
-function convert(::Type{ProductSpace{NTuple{N,T}}}, x::SVector{N,S}) where {N,T,S}
-    NTuple{N,T}(x)
-end
+# We identity (T,(T,T)) with [T,T,T]
 
-function convert(::Type{VectorSpace{N,T}}, x::NTuple{N,S}) where {N,T,S}
-    SVector{N,T}(x)
-end
+isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{S,SVector{2,S}}}}) where {T,S} =
+    (GeometricSpace{T}, GeometricSpace{T})
 
-# We prefer the SVector representation in case of mixing, since it acts like a vector.
-isomorphism_promotion_rule(::Type{ProductSpace{NTuple{N,S}}}, ::VectorSpace{N,T}) where {N,S,T} = VectorSpace{N,T}
+convert_space(::Type{ProductSpace{Tuple{T,SVector{2,T}}}}, x::SVector{3,S}) where {T,S} = (x[1], (x[2],x[3]))
+convert_space(::Type{VectorSpace{3,T}}, x::Tuple{S,SVector{2,S}}) where {T,S} = SVector{3,T}(x[1], x[2][1], x[2][2])
+
+# We identity ((T,T),T) with [T,T,T]
+
+isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{SVector{2,S},S}}}) where {T,S} =
+    (GeometricSpace{T}, GeometricSpace{S})
+
+# The line below causes a stack overflow when loading...
+convert_space(::Type{ProductSpace{Tuple{SVector{2,T},T}}}, x::SVector{3,T}) where {T} = ((x[1], x[2]), x[3])
+convert_space(::Type{VectorSpace{3,T}}, x::Tuple{SVector{2,T},T}) where {T} = SVector{3,T}(x[1][1], x[1][2], x[2])
