@@ -22,12 +22,13 @@ eltype(::Type{D}) where {D <: Domain} = eltype(supertype(D))
 "We use `Point{N,T}` as a synonym for `SVector{N,T}`."
 const Point{N,T} = SVector{N,T}
 
-abstract type EuclideanDomain{N,T} <: Domain{Point{N,T}}
-end
+const EuclideanDomain{N,T} = Domain{Point{N,T}}
 
-ndims(::Type{EuclideanDomain{N,T}}) where {N,T} = N
-ndims(::Type{D}) where {D <: EuclideanDomain} = ndims(supertype(D))
+ndims(::Type{Domain{T}}) where {T} = ndims_type(T)
+ndims(::Type{D}) where {D <: Domain} = ndims(supertype(D))
 ndims(d::Domain) = ndims(typeof(d))
+ndims_type(::Type{SVector{N,T}}) where {N,T} = N
+ndims_type(::Type{T}) where {T <: Number} = 1
 
 
 
@@ -47,10 +48,13 @@ right(d::Domain, i::Int) = right(boundingbox(d), i)
 
 # We implement the indicator function by overriding `in`.
 # The implementation of `in` at the level of Domain converts the point into
-# the element type of the domain, and calls `indomain`. Concrete subtypes
-# should implement `indomain`, rather than `in`.
+# the element type of the domain using promotion, and calls `indomain`.
+# Concrete subtypes should implement `indomain`, rather than `in`.
 in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 in(x::S, d::Domain{T}) where {T,S} = in(convert(T, x), d)
+
+# The user may supply a vector. We attempt to convert it to the right space.
+in(x::Vector{T}, d::Domain) where {T} = in(convert(SVector{ndims(typeof(d)),T}, x), d)
 
 # Check whether a value is in an interval, up to 10 times machine precision
 in(x::Number, a::T, b::T) where {T <: AbstractFloat} = (a-10eps(T) <= x <= b+10eps(T))

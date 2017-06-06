@@ -11,7 +11,8 @@ using StaticArrays
 ################################
 
 # Operator symbols
-import Base: *, +, -, /, \, ^, |, &
+import Base: *, +, -, /, \, ^
+import Base: |, &
 import Base: ∪, ∩
 import Base: ==
 
@@ -58,7 +59,7 @@ export ⊂
 export GeometricSpace, AnySpace
 export spaceof, spacetype, origin, superspace, issubspace, subeltype
 # from spaces/space_promotions.jl
-export convert_space, promote_space
+export convert_space, promote_space, promote_space_type
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
 export IntegerSpace, RationalSpace, RealSpace, ComplexSpace
@@ -126,8 +127,6 @@ export rectangle, cube, cylinder, randomcircles
 export Mandelbrot, JuliaSet
 # from domains/characteristic.jl
 export Characteristic
-# from domains/atomium.jl
-export atomium
 
 
 include("util/common.jl")
@@ -158,6 +157,5 @@ include("domains/interval.jl")
 include("domains/simple.jl")
 include("domains/fractals.jl")
 include("domains/characteristic.jl")
-include("domains/atomium.jl")
 
 end # module

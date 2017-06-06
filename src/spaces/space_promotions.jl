@@ -16,6 +16,24 @@ const False = Val{false}
 (&)(::Type{True}, ::Type{False}) = False
 (&)(::Type{False}, ::Type{True}) = False
 (&)(::Type{False}, ::Type{False}) = False
+(|)(::Type{True}, ::Type{True}) = True
+(|)(::Type{True}, ::Type{False}) = True
+(|)(::Type{False}, ::Type{True}) = True
+(|)(::Type{False}, ::Type{False}) = False
+
+# Return True if one of the arguments is True
+one_of(::Type{True}) = True
+one_of(::Type{False}) = False
+one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(a,b)
+one_of(a::Type{Val{A}}, b::Type{Val{B}}, c::Type{Val{C}}, d...) where {A,B,C} = one_of(a, one_of(b, c, d...))
+
+# Find the first space in a list of arguments that is not AnySpace
+lcd(::Type{GSpace{T}}) where {T} = GSpace{T}
+lcd(::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
+lcd(::Type{AnySpace}, ::Type{GSpace{T}}) where {T} = GSpace{T}
+lcd(::Type{GSpace{T}}, ::Type{AnySpace}) where {T} = GSpace{T}
+lcd(::Type{GSpace{T}}, ::Type{GSpace{S}}) where {T,S} = GSpace{T}
+lcd(A::Type{GSpace{T}}, B::Type{GSpace{S}}, C::Type{GSpace{U}}, D...) where {T,S,U} = lcd(A, lcd(B, C, D...))
 
 # Convert the type to a value
 result(::Type{True}) = true
@@ -76,29 +94,6 @@ isomorphic(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} = result(isomorph
 ≅ = isomorphic
 
 
-"""
-If two spaces `A` and `B` are isomorphic, then there is an ambiguity when an
-element of `A` and an element of `B` are promoted. The choice is decided by
-the space returned by `isomorphism_promotion_rule(A,B)`.
-
-It is sufficient to define the function once, the order of the arguments does not
-matter.
-"""
-# Default: if two spaces are identical, we return that one.
-isomorphism_promotion_rule(::Type{GSpace{T}}, ::Type{GSpace{T}}) where {T} = GSpace{T}
-# # Fallback: we check the superspaces
-# isomorphism_promotion_rule(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
-#     _isomorphism_promotion_rule(A, B, superspace(A), superspace(B))
-#
-# # - the superspace of A (argument C) equals B: we choose B
-# _isomorphism_promotion_rule(A::Type{GSpace{T}}, B::Type{GSpace{S}},
-#     C::Type{GSpace{S}}, D::Type{GSpace{V}}) where {T,S,V} = B
-# # - the superspace of B (argument D) equals A: we choose A
-# _isomorphism_promotion_rule(A::Type{GSpace{T}}, B::Type{GSpace{S}},
-#     C::Type{GSpace{U}}, D::Type{GSpace{T}}) where {T,S,U} = A
-# # - neither superspaces match anything, we arbitrarily return A
-# _isomorphism_promotion_rule(A::Type{GSpace{T}}, B::Type{GSpace{S}},
-#     C::Type{GSpace{U}}, D::Type{GSpace{V}}) where {T,S,U,V} = A
 
 
 #############
@@ -113,10 +108,10 @@ otherwise it returns False.
 
 Embeddings are the result of the following rules:
 1) A{T} is embedded in A{S} if T promotes to S in the Julia type system
-2) Say A and B are isomorphic if C and D are. Then A{C} is embedded in B{D} if
-   C is embedded in D.
-3) If a rule embedding_reduction(A,B) = (C,D) has been defined, then A is
+2) If a rule embedding_reduction(A,B) = (C,D) has been defined, then A is
    embedded in B if C is embedded in D.
+3) Say A and B are isomorphic if C and D are. This automatically results in
+   embedding reduction rules from A to B and from B to A.
 4) A is embedded in B if the superspace of A is embedded in B.
 """
 embedding(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{T}}) where {T} = True
@@ -131,20 +126,10 @@ embedding(::Type{AnySpace}, ::Type{GeometricSpace{T}}) where {T} = False
 # We try all different cases. For isomorphisms, we have to check isomorphism_reduction
 # with both possible orders of the arguments (A,B) and (B,A).
 embedding(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
-    embedding_result(A, B,
+    one_of(
         embedding_via_promotion(A, B),
-        embedding_via_isomorphism1(A, B),
-        embedding_via_isomorphism2(A, B),
         embedding_via_reduction(A, B),
         embedding_via_superspace(A, B))
-
-# Only one has to be true for the result to be true. We check one by one.
-embedding_result(A, B, ::Type{True}, d2, d3, d4, d5) = True
-embedding_result(A, B, ::Type{False}, ::Type{True}, d3, d4, d5) = True
-embedding_result(A, B, ::Type{False}, ::Type{False}, ::Type{True}, d4, d5) = True
-embedding_result(A, B, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{True}, d5) = True
-embedding_result(A, B, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{True}) = True
-embedding_result(A, B, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{False}) = False
 
 
 embedding_via_promotion(A, B) =
@@ -152,20 +137,16 @@ embedding_via_promotion(A, B) =
 _embedding_via_promotion(::Type{GSpace{T}}, ::Type{GSpace{S}}, ::Type{S}) where {T,S} = True
 _embedding_via_promotion(::Type{GSpace{T}}, ::Type{GSpace{S}}, ::Type{U}) where {T,S,U} = False
 
-embedding_via_isomorphism1(A, B) = _embedding_via_isomorphism1(A, B, isomorphism_reduction(A,B)...)
-# There is no isomorphism_reduction, at least in the order (A,B)
-_embedding_via_isomorphism1(A, B) = False
-# A and B are isomorphic if C and D are: check whether C is embedded in D
-_embedding_via_isomorphism1(A, B, C, D) = embedding(C, D)
-
-embedding_via_isomorphism2(A, B) = _embedding_via_isomorphism2(A, B, isomorphism_reduction(B,A)...)
-# There is no isomorphism_reduction in the order (B,A)
-_embedding_via_isomorphism2(A, B) = False
-# A and B are isomorphic if C and D are: check whether D is embedded in C
-_embedding_via_isomorphism2(A, B, C, D) = embedding(D, C)
-
-# By default, a space is not embedded in another space
-embedding_reduction(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} = ()
+# By default, two spaces have no embedding reduction rules.
+# However, if there is an isomorphic_reduction rule, then there is automatically
+# an embedding_reduction possible in both directions.
+embedding_reduction(::Type{GSpace{T}}, ::Type{GSpace{T}}) where {T} = ()
+embedding_reduction(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
+   _embedding_reduction(A, B, isomorphism_reduction(A,B)..., 1, isomorphism_reduction(B,A)...)
+_embedding_reduction(A, B, ::Int) = ()
+_embedding_reduction(A, B, C, D, ::Int) = (C,D)
+_embedding_reduction(A, B, ::Int, E, F) = (F,E)
+_embedding_reduction(A, B, C, D, ::Int, E, F) = (C,D)
 
 embedding_via_reduction(A, B) = _embedding_via_reduction(A, B, embedding_reduction(A, B)...)
 # There was no specific rule for A and B
@@ -203,39 +184,22 @@ convert_space(B::Type{GSpace{T}}, x) where {T} = convert_spaces(x, spaceof(x), B
 
 convert_spaces(x, A, B) = convert_spaces(x, A, B,
     embedding_via_promotion(A, B),
-    embedding_via_isomorphism1(A, B),
-    embedding_via_isomorphism2(A, B),
     embedding_via_reduction(A, B),
-    embedding_via_superspace(A,B))
+    embedding_via_superspace(A, B))
 
-convert_spaces(x, A, B, ::Type{True}, d2, d3, d4, d5) =
+convert_spaces(x, A, B, ::Type{True}, d2, d3) =
     convert_space_via_promotion(x, A, B)
-convert_spaces(x, A, B, ::Type{False}, ::Type{True}, d3, d4, d5) =
-    convert_space_via_isomorphism1(x, A, B)
-convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{True}, d4, d5) =
-    convert_space_via_isomorphism2(x, A, B)
-convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{True}, d5) =
+convert_spaces(x, A, B, ::Type{False}, ::Type{True}, d3) =
     convert_space_via_reduction(x, A, B)
-convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{False}, ::Type{True}) =
+convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{True}) =
     convert_space_via_superspace(x, A, B)
 
 
 # Embedding via promotion: promote the type of x using convert
 convert_space_via_promotion(x, A, B) = convert(eltype(B), x)
 
-# Embedding via isomorphism in the first direction:
-# - we have to apply the isomorphism reduction: A is isomorphic to B if C is isomorphic to D
-# - we upgrade the space A{C} to A{D}
-# - and then convert A{D} to B{D}
-convert_space_via_isomorphism1(x, A, B) =
-    _convert_space_via_isomorphism1(x, A, B, isomorphism_reduction(A, B)...)
-_convert_space_via_isomorphism1(x, A, B, C, D) = convert_space(B, convert_space(similar_space(A, eltype(D)), x))
-
-# Embedding via isomorphism in the other direction: similar to the case above
-convert_space_via_isomorphism2(x, A, B) =
-    _convert_space_via_isomorphism2(x, A, B, isomorphism_reduction(B, A)...)
-_convert_space_via_isomorphism2(x, A, B, C, D) = convert_space(B, convert_space(similar_space(A, eltype(C)), x))
-
+# Embedding via reduction: if A is embedded in B if C is embedded in D,
+# then we have to upgrade the space A{C} to A{D}
 convert_space_via_reduction(x, A, B) = _convert_space_via_reduction(x, A, B, embedding_reduction(A, B)...)
 _convert_space_via_reduction(x, A, B, C, D) = convert_space(B, convert_space(similar_space(A, eltype(D)), x))
 
@@ -279,7 +243,7 @@ promote_space_type(::Type{GSpace{T}}, ::Type{AnySpace}) where {T} = AnySpace
 promote_space_type(::Type{GSpace{T}}, ::Type{GSpace{T}}) where {T} = GSpace{T}
 
 promote_space_type(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
-    promote_space_result(A, B,
+    lcd(
         promote_via_promotion(A,B),
         promote_via_superspace(A,B),
         promote_via_embedding_reduction(A,B),
@@ -304,11 +268,7 @@ _promote_via_promotion(A, B, ::Type{T}, ::Type{T}, ::Type{T}) where {T} = A
 _promote_via_promotion(A, B, ::Type{T}, ::Type{S}, ::Type{U}) where {T,S,U} = AnySpace
 
 
-promote_via_superspace(A, B) = _promote_via_superspace(A, B, promote_space_type(superspace(A),B), promote_space_type(A,superspace(B)))
-_promote_via_superspace(A, B, ::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
-_promote_via_superspace(A, B, ::Type{AnySpace}, ::Type{GSpace{T}}) where {T} = GSpace{T}
-_promote_via_superspace(A, B, ::Type{GSpace{T}}, ::Type{AnySpace}) where {T} = GSpace{T}
-_promote_via_superspace(A, B, ::Type{GSpace{T}}, ::Type{GSpace{S}}) where {T,S} = GSpace{T}
+promote_via_superspace(A, B) = lcd(promote_space_type(superspace(A),B), promote_space_type(A,superspace(B)))
 
 promote_via_embedding_reduction(A, B) = _promote_via_embedding_reduction(A, B, embedding_reduction(A,B)..., 1, embedding_reduction(B,A)...)
 # We passed a dummy Int to distinguish between the cases below
@@ -324,6 +284,8 @@ _promote_via_embedding_reduction(A, B, ::Int, C, D) = _promote_via_embedding_red
 _promote_via_embedding_reduction2(A, B, C, D, E::Type{AnySpace}) = AnySpace
 # - in case promotion of C and D is succesful, we promote A{C} to A{E}
 _promote_via_embedding_reduction2(A, B, C, D, E::Type{GSpace{T}}) where {T} = similar_space(A, T)
+# Third case: A is embedded in B and B is in A: we rely on isomorphism_reduction
+_promote_via_embedding_reduction(A, B, C, D, ::Int, E, F) = AnySpace
 
 
 promote_via_isomorphism_reduction(A, B) = _promote_via_isomorphism_reduction(A, B, isomorphism_reduction(A,B)..., 1, isomorphism_reduction(B,A)...)

@@ -3,7 +3,8 @@
 """
 A map is any transformation of the form y = f(x).
 """
-abstract type AbstractMap end
+abstract type AbstractMap
+end
 
 forward_map(map::AbstractMap, x) = nothing
 

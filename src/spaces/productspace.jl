@@ -24,19 +24,6 @@ zero(::Type{ProductSpace{Tuple{T,S,U,V}}}) where {T,S,U,V} = (zero(T), zero(S), 
 
 ## Isomorphisms
 
-# We can identify a product space with equal types with a vector space of the
-# same dimension and type. The agreement is between NTuple{N,T} and SVector{N,T}.
-
-isomorphism_reduction(::Type{VectorSpace{N,T}}, ::Type{ProductSpace{NTuple{N,S}}}) where {N,T,S} =
-    (GeometricSpace{T}, GeometricSpace{S})
-
-convert_space(::Type{ProductSpace{NTuple{1,T}}}, x::SVector{1,T}) where {T} = Tuple(x)
-convert_space(::Type{ProductSpace{NTuple{2,T}}}, x::SVector{2,T}) where {T} = Tuple(x)
-convert_space(::Type{ProductSpace{NTuple{3,T}}}, x::SVector{3,T}) where {T} = Tuple(x)
-convert_space(::Type{ProductSpace{NTuple{4,T}}}, x::SVector{4,T}) where {T} = Tuple(x)
-# convert_space(::Type{ProductSpace{NTuple{N,T}}}, x::SVector{N,T}) where {N,T} = Tuple(x)
-convert_space(::Type{VectorSpace{N,T}}, x::NTuple{N,T}) where {N,T} = SVector{N,T}(x)
-
 # We identity (T,(T,T)) with [T,T,T]
 
 isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{S,SVector{2,S}}}}) where {T,S} =
@@ -50,6 +37,14 @@ convert_space(::Type{VectorSpace{3,T}}, x::Tuple{S,SVector{2,S}}) where {T,S} = 
 isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{SVector{2,S},S}}}) where {T,S} =
     (GeometricSpace{T}, GeometricSpace{S})
 
-# The line below causes a stack overflow when loading...
 convert_space(::Type{ProductSpace{Tuple{SVector{2,T},T}}}, x::SVector{3,T}) where {T} = ((x[1], x[2]), x[3])
 convert_space(::Type{VectorSpace{3,T}}, x::Tuple{SVector{2,T},T}) where {T} = SVector{3,T}(x[1][1], x[1][2], x[2])
+
+# We can identify a product space with equal types with a vector space of the
+# same dimension and type. The agreement is between NTuple{N,T} and SVector{N,T}.
+
+isomorphism_reduction(::Type{VectorSpace{N,T}}, ::Type{ProductSpace{NTuple{N,S}}}) where {N,T,S} =
+    (GeometricSpace{T}, GeometricSpace{S})
+
+convert_space(::Type{ProductSpace{NTuple{N,T}}}, x::SVector{N,T}) where {N,T} = Tuple(x)
+convert_space(::Type{VectorSpace{N,T}}, x::NTuple{N,T}) where {N,T} = SVector{N,T}(x)

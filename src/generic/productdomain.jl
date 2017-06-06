@@ -4,7 +4,18 @@
 # A tensor product of Domains
 ###############################
 
-product_eltype(domains::Domain...) = Tuple{map(eltype, domains)...}
+"""
+Create an eltype that is suitable for a product domain. By default, a tuple type
+that contains the element types is returned. However, if the types are homogeneous,
+they are collected into an SVector.
+
+for example:
+`product_eltype(::Domain{Int}, ::Domain{Float64}) -> Tuple{Int,Float64}`
+`product_eltype(::Domain{Float64}, ::Domain{Float64}) -> SVector{2,Float64}`
+"""
+product_eltype(domains::Domain...) = _product_eltype(Tuple{map(eltype, domains)...})
+_product_eltype(::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
+_product_eltype(::Type{T}) where {T} = T
 
 """
 A `ProductDomain` represents the tensor product of other domains.
@@ -38,7 +49,7 @@ tensorproduct(d::Domain...) =
 
 ^(d::Domain, n::Int) = tensorproduct(d, n)
 
-indomain(x, d::ProductDomain) = reduce(&, map(indomain, x, d))
+indomain(x, d::ProductDomain) = reduce(&, map(indomain, x, elements(d)))
 
 # indomain(x::SVector{2}, d1::Domain{1}, d2::Domain{1}) =
 # 	indomain(x[1], d1) && indomain(x[2], d2)

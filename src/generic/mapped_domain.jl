@@ -1,8 +1,8 @@
 # mapped_domain.jl
 
-#######################
+##################
 # Mapped domains
-#######################
+##################
 
 """
 A MappedDomain consists of a domain and a bidirectional map. The forward map
@@ -62,7 +62,7 @@ apply_map(d::MappedDomain, map::AbstractMap) = MappedDomain(domain(d), map*mappi
 
 (*)(map::AbstractMap, domain::Domain) = apply_map(domain, map)
 
-(*)(domain::Domain, a::Number) = scaling_map(a*ones(eltype(domain))) * domain
+(*)(domain::Domain, a::Number) = scaling_map(a*diagm(ones(eltype(domain)))) * domain
 
 # TODO: revise
 (+){N,T}(d::Domain{N}, x::SVector{N,T}) = AffineMap(eye(SMatrix{N,N,T}),x) * d

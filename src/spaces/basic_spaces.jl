@@ -45,25 +45,25 @@ similar_space(::Type{ArraySpace{N,T}}, ::Type{S}) where {N,T,S} = ArraySpace{N,S
 
 ## Convenience functions
 
-^(::GeometricSpace{T}, ::Val{N}) where {T <: Number,N} = VectorSpace{N,T}()
+^(::Type{GeometricSpace{T}}, ::Type{Val{N}}) where {T <: Number,N} = VectorSpace{N,T}
 
 ## Some standard spaces
 
 "The set of integers of type Int (ℤ = \BbbZ)."
-const ℤ = IntegerSpace{Int}()
+const ℤ = IntegerSpace{Int}
 "The set of rational numbers of type Rational{Int} (ℚ = \BbbQ)."
-const ℚ = RationalSpace{Int}()
+const ℚ = RationalSpace{Int}
 "The set of reals of type Float64 (ℝ = \BbbR)."
-const ℝ = RealSpace{Float64}()
+const ℝ = RealSpace{Float64}
 "The complex plane with Float64 real and imaginar parts (ℂ = \BbbC)."
-const ℂ = ComplexSpace{Float64}()
+const ℂ = ComplexSpace{Float64}
 
 "The space ℝ^2"
-const ℝ2 = ℝ^Val{2}()
+const ℝ2 = ℝ^Val{2}
 "The space ℝ^3"
-const ℝ3 = ℝ^Val{3}()
+const ℝ3 = ℝ^Val{3}
 "The space ℝ^4"
-const ℝ4 = ℝ^Val{4}()
+const ℝ4 = ℝ^Val{4}
 
 
 
@@ -74,7 +74,7 @@ const ℝ4 = ℝ^Val{4}()
 
 ## Isomorphism between scalars and 1D vectors
 
-isomorphism_reduction(::Type{GeometricSpace{T}}, ::Type{VectorSpace{1,S}}) where {T,S} =
+isomorphism_reduction(::Type{GeometricSpace{T}}, ::Type{VectorSpace{1,S}}) where {T <: Number,S} =
     (GeometricSpace{T},GeometricSpace{S})
 
 convert_space(::Type{GeometricSpace{T}}, x::SVector{1,T}) where {T} = x[1]
@@ -85,7 +85,7 @@ convert_space(::Type{VectorSpace{1,T}}, x::T) where {T} = SVector(x)
 isomorphism_reduction(::Type{VectorSpace{2,T}}, ::Type{ComplexSpace{S}}) where {T,S} =
     (GeometricSpace{T},GeometricSpace{S})
 
-convert_space(::Type{ComplexSpace{Complex{T}}}, x::SVector{2,T}) where {T} = x[1] + im*x[2]
+convert_space(::Type{ComplexSpace{T}}, x::SVector{2,T}) where {T} = x[1] + im*x[2]
 convert_space(::Type{VectorSpace{2,T}}, x::Complex{T}) where {T} = SVector(real(x), imag(x))
 
 ## Isomorphism between vector spaces of the same dimension

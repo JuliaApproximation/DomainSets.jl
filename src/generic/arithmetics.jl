@@ -13,24 +13,26 @@
 ### The union of two domains
 ################################################################################
 
-struct DomainUnion{D1,D2,T} <: Domain{T}
+struct UnionDomain{D1,D2,T} <: Domain{T}
     d1    ::  D1
     d2    ::  D2
 
-    DomainUnion{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
+    UnionDomain{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
 end
 
-DomainUnion(d1::Domain{T}, d2::Domain{T}) where {T} = DomainUnion{typeof(d1),typeof(d2),T}(d1, d2)
+UnionDomain(d1::Domain{T}, d2::Domain{T}) where {T} = UnionDomain{typeof(d1),typeof(d2),T}(d1, d2)
 
-union(d1::Domain, d2::Domain) = (d1 == d2 ? d1 : DomainUnion(d1,d2))
+# UnionDomain(d1::Domain{T}, d2::Domain{S}) where {T,S} = 
+
+union(d1::Domain, d2::Domain) = (d1 == d2 ? d1 : UnionDomain(d1,d2))
 
 
 # The union of two domains corresponds to a logical OR of their characteristic functions
-indomain(x, d::DomainUnion) = in(x, d.d1) || in(x, d.d2)
+indomain(x, d::UnionDomain) = in(x, d.d1) || in(x, d.d2)
 
-function indomain_grid(grid, d::DomainUnion)
-    z1 = indomain_grid(grid, d.d1)
-    z2 = indomain_grid(grid, d.d2)
+function indomain_broadcast(grid, d::UnionDomain)
+    z1 = indomain_broadcast(grid, d.d1)
+    z2 = indomain_broadcast(grid, d.d2)
     z1 .| z2
 end
 
@@ -38,9 +40,9 @@ end
 (|)(d1::Domain, d2::Domain) = union(d1,d2)
 
 
-boundingbox(d::DomainUnion) = boundingbox(d.d1) ∪ boundingbox(d.d2)
+boundingbox(d::UnionDomain) = boundingbox(d.d1) ∪ boundingbox(d.d2)
 
-function show(io::IO, d::DomainUnion)
+function show(io::IO, d::UnionDomain)
     print(io, "a union of two domains: \n")
     print(io, "    First domain: ", d.d1, "\n")
     print(io, "    Second domain: ", d.d2, "\n")
@@ -63,9 +65,9 @@ DomainIntersection(d1::Domain{T},d2::Domain{T}) where {T} = DomainIntersection{t
 # The intersection of two domains corresponds to a logical AND of their characteristic functions
 indomain(x, d::DomainIntersection) = in(x, d.d1) && in(x, d.d2)
 
-function indomain_grid(grid, d::DomainIntersection)
-    z1 = indomain_grid(grid, d.d1)
-    z2 = indomain_grid(grid, d.d2)
+function indomain_broadcast(grid, d::DomainIntersection)
+    z1 = indomain_broadcast(grid, d.d1)
+    z2 = indomain_broadcast(grid, d.d2)
     z1 .& z2
 end
 
@@ -111,9 +113,9 @@ setdiff(d1::Domain, d2::Domain) = DomainDifference(d1, d2)
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
 indomain(x, d::DomainDifference) = indomain(x, d.d1) && (~indomain(x, d.d2))
 
-function indomain_grid(grid, d::DomainDifference)
-    z1 = indomain_grid(grid, d.d1)
-    z2 = indomain_grid(grid, d.d2)
+function indomain_broadcast(grid, d::DomainDifference)
+    z1 = indomain_broadcast(grid, d.d1)
+    z2 = indomain_broadcast(grid, d.d2)
     z1 .& (~z2)
 end
 
