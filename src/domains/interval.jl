@@ -196,8 +196,6 @@ end
 (*)(d::Interval, a::Number) = a * d
 
 
-boundingbox(d::Interval) = BBox(leftendpoint(d), rightendpoint(d))
-
 show(io::IO, d::Interval) = print(io, "the interval [", d.a, ", ", d.b, "]")
 
 

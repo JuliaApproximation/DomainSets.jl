@@ -1,9 +1,9 @@
 # simple.jl
+# A collection of simple domains.
 
-################################################################################
-### The unit ball in N dimensions
-################################################################################
-
+"""
+The unit ball (of radius 1) in N dimensions.
+"""
 struct UnitBall{N,T} <: EuclideanDomain{N,T}
 end
 
@@ -11,9 +11,7 @@ indomain(x, ::UnitBall{1}) = -1 <= x <= 1
 indomain(x, ::UnitBall{2}) = x[1]^2+x[2]^2 <= 1
 indomain(x, ::UnitBall{3}) = x[1]^2+x[2]^2+x[3]^2 <= 1
 
-indomain{N}(x, ::UnitBall{N}) = sum(map(t->t^2, x)) <= 1
-
-boundingbox{N}(::UnitBall{N}) = BBox{N,Int}(-ones(SVector{N,Int}), ones(SVector{N,Int}))
+indomain(x, ::UnitBall{N}) where {N} = sum(map(t->t^2, x)) <= 1
 
 Disk(::Type{T} = Float64) where {T} = UnitBall{2,T}()
 Disk(radius) = radius * Disk(float(typeof(radius)))
@@ -52,8 +50,6 @@ indomain(x, s::Ball) = (x[1]-s.center[1])^2 + (x[2]-s.center[2])^2 + (x[3]-s.cen
 
 (*)(s::Ball, x::Number) = Ball(s.radius * x, s.center * x)
 
-
-boundingbox(c::Ball) = BBox((c.center[1]-c.radius,c.center[2]-c.radius,c.center[3]-c.radius),(c.center[1]+c.radius,c.center[2]+c.radius,c.center[3]+c.radius))
 
 show(io::IO, s::Ball) = print(io, "a ball of radius ", s.radius, " centered at ", s.center)
 

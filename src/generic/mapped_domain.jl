@@ -29,33 +29,6 @@ mapping(d::MappedDomain) = d.fmap
 
 indomain(x, d::MappedDomain) = indomain(inverse_map(mapping(d), x), domain(d))
 
-# Now here is a problem: how do we compute a bounding box, without extra knowledge
-# of the map? We can only do this for some maps.
-boundingbox(d::MappedDomain) = mapped_boundingbox(boundingbox(domain(d)), mapping(d))
-
-function mapped_boundingbox(box::BBox1, fmap)
-    l,r = box[1]
-    ml = fmap*l
-    mr = fmap*r
-    BBox(min(ml,mr), max(ml,mr))
-end
-
-# In general, we can at least map all the corners of the bounding box of the
-# underlying domain, and compute a bounding box for those points. This will be
-# correct for affine maps.
-function mapped_boundingbox{N}(box::BBox{N}, fmap)
-    crn = corners(box)
-    mapped_corners = [fmap*c for c in crn]
-    left = [minimum([mapped_corners[i][j] for i in 1:length(mapped_corners)]) for j in 1:N]
-    right = [maximum([mapped_corners[i][j] for i in 1:length(mapped_corners)]) for j in 1:N]
-    BBox(left, right)
-end
-
-# We can do better for diagonal maps, since the problem simplifies: each dimension
-# is mapped independently.
-mapped_boundingbox{N}(box::BBox{N}, fmap::ProductMap) =
-    tensorproduct([mapped_boundingbox(element(box,i), element(fmap,i)) for i in 1:N]...)
-
 apply_map(domain::Domain, map::AbstractMap) = MappedDomain(domain, map)
 
 apply_map(d::MappedDomain, map::AbstractMap) = MappedDomain(domain(d), map*mapping(d))

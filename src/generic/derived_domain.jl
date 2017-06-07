@@ -14,8 +14,3 @@ end
 superdomain(d::DerivedDomain) = d.superdomain
 
 indomain(x, d::DerivedDomain) = indomain(x, superdomain(d))
-indomain_broadcast(grid, d::DerivedDomain) = indomain_broadcast(grid, superdomain(d))
-
-indomain_broadcast!(result, grid, d::DerivedDomain) = indomain_broadcast!(result, grid, superdomain(d))
-
-boundingbox(d::DerivedDomain) = boundingbox(superdomain(d))

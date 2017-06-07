@@ -285,6 +285,9 @@ _promote_via_embedding_reduction2(A, B, C, D, E::Type{AnySpace}) = AnySpace
 # - in case promotion of C and D is succesful, we promote A{C} to A{E}
 _promote_via_embedding_reduction2(A, B, C, D, E::Type{GSpace{T}}) where {T} = similar_space(A, T)
 # Third case: A is embedded in B and B is in A: we rely on isomorphism_reduction
+# in order to get the right preferential promotion type.
+# The only risk we take here is that A is embedded in B and B is embedded in A, but
+# for some reason the isomorphism between A and B is not defined.
 _promote_via_embedding_reduction(A, B, C, D, ::Int, E, F) = AnySpace
 
 

@@ -28,9 +28,6 @@ import Base: zero
 # Types, promotions and conversions
 import Base: convert, widen
 
-# The broadcast mechanism
-import Base: broadcast
-
 # Iteration protocol
 import Base: start, next, done
 
@@ -48,9 +45,6 @@ import Base: show
 export elements, element, nb_elements
 # from util/tensorproducts.jl
 export flatten, tensorproduct, ⊗
-# from util/box.jl
-export BBox, BBox1, BBox2, BBox3, BBox4
-export ⊂
 
 
 ## Spaces
@@ -64,7 +58,7 @@ export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
 export IntegerSpace, RationalSpace, RealSpace, ComplexSpace
 export VectorSpace, EuclideanSpace, ArraySpace
-export ℤ, ℚ, ℝ, ℂ, ℝ2, ℝ3, ℝ4
+export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from spaces/productspace.jl
 export ProductSpace
 
@@ -90,16 +84,13 @@ export CompositeMap
 
 # from generic/domain.jl
 export Domain, Domain1d, Domain2d, Domain3d, Domain4d
-export indomain, boundingbox
-export left, right
+export indomain
 
 # from generic/productdomain.jl
 export ProductDomain, tensorproduct, ⊗
 
 # from generic/arithmetics.jl
-export DomainDifference, DomainUnion, DomainIntersection, RevolvedDomain, RotatedDomain,
-    TranslatedDomain
-export rotate, revolve
+export UnionDomain, IntersectionDomain, DifferenceDomain
 
 # from generic/collection.jl
 export DomainCollection
@@ -119,19 +110,14 @@ export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
 export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval
-export interval
+export interval, leftendpoint, rightendpoint
 # from domains/simple.jl
 export UnitBall, Disk, Ball, Cube
 export rectangle, cube, cylinder, randomcircles
-# from domains/fractals.jl
-export Mandelbrot, JuliaSet
-# from domains/characteristic.jl
-export Characteristic
 
 
 include("util/common.jl")
 include("util/tensorproducts.jl")
-include("util/box.jl")
 
 include("spaces/space.jl")
 include("spaces/space_promotions.jl")
@@ -155,7 +141,5 @@ include("generic/mapped_domain.jl")
 include("domains/trivial.jl")
 include("domains/interval.jl")
 include("domains/simple.jl")
-include("domains/fractals.jl")
-include("domains/characteristic.jl")
 
 end # module

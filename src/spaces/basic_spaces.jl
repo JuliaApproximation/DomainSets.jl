@@ -58,6 +58,8 @@ const ℝ = RealSpace{Float64}
 "The complex plane with Float64 real and imaginar parts (ℂ = \BbbC)."
 const ℂ = ComplexSpace{Float64}
 
+"The space ℝ^1"
+const ℝ1 = ℝ^Val{1}
 "The space ℝ^2"
 const ℝ2 = ℝ^Val{2}
 "The space ℝ^3"

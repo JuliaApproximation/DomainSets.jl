@@ -9,7 +9,6 @@ end
 
 DomainCollection(d::Domain) = DomainCollection([d])
 
-
 length(d::DomainCollection) = length(d.list)
 
 domain(d::DomainCollection, i) = d.list[i]
@@ -29,24 +28,6 @@ function indomain(x, dc::DomainCollection)
     z
 end
 
-function indomain_grid!(z, grid, dc::DomainCollection)
-    for d in dc
-        indomain_grid!(z, grid, d)
-    end
-    z
-end
-
 push!(dc::DomainCollection, d::Domain) = push!(dc.list, d)
-
-
-
-function boundingbox(d::DomainCollection)
-    ubox = boundingbox(d.list[1])
-    for i = 2:length(d.list)
-        ubox = union(ubox, boundingbox(d.list[i]))
-    end
-    ubox
-end
-
 
 show(io::IO, d::DomainCollection) = print(io, "a collection of ", length(d.list), " domains")
