@@ -131,6 +131,8 @@ const HalfOpenRightInterval{T} = Interval{:closed,:open,T}
 # By default we create a closed interval
 Interval(args...) = ClosedInterval(args...)
 
+Interval{T}(args...) where {T <: Number} = ClosedInterval{T}(args...)
+
 # By default we use a Float64 type
 Interval{L,R}() where {L,R} = Interval{L,R,Float64}()
 
@@ -206,7 +208,7 @@ function union(d1::Interval, d2::Interval)
     d = rightendpoint(d2)
 
     if (b < c) || (a > d)
-        DomainUnion(d1, d2)
+        UnionDomain(d1, d2)
     else
         Interval(min(a, c), max(b, d))
     end

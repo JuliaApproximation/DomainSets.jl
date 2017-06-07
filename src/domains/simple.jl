@@ -88,15 +88,3 @@ const unitcube = Cube(Val{3})
 
 
 cylinder(radius = 1, length = 1) = Disk(radius) ⊗ Interval(0,length)
-
-
-
-##########################################################################
-### Assorted Domains
-##########################################################################
-
-
-function randomcircles(n, radius = 0.3)
-    list = Domain[Disk(radius, (2*rand(2)-1)*0.8) for i=1:n]
-    DomainCollection{2}(list)
-end

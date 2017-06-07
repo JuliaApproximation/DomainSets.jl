@@ -10,7 +10,6 @@ maps the domain onto the mapped domain, and the inverse map maps it back.
 A point lies in the mapped domain, if the inverse map of that point lies in the
 original domain.
 """
-# TODO: experiment with leaving out the type parameters and implement fast indomain_grid
 struct MappedDomain{DOMAIN <: Domain,MAP,T} <: Domain{T}
     domain  ::  DOMAIN
     # The forward map, from the underlying domain to the mapped domain
@@ -38,7 +37,7 @@ apply_map(d::MappedDomain, map::AbstractMap) = MappedDomain(domain(d), map*mappi
 (*)(domain::Domain, a::Number) = scaling_map(a*diagm(ones(eltype(domain)))) * domain
 
 # TODO: revise
-(+){N,T}(d::Domain{N}, x::SVector{N,T}) = AffineMap(eye(SMatrix{N,N,T}),x) * d
-(+){N}(d::Domain{N}, x::AbstractVector) = d + SVector{N}(x)
+(+)(d::Domain, x::SVector{N,T}) where {N,T} = AffineMap(eye(SMatrix{N,N,T}),x) * d
+# (+){N}(d::Domain{N}, x::AbstractVector) = d + SVector{N}(x)
 
 show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", domain(d))

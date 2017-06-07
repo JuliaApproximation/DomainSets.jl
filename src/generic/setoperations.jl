@@ -1,4 +1,4 @@
-# arithmetics.jl
+# setoperations.jl
 # Code for computing with domains.
 
 # Make sure domains only need to implement addition/multiplication with numbers to the right
@@ -13,7 +13,9 @@
 # The union of two domains
 ############################
 
-# TODO: generalize to more than two sets
+"""
+A `UnionDomain` represents the union of a set of domains.
+"""
 struct UnionDomain{DD,T} <: Domain{T}
     domains  ::  DD
 end
@@ -45,9 +47,9 @@ indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
 
 function show(io::IO, d::UnionDomain)
-    print(io, "a union of two domains: \n")
-    print(io, "    First domain: ", d.d1, "\n")
-    print(io, "    Second domain: ", d.d2, "\n")
+    print(io, "a union of $(nb_elements(d)) domains: \n")
+    print(io, "    First domain: ", element(d,1), "\n")
+    print(io, "    Second domain: ", element(d,2), "\n")
 end
 
 
@@ -55,21 +57,35 @@ end
 # The intersection of two domains
 ###################################
 
-struct IntersectionDomain{D1,D2,T} <: Domain{T}
-    d1    ::  D1
-    d2    ::  D2
-
-    IntersectionDomain{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
+"""
+An `IntersectionDomain` represents the intersection of a set of domains.
+"""
+struct IntersectionDomain{DD,T} <: Domain{T}
+    domains ::  DD
 end
 
-IntersectionDomain(d1::Domain{T},d2::Domain{T}) where {T} = IntersectionDomain{typeof(d1),typeof(d2),T}(d1, d2)
+function IntersectionDomain(domains::Domain...)
+    # TODO: implement promote_space_type for domains and to the promotion properly
+    T = eltype(domains[1])
+    for d in domains
+        @assert eltype(d) == T
+    end
+    IntersectionDomain{typeof(domains),T}(domains)
+end
 
-# The intersection of two domains corresponds to a logical AND of their characteristic functions
-indomain(x, d::IntersectionDomain) = in(x, d.d1) && in(x, d.d2)
+elements(d::IntersectionDomain) = d.domains
+
+intersect(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
+
+# Avoid creating nested unions
+intersect(d1::IntersectionDomain, d2::Domain) = IntersectionDomain(elements(d1)..., d2)
+intersect(d1::IntersectionDomain, d2::IntersectionDomain) = IntersectionDomain(elements(d1)..., elements(d2)...)
+intersect(d1::Domain, d2::IntersectionDomain) = IntersectionDomain(d1, elements(d2)...)
+
+# The intersection of domains corresponds to a logical AND of their characteristic functions
+indomain(x, d::IntersectionDomain) = mapreduce(d->in(x, d), &, elements(d))
 
 (&)(d1::Domain, d2::Domain) = intersect(d1,d2)
-
-intersect(d1::Domain, d2::Domain) = (d1 == d2 ? d1 : IntersectionDomain(d1,d2))
 
 function intersect(d1::ProductDomain, d2::ProductDomain)
     @assert ndims(d1) == ndims(d2)
@@ -82,9 +98,9 @@ end
 
 
 function show(io::IO, d::IntersectionDomain)
-    print(io, "the intersection of two domains: \n")
-    print(io, "    First domain: ", d.d1, "\n")
-    print(io, "    Second domain: ", d.d1, "\n")
+    print(io, "the intersection of $(nb_elements(d)) domains: \n")
+    print(io, "    First domain: ", element(d,1), "\n")
+    print(io, "    Second domain: ", element(d,2), "\n")
 end
 
 
@@ -115,3 +131,25 @@ function show(io::IO, d::DifferenceDomain)
     print(io, "    First domain: ", d.d1, "\n")
     print(io, "    Second domain: ", d.d2, "\n")
 end
+
+
+###########################
+### A translated domain
+###########################
+
+# TODO: this should go, in favour of a more general mapped domain
+struct TranslatedDomain{T,D <: Domain{T}} <: Domain{T}
+    domain      ::  D
+    translation ::  T
+end
+
+domain(d::TranslatedDomain) = d.domain
+
+translationvector(d::TranslatedDomain) = d.translation
+
+function indomain(x, d::TranslatedDomain)
+    indomain(x-d.translation, d.domain)
+end
+
+(+)(d::Domain{T}, translation::T) where {T} = TranslatedDomain(d, translation)
+(+)(d::TranslatedDomain{T}, translation::T) where {T} = TranslatedDomain(domain(d), translation+translationvector(d))

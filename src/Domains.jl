@@ -43,6 +43,7 @@ import Base: show
 
 # from util/common.jl
 export elements, element, nb_elements
+export TypeFactory
 # from util/tensorproducts.jl
 export flatten, tensorproduct, ⊗
 
@@ -83,17 +84,15 @@ export CompositeMap
 ## Generic domains
 
 # from generic/domain.jl
-export Domain, Domain1d, Domain2d, Domain3d, Domain4d
+export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
 export indomain
 
 # from generic/productdomain.jl
 export ProductDomain, tensorproduct, ⊗
 
-# from generic/arithmetics.jl
+# from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
-
-# from generic/collection.jl
-export DomainCollection
+export TranslatedDomain
 
 # from generic/derived_domain.jl
 export DerivedDomain
@@ -101,6 +100,7 @@ export superdomain
 
 # from generic/mapped_domain.jl
 export MappedDomain
+export domain, mapping
 
 
 ## Specific domains
@@ -133,8 +133,7 @@ include("maps/coordinates.jl")
 
 include("generic/domain.jl")
 include("generic/productdomain.jl")
-include("generic/arithmetics.jl")
-include("generic/collection.jl")
+include("generic/setoperations.jl")
 include("generic/derived_domain.jl")
 include("generic/mapped_domain.jl")
 

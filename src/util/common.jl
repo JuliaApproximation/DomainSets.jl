@@ -1,6 +1,10 @@
 # common.jl
 
-# Forward declarations
+
+#######################
+# Composite structures
+#######################
+
 """
 Some types have composite structure, e.g. product domains, a union of domains.
 These types contain a list of domains.
@@ -15,6 +19,7 @@ can implement `elements` and provide a generic way to access their components.
 
 `nb_elements(t)`: return the number of elements of the composite type `t`
 """
+# Forward declaration
 elements() = nothing
 
 """
@@ -32,3 +37,27 @@ See also: `elements`.
 """
 # By default, we return length(elements(t))
 nb_elements(t) = length(elements(t))
+
+
+###############
+# Type factory
+###############
+
+"""
+A `TypeFactory{T}` is a convenience type to simplify construction of a type.
+
+Having `t = TypeFactory{T}` overrides `getindex` such that `t[a]` invokes `T(a)`.
+
+For example:
+```
+v = TypeFactory{SVector}
+v[0.1,0.2]
+```
+makes an `SVector{2,Float64}`.
+"""
+struct TypeFactory{T}
+end
+
+Base.getindex(v::TypeFactory{T}, args...) where {T} = T(args...)
+
+# const v = TypeFactory{SVector}()
