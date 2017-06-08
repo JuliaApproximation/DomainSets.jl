@@ -1,32 +1,6 @@
 # space_promotions.jl
 
 
-################
-# Preliminaries
-################
-
-# We introduce these types to compute with booleans in a type context.
-# They are not exported, but they are necessary when an external package wishes
-# to extend the embeddings and promotions of spaces.
-const True = Val{true}
-const False = Val{false}
-
-# Simple Boolean operations on the new types
-(&)(::Type{True}, ::Type{True}) = True
-(&)(::Type{True}, ::Type{False}) = False
-(&)(::Type{False}, ::Type{True}) = False
-(&)(::Type{False}, ::Type{False}) = False
-(|)(::Type{True}, ::Type{True}) = True
-(|)(::Type{True}, ::Type{False}) = True
-(|)(::Type{False}, ::Type{True}) = True
-(|)(::Type{False}, ::Type{False}) = False
-
-# Return True if one of the arguments is True
-one_of(::Type{True}) = True
-one_of(::Type{False}) = False
-one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(a,b)
-one_of(a::Type{Val{A}}, b::Type{Val{B}}, c::Type{Val{C}}, d...) where {A,B,C} = one_of(a, one_of(b, c, d...))
-
 # Find the first space in a list of arguments that is not AnySpace
 lcd(::Type{GSpace{T}}) where {T} = GSpace{T}
 lcd(::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
@@ -34,10 +8,6 @@ lcd(::Type{AnySpace}, ::Type{GSpace{T}}) where {T} = GSpace{T}
 lcd(::Type{GSpace{T}}, ::Type{AnySpace}) where {T} = GSpace{T}
 lcd(::Type{GSpace{T}}, ::Type{GSpace{S}}) where {T,S} = GSpace{T}
 lcd(A::Type{GSpace{T}}, B::Type{GSpace{S}}, C::Type{GSpace{U}}, D...) where {T,S,U} = lcd(A, lcd(B, C, D...))
-
-# Convert the type to a value
-result(::Type{True}) = true
-result(::Type{False}) = false
 
 
 

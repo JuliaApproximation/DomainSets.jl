@@ -1,43 +1,40 @@
 # mapped_domain.jl
 
-##################
-# Mapped domains
-##################
+################
+# Preliminaries
+################
+
+
+#######################
+# Main type definition
+#######################
+
 
 """
-A MappedDomain consists of a domain and a bidirectional map. The forward map
-maps the domain onto the mapped domain, and the inverse map maps it back.
-A point lies in the mapped domain, if the inverse map of that point lies in the
-original domain.
-"""
-struct MappedDomain{DOMAIN <: Domain,MAP,T} <: Domain{T}
-    domain  ::  DOMAIN
-    # The forward map, from the underlying domain to the mapped domain
-    fmap    ::  MAP
+A `MappedDomain` consists of a domain `d` and a map `f` such that
+```
+in(x, d::MappedDomain) = in(f(x), d)
+```
 
-    # With this inner constructor we enforce that N is the dimension of the domain
-    MappedDomain{DOMAIN,MAP,T}(domain::Domain{T}, fmap) where {DOMAIN <: Domain,MAP,T} = new{DOMAIN,MAP,T}(domain, fmap)
+If the function `f` maps a variable of type `S` to a variable of type `T`, then
+the underlying domain should have type `S` and the mapped domain has type `T`.
+"""
+struct MappedDomain{D,F,T} <: DerivedDomain{T}
+    superdomain ::  D
+    f           ::  F
 end
 
-MappedDomain(domain::Domain{T}, fmap) where {T} =
-    MappedDomain{typeof(domain),typeof(fmap),T}(domain, fmap)
+MappedDomain(domain::Domain{S}, f) where {S} =
+    MappedDomain{typeof(domain),typeof(f),return_type(f,S)}(domain, f)
 
-domain(d::MappedDomain) = d.domain
+mapping(d::MappedDomain) = d.f
 
-mapping(d::MappedDomain) = d.fmap
+indomain(x, d::MappedDomain) = indomain(mapping(f) * x, superdomain(d))
 
-indomain(x, d::MappedDomain) = indomain(inverse_map(mapping(d), x), domain(d))
+applymap(f, domain::Domain) = MappedDomain(domain, f)
 
-apply_map(domain::Domain, map::AbstractMap) = MappedDomain(domain, map)
+# Avoid nested mapping domains, construct a composite map instead
+# This assumes that the map types can be combined using \circ
+applymap(f, domain::MappedDomain) = applymap(superdomain(domain), f ∘ mapping(domain))
 
-apply_map(d::MappedDomain, map::AbstractMap) = MappedDomain(domain(d), map*mapping(d))
-
-(*)(map::AbstractMap, domain::Domain) = apply_map(domain, map)
-
-(*)(domain::Domain, a::Number) = scaling_map(a*diagm(ones(eltype(domain)))) * domain
-
-# TODO: revise
-(+)(d::Domain, x::SVector{N,T}) where {N,T} = AffineMap(eye(SMatrix{N,N,T}),x) * d
-# (+){N}(d::Domain{N}, x::AbstractVector) = d + SVector{N}(x)
-
-show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", domain(d))
+show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", superdomain(d))

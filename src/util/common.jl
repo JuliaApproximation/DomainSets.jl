@@ -1,6 +1,49 @@
 # common.jl
 
 
+##############################
+# Booleans in the type domain
+##############################
+
+# We introduce these types to compute with booleans in a type context.
+# They are not exported, but they are necessary when an external package wishes
+# to extend the embeddings and promotions of spaces in this package.
+const True = Val{true}
+const False = Val{false}
+
+# Simple boolean operations on the new types
+(&)(::Type{True}, ::Type{True}) = True
+(&)(::Type{True}, ::Type{False}) = False
+(&)(::Type{False}, ::Type{True}) = False
+(&)(::Type{False}, ::Type{False}) = False
+(|)(::Type{True}, ::Type{True}) = True
+(|)(::Type{True}, ::Type{False}) = True
+(|)(::Type{False}, ::Type{True}) = True
+(|)(::Type{False}, ::Type{False}) = False
+
+# Return True if one of the arguments is True
+one_of(::Type{True}) = True
+one_of(::Type{False}) = False
+one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(a,b)
+one_of(a::Type{Val{A}}, b::Type{Val{B}}, c::Type{Val{C}}, d...) where {A,B,C} = one_of(a, one_of(b, c, d...))
+
+# Convert the boolean type to a boolean value
+result(::Type{True}) = true
+result(::Type{False}) = false
+
+
+
+##############################
+# Promotion helper functions
+##############################
+
+"Return True if S promotes to T, i.e., if promote_type(S,T) == T."
+promotes_to(S, T) = _promotes_to(S, T, promote_type(S,T))
+_promotes_to(::Type{S}, ::Type{T}, ::Type{T}) where {S,T} = True
+_promotes_to(::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = False
+
+
+
 #######################
 # Composite structures
 #######################

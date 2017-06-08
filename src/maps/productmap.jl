@@ -4,31 +4,28 @@
 A product map is diagonal and acts on each of the components of x separately:
 y = f(x) becomes y_i = f_i(x_i)
 """
-struct ProductMap{N,MAPS} <: AbstractMap
+struct ProductMap{MAPS,T,S} <: AbstractMap{T,S}
     # maps has an indexable and iterable type, for example a tuple of maps
     maps    ::  MAPS
 end
 
-ProductMap(maps) = ProductMap{length(maps),typeof(maps)}(maps)
+function ProductMap(maps...)
+    MAPS = typeof(maps)
+    S = map(domaintype, maps)
+    T = map(rangetype, maps)
+    ProductMap{MAPS,T,S}(maps)
+end
 
-eltype(dmap::ProductMap) = promote_type(map(eltype, dmap.maps)...)
+elements(pm::ProductMap) = pm.maps
 
-ndims{N}(::ProductMap{N}) = N
+applymap(pm::ProductMap, x) = map(apply_map, elements(pm), x)
 
-(m::ProductMap)(x) = forward_map(m, x)
+tensorproduct(map1::AbstractMap, map2::AbstractMap) = ProductMap(map1, map2)
+tensorproduct(map1::ProductMap, map2::AbstractMap) = ProductMap(elements(map1)..., map2)
+tensorproduct(map1::AbstractMap, map2::ProductMap) = ProductMap(map1, elements(map2)...)
+tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
 
-elements(map::ProductMap) = map.maps
-element(map::ProductMap, range::Range) = ProductMap(map.maps[range])
-
-tensorproduct(map1::AbstractMap, map2::AbstractMap) = ProductMap((map1,map2))
-tensorproduct(map1::ProductMap, map2::AbstractMap) = ProductMap((elements(map1)...,map2))
-tensorproduct(map1::AbstractMap, map2::ProductMap) = ProductMap((map1,elements(map2)...))
-tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap((elements(map1)...,elements(map2)...))
-
-forward_map{N}(dmap::ProductMap{N}, x) = SVector{N}(map(forward_map, dmap.maps, x))
-inverse_map{N}(dmap::ProductMap{N}, x) = SVector{N}(map(inverse_map, dmap.maps, x))
-
-inv(dmap::ProductMap) = ProductMap(map(inv, dmap.maps))
+inv(pm::ProductMap) = ProductMap(map(inv, elements(pm)))
 
 for op in (:is_linear, :isreal)
     @eval $op(dmap::ProductMap) = reduce(&, map($op, elements(dmap)))

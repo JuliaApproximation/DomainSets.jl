@@ -3,11 +3,11 @@
 """
 The composition of several maps.
 """
-struct CompositeMap{MAPS} <: AbstractMap
+struct CompositeMap{MAPS,T,S} <: AbstractMap{T,S}
     maps    ::  MAPS
 end
 
-(m::CompositeMap)(x) = forward_map(m, x)
+(m::CompositeMap)(x) = applymap(m, x)
 
 elements(map::CompositeMap) = map.maps
 element(map::CompositeMap, i::Int) = map.maps[i]
@@ -15,10 +15,10 @@ element(map::CompositeMap, range::Range) = CompositeMap(map.maps[range])
 
 # dest_type{T}(map::CompositeMap, ::Type{T}) = promote_type(map(m->dest_type(m,T), elements(map))...)
 
-forward_map(map::CompositeMap, x) = forward_map_rec(x, map.maps...)
+applymap(map::CompositeMap, x) = applymap_rec(x, map.maps...)
 
-forward_map_rec(x) = x
-forward_map_rec(x, map1::AbstractMap, maps::AbstractMap...) = forward_map_rec(map1*x, maps...)
+applymap_rec(x) = x
+applymap_rec(x, map1::AbstractMap, maps::AbstractMap...) = applymap_rec(map1*x, maps...)
 
 inv(cmap::CompositeMap) = CompositeMap(reverse(map(inv, cmap.maps)))
 

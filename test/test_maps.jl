@@ -15,23 +15,23 @@ end
 function test_generic_map(T, m, n)
     # Try to map a random vector
     x = suitable_point_to_map(m, n)
-    y1 = forward_map(m, x)
+    y1 = applymap(m, x)
     y2 = m * x
     @test y1 == y2
-    x1 = inverse_map(m, y1)
+    x1 = apply_inverse(m, y1)
     @test x1 ≈ x
 
     mi = inv(m)
-    xi1 = forward_map(mi, y1)
+    xi1 = applymap(mi, y1)
     @test xi1 ≈ x
     xi2 = mi * y1
     @test xi2 ≈ x
-    yi1 = inverse_map(mi, x)
+    yi1 = apply_inverse(mi, x)
     @test yi1 ≈ y1
 
     if is_linear(m)
         x = suitable_point_to_map(m, n)
-        y1 = forward_map(m, x)
+        y1 = applymap(m, x)
         x0 = @SVector zeros(T,n)
         a,b = linearize(m, x0)
         y2 = a*x+b

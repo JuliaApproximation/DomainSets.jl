@@ -3,16 +3,16 @@
 """
 The identity map.
 """
-struct IdentityMap <: AbstractMap
+struct IdentityMap{T,S} <: AbstractMap{T,S}
 end
 
-(m::IdentityMap)(x) = forward_map(m, x)
+(m::IdentityMap)(x) = applymap(m, x)
 
-forward_map(map::IdentityMap, x) = x
+applymap(map::IdentityMap, x) = x
 
-inverse_map(map::IdentityMap, y) = y
+apply_inverse(map::IdentityMap, y) = y
 
-inv(map::IdentityMap) = map
+inv(::IdentityMap{T,S}) where {T,S} = IdentityMap{S,T}()
 
 jacobian{N,T}(map::IdentityMap, x::SVector{N,T}) = eye(SMatrix{N,N,T})
 

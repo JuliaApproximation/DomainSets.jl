@@ -20,7 +20,7 @@ other valid cases:
 * `a` is a scalar and `b` is a vector
 * `a` is a matrix and `b` is exactly 0
 """
-struct AffineMap{TA,TB} <: AbstractMap
+struct AffineMap{TA,TB,T,S} <: AbstractMap{T,S}
     # The fields a and b define the forward map y = a*x+b
     a   ::  TA
     b   ::  TB
@@ -46,6 +46,14 @@ function AffineMap(a, b, c, d)
     AffineMap(a, b, c, d)
 end
 
+AffineMap(a::T, b::T, c::T, d::T) where {T} = AffineMap{T,T,T,T}(a,b,c,d)
+
+dim1(::SMatrix{M,N}) where {M,N} = M
+dim2(::SMatrix{M,N}) where {M,N} = N
+
+AffineMap(a::TA, b::TB, c::TA, d::TB) where {TA <: SMatrix,TB} =
+    AffineMap{TA,TB,SVector{dim1(a),eltype(a)},SVector{dim2(a),eltype(a)}}(a, b, c, d)
+
 ## The logic for the inverse of a*x+b follows.
 
 "Compute c and d such that x = c*y + d is the inverse of y = a*x + b"
@@ -58,13 +66,13 @@ function affine_inv(a::AbstractMatrix, b::Number)
 end
 
 
-(m::AffineMap)(x) = forward_map(m, x)
+(m::AffineMap)(x) = applymap(m, x)
 
 eltype(map::AffineMap) = promote_type(eltype(map.a), eltype(map.b))
 
-forward_map(map::AffineMap, x) = map.a * x + map.b
+applymap(map::AffineMap, x) = map.a * x + map.b
 
-inverse_map(map::AffineMap, y) = map.c * y + map.d
+apply_inverse(map::AffineMap, y) = map.c * y + map.d
 
 inv(map::AffineMap) = AffineMap(map.c, map.d, map.a, map.b)
 

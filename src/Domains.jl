@@ -67,7 +67,7 @@ export ProductSpace
 ## Maps
 
 # from maps/maps.jl
-export AbstractMap, forward_map, inverse_map, jacobian, linearize
+export AbstractMap, applymap, apply_inverse, jacobian, linearize
 export is_linear, is_compatible
 # from maps/affine_maps.jl
 export AffineMap, translation, rotation, linear_map, interval_map, scaling_map
@@ -87,6 +87,10 @@ export CompositeMap
 export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
 export indomain
 
+# from generic/derived_domain.jl
+export DerivedDomain
+export superdomain
+
 # from generic/productdomain.jl
 export ProductDomain, tensorproduct, ⊗
 
@@ -94,13 +98,12 @@ export ProductDomain, tensorproduct, ⊗
 export UnionDomain, IntersectionDomain, DifferenceDomain
 export TranslatedDomain
 
-# from generic/derived_domain.jl
-export DerivedDomain
-export superdomain
-
 # from generic/mapped_domain.jl
 export MappedDomain
-export domain, mapping
+export mapping
+
+# from generic/arithmetics.jl
+
 
 
 ## Specific domains
@@ -132,10 +135,11 @@ include("maps/basic_maps.jl")
 include("maps/coordinates.jl")
 
 include("generic/domain.jl")
+include("generic/derived_domain.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
-include("generic/derived_domain.jl")
 include("generic/mapped_domain.jl")
+include("generic/arithmetics.jl")
 
 include("domains/trivial.jl")
 include("domains/interval.jl")
