@@ -1,13 +1,6 @@
 # setoperations.jl
 # Code for computing with domains.
 
-# Make sure domains only need to implement addition/multiplication with numbers to the right
-(+)(x::Number, d::Domain) = d + x
-(+)(x::AbstractVector, d::Domain) = d + x
-(*)(x::Number, d::Domain) = d * x
-
-(/)(d::Domain, x::Number) = d * (1/x)
-
 
 ############################
 # The union of two domains

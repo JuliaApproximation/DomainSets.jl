@@ -1,157 +1,133 @@
 # affine_map.jl
 
 """
-An affine map has the form `y = a*x + b`.
+An affine map has the general form `y = a*x + b`, with types for `a`, `b`, `x`
+and `y` such that the expression is valid.
 
-The fields a and b can be anything that can multiply a vector (a) and be added
-to a vector (b). In higher dimensions, the intended use is for a and b to be
-static arrays. In that case, the application of the map does not allocate memory.
-
-The affinemap also stores its inverse `x = c*y + d`, with `c = inv(a)` and
-`d = - inv(a)*b`. It is enforced that `a` and `c` have the same type, as do
-`b` and `d`.
-
-This restricts the possibilities for `a` and `b` somewhat. For example, `b` can
-not be a number if `a` is a matrix, since in that case `-inv(a)*b` would be a
-vector. An exception is when `b` is exactly `0`.
-
-In general, `a` is like a matrix and `b` is like a vector. However, there are
-other valid cases:
-* `a` is a scalar and `b` is a vector
-* `a` is a matrix and `b` is exactly 0
+We use matrix and vector to denote `a` and `b` respectively.
 """
-struct AffineMap{TA,TB,T,S} <: AbstractMap{T,S}
-    # The fields a and b define the forward map y = a*x+b
-    a   ::  TA
-    b   ::  TB
-    # The fields c and d define the inverse map x = c*y+d
-    c   ::  TA
-    d   ::  TB
+abstract type AbstractAffineMap{T,S} <: AbstractMap{T,S}
 end
 
-# If only one argument is given, we assume that b is 0.
-AffineMap(a) = AffineMap(a, 0)
 
-# If only two arguments are given we compute the inverse.
-function AffineMap(a, b)
-    c, d = affine_inv(a, b)
-    AffineMap(a, b, c, d)
+
+"""
+A `LinearMap` is an affine map that represents `y = a*x`, where `a` can have any
+type such that `a*x` maps type `S` to type `T.`
+"""
+struct LinearMap{T,S,A} <: AbstractAffineMap{T,S}
+    a   ::  A
 end
 
-# This outer constructor will be called if the types of a and c or b and d do
-# not match. We promote and call the inner constructor.
-function AffineMap(a, b, c, d)
-    a, c = promote(a, c)
-    b, d = promote(b, d)
-    AffineMap(a, b, c, d)
+LinearMap{T}(a) where {T} = LinearMap{T,T}(a)
+
+LinearMap{T,S}(a) where {T,S} = LinearMap{T,S,typeof(a)}(a)
+
+LinearMap(a::SMatrix{M,N,T}) where {M,N,T} = LinearMap{SVector{M,T},SVector{N,T},typeof(a)}(a)
+
+LinearMap(a::Matrix{T}) where {T} = LinearMap{Vector{T},Vector{T},typeof(a)}(a)
+
+LinearMap(a::T) where {T <: Number} = LinearMap{T,T,T}(a)
+
+matrix(m::LinearMap) = m.a
+
+applymap(m::LinearMap, x) = matrix(m) * x
+
+inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))
+
+vector(m::LinearMap) = zero(rangetype(m))
+
+
+"""
+Translation represents `y = x + v`, where `v` is a vector in the same space as
+`x` and `y`.
+"""
+struct Translation{T} <: AbstractAffineMap{T,T}
+    vector  ::  T
 end
 
-AffineMap(a::T, b::T, c::T, d::T) where {T} = AffineMap{T,T,T,T}(a,b,c,d)
+matrix(m::Translation{T}) where {T} = diagm(ones(T))
 
-dim1(::SMatrix{M,N}) where {M,N} = M
-dim2(::SMatrix{M,N}) where {M,N} = N
+vector(m::Translation) = m.vector
 
-AffineMap(a::TA, b::TB, c::TA, d::TB) where {TA <: SMatrix,TB} =
-    AffineMap{TA,TB,SVector{dim1(a),eltype(a)},SVector{dim2(a),eltype(a)}}(a, b, c, d)
+applymap(m::Translation, x) = x + vector(m)
 
-## The logic for the inverse of a*x+b follows.
+apply_inverse(m::Translation, y) = y - vector(m)
 
-"Compute c and d such that x = c*y + d is the inverse of y = a*x + b"
-affine_inv(a, b) = (inv(a), -a\b)
+inv(m::Translation) = Translation(-vector(m))
 
-# If b==0 then we can get by with b = 0 as well.
-function affine_inv(a::AbstractMatrix, b::Number)
-    @assert b == 0
-    (inv(a), 0)
+
+
+struct AffineMap{T,S,A} <: AbstractAffineMap{T,S}
+    a   ::  A
+    b   ::  T
 end
+
+AffineMap{T,S}(a::A, b) where {T,S,A} = AffineMap{T,S,A}(a, b)
+
+AffineMap(a::T, b::T) where {T} = AffineMap{T,T,T}(a, b)
+
+AffineMap(a::SMatrix{M,N,T}, b::SVector{M,T}) where {M,N,T} =
+    AffineMap{SVector{M,T},SVector{N,T},typeof(a)}(a, b)
+
+AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
+    AffineMap(eye(SMatrix{N,N,T}), b)
+
+matrix(m::AffineMap) = m.a
+
+vector(m::AffineMap) = m.b
 
 
 (m::AffineMap)(x) = applymap(m, x)
 
-eltype(map::AffineMap) = promote_type(eltype(map.a), eltype(map.b))
+applymap(m::AffineMap, x) = m.a * x + m.b
 
-applymap(map::AffineMap, x) = map.a * x + map.b
-
-apply_inverse(map::AffineMap, y) = map.c * y + map.d
-
-inv(map::AffineMap) = AffineMap(map.c, map.d, map.a, map.b)
-
-isreal(map::AffineMap) = isreal(map.a) && isreal(map.b)
+# If y = a*x+b, then x = inv(a)*(y-b).
+inv(m::AffineMap{T,S}) where {T,S} = AffineMap{S,T}(inv(m.a), -inv(m.a)*m.b)
 
 
-jacobian(map::AffineMap, x) = map.a
 
-is_linear(map::AffineMap) = true
-
-translation_vector(map::AffineMap, x) = map.b - map.a*x
-
-
+########################
 # Some useful functions
+########################
+
 "Make the linear map y = a*x + b."
 linear_map(a, b) = AffineMap(a, b)
 
 "Map the interval [a,b] to the interval [c,d]."
 interval_map(a, b, c, d) = linear_map((d-c)/(b-a), c - a*(d-c)/(b-a))
 
-## Simple scailng maps
+
+## Simple scaling maps
 
 "Scale all variables by a."
-scaling_map(a) = AffineMap(a)
+scaling_map(a) = LinearMap(a)
 
 "Scale the variables by a and b."
-scaling_map(a, b) = AffineMap(SMatrix{2,2}(a,0,0,b))
+scaling_map(a, b) = LinearMap(SMatrix{2,2}(a, 0, 0, b))
 
 "Scale the variables by a, b and c."
-scaling_map(a, b, c) = AffineMap(SMatrix{3,3}(a,0,0, 0,b,0, 0,0,c))
+scaling_map(a, b, c) = LinearMap(SMatrix{3,3}(a, 0, 0,  0, b, 0,  0, 0,c))
 
-# 4x4 StaticArrays don't seem to work as well as 1-3d, the code below errors
-# "Scale the variables by a, b, c and d."
-# scaling_map(a, b, c, d) = AffineMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,0,d))
+"Scale the variables by a, b, c and d."
+scaling_map(a, b, c, d) = LinearMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,0,d))
+
+
+##############
+# Arithmetic
+##############
+
+∘(m2::AbstractAffineMap, m1::AbstractAffineMap) = affine_composition(m2, m1)
 
 """
-Compute the affine map that represents map2*map1, that is:
+Compute the affine map that represents map2 after map1, that is:
 y = a2*(a1*x+b1)+b2 = a2*a1*x + a2*b1 + b2.
 """
-affine_composition(map1::AffineMap, map2::AffineMap) = affine_composition(map1.a, map1.b, map2.a, map2.b)
+affine_composition(map2::AbstractAffineMap, map1::AbstractAffineMap) =
+    AffineMap(matrix(map2) * matrix(map1), matrix(map2)*vector(map1) + vector(map2))
 
-# We have to compute a matrix a2*a1 and a vector a2*b1+b2.
-# We have to be careful to treat the cases where a and/or b are scalars properly,
-# since a*x+b sometimes relies on broadcasting.
-# It turns out the only problematic case is a*b when a is a matrix and b is a
-# scalar. In that case a*b is again a matrix, but we want it to be a vector.
-# But given the restrictions on types, we can only have this case when b = 0.
-affine_composition(a1, b1, a2, b2) = AffineMap(a2*a1, affine_composition_vector(a2, b1, b2))
+affine_composition(map2::LinearMap{U,T}, map1::LinearMap{T,S}) where {S,T,U} =
+    LinearMap{S,U}(matrix(map2) * matrix(map1))
 
-# About the composition vector:
-# - The general expression is fine in most cases
-affine_composition_vector(a2, b1, b2) = a2*b1 + b2
-
-# - be careful when a2 is a matrix and b1 a scalar
-function affine_composition_vector(a2::AbstractMatrix, b1::Number, b2)
-    @assert b1 == 0
-    b2
-end
-
-
-########################
-# Arithmetic
-########################
-
-(*)(map1::AffineMap, map2::AffineMap) = affine_composition(map2, map1)
-
-(*)(map1::AbstractMap, map2::AffineMap) = composite_map(map1, map2, is_linear(map1))
-
-function composite_map(map1::AbstractMap, map2::AffineMap, islinear::Bool)
-    if islinear
-        CompositeMap((map2,map1))
-    else
-        A,B = matrix_vector(map1)
-        AffineMap(A,B) * map2
-    end
-end
-
-(*)(a::Number, m::AbstractMap) = scaling_map(a) * m
-
-(+)(m::AffineMap, x) = AffineMap(m.a, m.b+x)
-
-(+)(m1::AffineMap, m2::AffineMap) = AffineMap(m1.a+m2.a, m1.b+m2.b)
+affine_composition(map2::Translation{T}, map1::Translation{T}) where {T} =
+    Translation{T}(translation_vector(map2) + translation_vector(map1))

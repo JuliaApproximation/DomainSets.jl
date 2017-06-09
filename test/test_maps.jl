@@ -18,25 +18,21 @@ function test_generic_map(T, m, n)
     y1 = applymap(m, x)
     y2 = m * x
     @test y1 == y2
-    x1 = apply_inverse(m, y1)
-    @test x1 ≈ x
 
     mi = inv(m)
     xi1 = applymap(mi, y1)
     @test xi1 ≈ x
     xi2 = mi * y1
     @test xi2 ≈ x
-    yi1 = apply_inverse(mi, x)
-    @test yi1 ≈ y1
 
-    if is_linear(m)
-        x = suitable_point_to_map(m, n)
-        y1 = applymap(m, x)
-        x0 = @SVector zeros(T,n)
-        a,b = linearize(m, x0)
-        y2 = a*x+b
-        @test y1 ≈ y2
-    end
+    # if is_linear(m)
+    #     x = suitable_point_to_map(m, n)
+    #     y1 = applymap(m, x)
+    #     x0 = @SVector zeros(T,n)
+    #     a,b = linearize(m, x0)
+    #     y2 = a*x+b
+    #     @test y1 ≈ y2
+    # end
 end
 
 randvec(T,n) = SVector{n,T}(rand(n))
@@ -56,8 +52,7 @@ function test_maps(T)
     m2 = AffineMap(randvec(T, 2, 2), randvec(T, 2))
     test_generic_map(T, m2, 2)
 
-    # Test an affine map with b = 0
-    m3 = AffineMap(randvec(T, 2, 2), 0)
+    m3 = LinearMap(randvec(T, 2, 2))
     test_generic_map(T, m3, 2)
 
     # Test an affine map with a a scalar and b a vector
@@ -67,7 +62,7 @@ function test_maps(T)
     m5 = AffineMap(randvec(T, 3, 3), randvec(T, 3))
     test_generic_map(T, m5, 3)
 
-    m6 = m3*m4
+    m6 = m3∘m4
     @test typeof(m6) <: AffineMap
     test_generic_map(T, m6, 2)
 
@@ -78,8 +73,8 @@ function test_maps(T)
     test_generic_map(T, scaling_map(T(2), T(3)), 2)
     test_generic_map(T, scaling_map(T(2), T(3), T(4)), 3)
 
-    test_generic_map(T, IdentityMap(), 1)
-    test_generic_map(T, IdentityMap(), 2)
+    test_generic_map(T, IdentityMap{T}(), 1)
+    test_generic_map(T, IdentityMap{SVector{2,T}}(), 2)
 
     # Diagonal maps
 

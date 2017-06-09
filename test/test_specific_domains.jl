@@ -9,7 +9,6 @@ function test_specific_domains()
         test_interval()
         test_unitball()
         test_cube()
-        test_fractals()
         test_arithmetics()
         test_tensorproduct_domain()
     end
@@ -41,12 +40,11 @@ function test_interval()
     @test 1.1 ∉ d
 
     # Interval
-    Intervala = Interval(-1.0,1.0)
+    Intervala = Interval(-2.0,1.0)
     Intervala = Intervala+1
-    Intervala = 1+Intervala
-    @test leftendpoint(Intervala) == 1
-    @test leftendpoint(2*Intervala) == 2
-    @test rightendpoint(Intervala/4) == 0.75
+    @test leftendpoint(Intervala) == -1.0
+    @test leftendpoint(2*Intervala) == -2.0
+    @test rightendpoint(Intervala/4) == 0.5
 end
 
 function test_unitball()
@@ -74,10 +72,6 @@ function test_cube()
     D = Cube((-1.5,0.5,-3.0),(2.2,0.7,-1.0))
     @test v[0.9, 0.6, -2.5] ∈ D
     @test v[0.0, 0.6, 0.0] ∉ D
-end
-
-function test_fractals()
-
 end
 
 function test_arithmetics()

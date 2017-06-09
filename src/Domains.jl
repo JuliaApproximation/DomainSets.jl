@@ -15,6 +15,7 @@ import Base: *, +, -, /, \, ^
 import Base: |, &
 import Base: ∪, ∩
 import Base: ==
+import Base: ∘
 
 # Set operations
 import Base: intersect, union, setdiff, in
@@ -68,9 +69,10 @@ export ProductSpace
 
 # from maps/maps.jl
 export AbstractMap, applymap, apply_inverse, jacobian, linearize
-export is_linear, is_compatible
+export domaintype, rangetype
 # from maps/affine_maps.jl
-export AffineMap, translation, rotation, linear_map, interval_map, scaling_map
+export AffineMap, Translation, LinearMap
+export linear_map, interval_map, scaling_map
 # from maps/productmap.jl
 export ProductMap
 # from maps/coordinates.jl
@@ -100,7 +102,7 @@ export TranslatedDomain
 
 # from generic/mapped_domain.jl
 export MappedDomain
-export mapping
+export mapping, map_domain
 
 # from generic/arithmetics.jl
 

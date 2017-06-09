@@ -6,19 +6,23 @@
 ###################
 
 """
-Create an eltype that is suitable for a product domain. By default, a tuple type
-that contains the element types is returned. However, if the types are homogeneous,
-they are collected into an SVector.
-
-for example:
-`product_eltype(::Domain{Int}, ::Domain{Float64}) -> Tuple{Int,Float64}`
-`product_eltype(::Domain{Float64}, ::Domain{Float64}) -> SVector{2,Float64}`
+Create an eltype that is suitable for a product domain. The result is a tuple
+type, where each of the elements is the eltype of the corresponding element
+of the product domain.
 """
 product_eltype(domains::Domain...) = Tuple{map(eltype, domains)...}
 
-simplify_eltype(::Type{T}) where {T} = T
-simplify_eltype(::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
-simplify_eltype(::Type{Tuple{Tuple{T,T},T}}) where {T} = SVector{3,T}
+"""
+Try to simplify the type of a product domain to a type to which it is isomorphic.
+The goal is to automatically embed the product domain in ℝ^N if possible.
+
+Examples of simplifications:
+`Tuple{Float64,Float64} -> SVector{2,Float64}`
+`Tuple{Tuple{Float64,Float64},Float64} -> SVector{3,Float64}`
+"""
+simplify_product_eltype(::Type{T}) where {T} = T
+simplify_product_eltype(::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
+simplify_product_eltype(::Type{Tuple{Tuple{T,T},T}}) where {T} = SVector{3,T}
 
 
 #######################
@@ -31,32 +35,33 @@ A `ProductDomain` represents the tensor product of other domains.
 A product domain has two eltypes, an internal type `S` and an external type `T`.
 The internal type `S` is a tuple containing the eltypes of the elements of the
 product domain. The external eltype `T` is a type whose associated space is
-isomorphic to that of `S`, but which has been simplified.
+isomorphic to that of `S`, but which has been simplified. (See also
+`simplify_product_eltype`).
 
 For example, if `S` is `Tuple{Float64,Float64}`, then `T` is `SVector{2,Float64}`.
 """
-struct ProductDomain{D,S,T} <: Domain{T}
+struct ProductDomain{DD,S,T} <: Domain{T}
 	# D is the type of an indexable list of domains, such as a tuple
-	domains	::	D
+	domains	::	DD
 
 	# Inner constructor to verify that S and T are correct
-	function ProductDomain{D,S,T}(domains) where {D,S,T}
+	function ProductDomain{DD,S,T}(domains) where {DD,S,T}
 		@assert S == product_eltype(domains...)
 		@assert isomorphic(spacetype(S),spacetype(T))
-		new{D,S,T}(domains)
+		new{DD,S,T}(domains)
 	end
 end
 
 function ProductDomain(domains...)
-    D = typeof(domains)
+    DD = typeof(domains)
     S = product_eltype(domains...)
-	T = simplify_eltype(S)
-    ProductDomain{D,S,T}(domains)
+	T = simplify_product_eltype(S)
+    ProductDomain{DD,S,T}(domains)
 end
 
 elements(d::ProductDomain) = d.domains
 
-internal_eltype(::Type{ProductDomain{D,S,T}}) where {D,S,T} = S
+internal_eltype(::Type{ProductDomain{DD,S,T}}) where {DD,S,T} = S
 internal_eltype(::Type{P}) where {P <: ProductDomain} = S
 internal_eltype(d::ProductDomain) = internal_eltype(typeof(d))
 
@@ -74,40 +79,9 @@ tensorproduct(d1::ProductDomain, d2::ProductDomain) = tensorproduct(elements(d1)
 
 indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d)
 
+# TODO: check for the efficiency of this operation
 _indomain(x, d::ProductDomain) = reduce(&, map(indomain, x, elements(d)))
 
-# indomain(x::SVector{2}, d1::Domain{1}, d2::Domain{1}) =
-# 	indomain(x[1], d1) && indomain(x[2], d2)
-#
-# indomain(x::SVector{3}, d1::Domain{1}, d2::Domain{1}, d3::Domain{1}) =
-# 	indomain(x[1], d1) && indomain(x[2], d2) && indomain(x[3], d3)
-#
-# indomain(x::SVector{4}, d1::Domain{1}, d2::Domain{1}, d3::Domain{1}, d4::Domain{1}) =
-# 	indomain(x[1], d1) && indomain(x[2], d2) && indomain(x[3], d3) && indomain(x[4], d4)
-#
-# indomain(x::SVector{3}, d1::Domain{1}, d2::Domain{2}) =
-# 	indomain(x[1], d1) && indomain(SVector(x[2],x[3]), d2)
-#
-# indomain(x::SVector{3}, d1::Domain{2}, d2::Domain{1}) =
-# 	indomain(SVector(x[1],x[2]), d1) && indomain(x[3], d2)
-#
-# indomain(x::SVector{4}, d1::Domain{2}, d2::Domain{2}) =
-# 	indomain(SVector(x[1],x[2]), d1) && indomain(SVector(x[3],x[4]), d2)
-#
-# indomain(x::SVector{4}, d1::Domain{1}, d2::Domain{3}) =
-# 	indomain(x[1], d1) && indomain(SVector(x[2],x[3],x[4]), d2)
-#
-# indomain(x::SVector{4}, d1::Domain{3}, d2::Domain{1}) =
-# 	indomain(SVector(x[1],x[2],x[3]), d1) && indomain(x[1], d2)
-#
-# indomain(x::SVector{4}, d1::Domain{1}, d2::Domain{1}, d3::Domain{2}) =
-# 	indomain(x[1], d1) && indomain(x[2], d2) && indomain(SVector(x[3],x[4]), d3)
-#
-# indomain(x::SVector{4}, d1::Domain{1}, d2::Domain{2}, d3::Domain{1}) =
-# 	indomain(x[1], d1) && indomain(SVector(x[2],x[3]), d2) && indomain(x[4], d3)
-#
-# indomain(x::SVector{4}, d1::Domain{2}, d2::Domain{1}, d3::Domain{1}) =
-# 	indomain(SVector(x[1],x[2]), d1) && indomain(x[3], d2) && indomain(x[4], d3)
 
 
 function show(io::IO, t::ProductDomain)
@@ -118,5 +92,3 @@ function show(io::IO, t::ProductDomain)
     end
     show(io, element(t, L))
 end
-
-(*)(d::ProductDomain, x::Number) = tensorproduct([domain*x for domain in elements(d)]...)

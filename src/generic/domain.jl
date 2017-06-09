@@ -23,13 +23,6 @@ const Point{N,T} = SVector{N,T}
 "A `EuclideanDomain` is any domain whose eltype is `Point{N,T}`."
 const EuclideanDomain{N,T} = Domain{Point{N,T}}
 
-# I don't like this definition of ndims. Perhaps there should be no ndims at all.
-ndims(::Type{Domain{T}}) where {T} = ndims_type(T)
-ndims(::Type{D}) where {D <: Domain} = ndims(supertype(D))
-ndims(d::Domain) = ndims(typeof(d))
-ndims_type(::Type{SVector{N,T}}) where {N,T} = N
-ndims_type(::Type{T}) where {T <: Number} = 1
-
 
 # Convenient aliases
 const Domain1d{T <: Number} = Domain{T}

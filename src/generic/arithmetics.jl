@@ -1,10 +1,12 @@
 # arithmetics.jl
 # Routines having to do with computations involving domains
 
-(*)(map::AbstractMap, domain::Domain) = applymap(map, domain)
+(*)(map::AbstractMap, domain::Domain) = map_domain(map, domain)
 
-(*)(domain::Domain, a::Number) = scaling_map(a*diagm(ones(eltype(domain)))) * domain
+(*)(a::Number, domain::Domain{T}) where {T} = LinearMap{T}(1/a) * domain
+(*)(domain::Domain, a::Number) = a*domain
 
-# TODO: revise
-(+)(d::Domain, x::SVector{N,T}) where {N,T} = AffineMap(eye(SMatrix{N,N,T}),x) * d
-# (+){N}(d::Domain{N}, x::AbstractVector) = d + SVector{N}(x)
+(/)(domain::Domain{T}, a::Number) where {T} = LinearMap{T}(a) * domain
+
+(+)(d::Domain, x::SVector{N,T}) where {N,T} = Translation(-x) * d
+(+)(x::SVector, d::Domain) = d+x

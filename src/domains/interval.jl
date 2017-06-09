@@ -192,10 +192,10 @@ end
 # Arithmetic operations
 ########################
 
-(+)(d::Interval, x::Number) = Interval(d.a+x, d.b+x)
+(+)(d::AbstractInterval, x::Number) = Interval(leftendpoint(d)+x, rightendpoint(d)+x)
 
-(*)(a::Number, d::Interval) = Interval(a*d.a, a*d.b)
-(*)(d::Interval, a::Number) = a * d
+(*)(a::Number, d::AbstractInterval) = Interval(a*leftendpoint(d), a*rightendpoint(d))
+(/)(d::AbstractInterval, a::Number) = Interval(leftendpoint(d)/a, rightendpoint(d)/a)
 
 
 show(io::IO, d::Interval) = print(io, "the interval [", d.a, ", ", d.b, "]")

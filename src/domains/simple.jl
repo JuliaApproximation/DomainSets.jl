@@ -17,7 +17,7 @@ Disk(::Type{T} = Float64) where {T} = UnitBall{2,T}()
 Disk(radius) = radius * Disk(float(typeof(radius)))
 Disk(radius, center) = radius * Disk(promote_type(typeof(radius),eltype(center))) + center
 
-show(io::IO, d::UnitBall) = print(io, "the $(ndims(d))-dimensional unit ball")
+show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
 
 const unitdisk = Disk()
 

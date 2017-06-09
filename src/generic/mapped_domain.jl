@@ -29,12 +29,12 @@ MappedDomain(domain::Domain{S}, f) where {S} =
 
 mapping(d::MappedDomain) = d.f
 
-indomain(x, d::MappedDomain) = indomain(mapping(f) * x, superdomain(d))
+indomain(x, d::MappedDomain) = indomain(mapping(d) * x, superdomain(d))
 
-applymap(f, domain::Domain) = MappedDomain(domain, f)
+map_domain(f, domain::Domain) = MappedDomain(domain, f)
 
 # Avoid nested mapping domains, construct a composite map instead
 # This assumes that the map types can be combined using \circ
-applymap(f, domain::MappedDomain) = applymap(superdomain(domain), f ∘ mapping(domain))
+map_domain(f, domain::MappedDomain) = map_domain(f ∘ mapping(domain), superdomain(domain))
 
 show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", superdomain(d))

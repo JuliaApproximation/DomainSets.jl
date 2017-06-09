@@ -26,11 +26,3 @@ tensorproduct(map1::AbstractMap, map2::ProductMap) = ProductMap(map1, elements(m
 tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
 
 inv(pm::ProductMap) = ProductMap(map(inv, elements(pm)))
-
-for op in (:is_linear, :isreal)
-    @eval $op(dmap::ProductMap) = reduce(&, map($op, elements(dmap)))
-end
-
-
-# TODO: implement jacobian
-# jacobian(map::ProductMap, x) =

@@ -29,30 +29,3 @@ return_type(map::AbstractMap{T,S}, ::Type{U}) where {T,S,U} = _return_type(map, 
 _return_type(map, ::Type{T}, ::Type{True}) where {T} = T
 # -- No, it can not. We return Any.
 _return_type(map, ::Type{T}, ::Type{False}) where {T} = Any
-
-
-# is_linear(map::AbstractMap) = false
-#
-# isreal(map::AbstractMap) = true
-#
-# linearize(map::AbstractMap, x) = (jacobian(map, x), translation_vector(map, x))
-#
-# """
-# Return the matrix and vector of a linear map, with elements of the given type
-# (which defaults to eltype, if applicable).
-# """
-# function matrix_vector(map::AbstractMap, T = eltype(map))
-#     is_linear(map) || throw(ExceptionError())
-#     N = ndims(map)
-#     I = eye(SMatrix{N,N,T})
-#     B = map * zeros(SVector{N,T})
-#     mA = zeros(T,N,N)
-#     for i in 1:N
-#         v = I[:,i]
-#         mA[:,i] = map * v
-#     end
-#     A = SMatrix{N,N}(mA)
-#     A,B
-# end
-#
-# is_compatible(m1::AbstractMap, m2::AbstractMap) = m1==m2
