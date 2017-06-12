@@ -55,7 +55,7 @@ export flatten, tensorproduct, ⊗
 export GeometricSpace, AnySpace
 export spaceof, spacetype, origin, superspace, issubspace, subeltype
 # from spaces/space_promotions.jl
-export convert_space, promote_space, promote_space_type
+export convert_space, restrict_space, demote, promote_space, promote_space_type
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
 export IntegerSpace, RationalSpace, RealSpace, ComplexSpace
@@ -117,8 +117,8 @@ export euclideanspace, emptyspace, fullspace
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval
 export interval, leftendpoint, rightendpoint
 # from domains/simple.jl
-export UnitBall, Disk, Ball, Cube
-export rectangle, cube, cylinder, randomcircles
+export UnitBall, Disk, Ball, Circle, Sphere, Cube
+export disk, ball, circle, sphere, cube, cylinder
 
 
 include("util/common.jl")

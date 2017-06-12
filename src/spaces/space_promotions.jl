@@ -163,6 +163,8 @@ convert_spaces(x, A, B, ::Type{False}, ::Type{True}, d3) =
     convert_space_via_reduction(x, A, B)
 convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{True}) =
     convert_space_via_superspace(x, A, B)
+convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{False}) =
+    throw(InexactError())
 
 
 # Embedding via promotion: promote the type of x using convert
@@ -175,6 +177,80 @@ _convert_space_via_reduction(x, A, B, C, D) = convert_space(B, convert_space(sim
 
 # Embedding via superspace: we convert x first to the superspace of A and then continue
 convert_space_via_superspace(x, A, B) = convert_space(B, convert_space(superspace(A), x))
+
+
+## And now for the converse: restrict_space
+
+"""
+Restrict the variable `x` to an element of the space `B`. This is possible if
+`B` is embedded in the space of `x`.
+
+Mathematically, `restrict_space(A, y)` for `y` in space `B` is a left inverse
+of `convert_space(B, x)` for `x` in space `A`. This means that
+`restrict_space(A, convert_space(B, x)) == x` for any `x` in space `A`. However,
+`restrict_space(A, y)` for a `y` not in the range of `convert_space(B, x)` could
+take any value.
+"""
+# We don't need to do anything if the space of x is B
+restrict_space(B::Type{GSpace{T}}, x::T) where {T} = x
+
+# If it isn't, then we dispatch on the type of embedding
+restrict_space(B::Type{GSpace{T}}, x) where {T} = restrict_spaces1(x, spaceof(x), B)
+
+# If A and B are isomorphic, then we can use convert_space rather than restrict_space.
+restrict_spaces1(x, A, B) = _restrict_spaces1(x, A, B, isomorphism(A, B))
+_restrict_spaces1(x, A, B, ::Type{True}) = convert_space(B, x)
+_restrict_spaces1(x, A, B, ::Type{False}) = restrict_spaces2(x, A, B)
+
+# We have to follow the inverse logic compared to the case of conversions.
+# Here, B is embedded in A and we figure out by which path.
+restrict_spaces2(x, A, B) = restrict_spaces2(x, A, B,
+    embedding_via_promotion(B, A),
+    embedding_via_reduction(B, A),
+    embedding_via_superspace(B, A))
+
+restrict_spaces2(x, A, B, ::Type{True}, d2, d3) =
+    restrict_space_via_promotion(x, A, B)
+restrict_spaces2(x, A, B, ::Type{False}, ::Type{True}, d3) =
+    restrict_space_via_reduction(x, A, B)
+restrict_spaces2(x, A, B, ::Type{False}, ::Type{False}, ::Type{True}) =
+    restrict_space_via_superspace(x, A, B)
+restrict_spaces2(x, A, B, ::Type{False}, ::Type{False}, ::Type{False}) =
+    throw(InexactError())
+
+
+# Embedding via promotion
+restrict_space_via_promotion(x, A, B) = demote(eltype(B), x)
+
+"""
+The function `demote(S, y::T)` is a left inverse of `convert(T, x::S)`, for the
+case where type `S` promotes to type `T` (i.e. `promote_type(S,T) == T`).
+
+This means that `demote(S, convert(T, x::S)) == x`, while
+`demote(S, y)` may be anything for `y::T` not in the range of
+`convert(T, x::S)`.
+
+Note that Julia's `convert` function is its own left inverse, in the sense that
+`convert(S, convert(T,x)) == x` usually holds if `x::S`. However, the `convert`
+function generally throws an `InexactError()` for elements of type `T` that are
+not in (or close to) the range of `convert(T, x::S)`. In those cases, `demote`
+does not throw an error, but there may be an arbitrarily large difference between
+`convert(T, demote(S, y))` and `y` itself. In other words, `demote` may differ
+wildly from a right inverse of `convert`.
+"""
+demote(::Type{T}, x) where {T} = convert(T, x)
+
+# We need this rule, because Julia only converts a complex number to a real
+# number if the imaginary part is less than some threshold.
+demote(::Type{T}, x::Complex{T}) where {T} = real(x)
+
+# Embedding via reduction: if B is embedded in A if C is embedded in D,
+# then we have to downgrade the space A{D} to A{C}
+restrict_space_via_reduction(x, A, B) = _restrict_space_via_reduction(x, A, B, embedding_reduction(B, A)...)
+_restrict_space_via_reduction(x, A, B, C, D) = restrict_space(B, restrict_space(similar_space(A, eltype(C)), x))
+
+# Embedding via superspace: we convert x first to the superspace of A and then continue
+restrict_space_via_superspace(x, A, B) = restrict_space(B, restrict_space(superspace(B), x))
 
 
 #############
@@ -215,9 +291,9 @@ promote_space_type(::Type{GSpace{T}}, ::Type{GSpace{T}}) where {T} = GSpace{T}
 promote_space_type(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
     lcd(
         promote_via_promotion(A,B),
-        promote_via_superspace(A,B),
         promote_via_embedding_reduction(A,B),
-        promote_via_isomorphism_reduction(A,B))
+        promote_via_isomorphism_reduction(A,B),
+        promote_via_superspace(A,B))
 
 promote_space_result(A, B, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
 promote_space_result(A, B, ::Type{GSpace{T}}, d, e, f) where {T} = GSpace{T}

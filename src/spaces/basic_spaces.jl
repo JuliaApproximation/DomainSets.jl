@@ -105,8 +105,13 @@ convert_space(A::Type{VectorSpace{N,T}}, x::SVector{N,T}) where {N,T} = x
 convert_space(A::Type{VectorSpace{N,T}}, x::SVector{N,S}) where {N,T,S} =
     SVector{N,T}(convert_space.(GeometricSpace{T}, x))
 
+restrict_space(A::Type{VectorSpace{N,T}}, x::SVector{N,T}) where {N,T} = x
+restrict_space(A::Type{VectorSpace{N,T}}, x::SVector{N,S}) where {N,T,S} =
+    SVector{N,T}(restrict_space.(GeometricSpace{T}, x))
+
+
 ## For completeness, we have an isomorphism rule for ComplexSpace and RationalSpace
-## to themselves as well.
+## to themselves as well. These are probably not useful.
 
 isomorphism_reduction(::Type{ComplexSpace{T}}, ::Type{ComplexSpace{S}}) where {T,S} =
     (GeometricSpace{T},GeometricSpace{S})
@@ -115,12 +120,20 @@ convert_space(A::Type{ComplexSpace{T}}, x::Complex{T}) where {T} = x
 convert_space(A::Type{ComplexSpace{T}}, x::Complex{S}) where {T,S} =
     convert_space(GeometricSpace{T}, real(x)) + im * convert_space(GeometricSpace{T}, imag(x))
 
+restrict_space(A::Type{ComplexSpace{T}}, x::Complex{T}) where {T} = x
+restrict_space(A::Type{ComplexSpace{T}}, x::Complex{S}) where {T,S} =
+    restrict_space(GeometricSpace{T}, real(x)) + im * restrict_space(GeometricSpace{T}, imag(x))
+
 isomorphism_reduction(::Type{RationalSpace{T}}, ::Type{RationalSpace{S}}) where {T,S} =
     (GeometricSpace{T},GeometricSpace{S})
 
 convert_space(A::Type{RationalSpace{T}}, x::Rational{T}) where {T} = x
 convert_space(A::Type{RationalSpace{T}}, x::Rational{S}) where {T,S} =
     convert_space(GeometricSpace{T}, numerator(x)) // convert_space(GeometricSpace{T}, denominator(x))
+
+restrict_space(A::Type{RationalSpace{T}}, x::Rational{T}) where {T} = x
+restrict_space(A::Type{RationalSpace{T}}, x::Rational{S}) where {T,S} =
+    restrict_space(GeometricSpace{T}, numerator(x)) // restrict_space(GeometricSpace{T}, denominator(x))
 
 ## Embedding of R^N in R^(N+1)
 
@@ -135,6 +148,11 @@ embedding_reduction(::Type{VectorSpace{3,T}}, ::Type{VectorSpace{4,S}}) where {T
 convert_space(::Type{VectorSpace{2,T}}, x::SVector{1,T}) where {T} = SVector(x[1], 0)
 convert_space(::Type{VectorSpace{3,T}}, x::SVector{2,T}) where {T} = SVector(x[1], x[2], 0)
 convert_space(::Type{VectorSpace{4,T}}, x::SVector{3,T}) where {T} = SVector(x[1], x[2], x[3], 0)
+
+# Since these are true embeddings, we also provide a left inverse
+restrict_space(::Type{VectorSpace{1,T}}, x::SVector{2,T}) where {T} = SVector(x[1])
+restrict_space(::Type{VectorSpace{2,T}}, x::SVector{3,T}) where {T} = SVector(x[1], x[2])
+restrict_space(::Type{VectorSpace{3,T}}, x::SVector{4,T}) where {T} = SVector(x[1], x[2], x[3])
 
 # Superspaces of a vector space have one higher dimension
 superspace(::Type{VectorSpace{1,T}}) where {T} = VectorSpace{2,T}

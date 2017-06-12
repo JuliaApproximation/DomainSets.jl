@@ -39,8 +39,10 @@ function test_embedding(A, B)
     S = eltype(B)
     x = nonzero_element(T)
     y = nonzero_element(S)
-    # Does conversion work? We can only generically verify it yields the right type.
+    # Does conversion work? We verify if it yields the right type.
     @test typeof(convert_space(B, x)) == S
+    # And we test the left inverse
+    @test restrict_space(A, convert_space(B, x)) == x
 end
 
 

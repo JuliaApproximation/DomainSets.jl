@@ -1,90 +1,89 @@
 # simple.jl
 # A collection of simple domains.
 
+###########################
+# The unit ball and sphere
+###########################
+
 """
-The unit ball (of radius 1) in N dimensions.
+The unit ball (of radius 1) in `N` dimensions.
 """
 struct UnitBall{N,T} <: EuclideanDomain{N,T}
 end
 
-indomain(x, ::UnitBall{1}) = -1 <= x <= 1
-indomain(x, ::UnitBall{2}) = x[1]^2+x[2]^2 <= 1
-indomain(x, ::UnitBall{3}) = x[1]^2+x[2]^2+x[3]^2 <= 1
+const Disk{T} = UnitBall{2,T}
+const Ball{T} = UnitBall{3,T}
 
-indomain(x, ::UnitBall{N}) where {N} = sum(map(t->t^2, x)) <= 1
+indomain(x, ::UnitBall) = norm(x) <= 1
 
-Disk(::Type{T} = Float64) where {T} = UnitBall{2,T}()
-Disk(radius) = radius * Disk(float(typeof(radius)))
-Disk(radius, center) = radius * Disk(promote_type(typeof(radius),eltype(center))) + center
+disk(::Type{T} = Float64) where {T} = Disk{T}()
+disk(radius::Number) = radius * disk(typeof(radius))
+disk(radius::Number, center::AbstractVector) = disk(radius) + center
+
+ball(::Type{T} = Float64) where {T} = Ball{T}()
+ball(radius::Number) = radius * ball(typeof(radius))
+ball(radius::Number, center::AbstractVector) = ball(radius) + center
 
 show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
 
-const unitdisk = Disk()
 
 
-
-################################################################################
-### A 3D ball
-################################################################################
-
-struct Ball{S,T} <: EuclideanDomain{3,T}
-    radius    ::  S
-    center    ::  SVector{3,T}
-
-    Ball{S,T}(radius = one(S), center = zeros(SVector{3,T})) where {S,T} = new(radius, center)
+"""
+The unit sphere (of radius 1) in `N` dimensions.
+"""
+struct UnitSphere{N,T} <: EuclideanDomain{N,T}
 end
 
-Ball() = Ball{Int,Float64}()
-Ball{T}(::Type{T}) = Ball{T,T}()
+const Circle{T} = UnitSphere{2,T}
+const Sphere{T} = UnitBall{3,T}
 
-Ball{T}(radius::T) = Ball{T,T}(radius)
-Ball{S,T}(radius::S, center::SVector{3,T}) = Ball{S,T}(radius, center)
-Ball(radius, center::AbstractVector) = Ball(radius, SVector{3}(center))
+indomain(x, ::UnitSphere) = norm(x) == 1
 
+∂(::UnitBall{N,T}) where {N,T} = UnitSphere{N,T}()
 
-indomain(x, s::Ball) = (x[1]-s.center[1])^2 + (x[2]-s.center[2])^2 + (x[3]-s.center[3])^2 <= s.radius^2
+circle(::Type{T} = Float64) where {T} = Circle{T}()
+circle(radius::Number) = radius * circle(typeof(radius))
+circle(radius::Number, center::AbstractVector) = circle(radius) + center
 
-## Arithmetic operations
-
-(+)(s::Ball, x::SVector{3}) = Ball(s.radius, s.center+x)
-
-(*)(s::Ball, x::Number) = Ball(s.radius * x, s.center * x)
-
-
-show(io::IO, s::Ball) = print(io, "a ball of radius ", s.radius, " centered at ", s.center)
-
-const unitball = Ball()
+sphere(::Type{T} = Float64) where {T} = Sphere{T}()
+sphere(radius::Number) = radius * sphere(typeof(radius))
+sphere(radius::Number, center::AbstractVector) = sphere(radius) + center
 
 
+###########################
+# An n-dimensional simplex
+###########################
+
+struct UnitSimplex{N,T} <: EuclideanDomain{N,T}
+end
+
+indomain(x, ::UnitSimplex) = x .>= 0 && norm(x,1) <= 1
+
+simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
 
 
+#########################
+# An n-dimensional cube
+#########################
 
-################################################################################
-### An n-dimensional cube
-################################################################################
+cube(::Type{Val{N}}, ::Type{T} = Float64) where {N,T} = tensorproduct(UnitInterval{T}(), Val{N})
 
-Cube() = Cube(Val{1})
+cube() = cube(Val{3})
 
-Cube(::Type{Val{1}}) = Interval()
-Cube{N}(::Type{Val{N}}) = Interval() ⊗ Cube(Val{N-1})
-Cube(n::Int) = Cube(Val{n})
+rectangle(a, b, c, d) = interval(a,b) ⊗ interval(c,d)
 
-Cube(left::Number, right::Number) = Interval(left, right)
-Cube(left, right) = tensorproduct(map(Interval, left, right)...)
-
-rectangle(a, b, c, d) = Interval(a,b) ⊗ Interval(c,d)
-
-cube(a, b, c, d, e, f) = Interval(a,b) ⊗ Interval(c,d) ⊗ Interval(e,f)
+cube(a, b, c, d, e, f) = interval(a,b) ⊗ interval(c,d) ⊗ interval(e,f)
 
 
-const unitsquare = Cube(Val{2})
-const unitcube = Cube(Val{3})
+# const Square{T} = UnitCube{2,T}
+# const Cube{T} = UnitCube{3,T}}
 
 
 
-################################################################################
-### A cylinder
-################################################################################
+##############
+# A cylinder
+##############
 
+cylinder(::Type{T} = Float64) where {T} = disk(T) ⊗ UnitInterval{T}()
 
-cylinder(radius = 1, length = 1) = Disk(radius) ⊗ Interval(0,length)
+cylinder(radius::T, length::T) where {T} = disk(radius) ⊗ Interval(0,length)

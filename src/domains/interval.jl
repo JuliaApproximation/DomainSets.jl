@@ -38,6 +38,13 @@ iscompact(d::FixedInterval) = true
 # We assume a closed domain for membership.
 indomain(x, d::FixedInterval) = leftendpoint(d) <= x <= rightendpoint(d)
 
+"""
+Return an interval that is similar to the given interval, but with endpoints
+`a` and `b` instead.
+"""
+# Assume a closed interval by default
+similar_interval(d::FixedInterval{T}, a, b) where {T} = ClosedInterval{T}(a, b)
+
 
 "The closed unit interval [0,1]."
 struct UnitInterval{T} <: FixedInterval{T}
@@ -69,6 +76,13 @@ iscompact(d::RealLine) = false
 
 indomain(x::T, d::RealLine{T}) where {T} = true
 
+function similar_interval(d::RealLine, a, b)
+    @assert isinf(a) && a < 0
+    @assert isinf(b) && b > 0
+    d
+end
+
+
 "The half-open positive halfline `[0,∞)`."
 struct HalfLine{T} <: FixedInterval{T}
 end
@@ -84,6 +98,13 @@ iscompact(d::HalfLine) = false
 
 indomain(x, d::HalfLine) = x >= 0
 
+function similar_interval(d::HalfLine, a, b)
+    @assert a == 0
+    @assert isinf(b) && b > 0
+    d
+end
+
+
 "The open negative halfline `(-∞,0)`."
 struct NegativeHalfLine{T} <: FixedInterval{T}
 end
@@ -97,6 +118,13 @@ isopen(d::NegativeHalfLine) = true
 iscompact(d::NegativeHalfLine) = false
 
 indomain(x, d::NegativeHalfLine) = x < 0
+
+function similar_interval(d::NegativeHalfLine, a, b)
+    @assert isinf(a) && a < 0
+    @assert b == 0
+    d
+end
+
 
 """
 A general interval with endpoints `a` and `b`. The interval can be open or
@@ -129,9 +157,10 @@ const HalfOpenLeftInterval{T} = Interval{:open,:closed,T}
 const HalfOpenRightInterval{T} = Interval{:closed,:open,T}
 
 # By default we create a closed interval
-Interval(args...) = ClosedInterval(args...)
+interval(args...) = closed_interval(args...)
 
-Interval{T}(args...) where {T <: Number} = ClosedInterval{T}(args...)
+closed_interval(args...) = ClosedInterval(args...)
+open_interval(args...) = OpenInterval(args...)
 
 # By default we use a Float64 type
 Interval{L,R}() where {L,R} = Interval{L,R,Float64}()
@@ -158,21 +187,20 @@ indomain(x, d::HalfOpenLeftInterval) = d.a < x <= d.b
 indomain(x, d::HalfOpenRightInterval) = d.a <= x < d.b
 
 
+similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
+    Interval{L,R,T}(a, b)
+
+
 #################################
 # Conversions between intervals
 #################################
-
-# The unit interval is the default canonical domain for all intervals
-canonical_domain(d::AbstractInterval{T}) where T = UnitInterval{T}()
-
-# The Chebyshev interval is its own canonical domain
-canonical_domain(d::ChebyshevInterval) = d
 
 "Return a default interval (the unit interval `[0,1]`)."
 interval() = UnitInterval()
 
 
-convert(::Type{Interval{L,R,T}}, d::AbstractInterval{S}) where {L,R,T,S} = Interval{L,R,T}(leftendpoint(d), rightendpoint(d))
+convert(::Type{Interval{L,R,T}}, d::AbstractInterval{S}) where {L,R,T,S} =
+    Interval{L,R,T}(leftendpoint(d), rightendpoint(d))
 
 function convert(::Type{UnitInterval{T}}, d::AbstractInterval{S}) where {T,S}
     @assert leftendpoint(d) == 0
@@ -192,37 +220,40 @@ end
 # Arithmetic operations
 ########################
 
-(+)(d::AbstractInterval, x::Number) = Interval(leftendpoint(d)+x, rightendpoint(d)+x)
+# Some computations with intervals simplify without having to use a mapped domain.
+# This is only the case for Interval{L,R,T}, and not for any of the FixedIntervals
+# because the endpoints of the latter are, well, fixed.
+(+)(d::Interval, x::Number) = similar_interval(d, leftendpoint(d)+x, rightendpoint(d)+x)
+(*)(a::Number, d::Interval) = similar_interval(d, a*leftendpoint(d), a*rightendpoint(d))
+(/)(d::Interval, a::Number) = similar_interval(d, leftendpoint(d)/a, rightendpoint(d)/a)
 
-(*)(a::Number, d::AbstractInterval) = Interval(a*leftendpoint(d), a*rightendpoint(d))
-(/)(d::AbstractInterval, a::Number) = Interval(leftendpoint(d)/a, rightendpoint(d)/a)
 
+show(io::IO, d::AbstractInterval) = print(io, "the interval [", d.a, ", ", d.b, "]")
 
-show(io::IO, d::Interval) = print(io, "the interval [", d.a, ", ", d.b, "]")
+function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
+    a1 = leftendpoint(d1)
+    b1 = rightendpoint(d1)
+    a2 = leftendpoint(d2)
+    b2 = rightendpoint(d2)
 
-
-function union(d1::Interval, d2::Interval)
-    a = leftendpoint(d1)
-    b = rightendpoint(d1)
-    c = leftendpoint(d2)
-    d = rightendpoint(d2)
-
-    if (b < c) || (a > d)
+    if (b1 < a2) || (a1 > b2)
         UnionDomain(d1, d2)
     else
-        Interval(min(a, c), max(b, d))
+        # TODO: add some logic to determine open and closed nature of endpoints of new interval
+        Interval(min(a1, a2), max(b1, b2))
     end
 end
 
-function intersect(d1::Interval, d2::Interval)
-    a = leftendpoint(d1)
-    b = rightendpoint(d1)
-    c = leftendpoint(d2)
-    d = rightendpoint(d2)
+function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
+    a1 = leftendpoint(d1)
+    b1 = rightendpoint(d1)
+    a2 = leftendpoint(d2)
+    b2 = rightendpoint(d2)
 
-    if (b < c) || (a > d)
+    if (b1 < a2) || (a1 > b2)
         EmptyDomain(Val{1}())
     else
-        Interval(max(a, c), min(b, d))
+        # TODO: add some logic to determine open and closed nature of endpoints of new interval
+        Interval(max(a1, a2), min(b1, b2))
     end
 end

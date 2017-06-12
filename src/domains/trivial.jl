@@ -12,7 +12,7 @@ const AnyEmptySpace = EmptySpace{Any}
 EmptySpace() = EmptySpace{Float64}()
 EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 
-emptyspace(d::Domain) = EmptySpace{eltype(d)}()
+emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
 
@@ -43,6 +43,7 @@ euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
 euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace(Point{N,T})
 
 indomain(x::T, d::FullSpace{T}) where {T} = true
+indomain(x::S, d::FullSpace{T}) where {T,S} = promotes_to(S,T)
 
 # Arithmetic operations
 

@@ -77,6 +77,8 @@ tensorproduct(d1::ProductDomain, d2::ProductDomain) = tensorproduct(elements(d1)
 
 ^(d::Domain, n::Int) = tensorproduct(d, n)
 
+^(d::Domain{T}, ::Type{Val{N}}) where {N,T} = ProductDomain{NTuple{N,typeof(d)},NTuple{N,T},SVector{N,T}}(ntuple(i->d, Val{N}))
+
 indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d)
 
 # TODO: check for the efficiency of this operation

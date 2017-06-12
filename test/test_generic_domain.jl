@@ -2,8 +2,8 @@
 
 function test_generic_domains()
     domains = [
-        Interval(),
-        Cube()
+        interval(),
+        cube()
     ]
 
     @testset "$(rpad("Generic domains",80))" begin

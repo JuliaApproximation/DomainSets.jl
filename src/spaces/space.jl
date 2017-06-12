@@ -29,7 +29,11 @@ isomorphic. In that case, an element of `A` can be converted to an element of
 `B` and vice-versa. The conversion is invertible. One example is the isomorphism
 between ℝ^2 and ℂ.
 
-New spaces can be defined by defining a new numeric type.
+New spaces can be defined by defining a new numeric type. Embeddings and
+isomorphisms are defined by defining new `embedding_reduction` and
+`isomorphism_reduction` rules, along with conversiong using `convert_space`
+and `restrict_space`. See the documentation of these functions for
+information on how to use them.
 """
 struct GeometricSpace{T}
 end
@@ -71,12 +75,9 @@ zero(::Type{GeometricSpace{T}}) where {T} = zero(T)
 "The origin of a space is its zero element."
 origin(space::GeometricSpace) = zero(space)
 
-# Definition of element membership is based only on type:
-in(x, A::GeometricSpace) = in(x, typeof(A))
-# - x is in the space of the type of x equals that of the space
+# Definition of element membership is strictly based on type:
+in(x, ::GeometricSpace) = false
 in(x::T, ::Type{GeometricSpace{T}}) where {T} = true
-# - or if its type can be promoted to that of the space
-in(x::S, ::Type{GeometricSpace{T}}) where {S,T} = promote_type(S,T) == T
 
 
 # Make the space bigger by widening the numeric type
