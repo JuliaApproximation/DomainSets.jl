@@ -9,6 +9,7 @@ end
 
 function CompositeMap(maps...)
     MAPS = typeof(maps)
+    # TODO: check all intermediate types
     S = domaintype(maps[1])
     T = rangetype(maps[end])
     ProductMap{MAPS,T,S}(maps)

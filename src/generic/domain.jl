@@ -17,6 +17,12 @@ spaceof(::Domain{T}) where {T} = spacetype(T)
 eltype(::Type{Domain{T}}) where {T} = T
 eltype(::Type{D}) where {D <: Domain} = eltype(supertype(D))
 
+"""
+If the type `T` is a container type, the elements of `T` may have a different
+`subeltype`. If `T` is not a container, `subeltype` simply evaluates to `T`.
+"""
+subeltype(d) = subeltype(spaceof(d))
+
 "We use `Point{N,T}` as a synonym for `SVector{N,T}`."
 const Point{N,T} = SVector{N,T}
 
@@ -43,3 +49,5 @@ in(x::SVector{1,T}, d::Domain{T}) where {T <: Number} = in(x[1], d)
 
 # The user may supply a vector. We attempt to convert it to the right space.
 in(x::Vector{T}, d::Domain) where {T} = in(convert(SVector{ndims(typeof(d)),T}, x), d)
+
+isreal(d::Domain) = isreal(spaceof(d))

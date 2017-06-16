@@ -14,6 +14,8 @@ rangetype(map::AbstractMap{T,S}) where {T,S} = T
 
 (\)(map::AbstractMap, y) = inv(map) * y
 
+isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(rangetype(m))
+
 """
 `return_type(map, U)` is a generic function that computes the return type when
 the given map is applied to a variable of type `U`.

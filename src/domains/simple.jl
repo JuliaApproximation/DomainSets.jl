@@ -28,27 +28,6 @@ show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ba
 
 
 
-"""
-The unit sphere (of radius 1) in `N` dimensions.
-"""
-struct UnitSphere{N,T} <: EuclideanDomain{N,T}
-end
-
-const Circle{T} = UnitSphere{2,T}
-const Sphere{T} = UnitBall{3,T}
-
-indomain(x, ::UnitSphere) = norm(x) == 1
-
-∂(::UnitBall{N,T}) where {N,T} = UnitSphere{N,T}()
-
-circle(::Type{T} = Float64) where {T} = Circle{T}()
-circle(radius::Number) = radius * circle(typeof(radius))
-circle(radius::Number, center::AbstractVector) = circle(radius) + center
-
-sphere(::Type{T} = Float64) where {T} = Sphere{T}()
-sphere(radius::Number) = radius * sphere(typeof(radius))
-sphere(radius::Number, center::AbstractVector) = sphere(radius) + center
-
 
 ###########################
 # An n-dimensional simplex
@@ -74,6 +53,8 @@ rectangle(a, b, c, d) = interval(a,b) ⊗ interval(c,d)
 
 cube(a, b, c, d, e, f) = interval(a,b) ⊗ interval(c,d) ⊗ interval(e,f)
 
+# This one is not type-stable
+cube(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} = ProductDomain(map((ai,bi)->interval(T,ai,bi), a, b)...)
 
 # const Square{T} = UnitCube{2,T}
 # const Cube{T} = UnitCube{3,T}}

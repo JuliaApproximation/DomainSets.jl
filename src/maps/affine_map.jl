@@ -9,7 +9,10 @@ We use matrix and vector to denote `a` and `b` respectively.
 abstract type AbstractAffineMap{T,S} <: AbstractMap{T,S}
 end
 
+jacobian(m::AbstractAffineMap, x) = matrix(m)
 
+islinear(map::AbstractMap) = false
+islinear(map::AbstractAffineMap) = true
 
 """
 A `LinearMap` is an affine map that represents `y = a*x`, where `a` can have any
@@ -34,6 +37,8 @@ matrix(m::LinearMap) = m.a
 applymap(m::LinearMap, x) = matrix(m) * x
 
 inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))
+
+apply_inverse(m::LinearMap, y) = applymap(inv(m), y)
 
 vector(m::LinearMap) = zero(rangetype(m))
 
@@ -84,6 +89,8 @@ applymap(m::AffineMap, x) = m.a * x + m.b
 
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap{T,S}) where {T,S} = AffineMap{S,T}(inv(m.a), -inv(m.a)*m.b)
+
+apply_inverse(m::AffineMap, y) = applymap(inv(m), y)
 
 
 

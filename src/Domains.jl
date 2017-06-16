@@ -25,6 +25,7 @@ import Base: size, length, ndims, getindex, eltype, ndims
 import Base: inv
 import Base: isreal
 import Base: zero
+import Base: gradient
 
 # Types, promotions and conversions
 import Base: convert, widen
@@ -34,6 +35,9 @@ import Base: start, next, done
 
 # Display
 import Base: show
+
+# Various
+import Base: isopen
 
 
 ################################
@@ -70,17 +74,21 @@ export ProductSpace
 # from maps/maps.jl
 export AbstractMap, applymap, apply_inverse, jacobian, linearize
 export domaintype, rangetype
-# from maps/affine_maps.jl
-export AffineMap, Translation, LinearMap
-export linear_map, interval_map, scaling_map
-# from maps/productmap.jl
-export ProductMap
-# from maps/coordinates.jl
-export CartToPolarMap, PolarToCartMap
-# from maps/basic_maps.jl
-export IdentityMap
 # from maps/composite_map.jl
 export CompositeMap
+export ∘
+# from maps/productmap.jl
+export ProductMap
+# from maps/basic_maps.jl
+export IdentityMap
+# from maps/embedding_map.jl
+export embedding_map, restriction_map, isomorphism_map
+# from maps/affine_maps.jl
+export AffineMap, Translation, LinearMap
+export islinear, matrix, vector
+export linear_map, interval_map, scaling_map
+# from maps/coordinates.jl
+export CartToPolarMap, PolarToCartMap
 
 
 ## Generic domains
@@ -88,6 +96,7 @@ export CompositeMap
 # from generic/domain.jl
 export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
 export indomain
+export isclosed, isopen, iscompact
 
 # from generic/derived_domain.jl
 export DerivedDomain
@@ -115,10 +124,16 @@ export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
 export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval
+export real_line, halfline, negative_halfline
 export interval, leftendpoint, rightendpoint
+export similar_interval
 # from domains/simple.jl
 export UnitBall, Disk, Ball, Circle, Sphere, Cube
 export disk, ball, circle, sphere, cube, cylinder
+# from domains/circle.jl
+export Circle, Sphere
+export circle, sphere
+export parameterization, gradient
 
 
 include("util/common.jl")
@@ -130,10 +145,11 @@ include("spaces/basic_spaces.jl")
 include("spaces/productspace.jl")
 
 include("maps/maps.jl")
-include("maps/productmap.jl")
 include("maps/composite_map.jl")
-include("maps/affine_map.jl")
+include("maps/productmap.jl")
 include("maps/basic_maps.jl")
+include("maps/embedding_map.jl")
+include("maps/affine_map.jl")
 include("maps/coordinates.jl")
 
 include("generic/domain.jl")
@@ -146,5 +162,6 @@ include("generic/arithmetics.jl")
 include("domains/trivial.jl")
 include("domains/interval.jl")
 include("domains/simple.jl")
+include("domains/circle.jl")
 
 end # module

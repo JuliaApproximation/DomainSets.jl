@@ -65,40 +65,27 @@ leftendpoint(d::ChebyshevInterval{T}) where {T} = -one(T)
 rightendpoint(d::ChebyshevInterval{T}) where {T} = one(T)
 
 
-"The real line `(-∞,∞)`."
-struct RealLine{T} <: FixedInterval{T}
-end
-
-leftendpoint(d::RealLine{T}) where {T} = zero(T)
-rightendpoint(d::RealLine{T}) where {T} = T(Inf)
-
-iscompact(d::RealLine) = false
-
-indomain(x::T, d::RealLine{T}) where {T} = true
-
-function similar_interval(d::RealLine, a, b)
-    @assert isinf(a) && a < 0
-    @assert isinf(b) && b > 0
-    d
-end
+real_line(::Type{T} = Float64) where {T <: AbstractFloat} = FullSpace{T}()
 
 
 "The half-open positive halfline `[0,∞)`."
-struct HalfLine{T} <: FixedInterval{T}
+struct Halfline{T} <: FixedInterval{T}
 end
 
-leftendpoint(d::HalfLine{T}) where {T} = zero(T)
-rightendpoint(d::HalfLine{T}) where {T} = T(Inf)
+halfline(::Type{T} = Float64) where {T <: AbstractFloat} = Halfline{T}()
+
+leftendpoint(d::Halfline{T}) where {T} = zero(T)
+rightendpoint(d::Halfline{T}) where {T} = T(Inf)
 
 # A half-open domain is neither open nor closed
-isclosed(d::HalfLine) = false
-isopen(d::HalfLine) = false
+isclosed(d::Halfline) = false
+isopen(d::Halfline) = false
 
-iscompact(d::HalfLine) = false
+iscompact(d::Halfline) = false
 
-indomain(x, d::HalfLine) = x >= 0
+indomain(x, d::Halfline) = x >= 0
 
-function similar_interval(d::HalfLine, a, b)
+function similar_interval(d::Halfline, a, b)
     @assert a == 0
     @assert isinf(b) && b > 0
     d
@@ -106,20 +93,22 @@ end
 
 
 "The open negative halfline `(-∞,0)`."
-struct NegativeHalfLine{T} <: FixedInterval{T}
+struct NegativeHalfline{T} <: FixedInterval{T}
 end
 
-leftendpoint(d::NegativeHalfLine{T}) where {T} = -T(Inf)
-rightendpoint(d::NegativeHalfLine{T}) where {T} = zero(T)
+negative_halfline(::Type{T} = Float64) where {T <: AbstractFloat} = NegativeHalfline{T}()
 
-isclosed(d::NegativeHalfLine) = false
-isopen(d::NegativeHalfLine) = true
+leftendpoint(d::NegativeHalfline{T}) where {T} = -T(Inf)
+rightendpoint(d::NegativeHalfline{T}) where {T} = zero(T)
 
-iscompact(d::NegativeHalfLine) = false
+isclosed(d::NegativeHalfline) = false
+isopen(d::NegativeHalfline) = true
 
-indomain(x, d::NegativeHalfLine) = x < 0
+iscompact(d::NegativeHalfline) = false
 
-function similar_interval(d::NegativeHalfLine, a, b)
+indomain(x, d::NegativeHalfline) = x < 0
+
+function similar_interval(d::NegativeHalfline, a, b)
     @assert isinf(a) && a < 0
     @assert b == 0
     d
@@ -156,6 +145,16 @@ const HalfOpenLeftInterval{T} = Interval{:open,:closed,T}
 "A half-open interval `[a,b)`."
 const HalfOpenRightInterval{T} = Interval{:closed,:open,T}
 
+"""
+Return an interval domain:
+- with no arguments, return the unit interval `[0,1]`
+- with an argument of type T, return the unit interval with that type
+- with arguments `interval(a,b)`, return the closed interval `[a,b]`
+"""
+interval() = UnitInterval()
+
+interval(::Type{T}) where {T} = UnitInterval{T}()
+
 # By default we create a closed interval
 interval(args...) = closed_interval(args...)
 
@@ -168,6 +167,8 @@ Interval{L,R}() where {L,R} = Interval{L,R,Float64}()
 Interval{L,R}(a::T, b::S) where {L,R,T,S} = Interval{L,R}(promote(a,b)...)
 
 Interval{L,R}(a::T, b::T) where {L,R,T} = Interval{L,R,T}(a, b)
+
+Interval{L,R}(::Type{T}, a, b) where {L,R,T} = Interval{L,R}(convert(T, a), convert(T, b))
 
 leftendpoint(d::Interval) = d.a
 rightendpoint(d::Interval) = d.b
@@ -195,9 +196,6 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 # Conversions between intervals
 #################################
 
-"Return a default interval (the unit interval `[0,1]`)."
-interval() = UnitInterval()
-
 
 convert(::Type{Interval{L,R,T}}, d::AbstractInterval{S}) where {L,R,T,S} =
     Interval{L,R,T}(leftendpoint(d), rightendpoint(d))
@@ -223,12 +221,12 @@ end
 # Some computations with intervals simplify without having to use a mapped domain.
 # This is only the case for Interval{L,R,T}, and not for any of the FixedIntervals
 # because the endpoints of the latter are, well, fixed.
-(+)(d::Interval, x::Number) = similar_interval(d, leftendpoint(d)+x, rightendpoint(d)+x)
-(*)(a::Number, d::Interval) = similar_interval(d, a*leftendpoint(d), a*rightendpoint(d))
-(/)(d::Interval, a::Number) = similar_interval(d, leftendpoint(d)/a, rightendpoint(d)/a)
+(+)(d::AbstractInterval, x::Number) = similar_interval(d, leftendpoint(d)+x, rightendpoint(d)+x)
+(*)(a::Number, d::AbstractInterval) = similar_interval(d, a*leftendpoint(d), a*rightendpoint(d))
+(/)(d::AbstractInterval, a::Number) = similar_interval(d, leftendpoint(d)/a, rightendpoint(d)/a)
 
 
-show(io::IO, d::AbstractInterval) = print(io, "the interval [", d.a, ", ", d.b, "]")
+show(io::IO, d::AbstractInterval) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
 
 function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
@@ -240,7 +238,7 @@ function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,
         UnionDomain(d1, d2)
     else
         # TODO: add some logic to determine open and closed nature of endpoints of new interval
-        Interval(min(a1, a2), max(b1, b2))
+        interval(min(a1, a2), max(b1, b2))
     end
 end
 
@@ -251,9 +249,9 @@ function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2
     b2 = rightendpoint(d2)
 
     if (b1 < a2) || (a1 > b2)
-        EmptyDomain(Val{1}())
+        EmptySpace{T}()
     else
         # TODO: add some logic to determine open and closed nature of endpoints of new interval
-        Interval(max(a1, a2), min(b1, b2))
+        interval(max(a1, a2), min(b1, b2))
     end
 end
