@@ -36,7 +36,7 @@ show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ba
 struct UnitSimplex{N,T} <: EuclideanDomain{N,T}
 end
 
-indomain(x, ::UnitSimplex) = x .>= 0 && norm(x,1) <= 1
+indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 
 simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
 

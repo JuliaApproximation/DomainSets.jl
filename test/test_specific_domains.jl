@@ -9,6 +9,8 @@ function test_specific_domains()
         test_interval()
         test_unitball()
         test_cube()
+        test_simplex()
+        test_sphere()
         test_arithmetics()
         test_tensorproduct_domain()
     end
@@ -17,7 +19,13 @@ end
 function test_emptyspace()
     println("- an empty space")
     d1 = EmptySpace()
+    @test eltype(d1) == Float64
     @test 0.5 ∉ d1
+    @test d1 ∩ d1 == d1
+    @test d1 ∪ d1 == d1
+    d2 = interval()
+    @test d1 ∩ d2 == d1
+    @test d1 ∪ d2 == d2
 
     d2 = EmptySpace(SVector{2,Float64})
     @test v[0.1,0.2] ∉ d2
@@ -27,6 +35,11 @@ function test_fullspace()
     println("- a full Euclidean space")
     d1 = FullSpace()
     @test 0.5 ∈ d1
+    @test d1 ∪ d1 == d1
+    @test d1 ∩ d1 == d1
+    d2 = interval()
+    @test d1 ∪ d2 == d1
+    @test d1 ∩ d2 == d2
 
     d2 = FullSpace(SVector{2,Float64})
     @test v[0.1,0.2] ∈ d2
@@ -162,6 +175,44 @@ function test_cube()
     D = cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0)
     @test v[0.9, 0.6, -2.5] ∈ D
     @test v[0.0, 0.6, 0.0] ∉ D
+end
+
+function test_simplex()
+    d = simplex(Val{2})
+    # We test a point in the interior, a point on each of the boundaries and
+    # all corners.
+    @test v[0.2,0.2] ∈ d
+    @test v[0.0,0.2] ∈ d
+    @test v[0.2,0.0] ∈ d
+    @test v[0.5,0.5] ∈ d
+    @test v[0.0,0.0] ∈ d
+    @test v[1.0,0.0] ∈ d
+    @test v[0.0,1.0] ∈ d
+    # And then some points outside
+    @test v[0.6,0.5] ∉ d
+    @test v[0.5,0.6] ∉ d
+    @test v[-0.2,0.2] ∉ d
+    @test v[0.2,-0.2] ∉ d
+
+    d3 = simplex(Val{3}, BigFloat)
+    x0 = big(0.0)
+    x1 = big(1.0)
+    x2 = big(0.3)
+    @test v[x0,x0,x0] ∈ d3
+    @test v[x1,x0,x0] ∈ d3
+    @test v[x0,x1,x0] ∈ d3
+    @test v[x0,x0,x1] ∈ d3
+    @test v[x2,x0,x0] ∈ d3
+    @test v[x0,x2,x0] ∈ d3
+    @test v[x0,x0,x2] ∈ d3
+    @test v[x2,x2,x2] ∈ d3
+    @test v[-x2,x2,x2] ∉ d3
+    @test v[x2,-x2,x2] ∉ d3
+    @test v[x2,x2,-x2] ∉ d3
+    @test v[x1,x1,x1] ∉ d3
+end
+
+function test_sphere()
 end
 
 function test_arithmetics()
