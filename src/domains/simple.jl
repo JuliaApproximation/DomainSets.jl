@@ -55,6 +55,8 @@ cube(a, b, c, d, e, f) = interval(a,b) ⊗ interval(c,d) ⊗ interval(e,f)
 
 # This one is not type-stable
 cube(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} = ProductDomain(map((ai,bi)->interval(T,ai,bi), a, b)...)
+# This one isn't either
+cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), tuple(b...))
 
 # const Square{T} = UnitCube{2,T}
 # const Cube{T} = UnitCube{3,T}}
