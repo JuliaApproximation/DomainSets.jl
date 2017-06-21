@@ -139,18 +139,18 @@ end
 function test_product_spaces()
     Z = IntegerSpace{Int}
     R = RealSpace{Float64}
-    P = Z ⊗ R
+    P = Z × R
     @test eltype(P) == Tuple{Int,Float64}
 
-    R2 = R ⊗ R
+    R2 = R × R
     @test eltype(R2) == Tuple{Float64,Float64}
     test_isomorphism(R2, VectorSpace{2,Float64})
 
-    R3 = tensorproduct(R, R, R)
+    R3 = cartesianproduct(R, R, R)
     @test eltype(R3) == Tuple{Float64,Float64,Float64}
     test_isomorphism(R3, VectorSpace{3,Float64})
 
-    RR = R2 ⊗ R
+    RR = R2 × R
     @test eltype(RR) == Tuple{Tuple{Float64,Float64},Float64}
     test_isomorphism(RR, VectorSpace{3,Float64})
 end

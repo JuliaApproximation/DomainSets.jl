@@ -1,5 +1,5 @@
 # productdomain.jl
-# Routines for a tensor product of domains
+# Routines for a cartesian product of domains
 
 ###################
 # Helper functions
@@ -30,7 +30,7 @@ simplify_product_eltype(::Type{Tuple{Tuple{T,T},T}}) where {T} = SVector{3,T}
 #######################
 
 """
-A `ProductDomain` represents the tensor product of other domains.
+A `ProductDomain` represents the cartesian product of other domains.
 
 A product domain has two eltypes, an internal type `S` and an external type `T`.
 The internal type `S` is a tuple containing the eltypes of the elements of the
@@ -66,16 +66,18 @@ internal_eltype(::Type{P}) where {P <: ProductDomain} = S
 internal_eltype(d::ProductDomain) = internal_eltype(typeof(d))
 
 
-# One can use the tensorproduct routine to create product domains
-tensorproduct(domains::Domain...) = ProductDomain(domains...)
+cross(x::Domain...) = cartesianproduct(x...)
 
-# We try to avoid creating nested tensor products
-tensorproduct(d1::Domain, d2::ProductDomain) = tensorproduct(d1, elements(d2)...)
-tensorproduct(d1::ProductDomain, d2::Domain) = tensorproduct(elements(d1)..., d2)
-tensorproduct(d1::ProductDomain, d2::ProductDomain) = tensorproduct(elements(d1)..., elements(d2...))
+# One can use the cartesianproduct routine to create product domains
+cartesianproduct(domains::Domain...) = ProductDomain(domains...)
+
+# We try to avoid creating nested cartesian products
+cartesianproduct(d1::Domain, d2::ProductDomain) = cartesianproduct(d1, elements(d2)...)
+cartesianproduct(d1::ProductDomain, d2::Domain) = cartesianproduct(elements(d1)..., d2)
+cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elements(d1)..., elements(d2...))
 
 
-^(d::Domain, n::Int) = tensorproduct(d, n)
+^(d::Domain, n::Int) = cartesianproduct(d, n)
 
 ^(d::Domain{T}, ::Type{Val{N}}) where {N,T} = ProductDomain{NTuple{N,typeof(d)},NTuple{N,T},SVector{N,T}}(ntuple(i->d, Val{N}))
 
