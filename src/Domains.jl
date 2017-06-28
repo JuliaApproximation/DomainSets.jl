@@ -37,7 +37,7 @@ import Base: start, next, done
 import Base: show
 
 # Various
-import Base: isopen
+import Base: isopen, Bool
 
 
 ################################
@@ -128,7 +128,7 @@ export real_line, halfline, negative_halfline
 export interval, leftendpoint, rightendpoint
 export similar_interval
 # from domains/simple.jl
-export UnitBall, Disk, Ball, Cube, Simplex
+export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere
 export disk, ball, cube, simplex, cylinder
 # from domains/circle.jl
 export Circle, Sphere
