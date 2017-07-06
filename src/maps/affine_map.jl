@@ -62,7 +62,6 @@ apply_inverse(m::Translation, y) = y - vector(m)
 inv(m::Translation) = Translation(-vector(m))
 
 
-
 struct AffineMap{T,S,A} <: AbstractAffineMap{T,S}
     a   ::  A
     b   ::  T
@@ -119,7 +118,18 @@ scaling_map(a, b, c) = LinearMap(SMatrix{3,3}(a, 0, 0,  0, b, 0,  0, 0,c))
 "Scale the variables by a, b, c and d."
 scaling_map(a, b, c, d) = LinearMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,0,d))
 
+#############################
+# Rotations around the origin
+#############################
 
+# Rotation in positive direction
+rotationmatrix(theta) = SMatrix{2,2}(cos(theta), -sin(theta), sin(theta), cos(theta))
+# Rotation about X-axis (phi), Y-axis (theta) and Z-axis (psi)
+rotationmatrix(phi,theta,psi) =
+ SMatrix{3,3}(cos(theta)*cos(psi), cos(phi)*sin(psi)+sin(phi)*sin(theta)*cos(psi), sin(phi)*sin(psi)-cos(phi)*sin(theta)*cos(psi), -cos(theta)*sin(psi), cos(phi)*cos(psi)-sin(phi)*sin(theta)*sin(psi), sin(phi)*cos(psi)+cos(phi)*sin(theta)*sin(psi), sin(theta), -sin(phi)*cos(theta), cos(phi)*cos(theta))
+ 
+ rotation_map(theta) = LinearMap(rotationmatrix(theta))
+ rotation_map(phi, theta, psi) = LinearMap(rotationmatrix(phi,theta,psi))
 ##############
 # Arithmetic
 ##############

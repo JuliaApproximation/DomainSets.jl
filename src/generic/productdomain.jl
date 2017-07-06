@@ -23,6 +23,7 @@ Examples of simplifications:
 simplify_product_eltype(::Type{T}) where {T} = T
 simplify_product_eltype(::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
 simplify_product_eltype(::Type{Tuple{Tuple{T,T},T}}) where {T} = SVector{3,T}
+simplify_product_eltype(::Type{Tuple{SVector{2,T},T}}) where {T} = SVector{3,T}
 
 
 #######################

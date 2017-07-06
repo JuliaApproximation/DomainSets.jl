@@ -69,4 +69,4 @@ cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), t
 
 cylinder(::Type{T} = Float64) where {T} = disk(T) ⊗ UnitInterval{T}()
 
-cylinder(radius::T, length::T) where {T} = disk(radius) ⊗ Interval(0,length)
+cylinder(radius::T, length::T) where {T} = disk(radius) ⊗ interval(0,length)

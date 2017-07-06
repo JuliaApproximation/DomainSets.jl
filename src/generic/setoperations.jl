@@ -125,24 +125,3 @@ function show(io::IO, d::DifferenceDomain)
     print(io, "    Second domain: ", d.d2, "\n")
 end
 
-
-###########################
-### A translated domain
-###########################
-
-# TODO: this should go, in favour of a more general mapped domain
-struct TranslatedDomain{T,D <: Domain{T}} <: Domain{T}
-    domain      ::  D
-    translation ::  T
-end
-
-domain(d::TranslatedDomain) = d.domain
-
-translationvector(d::TranslatedDomain) = d.translation
-
-function indomain(x, d::TranslatedDomain)
-    indomain(x-d.translation, d.domain)
-end
-
-(+)(d::Domain{T}, translation::T) where {T} = TranslatedDomain(d, translation)
-(+)(d::TranslatedDomain{T}, translation::T) where {T} = TranslatedDomain(domain(d), translation+translationvector(d))

@@ -114,7 +114,7 @@ export MappedDomain
 export mapping, map_domain
 
 # from generic/arithmetics.jl
-
+export rotate
 
 
 ## Specific domains
@@ -134,7 +134,6 @@ export disk, ball, cube, simplex, cylinder
 export Circle, Sphere
 export circle, sphere
 export parameterization, gradient
-
 
 include("util/common.jl")
 include("util/tensorproducts.jl")
