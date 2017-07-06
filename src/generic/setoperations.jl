@@ -41,8 +41,9 @@ indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(nb_elements(d)) domains: \n")
-    print(io, "    First domain: ", element(d,1), "\n")
-    print(io, "    Second domain: ", element(d,2), "\n")
+    for i=1:nb_elements(d)
+        print(io, "    $i.\t: ", element(d,i), "\n")
+    end
 end
 
 

@@ -129,7 +129,7 @@ export interval, leftendpoint, rightendpoint
 export similar_interval
 # from domains/simple.jl
 export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere
-export disk, ball, cube, simplex, cylinder
+export disk, ball, cube, simplex, cylinder, rectangle
 # from domains/circle.jl
 export Circle, Sphere
 export circle, sphere
