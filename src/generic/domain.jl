@@ -48,6 +48,6 @@ in(x::S, d::Domain{T}) where {T,S} = in(convert(T, x), d)
 in(x::SVector{1,T}, d::Domain{T}) where {T <: Number} = in(x[1], d)
 
 # The user may supply a vector. We attempt to convert it to the right space.
-in(x::Vector{T}, d::Domain) where {T} = in(convert(SVector{ndims(typeof(d)),T}, x), d)
+in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)
 
 isreal(d::Domain) = isreal(spaceof(d))
