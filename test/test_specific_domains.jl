@@ -241,6 +241,6 @@ function test_tensorproduct_domain()
 
     # ProductDomain 2
     T = ProductDomain(disk(1.05), interval(-1.0,1.0))
-    @test (v[0.5,0.5,0.8]) ∈ T
-    @test (v[-1.1,0.3,0.1]) ∉ T
+    @test v[0.5,0.5,0.8] ∈ T
+    @test v[-1.1,0.3,0.1] ∉ T
 end
