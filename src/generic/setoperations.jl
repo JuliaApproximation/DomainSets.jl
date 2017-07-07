@@ -41,8 +41,9 @@ indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(nb_elements(d)) domains: \n")
-    print(io, "    First domain: ", element(d,1), "\n")
-    print(io, "    Second domain: ", element(d,2), "\n")
+    for i=1:nb_elements(d)
+        print(io, "    $i.\t: ", element(d,i), "\n")
+    end
 end
 
 
@@ -125,24 +126,3 @@ function show(io::IO, d::DifferenceDomain)
     print(io, "    Second domain: ", d.d2, "\n")
 end
 
-
-###########################
-### A translated domain
-###########################
-
-# TODO: this should go, in favour of a more general mapped domain
-struct TranslatedDomain{T,D <: Domain{T}} <: Domain{T}
-    domain      ::  D
-    translation ::  T
-end
-
-domain(d::TranslatedDomain) = d.domain
-
-translationvector(d::TranslatedDomain) = d.translation
-
-function indomain(x, d::TranslatedDomain)
-    indomain(x-d.translation, d.domain)
-end
-
-(+)(d::Domain{T}, translation::T) where {T} = TranslatedDomain(d, translation)
-(+)(d::TranslatedDomain{T}, translation::T) where {T} = TranslatedDomain(domain(d), translation+translationvector(d))
