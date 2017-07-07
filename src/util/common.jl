@@ -21,6 +21,9 @@ const False = Val{false}
 (|)(::Type{False}, ::Type{True}) = True
 (|)(::Type{False}, ::Type{False}) = False
 
+Bool(::Type{True}) = true
+Bool(::Type{False}) = false
+
 # Return True if one of the arguments is True
 one_of(::Type{True}) = True
 one_of(::Type{False}) = False
