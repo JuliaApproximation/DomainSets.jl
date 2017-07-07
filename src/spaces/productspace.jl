@@ -26,12 +26,12 @@ zero(::Type{ProductSpace{Tuple{T,S,U,V}}}) where {T,S,U,V} = (zero(T), zero(S), 
 
 # # Due to #22239, we temporarily disable this isomorphism
 # # We identity (T,[T,T]) with [T,T,T]
-#
-# isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{S,SVector{2,S}}}}) where {T,S} =
-#     (GeometricSpace{T}, GeometricSpace{S})
-#
-# convert_space(::Type{ProductSpace{Tuple{T,SVector{2,T}}}}, x::SVector{3,T}) where {T} = (x[1], SVector{2,T}(x[2],x[3]))
-# convert_space(::Type{VectorSpace{3,T}}, x::Tuple{T,SVector{2,T}}) where {T} = SVector{3,T}(x[1], x[2][1], x[2][2])
+
+## isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{S,SVector{2,S}}}}) where {T,S} =
+##     (GeometricSpace{T}, GeometricSpace{S})
+
+## convert_space(::Type{ProductSpace{Tuple{T,SVector{2,T}}}}, x::SVector{3,T}) where {T} = (x[1], SVector{2,T}(x[2],x[3]))
+## convert_space(::Type{VectorSpace{3,T}}, x::Tuple{T,SVector{2,T}}) where {T} = SVector{3,T}(x[1], x[2][1], x[2][2])
 
 # We identity ((T,T),T) with [T,T,T]
 

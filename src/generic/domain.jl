@@ -42,10 +42,11 @@ const Domain4d{T} = EuclideanDomain{4,T}
 # the element type of the domain using promotion, and calls `indomain`.
 # Concrete subtypes should implement `indomain`, rather than `in`.
 in(x::T, d::Domain{T}) where {T} = indomain(x, d)
+
 in(x::S, d::Domain{T}) where {T,S} = in(convert(T, x), d)
 
 # Be forgiving for a 1D case. Good idea or not? This is really an isomorphism.
-in(x::SVector{1,T}, d::Domain{T}) where {T <: Number} = in(x[1], d)
+in(x::SVector{1,T}, d::Domain{T}) where {T <: Number}  = in(x[1], d)
 
 # The user may supply a vector. We attempt to convert it to the right space.
 in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)
