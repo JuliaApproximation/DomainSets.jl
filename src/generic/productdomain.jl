@@ -82,11 +82,18 @@ cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elemen
 
 ^(d::Domain{T}, ::Type{Val{N}}) where {N,T} = ProductDomain{NTuple{N,typeof(d)},NTuple{N,T},SVector{N,T}}(ntuple(i->d, Val{N}))
 
-indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d)
+indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d))
 
-# TODO: check for the efficiency of this operation
-_indomain(x, d::ProductDomain) = reduce(&, map(indomain, x, elements(d)))
+# THe line below allocates a little bit of memory...
+_indomain(x, d::ProductDomain, el) = reduce(&, map(indomain, x, el))
 
+# ...hence these special cases:
+_indomain(x::Tuple{A,B}, d::ProductDomain, el) where {A,B} = indomain(x[1], el[1]) &&
+    indomain(x[2], el[2])
+_indomain(x::Tuple{A,B,C}, d::ProductDomain, el) where {A,B,C} = indomain(x[1], el[1]) &&
+    indomain(x[2], el[2]) && indomain(x[3], el[3])
+_indomain(x::Tuple{A,B,C,D}, d::ProductDomain, el) where {A,B,C,D} = indomain(x[1], el[1]) &&
+    indomain(x[2], el[2]) && indomain(x[3], el[3]) && indomain(x[4], el[4])
 
 
 function show(io::IO, t::ProductDomain)
