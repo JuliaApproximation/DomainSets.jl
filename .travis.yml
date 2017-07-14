@@ -6,10 +6,8 @@ env:
   - PLOTS_DEFAULT_BACKEND="plotly"
 notifications:
   email: false
-
 before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-
 before_script:
   - julia -e 'Pkg.init()'
   - julia -e 'Pkg.add("GR")'
