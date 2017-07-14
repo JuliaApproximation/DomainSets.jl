@@ -10,9 +10,8 @@ before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 before_script:
   - julia -e 'Pkg.init()'
-  - julia -e 'Pkg.add("GR")'
   - julia -e 'Pkg.clone(pwd())'
 script:
-  - julia --code-coverage=user test/runtests.jl
+  - julia --check-bounds=yes -e 'Pkg.test("Wavelets", coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("Domains")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
