@@ -7,8 +7,13 @@ A map is any transformation of the form `y = f(x)`, where `x` has type `S` and
 abstract type AbstractMap{T,S}
 end
 
-domaintype(map::AbstractMap{T,S}) where {T,S} = S
-rangetype(map::AbstractMap{T,S}) where {T,S} = T
+domaintype(map::AbstractMap) = domaintype(typeof(map))
+domaintype(::Type{AbstractMap{T,S}}) where {T,S} = S
+domaintype(::Type{M}) where {M <: AbstractMap} = domaintype(supertype(M))
+
+rangetype(map::AbstractMap) = rangetype(typeof(map))
+rangetype(::Type{AbstractMap{T,S}}) where {T,S} = T
+rangetype(::Type{M}) where {M <: AbstractMap} = rangetype(supertype(M))
 
 (*)(map::AbstractMap, x) = applymap(map, x)
 
