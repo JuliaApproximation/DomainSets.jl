@@ -105,6 +105,7 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain
+export product_eltype
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain

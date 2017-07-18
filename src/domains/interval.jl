@@ -154,6 +154,10 @@ interval() = unitinterval()
 
 interval(::Type{T}) where {T} = UnitInterval{T}()
 
+# Create a floating point interval by default. The knowledgeable user can construct
+# an interval of integers by calling ClosedInterval{T} directly.
+interval(a::T, b::T) where {T <: Integer} = interval(float(a), float(b))
+
 # By default we create a closed interval
 interval(args...) = closed_interval(args...)
 
