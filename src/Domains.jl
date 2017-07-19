@@ -50,14 +50,14 @@ import Base: isopen, Bool
 export elements, element, nb_elements
 export TypeFactory
 # from util/tensorproducts.jl
-export flatten, tensorproduct, ⊗
+export tensorproduct, ⊗
 
 
 ## Spaces
 
 # from spaces/space.jl
 export GeometricSpace, AnySpace
-export spaceof, spacetype, origin, superspace, issubspace, subeltype
+export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
 # from spaces/space_promotions.jl
 export convert_space, restrict_space, demote, promote_space, promote_space_type
 export isomorphic, ≅, embedded, ↪

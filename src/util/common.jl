@@ -21,13 +21,10 @@ const False = Val{false}
 (|)(::Type{False}, ::Type{True}) = True
 (|)(::Type{False}, ::Type{False}) = False
 
-Bool(::Type{True}) = true
-Bool(::Type{False}) = false
-
 # Return True if one of the arguments is True
 one_of(::Type{True}) = True
 one_of(::Type{False}) = False
-one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(a,b)
+one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(one_of(a),one_of(b))
 one_of(a::Type{Val{A}}, b::Type{Val{B}}, c::Type{Val{C}}, d...) where {A,B,C} = one_of(a, one_of(b, c, d...))
 
 # Convert the boolean type to a boolean value

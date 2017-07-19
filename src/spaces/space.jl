@@ -77,6 +77,7 @@ origin(space::GeometricSpace) = zero(space)
 
 # Definition of element membership is strictly based on type:
 in(x, ::GeometricSpace) = false
+in(x, ::Type{GeometricSpace{T}}) where {T} = false
 in(x::T, ::Type{GeometricSpace{T}}) where {T} = true
 
 
@@ -120,3 +121,4 @@ issubspace(A::Type{AnySpace}, B::Type{AnySpace}) = true
 issubspace(A::Type{AnySpace}, B::Type{GeometricSpace{T}}) where {T} = false
 # In all other cases, we replace A by its superspace and recurse
 issubspace(A::Type{GeometricSpace{T}}, B::Type{GeometricSpace{S}}) where {T,S} = issubspace(superspace(A), B)
+# TODO add issubspace to specific spaces

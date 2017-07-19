@@ -134,6 +134,24 @@ function test_basic_spaces()
     # - except when one space is bigger
     @test promote_space_type(ComplexSpace{BigFloat}, VectorSpace{2,Float64}) == VectorSpace{2,BigFloat}
     @test promote_space_type(ComplexSpace{Float64}, VectorSpace{2,BigFloat}) == VectorSpace{2,BigFloat}
+
+    # some basic tests
+    @test !(zero(Z) ∈ R())
+    @test !(zero(Z) ∈ R())
+    @test zero(Z) ∈ Z
+
+    @test origin(Z()) == zero(Z)
+    @test typeof(origin(Z())) == typeof(zero(Z))
+
+    @test spaceof(1) == ℤ
+    @test superspaceof(1) == AnySpace
+
+    @test issubspace(Z, Z)
+    @test issubspace(Z, AnySpace)
+    @test !issubspace(AnySpace, Z)
+    println("issubspace not implemented")
+      # @test issubspace(N, Z)
+      # @test !issubspace(Z, N)
 end
 
 function test_product_spaces()
@@ -153,4 +171,8 @@ function test_product_spaces()
     RR = R2 ⊗ R
     @test eltype(RR) == Tuple{Tuple{Float64,Float64},Float64}
     test_isomorphism(RR, VectorSpace{3,Float64})
+
+    @test R == tensorproduct(R)
+
+    @test tensorproduct() == nothing
 end
