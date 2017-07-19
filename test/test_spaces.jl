@@ -19,7 +19,7 @@ nonzero_element(::Type{Tuple{T,S,U,V}}) where {T,S,U,V} = (nonzero_element(T),no
 
 # Generic tests for isomorphisms
 function test_isomorphism(A, B)
-    @test isomorphic(A, B)
+    @test isomorphic(A(), B())
     @test isomorphic(B, A)
     test_embedding(A, B)
     test_embedding(B, A)
@@ -80,6 +80,10 @@ function test_basic_spaces()
     test_embedding(R1, R2)
     test_embedding(R1, R3)
 
+    @test embedded(AnySpace, AnySpace)
+    @test embedded(Z, AnySpace)
+    @test !embedded(AnySpace, Z)
+
     # Isomorphism between T and SVector{1,T}
     test_isomorphism(Z, VectorSpace{1,Int})
     test_isomorphism(Q, VectorSpace{1,Rational{Int}})
@@ -134,6 +138,13 @@ function test_basic_spaces()
     # - except when one space is bigger
     @test promote_space_type(ComplexSpace{BigFloat}, VectorSpace{2,Float64}) == VectorSpace{2,BigFloat}
     @test promote_space_type(ComplexSpace{Float64}, VectorSpace{2,BigFloat}) == VectorSpace{2,BigFloat}
+
+    # Duplication
+
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}))
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))
+    @test_throws ErrorException  Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{1,Float64}}, GeometricSpace{Float64})
 end
 
 function test_product_spaces()
