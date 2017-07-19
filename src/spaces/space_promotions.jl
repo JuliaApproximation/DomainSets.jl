@@ -50,8 +50,9 @@ isomorphism_reduction_result(A, B, C, D, E, F) = _duplicate_reduction_result(A, 
 # happens for composite types, because they may differ only in their subtypes.
 # Return an error if the results are not consistent, because that may never be
 # the case.
-_duplicate_reduction_result(A, B, C::T, D::S, E::T, F::S) where {T,S} = isomorphism(C, D)
-_duplicate_reduction_result(A, B, C::T, D::S, E::S, F::T) where {T,S} = isomorphism(C, D)
+_duplicate_reduction_result(A, B, C::Type{T}, D::Type{T}, E::Type{T}, F::Type{T}) where {T} = isomorphism(C, D)
+_duplicate_reduction_result(A, B, C::Type{T}, D::Type{S}, E::Type{T}, F::Type{S}) where {T,S} = isomorphism(C, D)
+_duplicate_reduction_result(A, B, C::Type{T}, D::Type{S}, E::Type{S}, F::Type{T}) where {T,S} = isomorphism(C, D)
 _duplicate_reduction_result(A, B, C, D, E, F) = error("Duplicate isomorphism_reduction defined for ", A, " and ", B, ", but with inconsistent results.")
 
 """

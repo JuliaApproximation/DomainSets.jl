@@ -19,7 +19,7 @@ nonzero_element(::Type{Tuple{T,S,U,V}}) where {T,S,U,V} = (nonzero_element(T),no
 
 # Generic tests for isomorphisms
 function test_isomorphism(A, B)
-    @test isomorphic(A, B)
+    @test isomorphic(A(), B())
     @test isomorphic(B, A)
     test_embedding(A, B)
     test_embedding(B, A)
@@ -79,6 +79,10 @@ function test_basic_spaces()
     test_embedding(R, R1)
     test_embedding(R1, R2)
     test_embedding(R1, R3)
+
+    @test embedded(AnySpace, AnySpace)
+    @test embedded(Z, AnySpace)
+    @test !embedded(AnySpace, Z)
 
     # Isomorphism between T and SVector{1,T}
     test_isomorphism(Z, VectorSpace{1,Int})
@@ -152,23 +156,29 @@ function test_basic_spaces()
     println("issubspace not implemented")
       # @test issubspace(N, Z)
       # @test !issubspace(Z, N)
+    # Duplication
+
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}))
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))
+    @test_throws ErrorException  Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{1,Float64}}, GeometricSpace{Float64})
 end
 
 function test_product_spaces()
     Z = IntegerSpace{Int}
     R = RealSpace{Float64}
-    P = Z ⊗ R
+    P = Z × R
     @test eltype(P) == Tuple{Int,Float64}
 
-    R2 = R ⊗ R
+    R2 = R × R
     @test eltype(R2) == Tuple{Float64,Float64}
     test_isomorphism(R2, VectorSpace{2,Float64})
 
-    R3 = tensorproduct(R, R, R)
+    R3 = cartesianproduct(R, R, R)
     @test eltype(R3) == Tuple{Float64,Float64,Float64}
     test_isomorphism(R3, VectorSpace{3,Float64})
 
-    RR = R2 ⊗ R
+    RR = R2 × R
     @test eltype(RR) == Tuple{Tuple{Float64,Float64},Float64}
     test_isomorphism(RR, VectorSpace{3,Float64})
 

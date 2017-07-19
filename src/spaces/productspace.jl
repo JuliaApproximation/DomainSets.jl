@@ -6,19 +6,23 @@ of the individual entries of `T`.
 """
 const ProductSpace{T <: Tuple} = GeometricSpace{T}
 
-# A `tensorproduct(a)` with just a single element returns `a`.
-# tensorproduct(a::GeometricSpace) = tensorproduct(typeof(a))
-tensorproduct(a::GeometricSpace, b::GeometricSpace) = tensorproduct(typeof(a), typeof(b))()
-tensorproduct(a::GeometricSpace, b::GeometricSpace, c::GeometricSpace) = tensorproduct(typeof(a), typeof(b), typeof(c))()
-tensorproduct(a::GeometricSpace, b::GeometricSpace, c::GeometricSpace, d::GeometricSpace) = tensorproduct(typeof(a), typeof(b), typeof(c), typeof(d))()
+# Identify with the × operator and the cross function
+cross(x::GeometricSpace...) = cartesianproduct(x...)
+cross(x::Type{G1}, y::Type{G2}) where {G1 <: GeometricSpace, G2 <: GeometricSpace} = cartesianproduct(x, y)
 
-# A `tensorproduct(a)` with just a single element returns `a`.
-# tensorproduct(::Type{GeometricSpace{T}}) where {T} = ProductSpace{Tuple{T}}
-tensorproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}) where {T,S} = ProductSpace{Tuple{T,S}}
-tensorproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{GeometricSpace{U}}) where {T,S,U} = ProductSpace{Tuple{T,S,U}}
-tensorproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{GeometricSpace{U}}, ::Type{GeometricSpace{V}}) where {T,S,U,V} = ProductSpace{Tuple{T,S,U,V}}
+# Don't create a cartesian product of just one element
+# cartesianproduct(a::GeometricSpace) = cartesianproduct(typeof(a))
+cartesianproduct(a::GeometricSpace, b::GeometricSpace) = cartesianproduct(typeof(a), typeof(b))()
+cartesianproduct(a::GeometricSpace, b::GeometricSpace, c::GeometricSpace) = cartesianproduct(typeof(a), typeof(b), typeof(c))()
+cartesianproduct(a::GeometricSpace, b::GeometricSpace, c::GeometricSpace, d::GeometricSpace) = cartesianproduct(typeof(a), typeof(b), typeof(c), typeof(d))()
 
-# A `tensorproduct(a)` with just a single element returns `a`.
+# Don't create a cartesian product of just one element
+# cartesianproduct(::Type{GeometricSpace{T}}) where {T} = ProductSpace{Tuple{T}}
+cartesianproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}) where {T,S} = ProductSpace{Tuple{T,S}}
+cartesianproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{GeometricSpace{U}}) where {T,S,U} = ProductSpace{Tuple{T,S,U}}
+cartesianproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{GeometricSpace{U}}, ::Type{GeometricSpace{V}}) where {T,S,U,V} = ProductSpace{Tuple{T,S,U,V}}
+
+# A `cartesianproduct(a)` with just a single element returns `a`.
 # zero(::Type{ProductSpace{Tuple{T}}}) where {T} = (zero(T),)
 zero(::Type{ProductSpace{Tuple{T,S}}}) where {T,S} = (zero(T), zero(S))
 zero(::Type{ProductSpace{Tuple{T,S,U}}}) where {T,S,U} = (zero(T), zero(S), zero(U))

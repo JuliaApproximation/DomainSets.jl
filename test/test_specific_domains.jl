@@ -12,7 +12,7 @@ function test_specific_domains()
         test_simplex()
         test_sphere()
         test_arithmetics()
-        test_tensorproduct_domain()
+        test_cartesianproduct_domain()
     end
 end
 
@@ -233,14 +233,18 @@ function test_arithmetics()
     @test v[0.1, 0.1, 0.1] ∉ DS
 end
 
-function test_tensorproduct_domain()
+function test_cartesianproduct_domain()
     # ProductDomain 1
-    T = tensorproduct(interval(-1.0, 1.0), 2)
+    T = cartesianproduct(interval(-1.0, 1.0), 2)
+    @test v[0.5,0.5] ∈ T
+    @test v[-1.1,0.3] ∉ T
+
+    T = interval(-1.0, 1.0) × interval(-1.5, 2.5)
     @test v[0.5,0.5] ∈ T
     @test v[-1.1,0.3] ∉ T
 
     # ProductDomain 2
-    T = ProductDomain(disk(1.05), interval(-1.0,1.0))
+    T = ProductDomain(disk(1.05), interval(-1.0, 1.0))
     @test v[0.5,0.5,0.8] ∈ T
     @test v[-1.1,0.3,0.1] ∉ T
 end

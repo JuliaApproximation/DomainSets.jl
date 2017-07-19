@@ -16,6 +16,7 @@ import Base: |, &
 import Base: ∪, ∩
 import Base: ==
 import Base: ∘
+import Base: cross, ×
 
 # Set operations
 import Base: intersect, union, setdiff, in
@@ -49,8 +50,9 @@ import Base: isopen, Bool
 # from util/common.jl
 export elements, element, nb_elements
 export TypeFactory
+
 # from util/tensorproducts.jl
-export tensorproduct, ⊗
+export cartesianproduct
 
 
 ## Spaces
@@ -103,7 +105,8 @@ export DerivedDomain
 export superdomain
 
 # from generic/productdomain.jl
-export ProductDomain, tensorproduct, ⊗
+export ProductDomain
+export product_eltype
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
@@ -136,7 +139,7 @@ export circle, sphere
 export parameterization, gradient
 
 include("util/common.jl")
-include("util/tensorproducts.jl")
+include("util/products.jl")
 
 include("spaces/space.jl")
 include("spaces/space_promotions.jl")

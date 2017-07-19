@@ -45,13 +45,13 @@ simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
 # An n-dimensional cube
 #########################
 
-cube(::Type{Val{N}}, ::Type{T} = Float64) where {N,T} = tensorproduct(UnitInterval{T}(), Val{N})
+cube(::Type{Val{N}}, ::Type{T} = Float64) where {N,T} = cartesianproduct(UnitInterval{T}(), Val{N})
 
 cube() = cube(Val{3})
 
-rectangle(a, b, c, d) = interval(a,b) ⊗ interval(c,d)
+rectangle(a, b, c, d) = interval(a,b) × interval(c,d)
 
-cube(a, b, c, d, e, f) = interval(a,b) ⊗ interval(c,d) ⊗ interval(e,f)
+cube(a, b, c, d, e, f) = interval(a,b) × interval(c,d) × interval(e,f)
 
 # This one is not type-stable
 cube(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} = ProductDomain(map((ai,bi)->interval(T,ai,bi), a, b)...)
@@ -67,6 +67,6 @@ cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), t
 # A cylinder
 ##############
 
-cylinder(::Type{T} = Float64) where {T} = disk(T) ⊗ UnitInterval{T}()
+cylinder(::Type{T} = Float64) where {T} = disk(T) × unitinterval(T)
 
-cylinder(radius::T, length::T) where {T} = disk(radius) ⊗ interval(0,length)
+cylinder(radius::T, length::T) where {T} = disk(radius) × interval(0,length)

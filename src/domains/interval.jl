@@ -50,8 +50,7 @@ similar_interval(d::FixedInterval{T}, a, b) where {T} = ClosedInterval{T}(a, b)
 struct UnitInterval{T} <: FixedInterval{T}
 end
 
-# By default we create a Float64 interval
-UnitInterval() = UnitInterval{Float64}()
+unitinterval(::Type{T} = Float64) where {T} = UnitInterval{T}()
 
 leftendpoint(d::UnitInterval{T}) where {T} = zero(T)
 rightendpoint(d::UnitInterval{T}) where {T} = one(T)
@@ -151,9 +150,13 @@ Return an interval domain:
 - with an argument of type T, return the unit interval with that type
 - with arguments `interval(a,b)`, return the closed interval `[a,b]`
 """
-interval() = UnitInterval()
+interval() = unitinterval()
 
 interval(::Type{T}) where {T} = UnitInterval{T}()
+
+# Create a floating point interval by default. The knowledgeable user can construct
+# an interval of integers by calling ClosedInterval{T} directly.
+interval(a::T, b::T) where {T <: Integer} = interval(float(a), float(b))
 
 # By default we create a closed interval
 interval(args...) = closed_interval(args...)

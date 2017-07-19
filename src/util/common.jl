@@ -12,10 +12,6 @@ const True = Val{true}
 const False = Val{false}
 
 # Simple boolean operations on the new types
-(&)(::Type{True}, ::Type{True}) = True
-(&)(::Type{True}, ::Type{False}) = False
-(&)(::Type{False}, ::Type{True}) = False
-(&)(::Type{False}, ::Type{False}) = False
 (|)(::Type{True}, ::Type{True}) = True
 (|)(::Type{True}, ::Type{False}) = True
 (|)(::Type{False}, ::Type{True}) = True
