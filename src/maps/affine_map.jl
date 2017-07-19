@@ -34,6 +34,8 @@ LinearMap(a::T) where {T <: Number} = LinearMap{T,T,T}(a)
 
 matrix(m::LinearMap) = m.a
 
+(m::LinearMap)(x) = applymap(m, x)
+
 applymap(m::LinearMap, x) = matrix(m) * x
 
 inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))

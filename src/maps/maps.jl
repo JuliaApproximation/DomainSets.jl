@@ -20,6 +20,8 @@ rangetype(::Type{M}) where {M <: AbstractMap} = rangetype(supertype(M))
 (\)(map::AbstractMap, y) = inv(map) * y
 
 isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(rangetype(m))
+isreal(::Type{T}) where {T<:Number} = isreal(T(0))
+isreal(::Type{SVector{N,T}}) where {N,T} = isreal(T)
 
 """
 `return_type(map, U)` is a generic function that computes the return type when

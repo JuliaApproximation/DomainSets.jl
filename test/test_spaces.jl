@@ -180,24 +180,37 @@ function test_basic_spaces()
 end
 
 function test_product_spaces()
+    T = Float64
+    z = T(0)
     Z = IntegerSpace{Int}
-    R = RealSpace{Float64}
+    R = RealSpace{T}
     P = Z × R
-    @test eltype(P) == Tuple{Int,Float64}
+    @test eltype(P) == Tuple{Int,T}
 
     R2 = R × R
-    @test eltype(R2) == Tuple{Float64,Float64}
-    test_isomorphism(R2, VectorSpace{2,Float64})
+    @test eltype(R2) == Tuple{T,T}
+    @test zero(R2) == (z,z)
+    test_isomorphism(R2, VectorSpace{2,T})
 
     R3 = cartesianproduct(R, R, R)
-    @test eltype(R3) == Tuple{Float64,Float64,Float64}
-    test_isomorphism(R3, VectorSpace{3,Float64})
+    @test eltype(R3) == Tuple{T,T,T}
+    @test zero(R3) == (z,z,z)
+    test_isomorphism(R3, VectorSpace{3,T})
+
+    R4 = cartesianproduct(R, R, R, R)
+    @test eltype(R4) == Tuple{T,T,T,T}
+    @test zero(R4) == (z,z,z,z)
+    test_isomorphism(R4, VectorSpace{4,T})
 
     RR = R2 × R
-    @test eltype(RR) == Tuple{Tuple{Float64,Float64},Float64}
-    test_isomorphism(RR, VectorSpace{3,Float64})
+    @test eltype(RR) == Tuple{Tuple{T,T},T}
+    test_isomorphism(RR, VectorSpace{3,T})
 
     @test R == cartesianproduct(R)
 
     @test cartesianproduct() == nothing
+    @test eltype(cross(R())) == T
+    @test eltype(cross(R(),R())) == NTuple{2,T}
+    @test eltype(cross(R(),R(),R())) == NTuple{3,T}
+    @test eltype(cross(R(),R(),R(),R())) == NTuple{4,T}
 end
