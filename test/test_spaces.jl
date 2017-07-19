@@ -118,8 +118,12 @@ function test_basic_spaces()
     @test !embedded(widen(R1), R3)
 
     # Some promotions
+    @test promote_space() == ()
     @test typeof(promote_space(1.0)) == Tuple{typeof(1.0)}
     @test typeof(promote_space(1, 1.0)) == Tuple{typeof(1.0),typeof(1.0)}
+
+    println("no promote_space(1, SVector(1.,1.)")
+    @test_throws ErrorException promote_space(1, spaceof(1))
 
     @test promote_space_type(RealSpace{Float64}, RealSpace{BigFloat}) == RealSpace{BigFloat}
     @test promote_space_type(VectorSpace{1,BigFloat}, VectorSpace{2,Float64}) == VectorSpace{2,BigFloat}
@@ -139,7 +143,18 @@ function test_basic_spaces()
     @test promote_space_type(ComplexSpace{BigFloat}, VectorSpace{2,Float64}) == VectorSpace{2,BigFloat}
     @test promote_space_type(ComplexSpace{Float64}, VectorSpace{2,BigFloat}) == VectorSpace{2,BigFloat}
 
+    @test promote_space_type(AnySpace, VectorSpace{2,Float64}) == AnySpace
+    @test promote_space_type(ComplexSpace{Float64}, AnySpace) == AnySpace
+    @test promote_space_type(AnySpace, AnySpace) == AnySpace
+
     # some basic tests
+
+    @test_throws InexactError convert_space(RealSpace{Float64}, RealSpace)
+    @test_throws InexactError restrict_space(RealSpace{Float64}, RealSpace)
+
+    @test Domains._promote_via_embedding_reduction(AnySpace, AnySpace, AnySpace, ℤ, 1) == AnySpace
+    @test Domains._promote_via_embedding_reduction(AnySpace, AnySpace, 1, AnySpace, ℤ) == AnySpace
+
     @test !(zero(Z) ∈ R())
     @test !(zero(Z) ∈ R())
     @test zero(Z) ∈ Z
@@ -182,7 +197,7 @@ function test_product_spaces()
     @test eltype(RR) == Tuple{Tuple{Float64,Float64},Float64}
     test_isomorphism(RR, VectorSpace{3,Float64})
 
-    @test R == tensorproduct(R)
+    @test R == cartesianproduct(R)
 
-    @test tensorproduct() == nothing
+    @test cartesianproduct() == nothing
 end

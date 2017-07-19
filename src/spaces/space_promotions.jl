@@ -281,7 +281,11 @@ promote_space() = ()
 promote_space(x) = (x,)
 promote_space(x::T, y::T) where {T} = (x,y)
 function promote_space(x::T, y::S) where {T,S}
-    (convert_space(promote_space_type(spaceof(x),spaceof(y)), x), convert_space(promote_space_type(spaceof(x),spaceof(y)), y))
+    space_type = promote_space_type(spaceof(x),spaceof(y))
+    if space_type == AnySpace
+      error("No conversion to AnySpace possible")
+    end
+    (convert_space(space_type, x), convert_space(space_type, y))
 end
 
 promote_space_type(::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
