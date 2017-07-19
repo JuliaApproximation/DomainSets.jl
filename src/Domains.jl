@@ -81,6 +81,7 @@ export CompositeMap
 export ∘
 # from maps/productmap.jl
 export ProductMap
+export tensorproduct
 # from maps/basic_maps.jl
 export IdentityMap
 # from maps/embedding_map.jl

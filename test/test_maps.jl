@@ -6,6 +6,7 @@ function test_maps()
         test_maps(BigFloat)
         test_embedding_maps()
         test_composite_map(Float64)
+        test_product_map(Float64)
     end
 end
 
@@ -146,4 +147,43 @@ function test_composite_map(T)
   test_generic_map(T, m, 2)
   @test m(r) ≈ m2(m3(r))
 
+  @test !(typeof(CompositeMap(ma)) <: CompositeMap)
+end
+
+function test_product_map(T)
+  a = T(0)
+  b = T(1)
+  c = T(2)
+  d = T(3)
+  ma = IdentityMap{T}()
+  mb = interval_map(a, b, c, d)
+
+  r1 = randvec(T, 2)
+  r2 = randvec(T, 2)
+  r3 = randvec(T, 2)
+  r4 = randvec(T, 2)
+  r5 = randvec(T, 2)
+
+  m1 = tensorproduct(ma,mb)
+  test_generic_map(T, m1, 2)
+  @test compare_tupple(m1((r1,r2)), (ma(r1),mb(r2)))
+  m2 = tensorproduct(m1,mb)
+  test_generic_map(T, m2, 2)
+  @test compare_tupple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
+  m3 = tensorproduct(mb,m2)
+  test_generic_map(T, m3, 2)
+  @test compare_tupple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
+  m = tensorproduct(m1,m2)
+  test_generic_map(T, m, 2)
+  @test compare_tupple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
+
+end
+
+function compare_tupple(a, b)
+  for i in length(a)
+    if !(a[i]≈b[i])
+      return false
+    end
+  end
+  true
 end

@@ -300,12 +300,6 @@ promote_space_type(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
         promote_via_isomorphism_reduction(A,B),
         promote_via_superspace(A,B))
 
-promote_space_result(A, B, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
-promote_space_result(A, B, ::Type{GSpace{T}}, d, e, f) where {T} = GSpace{T}
-promote_space_result(A, B, ::Type{AnySpace}, ::Type{GSpace{T}}, e, f) where {T} = GSpace{T}
-promote_space_result(A, B, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{GSpace{T}}, f) where {T} = GSpace{T}
-promote_space_result(A, B, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{AnySpace}, ::Type{GSpace{T}}) where {T} = GSpace{T}
-
 promote_via_promotion(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} =
     _promote_via_promotion(A, B, T, S, promote_type(T,S))
 
