@@ -34,7 +34,7 @@ end
 
 # Generic tests for embeddings
 function test_embedding(A, B)
-    @test embedded(A, B)
+    @test embedded(A(), B())
     T = eltype(A)
     S = eltype(B)
     x = nonzero_element(T)
