@@ -89,7 +89,7 @@ export embedding_map, restriction_map, isomorphism_map
 # from maps/affine_maps.jl
 export AffineMap, Translation, LinearMap
 export islinear, matrix, vector
-export linear_map, interval_map, scaling_map
+export linear_map, interval_map, scaling_map, rotation_map, translation_map
 # from maps/coordinates.jl
 export CartToPolarMap, PolarToCartMap
 

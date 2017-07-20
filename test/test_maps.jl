@@ -5,22 +5,41 @@ function test_maps()
         test_maps(Float64)
         test_maps(BigFloat)
         test_embedding_maps()
-        test_composite_map(Float64)
-        test_product_map(Float64)
     end
 end
 
-function suitable_point_to_map(m, n)
-    x = @SVector ones(n)
+function suitable_point_to_map(m)
+  T = domaintype(m)
+  if T <: SVector
+    randvec(eltype(T),length(T))
+  else
+    x = T(rand())
+  end
 end
 
+function suitable_point_to_map(m::Domains.EmbeddingMap{T1,T2}) where {T1,T2}
+    x = T2(1)
+end
+
+function suitable_point_to_map(m::Domains.EmbeddingMap{T1,SVector{N,T}}) where {T1,T,N}
+    x = @SVector ones(N)
+end
+
+function suitable_point_to_map(m::Domains.ProductMap)
+    x = ()
+    for map in elements(m)
+        x = (x..., suitable_point_to_map(map))
+    end
+    x
+end
+
+suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
+suitable_point_to_map(::PolarToCartMap{T}) where {T} = randvec(T,2)
 # Test a map m with dimensions n
-function test_generic_map(T, m, n)
+function test_generic_map(T, m)
     # Try to map a random vector
     isreal(T(0)) && (@test isreal(m))
-    r = randvec(T,n)
-
-    x = suitable_point_to_map(m, n)
+    x = suitable_point_to_map(m)
     y1 = applymap(m, x)
     y2 = m * x
     @test y1 == y2
@@ -34,6 +53,8 @@ function test_generic_map(T, m, n)
     @test xi2 ≈ x
     xi3 = m\y1
     @test xi3 ≈ x
+    xi4 = apply_inverse(m, y1)
+    @test xi4 ≈ x
 
     # if is_linear(m)
     #     x = suitable_point_to_map(m, n)
@@ -57,39 +78,89 @@ function test_maps(T)
     @test m(a) ≈ c
     @test m(b) ≈ d
 
-    test_generic_map(T, m, 1)
+    test_generic_map(T, m)
 
     m2 = AffineMap(randvec(T, 2, 2), randvec(T, 2))
-    test_generic_map(T, m2, 2)
+    test_generic_map(T, m2)
 
     m3 = LinearMap(randvec(T, 2, 2))
-    test_generic_map(T, m3, 2)
+    test_generic_map(T, m3)
 
     # Test an affine map with a a scalar and b a vector
     m4 = AffineMap(T(1.2), randvec(T, 2))
-    test_generic_map(T, m4, 2)
+    test_generic_map(T, m4)
 
     m5 = AffineMap(randvec(T, 3, 3), randvec(T, 3))
-    test_generic_map(T, m5, 3)
+    test_generic_map(T, m5)
 
     m6 = m3∘m4
     @test typeof(m6) <: AffineMap
-    test_generic_map(T, m6, 2)
+    test_generic_map(T, m6)
 
     # Test special maps
-    test_generic_map(T, scaling_map(T(2)), 1)
+    test_composite_map(T)
 
-    test_generic_map(T, scaling_map(T(2)), 2)
-    test_generic_map(T, scaling_map(T(2), T(3)), 2)
-    test_generic_map(T, scaling_map(T(2), T(3), T(4)), 3)
+    test_product_map(T)
 
-    test_generic_map(T, IdentityMap{T}(), 1)
-    test_generic_map(T, IdentityMap{SVector{2,T}}(), 2)
+    test_scaling_maps(T)
+
+    test_identity_map(T)
+
+    test_rotation_map(T)
+
+    test_translation_map(T)
+
+    test_cart_polar_map(T)
 
     # Diagonal maps
 
 end
 
+function test_scaling_maps(T)
+  test_generic_map(T, scaling_map(T(2)))
+
+  test_generic_map(T, scaling_map(T(2)))
+  test_generic_map(T, scaling_map(T(2), T(3)))
+  test_generic_map(T, scaling_map(T(2), T(3), T(4)))
+  test_generic_map(T, scaling_map(T(2), T(3), T(4), T(5)))
+end
+
+function test_identity_map(T)
+  test_generic_map(T, IdentityMap{T}())
+  test_generic_map(T, IdentityMap{SVector{2,T}}())
+end
+
+function test_rotation_map(T)
+  theta = T(rand())
+  phi = T(rand())
+  psi = T(rand())
+  m2 = rotation_map(theta)
+  test_generic_map(T, m2)
+  m3 = rotation_map(phi, theta, psi)
+  test_generic_map(T, m3)
+
+  r = suitable_point_to_map(m2)
+  @test norm(m2*r)≈norm(r)
+
+  r = suitable_point_to_map(m3)
+  @test norm(m3*r)≈norm(r)
+end
+
+function test_translation_map(T)
+  v = randvec(T,3)
+  m = translation_map(v)
+  test_generic_map(T, m)
+end
+
+function test_cart_polar_map(T)
+  m1 = CartToPolarMap{T}()
+  test_generic_map(T, m1)
+  @test !islinear(m1)
+
+  m2 = PolarToCartMap{T}()
+  test_generic_map(T, m2)
+  @test !islinear(m2)
+end
 function test_embedding_maps()
     T1 = Float64
     T2 = Complex{Float64}
@@ -105,6 +176,14 @@ end
 function test_embedding_map(T1, T2)
     x = nonzero_element(T1)
     m = embedding_map(T2, T1)
+
+    x = suitable_point_to_map(m)
+    y1 = applymap(m, x)
+    y2 = m * x
+    @test y1 == y2
+    y3 = m(x)
+    @test y1 == y3
+
     @test applymap(m, x) == convert_space(spacetype(T2), x)
     m2 = restriction_map(T1, T2)
     y = nonzero_element(T2)
@@ -133,18 +212,18 @@ function test_composite_map(T)
   ma = IdentityMap{T}()
   mb = interval_map(a, b, c, d)
 
-  r = randvec(T, 2)
+  r = suitable_point_to_map(ma)
   m1 = ma∘mb
-  test_generic_map(T, m1, 2)
+  test_generic_map(T, m1)
   @test m1(r) ≈ ma(mb(r))
   m2 = m1∘mb
-  test_generic_map(T, m2, 2)
+  test_generic_map(T, m2)
   @test m2(r) ≈ m1(mb(r))
   m3 = mb∘m2
-  test_generic_map(T, m3, 2)
+  test_generic_map(T, m3)
   @test m3(r) ≈ mb(m2(r))
   m = m2∘m3
-  test_generic_map(T, m, 2)
+  test_generic_map(T, m)
   @test m(r) ≈ m2(m3(r))
 
   @test !(typeof(CompositeMap(ma)) <: CompositeMap)
@@ -158,26 +237,29 @@ function test_product_map(T)
   ma = IdentityMap{T}()
   mb = interval_map(a, b, c, d)
 
-  r1 = randvec(T, 2)
-  r2 = randvec(T, 2)
-  r3 = randvec(T, 2)
-  r4 = randvec(T, 2)
-  r5 = randvec(T, 2)
+  r1 = suitable_point_to_map(ma)
+  r2 = suitable_point_to_map(ma)
+  r3 = suitable_point_to_map(ma)
+  r4 = suitable_point_to_map(ma)
+  r5 = suitable_point_to_map(ma)
 
   m1 = tensorproduct(ma,mb)
-  test_generic_map(T, m1, 2)
+  test_generic_map(T, m1)
   @test compare_tupple(m1((r1,r2)), (ma(r1),mb(r2)))
   m2 = tensorproduct(m1,mb)
-  test_generic_map(T, m2, 2)
+  test_generic_map(T, m2)
   @test compare_tupple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
   m3 = tensorproduct(mb,m2)
-  test_generic_map(T, m3, 2)
+  test_generic_map(T, m3)
   @test compare_tupple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
   m = tensorproduct(m1,m2)
-  test_generic_map(T, m, 2)
+  test_generic_map(T, m)
   @test compare_tupple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
 
 end
+
+Base.isapprox(a::NTuple{L,SVector{N,T}}, b::NTuple{L,SVector{N,T}}) where {L,N,T} = compare_tupple(a,b)
+Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tupple(a,b)
 
 function compare_tupple(a, b)
   for i in length(a)

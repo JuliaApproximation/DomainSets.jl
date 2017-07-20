@@ -53,9 +53,13 @@ struct Translation{T} <: AbstractAffineMap{T,T}
     vector  ::  T
 end
 
+translation_map(vector::T) where {T} = Translation{T}(vector)
+
 matrix(m::Translation{T}) where {T} = diagm(ones(T))
 
 vector(m::Translation) = m.vector
+
+(m::Translation)(x) = applymap(m, x)
 
 applymap(m::Translation, x) = x + vector(m)
 
@@ -90,8 +94,6 @@ applymap(m::AffineMap, x) = m.a * x + m.b
 
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap{T,S}) where {T,S} = AffineMap{S,T}(inv(m.a), -inv(m.a)*m.b)
-
-apply_inverse(m::AffineMap, y) = applymap(inv(m), y)
 
 
 

@@ -19,6 +19,8 @@ rangetype(::Type{M}) where {M <: AbstractMap} = rangetype(supertype(M))
 
 (\)(map::AbstractMap, y) = inv(map) * y
 
+apply_inverse(m::AbstractMap, y) = applymap(inv(m), y)
+
 isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(rangetype(m))
 isreal(::Type{T}) where {T<:Number} = isreal(T(0))
 isreal(::Type{SVector{N,T}}) where {N,T} = isreal(T)

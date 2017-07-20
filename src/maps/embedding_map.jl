@@ -11,6 +11,8 @@ end
 embedding_map(::Type{T}, ::Type{S}) where {T,S} = EmbeddingMap{T,S}()
 embedding_map(::Type{T}, ::Type{T}) where {T} = IdentityMap{T}()
 
+(m::EmbeddingMap)(x) = applymap(m, x)
+
 applymap(map::EmbeddingMap{T,S}, x::S) where {T,S} = convert_space(spacetype(T), x)
 
 
