@@ -3,7 +3,7 @@
 function test_generic_domains()
     domains = [
         interval(),
-        cube()
+        cube(),
     ]
 
     @testset "$(rpad("Generic domains",80))" begin
@@ -14,5 +14,6 @@ function test_generic_domains()
 end
 
 function test_generic_domain(d::Domain)
-
+  @test eltype(eltype(d)) == subeltype(d)
+  @test isreal(d) == isreal(subeltype(d))
 end

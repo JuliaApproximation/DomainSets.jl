@@ -67,6 +67,7 @@ similar_space(::Type{GeometricSpace{T}}, ::Type{S}) where {T,S} = GeometricSpace
 
 
 isreal(space::GeometricSpace{T}) where {T} = isreal(T)
+isreal(::Type{GeometricSpace{T}}) where {T} = isreal(T)
 
 # Return the zero element
 zero(space::GeometricSpace{T}) where {T} = zero(T)

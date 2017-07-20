@@ -128,6 +128,7 @@ end
 function test_identity_map(T)
   test_generic_map(T, IdentityMap{T}())
   test_generic_map(T, IdentityMap{SVector{2,T}}())
+  @test islinear(IdentityMap{T}())
 end
 
 function test_rotation_map(T)
@@ -144,12 +145,14 @@ function test_rotation_map(T)
 
   r = suitable_point_to_map(m3)
   @test norm(m3*r)≈norm(r)
+  @test islinear(m3)
 end
 
 function test_translation_map(T)
   v = randvec(T,3)
   m = translation_map(v)
   test_generic_map(T, m)
+  @test islinear(m)
 end
 
 function test_cart_polar_map(T)

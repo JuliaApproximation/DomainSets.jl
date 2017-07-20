@@ -13,3 +13,5 @@ applymap(map::IdentityMap{T}, x::T) where {T} = x
 apply_inverse(map::IdentityMap{T}, y::T) where T = y
 
 inv(m::IdentityMap) = m
+
+islinear(::IdentityMap) = true

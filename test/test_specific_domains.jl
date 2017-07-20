@@ -8,6 +8,7 @@ function test_specific_domains()
         test_fullspace()
         test_interval()
         test_unitball()
+        test_derived_unitball()
         test_cube()
         test_simplex()
         test_sphere()
@@ -152,6 +153,25 @@ end
 
 function test_unitball()
     C = disk(2.0)
+    @test in(v[1.4, 1.4], C)
+    @test !in(v[1.5, 1.5], C)
+    @test typeof(1.2*C)==typeof(C*1.2)
+    @test in(v[1.5,1.5],1.2*C)
+    @test in(v[1.5,1.5],C*1.2)
+
+    S = ball(2.0)
+    @test v[1.9,0.0,0.0] ∈ S
+    @test in(v[0,-1.9,0.0],S)
+    @test in(v[0.0,0.0,-1.9],S)
+    @test !in(v[1.9,1.9,0.0],S)
+end
+struct DerivedUnitBall<: DerivedDomain{SVector{2,Float64}}
+    superdomain :: Domain
+
+    DerivedUnitBall() = new(disk(2.0))
+end
+function test_derived_unitball()
+    C = DerivedUnitBall()
     @test in(v[1.4, 1.4], C)
     @test !in(v[1.5, 1.5], C)
     @test typeof(1.2*C)==typeof(C*1.2)
