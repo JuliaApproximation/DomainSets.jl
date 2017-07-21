@@ -11,6 +11,7 @@ function test_specific_domains()
         test_unitball()
         test_derived_unitball()
         test_cube()
+        test_circle()
         test_mapped_domain()
         test_simplex()
         test_sphere()
@@ -90,6 +91,11 @@ function test_interval(T = Float64)
     @test !isclosed(d)
     @test !isopen(d)
     @test !iscompact(d)
+    @test 1. ∈ d
+    @test -1. ∉ d
+    @test similar_interval(d, T(0), T(Inf)) == d
+
+
 
     d = negative_halfline(T)
     @test leftendpoint(d) == -T(Inf)
@@ -97,6 +103,33 @@ function test_interval(T = Float64)
     @test !isclosed(d)
     @test isopen(d)
     @test !iscompact(d)
+    @test -1. ∈ d
+    @test 1. ∉ d
+    @test similar_interval(d, T(-Inf), T(0)) == d
+
+    d = Domains.open_interval()
+    @test isopen(d)
+    @test !isclosed(d)
+    @test leftendpoint(d)∉d
+    @test rightendpoint(d)∉d
+    d = Domains.closed_interval()
+    @test !isopen(d)
+    @test isclosed(d)
+    @test leftendpoint(d) ∈ d
+    @test rightendpoint(d) ∈ d
+    d = HalfOpenLeftInterval()
+    @test !isopen(d)
+    @test !isclosed(d)
+    @test leftendpoint(d) ∉ d
+    @test rightendpoint(d) ∈ d
+    d = HalfOpenRightInterval()
+    @test !isopen(d)
+    @test !isclosed(d)
+    @test leftendpoint(d) ∈ d
+    @test rightendpoint(d) ∉ d
+
+    @test typeof(UnitInterval{Float64}(interval(0.,1.))) <: UnitInterval
+    @test typeof(ChebyshevInterval{Float64}(interval(-1,1.))) <: ChebyshevInterval
 
     ## Some mappings preserve the interval structure
     # Translation
@@ -176,6 +209,18 @@ function test_unitball()
     @test in(v[0.0,0.0,-1.9],S)
     @test !in(v[1.9,1.9,0.0],S)
 end
+
+function test_disk_ball()
+    C = disk(2.0, v[1.0,1.0])
+    @test in(v[2.4, 2.4], C)
+    @test !in(v[3.5, 2.5], C)
+
+    S = ball(2.0, v[1.0,1.0,1.0])
+    @test v[2.9,0.0,0.0] ∈ S
+    @test in(v[1,-0.9,1.0],S)
+    @test in(v[1.0,1.0,-0.9],S)
+    @test !in(v[2.9,2.9,1.0],S)
+end
 struct DerivedUnitBall<: DerivedDomain{SVector{2,Float64}}
     superdomain :: Domain
 
@@ -196,6 +241,21 @@ function test_derived_unitball()
     @test !in(v[1.9,1.9,0.0],S)
 
     @test Domains.supereltype(C) == eltype(disk(2.0))
+end
+
+function test_circle()
+    C = circle()
+    v[1.,0.] ∈ C
+    v[1.,1.] ∉ C
+    C = circle(2., v[1.,1.])
+    v[2.,1.] ∈ C
+    v[2.,1.] ∉ C
+    S = sphere()
+    v[1.,0.,0.] ∈ S
+    v[1.,0.,1.] ∉ S
+    S = sphere(2., v[1.,1.,1.])
+    v[1.,2.,1.] ∈ S
+    v[2.,2.,1.] ∉ S
 end
 
 function test_cube()
@@ -220,9 +280,13 @@ function test_mapped_domain()
   @test v[-0.9, -0.9] ∈ D
   @test v[-1.1, -1.1] ∉ D
 
-  D = rotate(cube(Val{2}),pi,v[.5,.5])
+  D = rotate(cube(Val{2}),pi,v[-.5,-.5])
   @test v[0.9, 0.9] ∈ D
   @test v[1.1, 1.1] ∉ D
+
+  D = rotate(cube(Val{3})+v[-.5,-.5,-.5], pi, pi, pi)
+  @test v[0.4, 0.4, 0.4] ∈ D
+  @test v[0.6, 0.6, 0.6] ∉ D
 
   D = rotate(cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0),pi,pi,pi,v[.35, .65, -2.])
   @test v[0.9, 0.6, -2.5] ∈ D
@@ -371,7 +435,7 @@ function test_set_operations()
 
   i3 = d3 & i2
   i4 = i2 & d3
-  i5 = i1 & i2
+  i5 = i3 & i2
 
   x = SVector(0.,.05)
   y = SVector(0.,.75)

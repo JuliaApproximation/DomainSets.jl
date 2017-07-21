@@ -127,7 +127,7 @@ export rotate
 export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
 export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
-export AbstractInterval, Interval, UnitInterval, ChebyshevInterval
+export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
 export real_line, halfline, negative_halfline
 export interval, leftendpoint, rightendpoint
 export similar_interval

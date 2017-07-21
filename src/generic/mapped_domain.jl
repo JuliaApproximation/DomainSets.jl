@@ -35,6 +35,6 @@ map_domain(f, domain::Domain) = MappedDomain(domain, f)
 
 # Avoid nested mapping domains, construct a composite map instead
 # This assumes that the map types can be combined using \circ
-map_domain(f, domain::MappedDomain) = map_domain(f ∘ mapping(domain), superdomain(domain))
+map_domain(f, domain::MappedDomain) = map_domain(mapping(domain) ∘ f, superdomain(domain))
 
 show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", superdomain(d))

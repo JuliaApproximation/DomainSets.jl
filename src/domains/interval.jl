@@ -212,7 +212,7 @@ end
 function convert(::Type{ChebyshevInterval{T}}, d::AbstractInterval{S}) where {T,S}
     @assert leftendpoint(d) == -1
     @assert rightendpoint(d) == 1
-    UnitInterval{T}()
+    ChebyshevInterval{T}()
 end
 
 

@@ -85,6 +85,8 @@ function test_maps(T)
 
     m3 = LinearMap(randvec(T, 2, 2))
     test_generic_map(T, m3)
+    r = randvec(T,2,1)
+    @test jacobian(m3, r)*r ≈ m3*r
 
     # Test an affine map with a a scalar and b a vector
     m4 = AffineMap(T(1.2), randvec(T, 2))
