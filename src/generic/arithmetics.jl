@@ -17,10 +17,10 @@
 (+)(x::AbstractVector, d::Domain) = d+x
 
 # Rotation around the origin
-rotate(d::Domain2d, theta) = rotation_map(phi) * d
+rotate(d::Domain2d, theta) = rotation_map(theta) * d
 
 rotate(d::Domain3d, phi, theta, psi) = rotation_map(phi,theta,psi) * d
 # Rotation around a fixed center.
-rotate(d::Domain2d, theta, center::SVector{T}) where {T} = Translation(x) * rotation_map(phi) * Translation(-x) * d
+rotate(d::Domain2d, theta, center::SVector{T}) where {T} = Translation(center) * (rotation_map(theta) * (Translation(-center) * d))
 
-rotate(d::Domain3d, phi, theta, psi, center::SVector{T}) where {T} = Translation(x) * rotation_map(phi,theta,psi) * Translation(-x) * d
+rotate(d::Domain3d, phi, theta, psi, center::SVector{T}) where {T} = Translation(center) * (rotation_map(phi,theta,psi) * (Translation(-center) * d))

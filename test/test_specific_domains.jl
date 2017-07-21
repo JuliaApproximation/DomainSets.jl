@@ -2,6 +2,7 @@
 
 const v = TypeFactory{SVector}()
 
+const io = IOBuffer()
 function test_specific_domains()
     @testset "$(rpad("Specific domains",80))" begin
         test_emptyspace()
@@ -10,16 +11,24 @@ function test_specific_domains()
         test_unitball()
         test_derived_unitball()
         test_cube()
+        test_mapped_domain()
         test_simplex()
         test_sphere()
         test_arithmetics()
         test_cartesianproduct_domain()
     end
+
+    @testset "$(rpad("Set operations",80))" begin
+      test_set_operations()
+    end
+
 end
 
 function test_emptyspace()
     println("- an empty space")
     d1 = EmptySpace()
+    show(io,d1)
+    @test String(take!(io)) == "the empty space with eltype Float64"
     @test eltype(d1) == Float64
     @test 0.5 ∉ d1
     @test d1 ∩ d1 == d1
@@ -35,6 +44,8 @@ end
 function test_fullspace()
     println("- a full Euclidean space")
     d1 = FullSpace()
+    show(io,d1)
+    @test String(take!(io)) == "the full space with eltype Float64"
     @test 0.5 ∈ d1
     @test d1 ∪ d1 == d1
     @test d1 ∩ d1 == d1
@@ -183,6 +194,8 @@ function test_derived_unitball()
     @test in(v[0,-1.9,0.0],S)
     @test in(v[0.0,0.0,-1.9],S)
     @test !in(v[1.9,1.9,0.0],S)
+
+    @test Domains.supereltype(C) == eltype(disk(2.0))
 end
 
 function test_cube()
@@ -191,10 +204,29 @@ function test_cube()
     @test v[0.9, 0.9] ∈ D
     @test v[1.1, 1.1] ∉ D
 
+
     #Cube
     D = cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0)
     @test v[0.9, 0.6, -2.5] ∈ D
     @test v[0.0, 0.6, 0.0] ∉ D
+end
+
+function test_mapped_domain()
+  D = cube(Val{2})
+  show(io,rotate(D,1.))
+  @test String(take!(io)) == "A mapped domain based on the interval [0.0, 1.0] x the interval [0.0, 1.0]"
+
+  D = rotate(cube(Val{2}),pi)
+  @test v[-0.9, -0.9] ∈ D
+  @test v[-1.1, -1.1] ∉ D
+
+  D = rotate(cube(Val{2}),pi,v[.5,.5])
+  @test v[0.9, 0.9] ∈ D
+  @test v[1.1, 1.1] ∉ D
+
+  D = rotate(cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0),pi,pi,pi,v[.35, .65, -2.])
+  @test v[0.9, 0.6, -2.5] ∈ D
+  @test v[0.0, 0.6, 0.0] ∉ D
 end
 
 function test_simplex()
@@ -251,20 +283,114 @@ function test_arithmetics()
     # domain difference
     DS = D-S
     @test v[0.1, 0.1, 0.1] ∉ DS
+
+    D1 = 2*D
+    D2 = D*2
+    D3 = D/2
+
+    @test v[2., 2., 2.] ∈ D1
+    @test v[0.9, 0.6,-2.5] ∉ D1
+    @test v[2., 2., 2.] ∈ D2
+    @test v[0.9, 0.6,-2.5] ∉ D2
+    @test v[.5, .4, .45] ∈ D3
+    @test v[.3, 0.6,-.2] ∉ D3
+
 end
 
 function test_cartesianproduct_domain()
     # ProductDomain 1
-    T = cartesianproduct(interval(-1.0, 1.0), 2)
-    @test v[0.5,0.5] ∈ T
-    @test v[-1.1,0.3] ∉ T
+    T1 = interval(-1.0, 1.0)^2
+    @test v[0.5,0.5] ∈ T1
+    @test v[-1.1,0.3] ∉ T1
 
-    T = interval(-1.0, 1.0) × interval(-1.5, 2.5)
-    @test v[0.5,0.5] ∈ T
-    @test v[-1.1,0.3] ∉ T
+    T1 = cartesianproduct(interval(-1.0, 1.0), 2)
+    @test v[0.5,0.5] ∈ T1
+    @test v[-1.1,0.3] ∉ T1
+
+    T2 = interval(-1.0, 1.0) × interval(-1.5, 2.5)
+    @test v[0.5,0.5] ∈ T2
+    @test v[-1.1,0.3] ∉ T2
 
     # ProductDomain 2
-    T = ProductDomain(disk(1.05), interval(-1.0, 1.0))
-    @test v[0.5,0.5,0.8] ∈ T
-    @test v[-1.1,0.3,0.1] ∉ T
+    T3 = ProductDomain(disk(1.05), interval(-1.0, 1.0))
+    @test v[0.5,0.5,0.8] ∈ T3
+    @test v[-1.1,0.3,0.1] ∉ T3
+
+    T4 = T1×interval(-1.,1.)
+    @test v[0.5,0.5,0.8] ∈ T4
+    @test v[-1.1,0.3,0.1] ∉ T4
+
+    T5 = interval(-1.,1.)×T1
+    @test v[0.,0.5,0.5] ∈ T5
+    @test v[0.,-1.1,0.3] ∉ T5
+
+    T6 = T1×T1
+    @test v[0.,0.,0.5,0.5] ∈ T6
+    @test v[0.,0.,-1.1,0.3] ∉ T6
+
+    io = IOBuffer()
+    show(io,T1)
+    @test String(take!(io)) == "the interval [-1.0, 1.0] x the interval [-1.0, 1.0]"
+
+end
+
+function test_set_operations()
+
+  d1 = disk()
+  d2 = interval(-.9,.9)^2
+  d3 = rectangle(-.5,-.1,.5,.1)
+
+  println("- union")
+  u1 =  d1+d2
+  u2 = u1+d3
+
+  u3 = d3|u1
+  u4 = u1|u2
+  x = SVector(0.,.15)
+  y = SVector(1.1,.75)
+  @test x∈u3
+  @test x∈u4
+
+  @test y∉u3
+  @test y∉u4
+
+  show(io,u1)
+  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
+
+  println("- intersection")
+  d1 = disk()
+  d2 = interval(-.4,.4)^2
+  d3 = rectangle(-.5,.5,-.1,.1)
+  # intersection of productdomains
+  i1 = d2 & d3
+  show(io,i1)
+  @test String(take!(io)) == "the interval [-0.4, 0.4] x the interval [-0.1, 0.1]"
+  i2 = d1 & d2
+  show(io,i2)
+  @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.4, 0.4] x the interval [-0.4, 0.4]\n"
+
+  i3 = d3 & i2
+  i4 = i2 & d3
+  i5 = i1 & i2
+
+  x = SVector(0.,.05)
+  y = SVector(0.,.75)
+  @test x∈i3
+  @test x∈i4
+
+  @test y∉i3
+  @test y∉i4
+
+  println("- difference")
+  d1 = disk()
+  d2 = rectangle(-.5,.5,-.1,.1)
+  # intersection of productdomains
+  d = d1\d2
+  show(io,d)
+  @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.5, 0.5] x the interval [-0.1, 0.1]\n"
+
+  x = SVector(0.,.74)
+  y = SVector(0.,.25)
+  @test x∈d
+  @test x∈d
 end

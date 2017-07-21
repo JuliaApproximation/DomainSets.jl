@@ -24,6 +24,7 @@ simplify_product_eltype(::Type{T}) where {T} = T
 simplify_product_eltype(::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
 simplify_product_eltype(::Type{Tuple{Tuple{T,T},T}}) where {T} = SVector{3,T}
 simplify_product_eltype(::Type{Tuple{SVector{2,T},T}}) where {T} = SVector{3,T}
+simplify_product_eltype(::Type{Tuple{SVector{2,T},SVector{2,T}}}) where {T} = SVector{4,T}
 
 
 #######################
@@ -75,7 +76,7 @@ cartesianproduct(domains::Domain...) = ProductDomain(domains...)
 # We try to avoid creating nested cartesian products
 cartesianproduct(d1::Domain, d2::ProductDomain) = cartesianproduct(d1, elements(d2)...)
 cartesianproduct(d1::ProductDomain, d2::Domain) = cartesianproduct(elements(d1)..., d2)
-cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elements(d1)..., elements(d2...))
+cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elements(d1)..., elements(d2)...)
 
 
 ^(d::Domain, n::Int) = cartesianproduct(d, n)

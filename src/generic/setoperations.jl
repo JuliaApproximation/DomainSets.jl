@@ -40,9 +40,9 @@ indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
 
 function show(io::IO, d::UnionDomain)
-    print(io, "a union of $(nb_elements(d)) domains: \n")
+    print(io, "a union of $(nb_elements(d)) domains:\n")
     for i=1:nb_elements(d)
-        print(io, "    $i.\t: ", element(d,i), "\n")
+        print(io, "\t$i.\t: ", element(d,i), "\n")
     end
 end
 
@@ -82,9 +82,8 @@ indomain(x, d::IntersectionDomain) = mapreduce(d->in(x, d), &, elements(d))
 (&)(d1::Domain, d2::Domain) = intersect(d1,d2)
 
 function intersect(d1::ProductDomain, d2::ProductDomain)
-    @assert ndims(d1) == ndims(d2)
     if nb_elements(d1) == nb_elements(d2)
-        Product([intersect(element(d1,i), element(d2,i)) for i in 1:nb_elements(d1)]...)
+        ProductDomain([intersect(element(d1,i), element(d2,i)) for i in 1:nb_elements(d1)]...)
     else
         IntersectionDomain(d1, d2)
     end
@@ -92,9 +91,9 @@ end
 
 
 function show(io::IO, d::IntersectionDomain)
-    print(io, "the intersection of $(nb_elements(d)) domains: \n")
-    print(io, "    First domain: ", element(d,1), "\n")
-    print(io, "    Second domain: ", element(d,2), "\n")
+    print(io, "the intersection of $(nb_elements(d)) domains:\n")
+    print(io, "\t1.\t: ", element(d,1), "\n")
+    print(io, "\t2.\t: ", element(d,2), "\n")
 end
 
 
@@ -121,8 +120,7 @@ indomain(x, d::DifferenceDomain) = indomain(x, d.d1) && (~indomain(x, d.d2))
 
 
 function show(io::IO, d::DifferenceDomain)
-    print(io, "the difference of two domains: \n")
-    print(io, "    First domain: ", d.d1, "\n")
-    print(io, "    Second domain: ", d.d2, "\n")
+    print(io, "the difference of 2 domains:\n")
+    print(io, "\t1.\t: ", d.d1, "\n")
+    print(io, "\t2.\t: ", d.d2, "\n")
 end
-
