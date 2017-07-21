@@ -53,8 +53,8 @@ function test_fullspace()
     d2 = interval()
     @test d1 ∪ d2 == d1
     @test d1 ∩ d2 == d2
-    @test typeof(fullspace()+1) <: FullSpace
-    @test typeof(fullspace()*3) <: FullSpace
+    @test typeof(fullspace(interval())+1) <: FullSpace
+    @test typeof(fullspace(interval())*3) <: FullSpace
 
     d2 = FullSpace(SVector{2,Float64})
     @test v[0.1,0.2] ∈ d2
@@ -256,6 +256,19 @@ function test_circle()
     v[1.,0.,0.] ∈ S
     v[1.,0.,1.] ∉ S
     S = sphere(2., v[1.,1.,1.])
+    v[1.,2.,1.] ∈ S
+    v[2.,2.,1.] ∉ S
+
+    C = disk()
+    v[1.,0.] ∈ C
+    v[1.,1.] ∉ C
+    C = disk(2., v[1.,1.])
+    v[2.,1.] ∈ C
+    v[2.,1.] ∉ C
+    S = ball()
+    v[1.,0.,0.] ∈ S
+    v[1.,0.,1.] ∉ S
+    S = ball(2., v[1.,1.,1.])
     v[1.,2.,1.] ∈ S
     v[2.,2.,1.] ∉ S
 end
