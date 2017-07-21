@@ -53,6 +53,8 @@ function test_fullspace()
     d2 = interval()
     @test d1 ∪ d2 == d1
     @test d1 ∩ d2 == d2
+    @test typeof(fullspace()+1) <: FullSpace
+    @test typeof(fullspace()*3) <: FullSpace
 
     d2 = FullSpace(SVector{2,Float64})
     @test v[0.1,0.2] ∈ d2
