@@ -17,6 +17,13 @@ spaceof(::Domain{T}) where {T} = spacetype(T)
 eltype(::Type{Domain{T}}) where {T} = T
 eltype(::Type{D}) where {D <: Domain} = eltype(supertype(D))
 
+dimension(::Type{Domain{T}}) where {T} = dimension_type(T)
+dimension(::Type{D}) where {D <: Domain} = dimension(supertype(D))
+dimension(d::Domain) = dimension(typeof(d))
+dimension_type(::Type{SVector{N,T}}) where {N,T} = N
+dimension_type(::Type{T}) where {T <: Number} = 1
+
+
 """
 If the type `T` is a container type, the elements of `T` may have a different
 `subeltype`. If `T` is not a container, `subeltype` simply evaluates to `T`.

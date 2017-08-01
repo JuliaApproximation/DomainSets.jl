@@ -98,7 +98,7 @@ export CartToPolarMap, PolarToCartMap
 
 # from generic/domain.jl
 export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
-export indomain
+export indomain, dimension
 export isclosed, isopen, iscompact
 
 # from generic/derived_domain.jl
