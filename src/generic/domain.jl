@@ -28,7 +28,8 @@ dimension_type(::Type{T}) where {T <: Number} = 1
 If the type `T` is a container type, the elements of `T` may have a different
 `subeltype`. If `T` is not a container, `subeltype` simply evaluates to `T`.
 """
-subeltype(d) = subeltype(spaceof(d))
+subeltype(d::Domain) = subeltype(spaceof(d))
+subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 
 "We use `Point{N,T}` as a synonym for `SVector{N,T}`."
 const Point{N,T} = SVector{N,T}

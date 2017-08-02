@@ -27,7 +27,7 @@ cartesianproduct(::Type{GeometricSpace{T}}, ::Type{GeometricSpace{S}}, ::Type{Ge
 zero(::Type{ProductSpace{Tuple{T,S}}}) where {T,S} = (zero(T), zero(S))
 zero(::Type{ProductSpace{Tuple{T,S,U}}}) where {T,S,U} = (zero(T), zero(S), zero(U))
 zero(::Type{ProductSpace{Tuple{T,S,U,V}}}) where {T,S,U,V} = (zero(T), zero(S), zero(U), zero(V))
-
+zero(::Type{ProductSpace{NTuple{N,T}}}) where {N,T} = ntuple(k->zero(T),Val{N})
 
 ## Isomorphisms
 
