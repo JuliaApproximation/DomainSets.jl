@@ -100,3 +100,8 @@ end
 Base.getindex(v::TypeFactory{T}, args...) where {T} = T(args...)
 
 # const v = TypeFactory{SVector}()
+
+###############
+# Type conversion
+###############
+Base.convert(::Type{SVector}, ::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
