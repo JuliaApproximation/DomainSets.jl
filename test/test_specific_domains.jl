@@ -443,7 +443,10 @@ function test_set_operations()
   @test u1 == ũ1
   ũ1 = UnionDomain((d1,d2))
   @test u1 == ũ1
-  ũ1 = UnionDomain((d1,d2))
+  ũ2 = UnionDomain([d1,d2])
+  @test ũ2 == ũ2
+  @test u1 == ũ2
+
 
   show(io,u1)
   @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"

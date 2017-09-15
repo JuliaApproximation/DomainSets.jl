@@ -43,6 +43,14 @@ indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 (|)(d1::Domain, d2::Domain) = union(d1, d2)
 
 
+function ==(a::UnionDomain, b::UnionDomain)
+    length(elements(a)) ≠ length(elements(b)) && return false
+    for (c, d) in zip(a.domains, b.domains)
+        c ≠ d && return false
+    end
+    return true
+end
+
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(nb_elements(d)) domains:\n")
     for i=1:nb_elements(d)
