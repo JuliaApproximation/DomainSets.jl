@@ -9,6 +9,7 @@
 """
 A `UnionDomain` represents the union of a set of domains.
 """
+# DD can be any collection type: a Tuple, or a Vector
 struct UnionDomain{DD,T} <: Domain{T}
     domains  ::  DD
 end
@@ -21,6 +22,8 @@ function UnionDomain(domains::Domain...)
     end
     UnionDomain{typeof(domains),T}(domains)
 end
+
+UnionDomain(domains::AbstractVector) = UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
 
 elements(d::UnionDomain) = d.domains
 

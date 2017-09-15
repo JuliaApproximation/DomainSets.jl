@@ -60,12 +60,18 @@ function test_fullspace()
     @test v[0.1,0.2] ∈ d2
 end
 
+
 function test_interval(T = Float64)
     println("- intervals")
 
     d = interval(zero(T), one(T))
     @test T(0.5) ∈ d
     @test T(1.1) ∉ d
+    @test 0.5f0 ∈ d
+    @test 1.1f0 ∉ d
+    @test BigFloat(0.5) ∈ d
+    @test BigFloat(1.1) ∉ d
+
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
     @test isclosed(d)

@@ -51,9 +51,14 @@ const Domain4d{T} = EuclideanDomain{4,T}
 # Concrete subtypes should implement `indomain`, rather than `in`.
 in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 
-in(x::S, d::Domain{T}) where {T,S} = in(convert(T, x), d)
+function in(x, d::Domain)
+   T = promote_type(typeof(x), eltype(d))
+   T == Any && return false
+   in(convert(T, x), convert(Domain{T}, d))
+end
 
 # Be forgiving for a 1D case. Good idea or not? This is really an isomorphism.
+# dlfivefifty: NOT!
 in(x::SVector{1,T}, d::Domain{T}) where {T <: Number}  = in(x[1], d)
 
 # The user may supply a vector. We attempt to convert it to the right space.
