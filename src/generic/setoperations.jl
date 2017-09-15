@@ -24,6 +24,7 @@ function UnionDomain(domains::Domain...)
 end
 
 UnionDomain(domains::AbstractVector) = UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
+UnionDomain(domains::Tuple) = UnionDomain(domains...)
 
 elements(d::UnionDomain) = d.domains
 

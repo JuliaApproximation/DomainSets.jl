@@ -426,7 +426,7 @@ function test_set_operations()
   d3 = rectangle(-.5,-.1,.5,.1)
 
   println("- union")
-  u1 =  d1+d2
+  u1 = d1+d2
   u2 = u1+d3
 
   u3 = d3|u1
@@ -438,6 +438,12 @@ function test_set_operations()
 
   @test y∉u3
   @test y∉u4
+
+  ũ1 = UnionDomain(d1,d2)
+  @test u1 == ũ1
+  ũ1 = UnionDomain((d1,d2))
+  @test u1 == ũ1
+  ũ1 = UnionDomain((d1,d2))
 
   show(io,u1)
   @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
