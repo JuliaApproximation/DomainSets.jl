@@ -58,6 +58,10 @@ function test_fullspace()
 
     d2 = FullSpace(SVector{2,Float64})
     @test v[0.1,0.2] ∈ d2
+
+    @test d2 == Domain(SVector{2,Float64})
+    @test d2 == convert(Domain,SVector{2,Float64})
+    @test d2 == convert(Domain{SVector{2,Float64}}, SVector{2,Float64})
 end
 
 
@@ -573,12 +577,12 @@ function test_set_operations()
   d2 = interval(2,3)
   d = d1 ∪ d2
 
-  @test d+1 == (d1+1)∪(d2+1)
-  @test d-1 == (d1-1)∪(d2-1)
-  @test 2d == (2d1)∪(2d2)
-  @test d*2 == (d1*2)∪(d2*2)
-  @test d/2 == (d1/2)∪(d2/2)
-  @test 2\d == (2\d1)∪(2\d2)
+  @test d+1 == (d1+1) ∪ (d2+1)
+  @test d-1 == (d1-1) ∪ (d2-1)
+  @test 2d  == (2d1)  ∪ (2d2)
+  @test d*2 == (d1*2) ∪ (d2*2)
+  @test d/2 == (d1/2) ∪ (d2/2)
+  @test 2\d == (2\d1) ∪ (2\d2)
 
 
   println("- different types")
@@ -586,5 +590,5 @@ function test_set_operations()
   d1 = interval(0f0, 1f0)
   d2 = interval(2,3)
 
-  @test d1 ∪ d2 == d̃1 ∪ D2
+  @test d1 ∪ d2 == d̃1 ∪ d2
 end

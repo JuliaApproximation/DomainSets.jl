@@ -70,3 +70,7 @@ intersect(d1::FullSpace{T}, d2::Domain{T}) where {T} = d2
 
 
 show(io::IO, d::FullSpace) = print(io, "the full space with eltype ", eltype(d))
+
+
+convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()
+convert(::Type{Domain{S}}, ::Type{T}) where {T,S} = convert(Domain{S}, convert(Domain, T))
