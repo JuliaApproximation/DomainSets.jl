@@ -579,4 +579,12 @@ function test_set_operations()
   @test d*2 == (d1*2)∪(d2*2)
   @test d/2 == (d1/2)∪(d2/2)
   @test 2\d == (2\d1)∪(2\d2)
+
+
+  println("- different types")
+  d̃1 = interval(0,1)
+  d1 = interval(0f0, 1f0)
+  d2 = interval(2,3)
+
+  @test d1 ∪ d2 == d̃1 ∪ D2
 end

@@ -29,6 +29,10 @@ UnionDomain(domains::Tuple) = UnionDomain(domains...)
 elements(d::UnionDomain) = d.domains
 
 union(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : UnionDomain(d1, d2)
+function union(d1::Domain{S}, d2::Domain{T}) where {S,T}
+    TS = promote_type(S, T)
+    union(convert(Domain{TS}, d1), convert(Domain{TS}, d2))
+end
 
 # Avoid creating nested unions
 union(d1::UnionDomain, d2::Domain) = UnionDomain(elements(d1)..., d2)
