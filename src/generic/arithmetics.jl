@@ -30,10 +30,3 @@ rotate(d::Domain3d, phi, theta, psi) = rotation_map(phi,theta,psi) * d
 rotate(d::Domain2d, theta, center::SVector{T}) where {T} = Translation(center) * (rotation_map(theta) * (Translation(-center) * d))
 
 rotate(d::Domain3d, phi, theta, psi, center::SVector{T}) where {T} = Translation(center) * (rotation_map(phi,theta,psi) * (Translation(-center) * d))
-
-
-## union domain operations
-
-for op in (:+, :*)
-    @eval $op(domain::UnionDomain, x) = UnionDomain(broadcast($op, domain.domains, x))
-end

@@ -218,7 +218,7 @@ function test_interval(T = Float64)
     d2 = one(T) - d
     @test typeof(d2) <: AbstractInterval
     @test leftendpoint(d2) == zero(T)
-    @test rightendpoint(d2) == 2one(T)    
+    @test rightendpoint(d2) == 2one(T)
 
 
     # Scaling
@@ -501,7 +501,6 @@ end
 
 
 function test_set_operations()
-
   d1 = disk()
   d2 = interval(-.9,.9)^2
   d3 = rectangle(-.5,-.1,.5,.1)
@@ -568,4 +567,16 @@ function test_set_operations()
   y = SVector(0.,.25)
   @test x∈d
   @test x∈d
+
+  println("- arithmetic")
+  d1 = interval(0,1)
+  d2 = interval(2,3)
+  d = d1 ∪ d2
+
+  @test d+1 == (d1+1)∪(d2+1)
+  @test d-1 == (d1-1)∪(d2-1)
+  @test 2d == (2d1)∪(2d2)
+  @test d*2 == (d1*2)∪(d2*2)
+  @test d/2 == (d1/2)∪(d2/2)
+  @test 2\d == (2\d1)∪(2\d2)
 end

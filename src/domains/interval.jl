@@ -248,8 +248,8 @@ for op in (:+, :-)
     @eval $op(d::AbstractInterval, x::Real) = similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
 end
 
-+(x::Number, d::AbstractInterval) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
--(x::Number, d::AbstractInterval) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
++(x::Real, d::AbstractInterval) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
+-(x::Real, d::AbstractInterval) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
 
 for op in (:*, :/)
     @eval function $op(d::AbstractInterval, x::Real)

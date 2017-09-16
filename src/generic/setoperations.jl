@@ -58,6 +58,18 @@ function show(io::IO, d::UnionDomain)
 end
 
 
+## ualgebra
+
+for op in (:+, :-, :*, :/)
+    @eval begin
+        $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, domain.domains, x))
+        $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, domain.domains))
+    end
+end
+
+\(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, domain.domains))
+
+
 ###################################
 # The intersection of two domains
 ###################################
