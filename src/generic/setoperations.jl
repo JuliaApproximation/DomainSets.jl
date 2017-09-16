@@ -39,7 +39,6 @@ union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 # The union of domains corresponds to a logical OR of their characteristic functions
 indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
-(+)(d1::Domain, d2::Domain) = union(d1, d2)
 (|)(d1::Domain, d2::Domain) = union(d1, d2)
 
 

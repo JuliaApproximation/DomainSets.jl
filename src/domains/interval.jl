@@ -240,9 +240,36 @@ end
 # Some computations with intervals simplify without having to use a mapped domain.
 # This is only the case for Interval{L,R,T}, and not for any of the FixedIntervals
 # because the endpoints of the latter are, well, fixed.
-(+)(d::AbstractInterval, x::Number) = similar_interval(d, leftendpoint(d)+x, rightendpoint(d)+x)
-(*)(a::Number, d::AbstractInterval) = similar_interval(d, a*leftendpoint(d), a*rightendpoint(d))
-(/)(d::AbstractInterval, a::Number) = similar_interval(d, leftendpoint(d)/a, rightendpoint(d)/a)
+
+-(d::ChebyshevInterval) = d
+-(d::AbstractInterval) = similar_interval(d, -rightendpoint(d), -leftendpoint(d))
+
+for op in (:+, :-)
+    @eval $op(d::AbstractInterval, x::Real) = similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
+end
+
++(x::Number, d::AbstractInterval) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
+-(x::Number, d::AbstractInterval) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
+
+for op in (:*, :/)
+    @eval function $op(d::AbstractInterval, x::Real)
+        if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
+            similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
+        else
+            similar_interval(d, $op(rightendpoint(d),x), $op(leftendpoint(d),x))
+        end
+    end
+end
+
+for op in (:*, :\)
+    @eval function $op(x::Real, d::AbstractInterval)
+        if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
+            similar_interval(d, $op(x,leftendpoint(d)), $op(x,rightendpoint(d)))
+        else
+            similar_interval(d, $op(x,rightendpoint(d)), $op(x,leftendpoint(d)))
+        end
+    end
+end
 
 
 show(io::IO, d::AbstractInterval) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")

@@ -142,19 +142,93 @@ function test_interval(T = Float64)
     ## Some mappings preserve the interval structure
     # Translation
     d = interval(zero(T), one(T))
+    @test d == +d
+
     d2 = d + one(T)
     @test typeof(d2) == typeof(d)
     @test leftendpoint(d2) == one(T)
     @test rightendpoint(d2) == 2*one(T)
 
+    d2 = one(T) + d
+    @test typeof(d2) == typeof(d)
+    @test leftendpoint(d2) == one(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = d - one(T)
+    @test typeof(d2) == typeof(d)
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = -d
+    @test typeof(d2) == typeof(d)
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = one(T) - d
+    @test d2 == d
+
+    # translation for UnitInterval
     # Does a shifted unit interval return an interval?
     d = UnitInterval{T}()
     d2 = d + one(T)
     @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == one(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = one(T) + d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == one(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = d - one(T)
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = -d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = one(T) - d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == one(T)
+
+
+    # translation for ChebyshevInterval
+    d = ChebyshevInterval{T}()
+    d2 = d + one(T)
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = one(T) + d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = d - one(T)
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == -2one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    @test -d == d
+
+    d2 = one(T) - d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == 2one(T)    
+
 
     # Scaling
     d = interval(zero(T), one(T))
     d3 = T(2) * d
+    @test typeof(d3) == typeof(d)
+    @test leftendpoint(d3) == zero(T)
+    @test rightendpoint(d3) == T(2)
+
+    d3 = d * T(2)
     @test typeof(d3) == typeof(d)
     @test leftendpoint(d3) == zero(T)
     @test rightendpoint(d3) == T(2)
@@ -164,6 +238,12 @@ function test_interval(T = Float64)
     @test typeof(d4) == typeof(d)
     @test leftendpoint(d4) == zero(T)
     @test rightendpoint(d4) == T(1)/T(2)
+
+    d4 = T(2) \ d
+    @test typeof(d4) == typeof(d)
+    @test leftendpoint(d4) == zero(T)
+    @test rightendpoint(d4) == T(1)/T(2)
+
 
     # Union and intersection of intervals
     i1 = interval(zero(T), one(T))
@@ -419,6 +499,7 @@ function test_cartesianproduct_domain()
 
 end
 
+
 function test_set_operations()
 
   d1 = disk()
@@ -426,8 +507,8 @@ function test_set_operations()
   d3 = rectangle(-.5,-.1,.5,.1)
 
   println("- union")
-  u1 = d1+d2
-  u2 = u1+d3
+  u1 = d1∪d2
+  u2 = u1∪d3
 
   u3 = d3|u1
   u4 = u1|u2
