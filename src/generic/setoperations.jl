@@ -9,18 +9,29 @@
 """
 A `UnionDomain` represents the union of a set of domains.
 """
-# DD is a Set as ordering doesn't matter
-struct UnionDomain{DD<:Domain ,T} <: Domain{T}
-    domains  ::  Set{DD}
+# DD can be any collection type: a Tuple, or a Vector
+struct UnionDomain{DD,T} <: Domain{T}
+    domains  ::  DD
 end
 
 UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} = UnionDomain{DD,T}(domains)
 UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
-UnionDomain(domains::Domain...) = UnionDomain(Set(domains))
-UnionDomain(domains::AbstractVector) = UnionDomain(Set(domains))
-UnionDomain(domains::Tuple) = UnionDomain(Set(domains))
 
-elements(d::UnionDomain) = collect(d.domains)
+function UnionDomain(domains::Domain...)
+    # TODO: implement promote_space_type for domains and to the promotion properly
+    T = eltype(domains[1])
+    for d in domains
+        @assert eltype(d) == T
+    end
+    UnionDomain{typeof(domains),T}(domains)
+end
+
+UnionDomain(domains...) = UnionDomain(Domain.(domains)...)
+
+UnionDomain(domains::AbstractVector) = UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
+UnionDomain(domains::Tuple) = UnionDomain(domains...)
+
+elements(d::UnionDomain) = d.domains
 
 union(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : UnionDomain(d1, d2)
 function union(d1::Domain{S}, d2::Domain{T}) where {S,T}
@@ -29,18 +40,15 @@ function union(d1::Domain{S}, d2::Domain{T}) where {S,T}
 end
 
 # Avoid creating nested unions
-union(d1::UnionDomain, d2::Domain) = UnionDomain(elements(d1)..., d2)
 union(d1::UnionDomain, d2::UnionDomain) = UnionDomain(elements(d1)..., elements(d2)...)
+union(d1::UnionDomain, d2::Domain) = UnionDomain(elements(d1)..., d2)
 union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 
 
 # The union of domains corresponds to a logical OR of their characteristic functions
 indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
-(|)(d1::Domain, d2::Domain) = union(d1, d2)
-
-
-==(a::UnionDomain, b::UnionDomain) = a.domains == b.domains
+==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
 
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(nb_elements(d)) domains:\n")
@@ -62,7 +70,15 @@ end
 \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
 
 
+setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), d2))
 setdiff(d1::UnionDomain, d2::Domain) = UnionDomain(setdiff.(elements(d1), d2))
+function setdiff(d1::Domain, d2::UnionDomain)
+    ret = d1
+    for d in elements(d2)
+        ret = setdiff(ret, d)
+    end
+    ret
+end
 
 ###################################
 # The intersection of two domains

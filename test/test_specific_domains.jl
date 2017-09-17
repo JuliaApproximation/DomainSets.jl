@@ -319,6 +319,11 @@ function test_interval(T = Float64)
     @test d1 \ interval(-3one(T),zero(T)) == interval(zero(T),2one(T))
     @test d1 \ interval(-4one(T),-3one(T)) == d1
     @test d1 \ interval(-4one(T),4one(T)) == EmptySpace{T}()
+
+    d1 \ (-3one(T)) == d1
+    d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))
+    d1 \ (2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
+    d1 \ zero(T) == Interval{:closed,:open}(-2one(T),zero(T)) ∪ Interval{:open,:closed}(zero(T),2one(T))
 end
 
 function test_unitball()
@@ -544,11 +549,11 @@ function test_set_operations()
   d3 = rectangle(-.5,-.1,.5,.1)
 
   println("- union")
-  u1 = d1∪d2
-  u2 = u1∪d3
+  u1 = d1 ∪ d2
+  u2 = u1 ∪ d3
 
-  u3 = d3|u1
-  u4 = u1|u2
+  u3 = d3 ∪ u1
+  u4 = u1 ∪ u2
   x = SVector(0.,.15)
   y = SVector(1.1,.75)
   @test x∈u3
@@ -569,8 +574,7 @@ function test_set_operations()
   @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
   show(io,u1)
-  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n\t2.\t: the 2-dimensional unit ball\n" ||
-        String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
+  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
 
   println("- intersection")
   d1 = disk()

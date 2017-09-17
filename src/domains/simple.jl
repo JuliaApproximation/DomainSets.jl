@@ -114,3 +114,15 @@ for op in (:*,:+)
         $op(v::AbstractVector,a::Point) = map(y->$op(y,a),v)
     end
 end
+
+
+function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
+    a = leftendpoint(d)
+    b = rightendpoint(d)
+
+    a == p.x && return Interval{:open,R}(a,b)
+    a < p.x < b && return Interval{L,:open}(a,p.x) ∪ Interval{:open,R}(p.x,b)
+    b == p.x && return Interval{L,:open}(a,b)
+
+    return d
+end

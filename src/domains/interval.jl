@@ -273,6 +273,11 @@ end
 
 
 show(io::IO, d::AbstractInterval) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Interval{:closed,:closed}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Interval{:closed,:open}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), ")")
+show(io::IO, d::Interval{:open,:closed}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Interval{:open,:open}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), ")")
+
 
 function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
@@ -280,13 +285,16 @@ function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,
     a2 = leftendpoint(d2)
     b2 = rightendpoint(d2)
 
-    if (b1 < a2) || (a1 > b2)
+    if (b1 < a2) || (b2 < a1) || (b1 == a2 && R1 == L2 == :open) ||
+                    (b2 == a1 && R2 == L1 == :open)
         UnionDomain(d1, d2)
     else
-        # TODO: add some logic to determine open and closed nature of endpoints of new interval
-        interval(min(a1, a2), max(b1, b2))
+        a = min(a1, a2)
+        b = max(b1, b2)
+        Interval{a == a1 ? L1 : L2, b == b1 ? R1 : R2}(a, b)
     end
 end
+
 
 function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
