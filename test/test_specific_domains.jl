@@ -83,7 +83,10 @@ function test_point()
     @test d/2 == Domain(0.5)
     @test 2\d == Domain(0.5)
 
-    @test Domain(Set([1,2,3])) == Point(1) ∪ Point(2) ∪ Point(3)
+    d1 = Domain(Set([1,2,3]))
+    d2 = Point(1) ∪ Point(2) ∪ Point(3)
+
+    @test d1 == d2
 end
 
 
@@ -566,7 +569,8 @@ function test_set_operations()
   @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
   show(io,u1)
-  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n\t2.\t: the 2-dimensional unit ball\n"
+  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n\t2.\t: the 2-dimensional unit ball\n" ||
+        String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
 
   println("- intersection")
   d1 = disk()
