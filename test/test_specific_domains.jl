@@ -37,6 +37,8 @@ function test_emptyspace()
     d2 = interval()
     @test d1 ∩ d2 == d1
     @test d1 ∪ d2 == d2
+    @test d2 \ d1 == d2
+    @test d2 \ d2 == d1
 
     d2 = EmptySpace(SVector{2,Float64})
     @test v[0.1,0.2] ∉ d2
@@ -285,6 +287,15 @@ function test_interval(T = Float64)
     # - intersection of non-overlapping intervals
     du6 = i1 ∩ i4
     @test typeof(du6) == EmptySpace{T}
+
+    # - setdiff of intervals
+    d1 = interval(-2one(T), 2one(T))
+    @test d1 \ interval(3one(T), 4one(T)) == d1
+    @test d1 \ interval(zero(T), one(T)) == interval(-2one(T),zero(T)) ∪ interval(one(T), 2one(T))
+    @test d1 \ interval(zero(T), 3one(T)) == interval(-2one(T),zero(T))
+    @test d1 \ interval(-3one(T),zero(T)) == interval(zero(T),2one(T))
+    @test d1 \ interval(-4one(T),-3one(T)) == d1
+    @test d1 \ interval(-4one(T),4one(T)) == EmptySpace{T}()
 end
 
 function test_unitball()

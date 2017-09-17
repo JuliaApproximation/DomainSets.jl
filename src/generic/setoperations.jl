@@ -74,6 +74,8 @@ end
 \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, domain.domains))
 
 
+setdiff(d1::UnionDomain, d2::Domain) = UnionDomain(setdiff.(d1.domains, d2))
+
 ###################################
 # The intersection of two domains
 ###################################
@@ -137,7 +139,10 @@ end
 
 DifferenceDomain(d1::Domain{T}, d2::Domain{T}) where {T} = DifferenceDomain{typeof(d1),typeof(d2),T}(d1,d2)
 
-setdiff(d1::Domain, d2::Domain) = DifferenceDomain(d1, d2)
+function setdiff(d1::Domain{T}, d2::Domain{T}) where T
+    d1 == d2 && return EmptySpace{T}()
+    DifferenceDomain(d1, d2)
+end
 
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
 indomain(x, d::DifferenceDomain) = indomain(x, d.d1) && (~indomain(x, d.d2))

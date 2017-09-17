@@ -26,6 +26,10 @@ intersect(d1::EmptySpace{T}, d2::EmptySpace{T}) where {T} = d1
 intersect(d1::Domain{T}, d2::EmptySpace{T}) where {T} = d2
 intersect(d1::EmptySpace{T}, d2::Domain{T}) where {T} = d1
 
+setdiff(d1::EmptySpace{T}, d2::EmptySpace{T}) where {T} = d1
+setdiff(d1::EmptySpace{T}, d2::Domain{T}) where {T} = d1
+setdiff(d1::Domain{T}, d2::EmptySpace{T}) where {T} = d1
+
 # TODO: verify these - should we restrict x?
 (+)(d::EmptySpace, x::Number) = d
 (*)(d::EmptySpace, x::Number) = d

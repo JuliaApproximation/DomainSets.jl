@@ -301,3 +301,21 @@ function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2
         interval(max(a1, a2), min(b1, b2))
     end
 end
+
+function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
+    a1 = leftendpoint(d1)
+    b1 = rightendpoint(d1)
+    a2 = leftendpoint(d2)
+    b2 = rightendpoint(d2)
+
+    a1 > b1 && return d1
+    a2 > b2 && return d1
+    b1 < a2 && return d1
+    a1 < a2 < b1 ≤ b2 && return interval(a1, a2)
+    a1 < a2 ≤ b2 < b1 && return interval(a1, a2) ∪ interval(b2, b1)
+    a2 ≤ a1 < b2 < b1 && return interval(b2, b1)
+    a2 ≤ a1 ≤ b1 ≤ b2 && return EmptySpace{T}()
+
+    @assert b2 ≤ a1
+    d1
+end
