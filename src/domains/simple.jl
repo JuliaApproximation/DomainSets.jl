@@ -86,6 +86,7 @@ convert(::Type{<:Number}, d::Point) = N(d.x)
 convert(::Type{Domain}, c::Number) = Point(c)
 convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
 
+convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
 
 
 ==(a::Point,b::Point) = a.x == b.x

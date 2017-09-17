@@ -9,24 +9,18 @@
 """
 A `UnionDomain` represents the union of a set of domains.
 """
-# DD can be any collection type: a Tuple, or a Vector
-struct UnionDomain{DD,T} <: Domain{T}
-    domains  ::  DD
+# DD is a Set as ordering doesn't matter
+struct UnionDomain{DD<:Domain ,T} <: Domain{T}
+    domains  ::  Set{DD}
 end
 
-function UnionDomain(domains::Domain...)
-    # TODO: implement promote_space_type for domains and to the promotion properly
-    T = eltype(domains[1])
-    for d in domains
-        @assert eltype(d) == T
-    end
-    UnionDomain{typeof(domains),T}(domains)
-end
+UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} = UnionDomain{DD,T}(domains)
+UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
+UnionDomain(domains::Domain...) = UnionDomain(Set(domains))
+UnionDomain(domains::AbstractVector) = UnionDomain(Set(domains))
+UnionDomain(domains::Tuple) = UnionDomain(Set(domains))
 
-UnionDomain(domains::AbstractVector) = UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
-UnionDomain(domains::Tuple) = UnionDomain(domains...)
-
-elements(d::UnionDomain) = d.domains
+elements(d::UnionDomain) = collect(d.domains)
 
 union(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : UnionDomain(d1, d2)
 function union(d1::Domain{S}, d2::Domain{T}) where {S,T}
@@ -46,18 +40,12 @@ indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 (|)(d1::Domain, d2::Domain) = union(d1, d2)
 
 
-function ==(a::UnionDomain, b::UnionDomain)
-    length(elements(a)) ≠ length(elements(b)) && return false
-    for (c, d) in zip(a.domains, b.domains)
-        c ≠ d && return false
-    end
-    return true
-end
+==(a::UnionDomain, b::UnionDomain) = elements(a) == elements(b)
 
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(nb_elements(d)) domains:\n")
-    for i=1:nb_elements(d)
-        print(io, "\t$i.\t: ", element(d,i), "\n")
+    for (i,e) in enumerate(elements(d))
+        print(io, "\t$i.\t: ", e, "\n")
     end
 end
 
@@ -66,15 +54,15 @@ end
 
 for op in (:+, :-, :*, :/)
     @eval begin
-        $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, domain.domains, x))
-        $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, domain.domains))
+        $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, elements(domain), x))
+        $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, elements(domain)))
     end
 end
 
-\(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, domain.domains))
+\(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
 
 
-setdiff(d1::UnionDomain, d2) = UnionDomain(setdiff.(d1.domains, d2))
+setdiff(d1::UnionDomain, d2::Domain) = UnionDomain(setdiff.(elements(d1), d2))
 
 ###################################
 # The intersection of two domains
@@ -139,16 +127,17 @@ end
 
 DifferenceDomain(d1::Domain{T}, d2::Domain{T}) where {T} = DifferenceDomain{typeof(d1),typeof(d2),T}(d1,d2)
 
-function setdiff(d1::Domain{T}, d2::Domain{T}) where T
+function setdiff(d1::Domain{T}, d2::Domain) where T
     d1 == d2 && return EmptySpace{T}()
     DifferenceDomain(d1, d2)
 end
 
+setdiff(d1::Domain, d2) = setdiff(d1, convert(Domain, d2))
+
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
 indomain(x, d::DifferenceDomain) = indomain(x, d.d1) && (~indomain(x, d.d2))
 
-(-)(d1::Domain, d2::Domain) = setdiff(d1, d2)
-(\)(d1::Domain, d2::Domain) = setdiff(d1, d2)
+\(d1::Domain, d2) = setdiff(d1, d2)
 
 
 function show(io::IO, d::DifferenceDomain)

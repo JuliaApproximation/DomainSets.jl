@@ -68,6 +68,7 @@ function test_fullspace()
 end
 
 function test_point()
+    println("- points")
     d = Domain(1.0)
     @test d isa Point
     @test 1 ∈ d
@@ -81,6 +82,8 @@ function test_point()
     @test d*2 == Domain(2.0)
     @test d/2 == Domain(0.5)
     @test 2\d == Domain(0.5)
+
+    @test Domain(Set([1,2,3])) == Point(1) ∪ Point(2) ∪ Point(3)
 end
 
 
@@ -478,7 +481,7 @@ function test_arithmetics()
     @test v[0.1, -0.1, 0.1] ∉ DS
 
     # domain difference
-    DS = D-S
+    DS = D\S
     @test v[0.1, 0.1, 0.1] ∉ DS
 
     D1 = 2*D
@@ -559,9 +562,11 @@ function test_set_operations()
   @test ũ2 == ũ2
   @test u1 == ũ2
 
+  # ordering doesn't matter
+  @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
   show(io,u1)
-  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
+  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n\t2.\t: the 2-dimensional unit ball\n"
 
   println("- intersection")
   d1 = disk()
