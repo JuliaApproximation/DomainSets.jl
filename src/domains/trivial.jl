@@ -52,7 +52,7 @@ FullSpace(::Type{T}) where {T} = FullSpace{T}()
 fullspace(d::Domain) = FullSpace{eltype(d)}()
 
 euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
-euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace(Point{N,T})
+euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace(SVector{N,T})
 
 indomain(x::T, d::FullSpace{T}) where {T} = true
 indomain(x::S, d::FullSpace{T}) where {T,S} = promotes_to(S,T) == Val{true}

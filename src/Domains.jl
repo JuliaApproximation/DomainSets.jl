@@ -132,7 +132,7 @@ export real_line, halfline, negative_halfline
 export interval, leftendpoint, rightendpoint
 export similar_interval
 # from domains/simple.jl
-export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere
+export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere, Point
 export disk, ball, cube, simplex, cylinder, rectangle
 # from domains/circle.jl
 export Circle, Sphere

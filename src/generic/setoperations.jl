@@ -74,7 +74,7 @@ end
 \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, domain.domains))
 
 
-setdiff(d1::UnionDomain, d2::Domain) = UnionDomain(setdiff.(d1.domains, d2))
+setdiff(d1::UnionDomain, d2) = UnionDomain(setdiff.(d1.domains, d2))
 
 ###################################
 # The intersection of two domains

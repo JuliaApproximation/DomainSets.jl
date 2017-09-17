@@ -7,6 +7,7 @@ function test_specific_domains()
     @testset "$(rpad("Specific domains",80))" begin
         test_emptyspace()
         test_fullspace()
+        test_point()
         test_interval()
         test_unitball()
         test_derived_unitball()
@@ -64,6 +65,22 @@ function test_fullspace()
     @test d2 == Domain(SVector{2,Float64})
     @test d2 == convert(Domain,SVector{2,Float64})
     @test d2 == convert(Domain{SVector{2,Float64}}, SVector{2,Float64})
+end
+
+function test_point()
+    d = Domain(1.0)
+    @test d isa Point
+    @test 1 ∈ d
+    @test 1.1 ∉ d
+
+    @test d+1 == Domain(2.0)
+    @test 1+d == Domain(2.0)
+    @test 1-d == Domain(0.0)
+    @test d-1 == Domain(0.0)
+    @test 2d  == Domain(2.0)
+    @test d*2 == Domain(2.0)
+    @test d/2 == Domain(0.5)
+    @test 2\d == Domain(0.5)
 end
 
 

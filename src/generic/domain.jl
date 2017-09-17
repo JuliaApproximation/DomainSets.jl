@@ -31,11 +31,8 @@ If the type `T` is a container type, the elements of `T` may have a different
 subeltype(d::Domain) = subeltype(spaceof(d))
 subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 
-"We use `Point{N,T}` as a synonym for `SVector{N,T}`."
-const Point{N,T} = SVector{N,T}
-
-"A `EuclideanDomain` is any domain whose eltype is `Point{N,T}`."
-const EuclideanDomain{N,T} = Domain{Point{N,T}}
+"A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
+const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 
 
 # Convenient aliases
