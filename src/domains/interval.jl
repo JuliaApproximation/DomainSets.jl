@@ -15,6 +15,8 @@ leftendpoint(d::AbstractInterval) = d.a
 "The right endpoint of the interval."
 rightendpoint(d::AbstractInterval) = d.b
 
+isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
+
 
 ## Some special intervals
 # - the unit interval [0,1]
@@ -182,6 +184,8 @@ isclosed(d::ClosedInterval) = true
 isopen(d::OpenInterval) = true
 isclosed(d::Interval) = false
 isopen(d::Interval) = false
+isempty(d::Union{OpenInterval,HalfOpenLeftInterval,HalfOpenRightInterval}) = leftendpoint(d) ≥ rightendpoint(d)
+
 
 iscompact(d::Interval) = true
 

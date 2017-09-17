@@ -16,6 +16,8 @@ emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
 
+isempty(d::EmptySpace) = true
+
 # Arithmetic operations
 
 union(d1::EmptySpace{T}, d2::EmptySpace{T}) where {T} = d1

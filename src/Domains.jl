@@ -19,7 +19,7 @@ import Base: ∘
 import Base: cross, ×
 
 # Set operations
-import Base: intersect, union, setdiff, in
+import Base: intersect, union, setdiff, in, isempty
 
 # Arrays
 import Base: size, length, ndims, getindex, eltype, ndims

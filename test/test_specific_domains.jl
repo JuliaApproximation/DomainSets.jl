@@ -30,6 +30,7 @@ function test_emptyspace()
     println("- an empty space")
     d1 = EmptySpace()
     show(io,d1)
+    @test isempty(d1)
     @test String(take!(io)) == "the empty space with eltype Float64"
     @test eltype(d1) == Float64
     @test 0.5 ∉ d1
@@ -42,6 +43,7 @@ function test_emptyspace()
     @test d2 \ d2 == d1
 
     d2 = EmptySpace(SVector{2,Float64})
+    @test isempty(d2)
     @test v[0.1,0.2] ∉ d2
 end
 
@@ -324,6 +326,16 @@ function test_interval(T = Float64)
     d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))
     d1 \ (2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
     d1 \ zero(T) == Interval{:closed,:open}(-2one(T),zero(T)) ∪ Interval{:open,:closed}(zero(T),2one(T))
+
+    # - empty interval
+    @test isempty(interval(one(T),zero(T)))
+    @test zero(T) ∉ interval(one(T),zero(T))
+    @test isempty(Interval{:open,:open}(zero(T),zero(T)))
+    @test zero(T) ∉ Interval{:open,:open}(zero(T),zero(T))
+    @test isempty(Interval{:open,:closed}(zero(T),zero(T)))
+    @test zero(T) ∉ Interval{:open,:closed}(zero(T),zero(T))
+    @test isempty(Interval{:closed,:open}(zero(T),zero(T)))
+    @test zero(T) ∉ Interval{:closed,:open}(zero(T),zero(T))
 end
 
 function test_unitball()
