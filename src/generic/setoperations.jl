@@ -10,11 +10,14 @@
 A `UnionDomain` represents the union of a set of domains.
 """
 # DD can be any collection type: a Tuple, or a Vector
+# Eventually it will likely be forced to be an AbstractSet
+#
 struct UnionDomain{DD,T} <: Domain{T}
     domains  ::  DD
 end
 
-UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} = UnionDomain{DD,T}(domains)
+UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} =
+    UnionDomain{DD,T}(domains)
 UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
 
 function UnionDomain(domains::Domain...)
@@ -28,10 +31,13 @@ end
 
 UnionDomain(domains...) = UnionDomain(Domain.(domains)...)
 
-UnionDomain(domains::AbstractVector) = UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
+UnionDomain(domains::AbstractVector) =
+    UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
 UnionDomain(domains::Tuple) = UnionDomain(domains...)
 
 elements(d::UnionDomain) = d.domains
+
+hash(d::UnionDomain, h::UInt) = hash(Set(d.domains), h)
 
 union(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : UnionDomain(d1, d2)
 function union(d1::Domain{S}, d2::Domain{T}) where {S,T}
@@ -71,7 +77,14 @@ end
 
 
 setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), d2))
-setdiff(d1::UnionDomain, d2::Domain) = UnionDomain(setdiff.(elements(d1), d2))
+function setdiff(d1::UnionDomain, d2::Domain)
+    s = Set(elements(d1))
+    # check if any element is in d1 and just remove
+    s2 = setdiff(s, tuple(d2))
+    s2 ≠ s && return UnionDomain(s2)
+
+    UnionDomain(setdiff.(elements(d1), d2))
+end
 function setdiff(d1::Domain, d2::UnionDomain)
     ret = d1
     for d in elements(d2)

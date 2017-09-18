@@ -22,7 +22,7 @@ import Base: cross, ×
 import Base: intersect, union, setdiff, in, isempty
 
 # Arrays
-import Base: size, length, ndims, getindex, eltype, ndims
+import Base: size, length, ndims, getindex, eltype, ndims, hash
 import Base: inv
 import Base: isreal
 import Base: zero

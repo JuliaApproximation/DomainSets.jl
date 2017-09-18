@@ -585,6 +585,8 @@ function test_set_operations()
   # ordering doesn't matter
   @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
+  @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
+
   show(io,u1)
   @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
 
