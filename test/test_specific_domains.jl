@@ -89,6 +89,8 @@ function test_point()
     d2 = Point(1) ∪ Point(2) ∪ Point(3)
 
     @test d1 == d2
+
+    convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
 end
 
 

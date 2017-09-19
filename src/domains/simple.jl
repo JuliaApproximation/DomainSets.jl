@@ -83,6 +83,10 @@ end
 convert(::Type{Number}, d::Point) = d.x
 convert(::Type{<:Number}, d::Point) = N(d.x)
 
+convert(::Type{Domain{T}}, d::Point{T}) where T = d
+convert(::Type{Domain{T}}, d::Point) where T = Point(T(d.x))
+
+
 convert(::Type{Domain}, c::Number) = Point(c)
 convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
 
