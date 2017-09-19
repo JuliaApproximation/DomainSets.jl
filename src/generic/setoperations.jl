@@ -85,7 +85,7 @@ setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), d
 function setdiff(d1::UnionDomain, d2::Domain)
     s = Set(elements(d1))
     # check if any element is in d1 and just remove
-    s2 = setdiff(s, tuple(d2))
+    s2 = Set(setdiff(s, tuple(d2)))
     s2 ≠ s && return UnionDomain(s2)
 
     UnionDomain(setdiff.(elements(d1), d2))
