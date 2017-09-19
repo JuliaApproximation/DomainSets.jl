@@ -19,7 +19,7 @@ import Base: ∘
 import Base: cross, ×
 
 # Set operations
-import Base: intersect, union, setdiff, in, isempty
+import Base: intersect, union, setdiff, in, isempty, minimum, maximum
 
 # Arrays
 import Base: size, length, ndims, getindex, eltype, ndims, hash
@@ -119,6 +119,8 @@ export mapping, map_domain
 
 # from generic/arithmetics.jl
 export rotate
+
+export infimum, supremum
 
 
 ## Specific domains

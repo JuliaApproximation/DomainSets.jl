@@ -62,3 +62,8 @@ in(x::SVector{1,T}, d::Domain{T}) where {T <: Number}  = in(x[1], d)
 in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)
 
 isreal(d::Domain) = isreal(spaceof(d))
+
+infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
+supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
+
+# override minimum and maximum for closed sets

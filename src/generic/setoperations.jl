@@ -76,6 +76,11 @@ end
 \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
 
 
+for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:supremum, :max))
+    @eval $op(d::UnionDomain) = mapreduce($op, $mop, elements(d))
+end
+
+
 setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), d2))
 function setdiff(d1::UnionDomain, d2::Domain)
     s = Set(elements(d1))

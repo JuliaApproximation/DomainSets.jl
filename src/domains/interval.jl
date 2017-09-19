@@ -18,6 +18,21 @@ rightendpoint(d::AbstractInterval) = d.b
 isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
 
 
+
+function infimum(d::AbstractInterval{T}) where T
+    a = leftendpoint(d)
+    b = rightendpoint(d)
+    a > b && throw(ArgumentError("Infimum not defined for empty intervals"))
+    a
+end
+
+function supremum(d::AbstractInterval{T}) where T
+    a = leftendpoint(d)
+    b = rightendpoint(d)
+    a > b && throw(ArgumentError("Supremum not defined for empty intervals"))
+    b
+end
+
 ## Some special intervals
 # - the unit interval [0,1]
 # - the 'Chebyshev' interval [-1,1]
@@ -57,6 +72,9 @@ unitinterval(::Type{T} = Float64) where {T} = UnitInterval{T}()
 leftendpoint(d::UnitInterval{T}) where {T} = zero(T)
 rightendpoint(d::UnitInterval{T}) where {T} = one(T)
 
+minimum(d::UnitInterval) = infimum(d)
+maximum(d::UnitInterval) = supremum(d)
+
 
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: FixedInterval{T}
@@ -64,6 +82,9 @@ end
 
 leftendpoint(d::ChebyshevInterval{T}) where {T} = -one(T)
 rightendpoint(d::ChebyshevInterval{T}) where {T} = one(T)
+
+minimum(d::ChebyshevInterval) = infimum(d)
+maximum(d::ChebyshevInterval) = supremum(d)
 
 
 real_line(::Type{T} = Float64) where {T <: AbstractFloat} = FullSpace{T}()
@@ -77,6 +98,10 @@ halfline(::Type{T} = Float64) where {T <: AbstractFloat} = Halfline{T}()
 
 leftendpoint(d::Halfline{T}) where {T} = zero(T)
 rightendpoint(d::Halfline{T}) where {T} = T(Inf)
+
+
+minimum(d::Halfline) = infimum(d)
+maximum(d::Halfline) = throw(ArgumentError("$d is unbounded. Use supremum."))
 
 # A half-open domain is neither open nor closed
 isclosed(d::Halfline) = false
@@ -101,6 +126,10 @@ negative_halfline(::Type{T} = Float64) where {T <: AbstractFloat} = NegativeHalf
 
 leftendpoint(d::NegativeHalfline{T}) where {T} = -T(Inf)
 rightendpoint(d::NegativeHalfline{T}) where {T} = zero(T)
+
+
+minimum(d::NegativeHalfline) = throw(ArgumentError("$d is unbounded. Use infimum."))
+maximum(d::NegativeHalfline) = supremum(d)
 
 isclosed(d::NegativeHalfline) = false
 isopen(d::NegativeHalfline) = true
@@ -177,6 +206,12 @@ Interval{L,R}(::Type{T}, a, b) where {L,R,T} = Interval{L,R}(convert(T, a), conv
 
 leftendpoint(d::Interval) = d.a
 rightendpoint(d::Interval) = d.b
+
+minimum(d::Interval{:closed}) = infimum(d)
+minimum(d::Interval{:open}) = throw(ArgumentError("$d is open on the left. Use infimum."))
+maximum(d::Interval{L,:closed}) where L = supremum(d)
+maximum(d::Interval{L,:open}) where L = throw(ArgumentError("$d is open on the right. Use supremum."))
+
 
 # The interval is closed if it is closed at both endpoints, and open if it
 # is open at both endpoints. In all other cases, it is neither open nor closed.

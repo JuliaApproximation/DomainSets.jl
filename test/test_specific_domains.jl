@@ -107,6 +107,9 @@ function test_interval(T = Float64)
 
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
@@ -115,6 +118,9 @@ function test_interval(T = Float64)
     d = UnitInterval{T}()
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
@@ -122,6 +128,9 @@ function test_interval(T = Float64)
     d = ChebyshevInterval{T}()
     @test leftendpoint(d) == -one(T)
     @test rightendpoint(d) == one(T)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
@@ -129,6 +138,10 @@ function test_interval(T = Float64)
     d = halfline(T)
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == T(Inf)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError maximum(d)
+
     @test !isclosed(d)
     @test !isopen(d)
     @test !iscompact(d)
@@ -141,6 +154,10 @@ function test_interval(T = Float64)
     d = negative_halfline(T)
     @test leftendpoint(d) == -T(Inf)
     @test rightendpoint(d) == zero(T)
+    @test infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError minimum(d)
+
     @test !isclosed(d)
     @test isopen(d)
     @test !iscompact(d)
@@ -153,21 +170,36 @@ function test_interval(T = Float64)
     @test !isclosed(d)
     @test leftendpoint(d)∉d
     @test rightendpoint(d)∉d
+    @test infimum(d) == leftendpoint(d)
+    @test supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError minimum(d)
+    @test_throws ArgumentError maximum(d)
+
     d = Domains.closed_interval()
     @test !isopen(d)
     @test isclosed(d)
     @test leftendpoint(d) ∈ d
     @test rightendpoint(d) ∈ d
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     d = HalfOpenLeftInterval()
     @test !isopen(d)
     @test !isclosed(d)
     @test leftendpoint(d) ∉ d
     @test rightendpoint(d) ∈ d
+    @test infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError minimum(d)
+
     d = HalfOpenRightInterval()
     @test !isopen(d)
     @test !isclosed(d)
     @test leftendpoint(d) ∈ d
     @test rightendpoint(d) ∉ d
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError maximum(d)
 
     @test typeof(UnitInterval{Float64}(interval(0.,1.))) <: UnitInterval
     @test typeof(ChebyshevInterval{Float64}(interval(-1,1.))) <: ChebyshevInterval
@@ -338,6 +370,12 @@ function test_interval(T = Float64)
     @test zero(T) ∉ Interval{:open,:closed}(zero(T),zero(T))
     @test isempty(Interval{:closed,:open}(zero(T),zero(T)))
     @test zero(T) ∉ Interval{:closed,:open}(zero(T),zero(T))
+
+    d = interval(one(T),zero(T))
+    @test_throws ArgumentError minimum(d)
+    @test_throws ArgumentError maximum(d)
+    @test_throws ArgumentError infimum(d)
+    @test_throws ArgumentError supremum(d)
 end
 
 function test_unitball()
@@ -641,6 +679,8 @@ function test_set_operations()
   @test d/2 == (d1/2) ∪ (d2/2)
   @test 2\d == (2\d1) ∪ (2\d2)
 
+  @test infimum(d) == minimum(d) == 0
+  @test supremum(d) == maximum(d) == 3
 
   println("- different types")
   d̃1 = interval(0,1)
