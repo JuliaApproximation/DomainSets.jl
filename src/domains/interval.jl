@@ -239,24 +239,40 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 #################################
 
 
-for STyp in (:Domain, :AbstractInterval, :FixedInterval)
+for STyp in (:Domain, :AbstractInterval)
     @eval begin
         convert(::Type{$STyp{T}}, d::Interval{L,R,T}) where {L,R,T} = d
         convert(::Type{$STyp{T}}, d::Interval{L,R}) where {L,R,T} =
             Interval{L,R,T}(T(leftendpoint(d)), T(rightendpoint(d)))
     end
+end
 
-    for Typ in (:ChebyshevInterval, :UnitInterval, :Halfline, :NegativeHalfline)
-        @eval begin
-            convert(::Type{$STyp{T}}, d::$Typ{T}) where {T} = d
-            convert(::Type{$STyp{T}}, d::$Typ) where T = $Typ{T}
-        end
+for STyp in (:Domain, :AbstractInterval, :FixedInterval),
+        Typ in (:ChebyshevInterval, :UnitInterval, :Halfline, :NegativeHalfline)
+    @eval begin
+        convert(::Type{$STyp{T}}, d::$Typ{T}) where {T} = d
+        convert(::Type{$STyp{T}}, d::$Typ) where T = $Typ{T}
+    end
+end
+
+for STyp in (:Domain, :AbstractInterval, :ClosedInterval)
+    @eval begin
+        convert(::Type{$STyp}, d::IntervalSets.ClosedInterval) =
+                ClosedInterval(d.left, d.right)
+        convert(::Type{$STyp{T}}, d::IntervalSets.ClosedInterval) where T =
+                ClosedInterval{T}(d.left, d.right)
     end
 end
 
 
 convert(::Type{Interval{L,R,T}}, d::AbstractInterval{S}) where {L,R,T,S} =
     Interval{L,R,T}(leftendpoint(d), rightendpoint(d))
+
+convert(::Type{Interval}, d::IntervalSets.ClosedInterval) =
+    ClosedInterval(d.left, d.right)
+# avoid constructor
+ClosedInterval{T}(d::IntervalSets.ClosedInterval) where T =
+    ClosedInterval{T}(d.left, d.right)
 
 function convert(::Type{UnitInterval{T}}, d::AbstractInterval{S}) where {T,S}
     @assert leftendpoint(d) == 0

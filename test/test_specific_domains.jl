@@ -376,6 +376,39 @@ function test_interval(T = Float64)
     @test_throws ArgumentError maximum(d)
     @test_throws ArgumentError infimum(d)
     @test_throws ArgumentError supremum(d)
+
+    # - convert
+    d = interval(zero(T), one(T))
+    @test convert(Domain, d) == d
+    @test Domain(d) == d
+    @test convert(Domain{Float32}, d) == interval(0f0, 1f0)
+    @test Domain{Float32}(d) == interval(0f0, 1f0)
+    @test convert(Domain{Float64}, d) == interval(0.0, 1.0)
+    @test Domain{Float64}(d) == interval(0.0, 1.0)
+    @test convert(Domain, zero(T)..one(T)) == d
+    @test Domain(zero(T)..one(T)) == d
+    @test convert(Domain{T}, zero(T)..one(T)) == d
+    @test Domain{T}(zero(T)..one(T)) == d
+    @test convert(AbstractInterval, zero(T)..one(T)) == d
+    @test AbstractInterval(zero(T)..one(T)) == d
+    @test convert(AbstractInterval{T}, zero(T)..one(T)) == d
+    @test AbstractInterval{T}(zero(T)..one(T)) == d
+    @test convert(Interval, zero(T)..one(T)) == d
+    @test Interval(zero(T)..one(T)) == d
+    @test convert(ClosedInterval, zero(T)..one(T)) == d
+    @test ClosedInterval(zero(T)..one(T)) == d
+    @test convert(ClosedInterval{T}, zero(T)..one(T)) == d
+    @test ClosedInterval{T}(zero(T)..one(T)) == d
+
+
+    # tests conversion from other types
+    @test convert(Domain{T}, 0..1) == d
+    @test Domain{T}(0..1) == d
+    @test convert(AbstractInterval{T}, 0..1) == d
+    @test AbstractInterval{T}(0..1) == d
+    @test convert(ClosedInterval{T}, 0..1) == d
+    @test ClosedInterval{T}(0..1) == d
+
 end
 
 function test_unitball()

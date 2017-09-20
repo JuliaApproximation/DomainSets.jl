@@ -4,7 +4,7 @@ module Domains
 
 # We use static vectors internally
 using StaticArrays
-
+import IntervalSets
 
 ################################
 ## Exhaustive list of imports
@@ -39,6 +39,10 @@ import Base: show
 
 # Various
 import Base: isopen, Bool
+
+# IntervalSets
+import IntervalSets: (..)
+export ..
 
 
 ################################
