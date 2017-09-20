@@ -67,6 +67,8 @@ similar_interval(d::FixedInterval{T}, a, b) where {T} = ClosedInterval{T}(a, b)
 struct UnitInterval{T} <: FixedInterval{T}
 end
 
+UnitInterval() = UnitInterval{Float64}()
+
 unitinterval(::Type{T} = Float64) where {T} = UnitInterval{T}()
 
 leftendpoint(d::UnitInterval{T}) where {T} = zero(T)
@@ -79,6 +81,8 @@ maximum(d::UnitInterval) = supremum(d)
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: FixedInterval{T}
 end
+
+ChebyshevInterval() = ChebyshevInterval{Float64}()
 
 leftendpoint(d::ChebyshevInterval{T}) where {T} = -one(T)
 rightendpoint(d::ChebyshevInterval{T}) where {T} = one(T)
@@ -197,12 +201,10 @@ open_interval(args...) = OpenInterval(args...)
 
 # By default we use a Float64 type
 Interval{L,R}() where {L,R} = Interval{L,R,Float64}()
-
 Interval{L,R}(a::T, b::S) where {L,R,T,S} = Interval{L,R}(promote(a,b)...)
-
 Interval{L,R}(a::T, b::T) where {L,R,T} = Interval{L,R,T}(a, b)
-
 Interval{L,R}(::Type{T}, a, b) where {L,R,T} = Interval{L,R}(convert(T, a), convert(T, b))
+Interval(a, b) = ClosedInterval(a, b)
 
 leftendpoint(d::Interval) = d.a
 rightendpoint(d::Interval) = d.b
