@@ -31,11 +31,8 @@ If the type `T` is a container type, the elements of `T` may have a different
 subeltype(d::Domain) = subeltype(spaceof(d))
 subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 
-"We use `Point{N,T}` as a synonym for `SVector{N,T}`."
-const Point{N,T} = SVector{N,T}
-
-"A `EuclideanDomain` is any domain whose eltype is `Point{N,T}`."
-const EuclideanDomain{N,T} = Domain{Point{N,T}}
+"A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
+const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 
 
 # Convenient aliases
@@ -51,12 +48,22 @@ const Domain4d{T} = EuclideanDomain{4,T}
 # Concrete subtypes should implement `indomain`, rather than `in`.
 in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 
-in(x::S, d::Domain{T}) where {T,S} = in(convert(T, x), d)
+function in(x, d::Domain)
+   T = promote_type(typeof(x), eltype(d))
+   T == Any && return false
+   in(convert(T, x), convert(Domain{T}, d))
+end
 
 # Be forgiving for a 1D case. Good idea or not? This is really an isomorphism.
+# dlfivefifty: NOT!
 in(x::SVector{1,T}, d::Domain{T}) where {T <: Number}  = in(x[1], d)
 
 # The user may supply a vector. We attempt to convert it to the right space.
 in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)
 
 isreal(d::Domain) = isreal(spaceof(d))
+
+infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
+supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
+
+# override minimum and maximum for closed sets

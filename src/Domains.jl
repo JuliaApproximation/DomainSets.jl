@@ -19,10 +19,10 @@ import Base: ∘
 import Base: cross, ×
 
 # Set operations
-import Base: intersect, union, setdiff, in
+import Base: intersect, union, setdiff, in, isempty, minimum, maximum
 
 # Arrays
-import Base: size, length, ndims, getindex, eltype, ndims
+import Base: size, length, ndims, getindex, eltype, ndims, hash
 import Base: inv
 import Base: isreal
 import Base: zero
@@ -120,6 +120,8 @@ export mapping, map_domain
 # from generic/arithmetics.jl
 export rotate
 
+export infimum, supremum
+
 
 ## Specific domains
 
@@ -132,7 +134,7 @@ export real_line, halfline, negative_halfline
 export interval, leftendpoint, rightendpoint
 export similar_interval
 # from domains/simple.jl
-export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere
+export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere, Point
 export disk, ball, cube, simplex, cylinder, rectangle
 # from domains/circle.jl
 export Circle, Sphere

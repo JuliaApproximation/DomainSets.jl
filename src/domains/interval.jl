@@ -15,6 +15,23 @@ leftendpoint(d::AbstractInterval) = d.a
 "The right endpoint of the interval."
 rightendpoint(d::AbstractInterval) = d.b
 
+isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
+
+
+
+function infimum(d::AbstractInterval{T}) where T
+    a = leftendpoint(d)
+    b = rightendpoint(d)
+    a > b && throw(ArgumentError("Infimum not defined for empty intervals"))
+    a
+end
+
+function supremum(d::AbstractInterval{T}) where T
+    a = leftendpoint(d)
+    b = rightendpoint(d)
+    a > b && throw(ArgumentError("Supremum not defined for empty intervals"))
+    b
+end
 
 ## Some special intervals
 # - the unit interval [0,1]
@@ -55,6 +72,9 @@ unitinterval(::Type{T} = Float64) where {T} = UnitInterval{T}()
 leftendpoint(d::UnitInterval{T}) where {T} = zero(T)
 rightendpoint(d::UnitInterval{T}) where {T} = one(T)
 
+minimum(d::UnitInterval) = infimum(d)
+maximum(d::UnitInterval) = supremum(d)
+
 
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: FixedInterval{T}
@@ -62,6 +82,9 @@ end
 
 leftendpoint(d::ChebyshevInterval{T}) where {T} = -one(T)
 rightendpoint(d::ChebyshevInterval{T}) where {T} = one(T)
+
+minimum(d::ChebyshevInterval) = infimum(d)
+maximum(d::ChebyshevInterval) = supremum(d)
 
 
 real_line(::Type{T} = Float64) where {T <: AbstractFloat} = FullSpace{T}()
@@ -75,6 +98,10 @@ halfline(::Type{T} = Float64) where {T <: AbstractFloat} = Halfline{T}()
 
 leftendpoint(d::Halfline{T}) where {T} = zero(T)
 rightendpoint(d::Halfline{T}) where {T} = T(Inf)
+
+
+minimum(d::Halfline) = infimum(d)
+maximum(d::Halfline) = throw(ArgumentError("$d is unbounded. Use supremum."))
 
 # A half-open domain is neither open nor closed
 isclosed(d::Halfline) = false
@@ -99,6 +126,10 @@ negative_halfline(::Type{T} = Float64) where {T <: AbstractFloat} = NegativeHalf
 
 leftendpoint(d::NegativeHalfline{T}) where {T} = -T(Inf)
 rightendpoint(d::NegativeHalfline{T}) where {T} = zero(T)
+
+
+minimum(d::NegativeHalfline) = throw(ArgumentError("$d is unbounded. Use infimum."))
+maximum(d::NegativeHalfline) = supremum(d)
 
 isclosed(d::NegativeHalfline) = false
 isopen(d::NegativeHalfline) = true
@@ -176,12 +207,20 @@ Interval{L,R}(::Type{T}, a, b) where {L,R,T} = Interval{L,R}(convert(T, a), conv
 leftendpoint(d::Interval) = d.a
 rightendpoint(d::Interval) = d.b
 
+minimum(d::Interval{:closed}) = infimum(d)
+minimum(d::Interval{:open}) = throw(ArgumentError("$d is open on the left. Use infimum."))
+maximum(d::Interval{L,:closed}) where L = supremum(d)
+maximum(d::Interval{L,:open}) where L = throw(ArgumentError("$d is open on the right. Use supremum."))
+
+
 # The interval is closed if it is closed at both endpoints, and open if it
 # is open at both endpoints. In all other cases, it is neither open nor closed.
 isclosed(d::ClosedInterval) = true
 isopen(d::OpenInterval) = true
 isclosed(d::Interval) = false
 isopen(d::Interval) = false
+isempty(d::Union{OpenInterval,HalfOpenLeftInterval,HalfOpenRightInterval}) = leftendpoint(d) ≥ rightendpoint(d)
+
 
 iscompact(d::Interval) = true
 
@@ -198,6 +237,22 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 #################################
 # Conversions between intervals
 #################################
+
+
+for STyp in (:Domain, :AbstractInterval, :FixedInterval)
+    @eval begin
+        convert(::Type{$STyp{T}}, d::Interval{L,R,T}) where {L,R,T} = d
+        convert(::Type{$STyp{T}}, d::Interval{L,R}) where {L,R,T} =
+            Interval{L,R,T}(T(leftendpoint(d)), T(rightendpoint(d)))
+    end
+
+    for Typ in (:ChebyshevInterval, :UnitInterval, :Halfline, :NegativeHalfline)
+        @eval begin
+            convert(::Type{$STyp{T}}, d::$Typ{T}) where {T} = d
+            convert(::Type{$STyp{T}}, d::$Typ) where T = $Typ{T}
+        end
+    end
+end
 
 
 convert(::Type{Interval{L,R,T}}, d::AbstractInterval{S}) where {L,R,T,S} =
@@ -224,12 +279,44 @@ end
 # Some computations with intervals simplify without having to use a mapped domain.
 # This is only the case for Interval{L,R,T}, and not for any of the FixedIntervals
 # because the endpoints of the latter are, well, fixed.
-(+)(d::AbstractInterval, x::Number) = similar_interval(d, leftendpoint(d)+x, rightendpoint(d)+x)
-(*)(a::Number, d::AbstractInterval) = similar_interval(d, a*leftendpoint(d), a*rightendpoint(d))
-(/)(d::AbstractInterval, a::Number) = similar_interval(d, leftendpoint(d)/a, rightendpoint(d)/a)
+
+-(d::ChebyshevInterval) = d
+-(d::AbstractInterval) = similar_interval(d, -rightendpoint(d), -leftendpoint(d))
+
+for op in (:+, :-)
+    @eval $op(d::AbstractInterval, x::Real) = similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
+end
+
++(x::Real, d::AbstractInterval) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
+-(x::Real, d::AbstractInterval) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
+
+for op in (:*, :/)
+    @eval function $op(d::AbstractInterval, x::Real)
+        if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
+            similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
+        else
+            similar_interval(d, $op(rightendpoint(d),x), $op(leftendpoint(d),x))
+        end
+    end
+end
+
+for op in (:*, :\)
+    @eval function $op(x::Real, d::AbstractInterval)
+        if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
+            similar_interval(d, $op(x,leftendpoint(d)), $op(x,rightendpoint(d)))
+        else
+            similar_interval(d, $op(x,rightendpoint(d)), $op(x,leftendpoint(d)))
+        end
+    end
+end
 
 
 show(io::IO, d::AbstractInterval) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Interval{:closed,:closed}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Interval{:closed,:open}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), ")")
+show(io::IO, d::Interval{:open,:closed}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Interval{:open,:open}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), ")")
+
 
 function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
@@ -237,13 +324,16 @@ function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,
     a2 = leftendpoint(d2)
     b2 = rightendpoint(d2)
 
-    if (b1 < a2) || (a1 > b2)
+    if (b1 < a2) || (b2 < a1) || (b1 == a2 && R1 == L2 == :open) ||
+                    (b2 == a1 && R2 == L1 == :open)
         UnionDomain(d1, d2)
     else
-        # TODO: add some logic to determine open and closed nature of endpoints of new interval
-        interval(min(a1, a2), max(b1, b2))
+        a = min(a1, a2)
+        b = max(b1, b2)
+        Interval{a == a1 ? L1 : L2, b == b1 ? R1 : R2}(a, b)
     end
 end
+
 
 function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
@@ -257,4 +347,22 @@ function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2
         # TODO: add some logic to determine open and closed nature of endpoints of new interval
         interval(max(a1, a2), min(b1, b2))
     end
+end
+
+function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
+    a1 = leftendpoint(d1)
+    b1 = rightendpoint(d1)
+    a2 = leftendpoint(d2)
+    b2 = rightendpoint(d2)
+
+    a1 > b1 && return d1
+    a2 > b2 && return d1
+    b1 < a2 && return d1
+    a1 < a2 < b1 ≤ b2 && return interval(a1, a2)
+    a1 < a2 ≤ b2 < b1 && return interval(a1, a2) ∪ interval(b2, b1)
+    a2 ≤ a1 < b2 < b1 && return interval(b2, b1)
+    a2 ≤ a1 ≤ b1 ≤ b2 && return EmptySpace{T}()
+
+    @assert b2 ≤ a1
+    d1
 end

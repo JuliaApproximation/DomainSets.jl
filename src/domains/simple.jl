@@ -70,3 +70,63 @@ cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), t
 cylinder(::Type{T} = Float64) where {T} = disk(T) × unitinterval(T)
 
 cylinder(radius::T, length::T) where {T} = disk(radius) × interval(0,length)
+
+doc"""
+    Point(x)
+
+represents a single point at `x`.
+"""
+struct Point{T} <: Domain{T}
+    x::T
+end
+
+convert(::Type{Number}, d::Point) = d.x
+convert(::Type{<:Number}, d::Point) = N(d.x)
+
+convert(::Type{Domain{T}}, d::Point{T}) where T = d
+convert(::Type{Domain{T}}, d::Point) where T = Point(T(d.x))
+
+
+convert(::Type{Domain}, c::Number) = Point(c)
+convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
+
+convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
+
+
+==(a::Point,b::Point) = a.x == b.x
+indomain(x, d::Point) = x == d.x
+
+for op in (:*,:+,:-)
+    @eval begin
+        $op(c::Number, d::Point)  = Point($op(c,d.x))
+        $op(d::Point,  c::Number) = Point($op(d.x,c))
+    end
+end
+
+
+/(d::Point,  c::Number) = Point(d.x/c)
+\(c::Number, d::Point)  = Point(c\d.x)
+
+for op in (:+,:-)
+    @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))
+end
+
+
+for op in (:*,:+)
+    @eval begin
+        $op(a::Point,v::AbstractVector) = map(y->$op(a,y),v)
+        $op(v::AbstractVector,a::Point) = map(y->$op(y,a),v)
+    end
+end
+
+
+function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
+    a = leftendpoint(d)
+    b = rightendpoint(d)
+
+    a == p.x && return Interval{:open,R}(a,b)
+    a < p.x < b && return Interval{L,:open}(a,p.x) ∪ Interval{:open,R}(p.x,b)
+    b == p.x && return Interval{L,:open}(a,b)
+
+    return d
+end

@@ -7,6 +7,7 @@ function test_specific_domains()
     @testset "$(rpad("Specific domains",80))" begin
         test_emptyspace()
         test_fullspace()
+        test_point()
         test_interval()
         test_unitball()
         test_derived_unitball()
@@ -29,6 +30,7 @@ function test_emptyspace()
     println("- an empty space")
     d1 = EmptySpace()
     show(io,d1)
+    @test isempty(d1)
     @test String(take!(io)) == "the empty space with eltype Float64"
     @test eltype(d1) == Float64
     @test 0.5 ∉ d1
@@ -37,8 +39,11 @@ function test_emptyspace()
     d2 = interval()
     @test d1 ∩ d2 == d1
     @test d1 ∪ d2 == d2
+    @test d2 \ d1 == d2
+    @test d2 \ d2 == d1
 
     d2 = EmptySpace(SVector{2,Float64})
+    @test isempty(d2)
     @test v[0.1,0.2] ∉ d2
 end
 
@@ -58,7 +63,36 @@ function test_fullspace()
 
     d2 = FullSpace(SVector{2,Float64})
     @test v[0.1,0.2] ∈ d2
+
+    @test d2 == Domain(SVector{2,Float64})
+    @test d2 == convert(Domain,SVector{2,Float64})
+    @test d2 == convert(Domain{SVector{2,Float64}}, SVector{2,Float64})
 end
+
+function test_point()
+    println("- points")
+    d = Domain(1.0)
+    @test d isa Point
+    @test 1 ∈ d
+    @test 1.1 ∉ d
+
+    @test d+1 == Domain(2.0)
+    @test 1+d == Domain(2.0)
+    @test 1-d == Domain(0.0)
+    @test d-1 == Domain(0.0)
+    @test 2d  == Domain(2.0)
+    @test d*2 == Domain(2.0)
+    @test d/2 == Domain(0.5)
+    @test 2\d == Domain(0.5)
+
+    d1 = Domain(Set([1,2,3]))
+    d2 = Point(1) ∪ Point(2) ∪ Point(3)
+
+    @test d1 == d2
+
+    convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
+end
+
 
 function test_interval(T = Float64)
     println("- intervals")
@@ -66,8 +100,16 @@ function test_interval(T = Float64)
     d = interval(zero(T), one(T))
     @test T(0.5) ∈ d
     @test T(1.1) ∉ d
+    @test 0.5f0 ∈ d
+    @test 1.1f0 ∉ d
+    @test BigFloat(0.5) ∈ d
+    @test BigFloat(1.1) ∉ d
+
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
@@ -76,6 +118,9 @@ function test_interval(T = Float64)
     d = UnitInterval{T}()
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
@@ -83,6 +128,9 @@ function test_interval(T = Float64)
     d = ChebyshevInterval{T}()
     @test leftendpoint(d) == -one(T)
     @test rightendpoint(d) == one(T)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
@@ -90,6 +138,10 @@ function test_interval(T = Float64)
     d = halfline(T)
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == T(Inf)
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError maximum(d)
+
     @test !isclosed(d)
     @test !isopen(d)
     @test !iscompact(d)
@@ -102,6 +154,10 @@ function test_interval(T = Float64)
     d = negative_halfline(T)
     @test leftendpoint(d) == -T(Inf)
     @test rightendpoint(d) == zero(T)
+    @test infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError minimum(d)
+
     @test !isclosed(d)
     @test isopen(d)
     @test !iscompact(d)
@@ -114,21 +170,36 @@ function test_interval(T = Float64)
     @test !isclosed(d)
     @test leftendpoint(d)∉d
     @test rightendpoint(d)∉d
+    @test infimum(d) == leftendpoint(d)
+    @test supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError minimum(d)
+    @test_throws ArgumentError maximum(d)
+
     d = Domains.closed_interval()
     @test !isopen(d)
     @test isclosed(d)
     @test leftendpoint(d) ∈ d
     @test rightendpoint(d) ∈ d
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+
     d = HalfOpenLeftInterval()
     @test !isopen(d)
     @test !isclosed(d)
     @test leftendpoint(d) ∉ d
     @test rightendpoint(d) ∈ d
+    @test infimum(d) == leftendpoint(d)
+    @test maximum(d) == supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError minimum(d)
+
     d = HalfOpenRightInterval()
     @test !isopen(d)
     @test !isclosed(d)
     @test leftendpoint(d) ∈ d
     @test rightendpoint(d) ∉ d
+    @test minimum(d) == infimum(d) == leftendpoint(d)
+    @test supremum(d) == rightendpoint(d)
+    @test_throws ArgumentError maximum(d)
 
     @test typeof(UnitInterval{Float64}(interval(0.,1.))) <: UnitInterval
     @test typeof(ChebyshevInterval{Float64}(interval(-1,1.))) <: ChebyshevInterval
@@ -136,19 +207,93 @@ function test_interval(T = Float64)
     ## Some mappings preserve the interval structure
     # Translation
     d = interval(zero(T), one(T))
+    @test d == +d
+
     d2 = d + one(T)
     @test typeof(d2) == typeof(d)
     @test leftendpoint(d2) == one(T)
     @test rightendpoint(d2) == 2*one(T)
 
+    d2 = one(T) + d
+    @test typeof(d2) == typeof(d)
+    @test leftendpoint(d2) == one(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = d - one(T)
+    @test typeof(d2) == typeof(d)
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = -d
+    @test typeof(d2) == typeof(d)
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = one(T) - d
+    @test d2 == d
+
+    # translation for UnitInterval
     # Does a shifted unit interval return an interval?
     d = UnitInterval{T}()
     d2 = d + one(T)
     @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == one(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = one(T) + d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == one(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = d - one(T)
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = -d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == -one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    d2 = one(T) - d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == one(T)
+
+
+    # translation for ChebyshevInterval
+    d = ChebyshevInterval{T}()
+    d2 = d + one(T)
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = one(T) + d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == 2*one(T)
+
+    d2 = d - one(T)
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == -2one(T)
+    @test rightendpoint(d2) == zero(T)
+
+    @test -d == d
+
+    d2 = one(T) - d
+    @test typeof(d2) <: AbstractInterval
+    @test leftendpoint(d2) == zero(T)
+    @test rightendpoint(d2) == 2one(T)
+
 
     # Scaling
     d = interval(zero(T), one(T))
     d3 = T(2) * d
+    @test typeof(d3) == typeof(d)
+    @test leftendpoint(d3) == zero(T)
+    @test rightendpoint(d3) == T(2)
+
+    d3 = d * T(2)
     @test typeof(d3) == typeof(d)
     @test leftendpoint(d3) == zero(T)
     @test rightendpoint(d3) == T(2)
@@ -158,6 +303,12 @@ function test_interval(T = Float64)
     @test typeof(d4) == typeof(d)
     @test leftendpoint(d4) == zero(T)
     @test rightendpoint(d4) == T(1)/T(2)
+
+    d4 = T(2) \ d
+    @test typeof(d4) == typeof(d)
+    @test leftendpoint(d4) == zero(T)
+    @test rightendpoint(d4) == T(1)/T(2)
+
 
     # Union and intersection of intervals
     i1 = interval(zero(T), one(T))
@@ -195,6 +346,36 @@ function test_interval(T = Float64)
     # - intersection of non-overlapping intervals
     du6 = i1 ∩ i4
     @test typeof(du6) == EmptySpace{T}
+
+    # - setdiff of intervals
+    d1 = interval(-2one(T), 2one(T))
+    @test d1 \ interval(3one(T), 4one(T)) == d1
+    @test d1 \ interval(zero(T), one(T)) == interval(-2one(T),zero(T)) ∪ interval(one(T), 2one(T))
+    @test d1 \ interval(zero(T), 3one(T)) == interval(-2one(T),zero(T))
+    @test d1 \ interval(-3one(T),zero(T)) == interval(zero(T),2one(T))
+    @test d1 \ interval(-4one(T),-3one(T)) == d1
+    @test d1 \ interval(-4one(T),4one(T)) == EmptySpace{T}()
+
+    d1 \ (-3one(T)) == d1
+    d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))
+    d1 \ (2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
+    d1 \ zero(T) == Interval{:closed,:open}(-2one(T),zero(T)) ∪ Interval{:open,:closed}(zero(T),2one(T))
+
+    # - empty interval
+    @test isempty(interval(one(T),zero(T)))
+    @test zero(T) ∉ interval(one(T),zero(T))
+    @test isempty(Interval{:open,:open}(zero(T),zero(T)))
+    @test zero(T) ∉ Interval{:open,:open}(zero(T),zero(T))
+    @test isempty(Interval{:open,:closed}(zero(T),zero(T)))
+    @test zero(T) ∉ Interval{:open,:closed}(zero(T),zero(T))
+    @test isempty(Interval{:closed,:open}(zero(T),zero(T)))
+    @test zero(T) ∉ Interval{:closed,:open}(zero(T),zero(T))
+
+    d = interval(one(T),zero(T))
+    @test_throws ArgumentError minimum(d)
+    @test_throws ArgumentError maximum(d)
+    @test_throws ArgumentError infimum(d)
+    @test_throws ArgumentError supremum(d)
 end
 
 function test_unitball()
@@ -360,7 +541,7 @@ function test_arithmetics()
     @test v[0.1, -0.1, 0.1] ∉ DS
 
     # domain difference
-    DS = D-S
+    DS = D\S
     @test v[0.1, 0.1, 0.1] ∉ DS
 
     D1 = 2*D
@@ -413,18 +594,18 @@ function test_cartesianproduct_domain()
 
 end
 
-function test_set_operations()
 
+function test_set_operations()
   d1 = disk()
   d2 = interval(-.9,.9)^2
   d3 = rectangle(-.5,-.1,.5,.1)
 
   println("- union")
-  u1 =  d1+d2
-  u2 = u1+d3
+  u1 = d1 ∪ d2
+  u2 = u1 ∪ d3
 
-  u3 = d3|u1
-  u4 = u1|u2
+  u3 = d3 ∪ u1
+  u4 = u1 ∪ u2
   x = SVector(0.,.15)
   y = SVector(1.1,.75)
   @test x∈u3
@@ -432,6 +613,19 @@ function test_set_operations()
 
   @test y∉u3
   @test y∉u4
+
+  ũ1 = UnionDomain(d1,d2)
+  @test u1 == ũ1
+  ũ1 = UnionDomain((d1,d2))
+  @test u1 == ũ1
+  ũ2 = UnionDomain([d1,d2])
+  @test ũ2 == ũ2
+  @test u1 == ũ2
+
+  # ordering doesn't matter
+  @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
+
+  @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
 
   show(io,u1)
   @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
@@ -472,4 +666,26 @@ function test_set_operations()
   y = SVector(0.,.25)
   @test x∈d
   @test x∈d
+
+  println("- arithmetic")
+  d1 = interval(0,1)
+  d2 = interval(2,3)
+  d = d1 ∪ d2
+
+  @test d+1 == (d1+1) ∪ (d2+1)
+  @test d-1 == (d1-1) ∪ (d2-1)
+  @test 2d  == (2d1)  ∪ (2d2)
+  @test d*2 == (d1*2) ∪ (d2*2)
+  @test d/2 == (d1/2) ∪ (d2/2)
+  @test 2\d == (2\d1) ∪ (2\d2)
+
+  @test infimum(d) == minimum(d) == 0
+  @test supremum(d) == maximum(d) == 3
+
+  println("- different types")
+  d̃1 = interval(0,1)
+  d1 = interval(0f0, 1f0)
+  d2 = interval(2,3)
+
+  @test d1 ∪ d2 == d̃1 ∪ d2
 end
