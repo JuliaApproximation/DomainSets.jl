@@ -24,8 +24,14 @@ struct MappedDomain{D,F,T} <: DerivedDomain{T}
     f           ::  F
 end
 
-MappedDomain(domain::Domain{S}, f) where {S} =
-    MappedDomain{typeof(domain),typeof(f),return_type(f,S)}(domain, f)
+MappedDomain(domain::Domain{T}, f::AbstractMap{T,S}) where {S,T} =
+    MappedDomain{typeof(domain),typeof(f),S}(domain, f)
+
+function MappedDomain(domain::Domain{T}, f) where {T}
+    S = domaintype(f)
+    return_type(f, S) == T || error("Return type ", return_type(f,S), " of map ", f, " does not match element type ", T, " of domain ", domain, ".")
+    MappedDomain{typeof(domain),typeof(f),S}(domain, f)
+end
 
 mapping(d::MappedDomain) = d.f
 
