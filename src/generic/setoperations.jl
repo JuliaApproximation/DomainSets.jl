@@ -54,6 +54,8 @@ union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 # The union of domains corresponds to a logical OR of their characteristic functions
 indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
+point_in_domain(d::UnionDomain) = point_in_domain(element(d,1))
+
 ==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
 
 function show(io::IO, d::UnionDomain)

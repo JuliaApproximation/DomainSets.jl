@@ -17,8 +17,6 @@ rightendpoint(d::AbstractInterval) = d.b
 
 isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
 
-
-
 function infimum(d::AbstractInterval{T}) where T
     a = leftendpoint(d)
     b = rightendpoint(d)
@@ -32,6 +30,12 @@ function supremum(d::AbstractInterval{T}) where T
     a > b && throw(ArgumentError("Supremum not defined for empty intervals"))
     b
 end
+
+function point_in_domain(d::AbstractInterval)
+    isempty(d) && throw(BoundsError())
+    one(eltype(d))/2 * (leftendpoint(d) + rightendpoint(d))
+end
+
 
 ## Some special intervals
 # - the unit interval [0,1]
@@ -117,6 +121,8 @@ function similar_interval(d::Halfline, a, b)
     d
 end
 
+point_in_domain(d::Halfline) = zero(eltype(d))
+
 
 "The open negative halfline `(-∞,0)`."
 struct NegativeHalfline{T} <: FixedInterval{T}
@@ -143,6 +149,9 @@ function similar_interval(d::NegativeHalfline, a, b)
     @assert b == 0
     d
 end
+
+point_in_domain(d::NegativeHalfline) = -one(eltype(d))
+
 
 
 """

@@ -26,7 +26,8 @@ ball(radius::Number, center::AbstractVector) = ball(radius) + center
 
 show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
 
-
+# We choose the origin here
+point_in_domain(d::UnitBall) = zero(eltype(d))
 
 
 ###########################
@@ -39,6 +40,9 @@ end
 indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 
 simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
+
+# We pick the origin, because it belongs to the domain regardless of what T is
+point_in_domain(d::UnitSimplex) = zero(eltype(d))
 
 
 #########################
@@ -95,6 +99,8 @@ convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x
+
+point_in_domain(d::Point) = d.x
 
 for op in (:*,:+,:-)
     @eval begin

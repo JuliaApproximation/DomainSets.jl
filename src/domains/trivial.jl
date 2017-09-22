@@ -59,6 +59,9 @@ euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace(SVector{N,T})
 indomain(x::T, d::FullSpace{T}) where {T} = true
 indomain(x::S, d::FullSpace{T}) where {T,S} = promotes_to(S,T) == Val{true}
 
+# We choose the origin as a point in the full space
+point_in_domain(d::FullSpace) = zero(eltype(d))
+
 # Arithmetic operations
 
 union(d1::FullSpace{T}, d2::FullSpace{T}) where {T} = d1

@@ -7,7 +7,7 @@ struct UnitSphere{N,T} <: EuclideanDomain{N,T}
 end
 
 const Circle{T} = UnitSphere{2,T}
-const Sphere{T} = UnitBall{3,T}
+const Sphere{T} = UnitSphere{3,T}
 
 indomain(x, ::UnitSphere) = norm(x) == 1
 

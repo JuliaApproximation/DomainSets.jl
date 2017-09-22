@@ -14,6 +14,17 @@ function test_generic_domains()
 end
 
 function test_generic_domain(d::Domain)
-  @test eltype(eltype(d)) == subeltype(d)
-  @test isreal(d) == isreal(subeltype(d))
+    @test eltype(eltype(d)) == subeltype(d)
+    @test isreal(d) == isreal(subeltype(d))
+
+    if !isempty(d)
+        x = point_in_domain(d)
+        @test x ∈ d
+    else
+        try
+            x = point_in_domain(d)
+            @test false
+        catch
+        end
+    end
 end

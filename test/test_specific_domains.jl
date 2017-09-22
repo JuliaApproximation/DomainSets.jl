@@ -175,6 +175,8 @@ function test_interval(T = Float64)
     @test_throws ArgumentError minimum(d)
     @test_throws ArgumentError maximum(d)
 
+    @test isempty(OpenInterval(1,1))
+
     d = Domains.closed_interval()
     @test !isopen(d)
     @test isclosed(d)
