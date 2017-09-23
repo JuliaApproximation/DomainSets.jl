@@ -37,6 +37,8 @@ mapping(d::MappedDomain) = d.f
 
 indomain(x, d::MappedDomain) = indomain(mapping(d) * x, superdomain(d))
 
+approx_indomain(x, d::MappedDomain, tolerance) = approx_indomain(mapping(d) * x, superdomain(d), tolerance)
+
 map_domain(f, domain::Domain) = MappedDomain(domain, f)
 
 # Avoid nested mapping domains, construct a composite map instead

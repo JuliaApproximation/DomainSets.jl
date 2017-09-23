@@ -11,6 +11,8 @@ const Sphere{T} = UnitSphere{3,T}
 
 indomain(x, ::UnitSphere) = norm(x) == 1
 
+approx_indomain(x, ::UnitSphere, tolerance) = 1-tolerance <= norm(x) <= 1+tolerance
+
 ∂(::UnitBall{N,T}) where {N,T} = UnitSphere{N,T}()
 
 circle(::Type{T} = Float64) where {T} = Circle{T}()
