@@ -76,6 +76,7 @@ export ProductSpace
 # from maps/maps.jl
 export AbstractMap, applymap, apply_inverse, jacobian, linearize
 export domaintype, rangetype
+export left_inverse, right_inverse
 # from maps/composite_map.jl
 export CompositeMap
 export ∘

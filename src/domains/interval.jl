@@ -17,6 +17,9 @@ rightendpoint(d::AbstractInterval) = d.b
 
 isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
 
+approx_indomain(x, d::AbstractInterval, tolerance) =
+    (x <= rightendpoint(d)+tolerance) && (x >= leftendpoint(d)-tolerance)
+
 function infimum(d::AbstractInterval{T}) where T
     a = leftendpoint(d)
     b = rightendpoint(d)

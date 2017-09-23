@@ -28,9 +28,9 @@ The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 struct CircleMap{T,S} <: AbstractMap{T,S}
 end
 
-parameterization(d::Circle{T}) where {T} = CircleMap{T,subeltype(d)}()
+parameterization(d::Circle) = CircleMap{eltype(d),subeltype(d)}()
 
-domain(d::CircleMap{T,S}) where {T,S} = HalfOpenRightInterval{T}()
+domain(d::CircleMap{T,S}) where {T,S} = HalfOpenRightInterval{S}(0, 1)
 
 range(m::CircleMap{T,S}) where {T,S} = Circle{T}()
 
