@@ -3,6 +3,7 @@
 const v = TypeFactory{SVector}()
 
 const io = IOBuffer()
+
 function test_specific_domains()
     @testset "$(rpad("Specific domains",80))" begin
         test_emptyspace()
@@ -21,9 +22,8 @@ function test_specific_domains()
     end
 
     @testset "$(rpad("Set operations",80))" begin
-      test_set_operations()
+        test_set_operations()
     end
-
 end
 
 function test_emptyspace()

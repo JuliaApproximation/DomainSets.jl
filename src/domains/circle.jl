@@ -42,3 +42,31 @@ function gradient(m::CircleMap{T,S}, t) where {T,S}
     a = 2*S(pi)
     SVector(-a*sin(a*t), a*cos(a*t))
 end
+
+
+"""
+`AngleMap` is a left inverse of `CircleMap`. A 2D vector `x` is projected onto
+the intersection point with the unit circle of the line connecting `x` to the
+origin. The angle of this point, scaled to the interval `[0,1)`, is the result.
+"""
+struct AngleMap{T,S} <: AbstractMap{T,S}
+end
+
+domain(d::AngleMap{T,S}) where {T,S} = FullSpace{S}()
+
+range(m::AngleMap{T,S}) where {T,S} = HalfOpenRightInterval{T}(0, 1)
+
+function applymap(m::AngleMap, x)
+    twopi = 2*convert(rangetype(m), pi)
+    θ = atan2(x[2],x[1])
+    if θ < 0
+        # atan2 returns an angle in (-π,π], convert to [0,2π) using periodicity.
+        θ += twopi
+    end
+    # And divide by 2π to scale to [0,1)
+    θ / twopi
+end
+
+left_inverse(m::CircleMap{T,S}) where {T,S} = AngleMap{S,T}()
+
+right_inverse(m::AngleMap{T,S}) where {T,S} = CircleMap{S,T}()

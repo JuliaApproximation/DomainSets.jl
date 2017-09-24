@@ -40,7 +40,8 @@ applymap(m::LinearMap, x) = matrix(m) * x
 
 inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))
 
-apply_inverse(m::LinearMap, y) = applymap(inv(m), y)
+left_inverse(m::LinearMap{T,S}) where {T,S} =  LinearMap{S,T}(pinv(matrix(m)))
+right_inverse(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(pinv(matrix(m)))
 
 vector(m::LinearMap) = zero(rangetype(m))
 
@@ -68,6 +69,10 @@ apply_inverse(m::Translation, y) = y - vector(m)
 inv(m::Translation) = Translation(-vector(m))
 
 
+"""
+`AffineMap` represents `y = a*x + b`, i.e. it combines a `LinearMap` and a
+`Translation`.
+"""
 struct AffineMap{T,S,A} <: AbstractAffineMap{T,S}
     a   ::  A
     b   ::  T
@@ -95,6 +100,8 @@ applymap(m::AffineMap, x) = m.a * x + m.b
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap{T,S}) where {T,S} = AffineMap{S,T}(inv(m.a), -inv(m.a)*m.b)
 
+# Todo: implement `full` for affine maps, which would result in `a` always being
+# a dense matrix.
 
 
 ########################

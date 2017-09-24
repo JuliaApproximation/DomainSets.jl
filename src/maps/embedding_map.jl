@@ -29,6 +29,9 @@ restriction_map(::Type{T}, ::Type{T}) where {T} = IdentityMap{T}()
 
 applymap(map::RestrictionMap{T,S}, x::S) where {T,S} = restrict_space(spacetype(T), x)
 
+left_inverse(map::EmbeddingMap{T,S}) where {T,S} = RestrictionMap{S,T}()
+right_inverse(map::RestrictionMap{T,S}) where {T,S} = EmbeddingMap{S,T}()
+
 
 
 "A map between isomorphic spaces."
