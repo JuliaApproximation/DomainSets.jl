@@ -19,6 +19,7 @@ function test_specific_domains()
         test_sphere()
         test_arithmetics()
         test_cartesianproduct_domain()
+        test_embedded_domain()
     end
 
     @testset "$(rpad("Set operations",80))" begin
@@ -476,6 +477,14 @@ function test_cube()
 end
 
 function test_mapped_domain()
+    # Test chaining of maps
+    D = circle()
+    D1 = 2*D
+    @test typeof(D1) <: MappedDomain
+    @test typeof(src(D1)) <: UnitSphere
+    D2 = 2*D1
+    @test typeof(src(D2)) <: UnitSphere
+
     D = cube(Val{2})
     show(io,rotate(D,1.))
     @test String(take!(io)) == "A mapped domain based on the interval [0.0, 1.0] x the interval [0.0, 1.0]"
@@ -485,8 +494,8 @@ function test_mapped_domain()
     @test v[-1.1, -1.1] ∉ D
 
     D = rotate(cube(Val{2}),pi,v[-.5,-.5])
-    @test v[0.9, 0.9] ∈ D
-    @test v[1.1, 1.1] ∉ D
+    @test v[-1.5, -1.5] ∈ D
+    @test v[-0.5, -0.5] ∉ D
 
     D = rotate(cube(Val{3})+v[-.5,-.5,-.5], pi, pi, pi)
     @test v[0.4, 0.4, 0.4] ∈ D
@@ -498,6 +507,7 @@ function test_mapped_domain()
 end
 
 function test_simplex()
+    println("- simplex")
     d = simplex(Val{2})
     # We test a point in the interior, a point on each of the boundaries and
     # all corners.
@@ -566,6 +576,7 @@ function test_arithmetics()
 end
 
 function test_cartesianproduct_domain()
+    println("- cartesian products")
     # ProductDomain 1
     T1 = interval(-1.0, 1.0)^2
     @test v[0.5,0.5] ∈ T1
@@ -696,4 +707,19 @@ function test_set_operations()
     d2 = interval(2,3)
 
     @test d1 ∪ d2 == d̃1 ∪ d2
+end
+
+function test_embedded_domain()
+    println("- embedded domains")
+    i = interval(0.0, 1.0)
+    e = embedding_map(Complex{Float64}, Float64)
+    r = restriction_map(Float64, Complex{Float64})
+    ei = Domains.forwardmap_domain(e, i)
+
+    @test 0.5+1im ∉ ei
+    @test 0.5+0im ∈ ei
+    @test 0.5-0im ∈ ei
+    @test 1.1+0im ∉ ei
+    @test approx_in(0.8+1e-5im, ei, 1e-5)
+    @test !approx_in(0.8+1e-5im, ei, 1e-6)
 end

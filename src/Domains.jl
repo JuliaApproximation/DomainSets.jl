@@ -117,8 +117,9 @@ export UnionDomain, IntersectionDomain, DifferenceDomain
 export TranslatedDomain
 
 # from generic/mapped_domain.jl
-export MappedDomain
-export mapping, map_domain
+export MappedDomain, ForwardMappedDomain, InverseMappedDomain, BidirectionalMappedDomain
+export src, target, mapping
+export map_domain, forwardmap_domain, inversemap_domain
 
 # from generic/arithmetics.jl
 export rotate
