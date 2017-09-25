@@ -136,6 +136,7 @@ export euclideanspace, emptyspace, fullspace
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
 export real_line, halfline, negative_halfline
 export interval, leftendpoint, rightendpoint
+export open_left, open_right
 export similar_interval
 # from domains/simple.jl
 export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere, Point
