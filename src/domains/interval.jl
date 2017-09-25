@@ -58,6 +58,19 @@ function point_in_domain(d::AbstractInterval)
     one(eltype(d))/2 * (leftendpoint(d) + rightendpoint(d))
 end
 
+# This routine it not type-stable as written on the level of abstractinterval,
+# but it is convenient here since it can be implemented generically.
+function ∂(d::AbstractInterval{T}) where {T}
+    if isclosed(d)
+        Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
+    elseif closed_left(d)
+        Point(leftendpoint(d))
+    elseif closed_right(d)
+        Point(rightendpoint(d))
+    else
+        EmptySpace{T}()
+    end
+end
 
 ## Some special intervals
 # - the unit interval [0,1]

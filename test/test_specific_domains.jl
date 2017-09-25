@@ -124,6 +124,9 @@ function test_interval(T = Float64)
     @test iscompact(d)
     @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
 
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∈ ∂(d)
+
     d = UnitInterval{T}()
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
@@ -160,6 +163,8 @@ function test_interval(T = Float64)
     @test !approx_in(-0.5, d, 0.1)
     @test similar_interval(d, T(0), T(Inf)) == d
 
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∉ ∂(d)
 
 
     d = negative_halfline(T)
@@ -178,6 +183,7 @@ function test_interval(T = Float64)
     @test !approx_in(0.5, d, 0.4)
     @test similar_interval(d, T(-Inf), T(0)) == d
 
+
     d = Domains.open_interval()
     @test isopen(d)
     @test !isclosed(d)
@@ -187,6 +193,8 @@ function test_interval(T = Float64)
     @test supremum(d) == rightendpoint(d)
     @test_throws ArgumentError minimum(d)
     @test_throws ArgumentError maximum(d)
+    @test leftendpoint(d) ∉ ∂(d)
+    @test rightendpoint(d) ∉ ∂(d)
 
     @test isempty(OpenInterval(1,1))
 
@@ -197,6 +205,8 @@ function test_interval(T = Float64)
     @test rightendpoint(d) ∈ d
     @test minimum(d) == infimum(d) == leftendpoint(d)
     @test maximum(d) == supremum(d) == rightendpoint(d)
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∈ ∂(d)
 
     d = HalfOpenLeftInterval()
     @test !isopen(d)
@@ -206,6 +216,8 @@ function test_interval(T = Float64)
     @test infimum(d) == leftendpoint(d)
     @test maximum(d) == supremum(d) == rightendpoint(d)
     @test_throws ArgumentError minimum(d)
+    @test leftendpoint(d) ∉ ∂(d)
+    @test rightendpoint(d) ∈ ∂(d)
 
     d = HalfOpenRightInterval()
     @test !isopen(d)
@@ -215,6 +227,8 @@ function test_interval(T = Float64)
     @test minimum(d) == infimum(d) == leftendpoint(d)
     @test supremum(d) == rightendpoint(d)
     @test_throws ArgumentError maximum(d)
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∉ ∂(d)
 
     @test typeof(UnitInterval{Float64}(interval(0.,1.))) <: UnitInterval
     @test typeof(ChebyshevInterval{Float64}(interval(-1,1.))) <: ChebyshevInterval
