@@ -27,25 +27,26 @@ in(x, target) = in(inv(f)*x, src)
 Concrete mapped domains can be implemented in various ways, e.g. by storing `src`
 and `f`, or by storing `src` and `inv(f)`, ...
 """
-abstract type MappedDomain{T} <: Domain{T}
+abstract type MappedDomain{D,T} <: Domain{T}
 end
 
 src(d::MappedDomain) = d.src
 
 show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", src(d))
 
+point_in_domain(d::MappedDomain) = forward_map(d) * point_in_domain(src(d))
 
 """
 A `ForwardMappedDomain` stores the `src` domain and the forward map `f`, which
 maps `src` to `target`.
 """
-struct ForwardMappedDomain{D,F,T} <: MappedDomain{T}
+struct ForwardMappedDomain{F,D,T} <: MappedDomain{D,T}
     src     ::  D
     fwmap   ::  F
 end
 
 ForwardMappedDomain(src::Domain{S}, fwmap::AbstractMap{T,S}) where {T,S} =
-    ForwardMappedDomain{typeof(src), typeof(fwmap), T}(src, fwmap)
+    ForwardMappedDomain{typeof(fwmap),typeof(src),T}(src, fwmap)
 
 forward_map(d::ForwardMappedDomain) = d.fwmap
 inverse_map(d::ForwardMappedDomain) = inv(d.fwmap)
@@ -93,19 +94,19 @@ forwardmap_domain(fwmap, domain::ForwardMappedDomain) = forwardmap_domain(fwmap 
 """
 An `InverseMappedDomain` stores the `src` and the inverse of the map `f`.
 """
-struct InverseMappedDomain{D,F,T} <: MappedDomain{T}
+struct InverseMappedDomain{F,D,T} <: MappedDomain{D,T}
     src     ::  D
     invmap  ::  F
 end
 
 InverseMappedDomain(src::Domain{T}, invmap::AbstractMap{T,S}) where {S,T} =
-    InverseMappedDomain{typeof(src),typeof(invmap),S}(src, invmap)
+    InverseMappedDomain{typeof(invmap),typeof(src),S}(src, invmap)
 
 function InverseMappedDomain(src::Domain{T}, invmap) where {T}
     S = domaintype(invmap)
     return_type(invmap, S) == T ||
         error("Return type ", return_type(invmap,S), " of map ", invmap, " does not match element type ", T, " of domain ", src, ".")
-    InverseMappedDomain{typeof(src),typeof(invmap),S}(src, invmap)
+    InverseMappedDomain{typeof(invmap),typeof(src),S}(src, invmap)
 end
 
 forward_map(d::InverseMappedDomain) = inv(d.invwmap)
@@ -126,7 +127,7 @@ inversemap_domain(invmap, d::MappedDomain) = inversemap_domain(inverse_map(d) âˆ
 """
 A `BidirectionalMappedDomain` stores the `src` domain and both the map `f` and its inverse.
 """
-struct BidirectionalMappedDomain{D,F1,F2,T} <: MappedDomain{T}
+struct BidirectionalMappedDomain{F1,F2,D,T} <: MappedDomain{D,T}
     src     ::  D
     fwmap   ::  F1
     invmap  ::  F2
@@ -135,7 +136,7 @@ end
 BidirectionalMappedDomain(src::Domain, fwmap::AbstractMap) = BidirectionalMappedDomain(src, fwmap, inv(fwmap))
 
 BidirectionalMappedDomain(src::Domain{S}, fwmap::AbstractMap{T,S}, invmap::AbstractMap{S,T}) where {S,T} =
-    BidirectionalMappedDomain{typeof(src),typeof(fwmap),typeof(invmap),T}(src, fwmap, invmap)
+    BidirectionalMappedDomain{typeof(fwmap),typeof(invmap),typeof(src),T}(src, fwmap, invmap)
 
 forward_map(d::BidirectionalMappedDomain) = d.fwmap
 inverse_map(d::BidirectionalMappedDomain) = d.invmap

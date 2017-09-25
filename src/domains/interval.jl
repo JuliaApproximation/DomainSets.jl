@@ -7,8 +7,6 @@
 abstract type AbstractInterval{T} <: Domain{T}
 end
 
-ndims(::Type{D}) where {D <: AbstractInterval} = 1
-
 "The left endpoint of the interval."
 leftendpoint(d::AbstractInterval) = d.a
 
@@ -53,9 +51,11 @@ function supremum(d::AbstractInterval{T}) where T
     b
 end
 
+center(d::AbstractInterval) = one(eltype(d))/2 * (leftendpoint(d) + rightendpoint(d))
+
 function point_in_domain(d::AbstractInterval)
     isempty(d) && throw(BoundsError())
-    one(eltype(d))/2 * (leftendpoint(d) + rightendpoint(d))
+    center(d)
 end
 
 # This routine it not type-stable as written on the level of abstractinterval,
@@ -72,9 +72,24 @@ function ∂(d::AbstractInterval{T}) where {T}
     end
 end
 
-## Some special intervals
+# We extend some functionality of intervals to mapped intervals
+const MappedInterval{D <: AbstractInterval,T} = MappedDomain{D,T}
+
+for op in (:leftendpoint, :rightendpoint)
+    @eval $op(d::MappedInterval) = forward_map(d) * $op(src(d))
+end
+
+for op in (:open_left, :open_right, :closed_left, :closed_right)
+    @eval $op(d::MappedInterval) = $op(src(d))
+end
+
+
+## Some special intervals follow, e.g.:
 # - the unit interval [0,1]
 # - the 'Chebyshev' interval [-1,1]
+# - ...
+# Unlike a generic interval, these specific intervals have no data, and only one
+# type parameter (T).
 
 """
 The abstract type `FixedInterval` is the supertype of intervals with endpoints
