@@ -34,17 +34,19 @@ LinearMap(a::T) where {T <: Number} = LinearMap{T,T,T}(a)
 
 matrix(m::LinearMap) = m.a
 
+vector(m::LinearMap) = zero(rangetype(m))
+
 (m::LinearMap)(x) = applymap(m, x)
 
 applymap(m::LinearMap, x) = matrix(m) * x
 
 inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))
 
-# We would like to do the below, but it seems SMatrix does not support pinv
-# left_inverse(m::LinearMap{T,S}) where {T,S} =  LinearMap{S,T}(pinv(matrix(m)))
-# right_inverse(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(pinv(matrix(m)))
+# Because StaticArrays does not currently support `pinv` we include a workaround:
+LinAlg.pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
 
-vector(m::LinearMap) = zero(rangetype(m))
+left_inverse(m::LinearMap{T,S}) where {T,S} =  LinearMap{S,T}(pinv(matrix(m)))
+right_inverse(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(pinv(matrix(m)))
 
 
 """

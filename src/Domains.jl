@@ -135,7 +135,8 @@ export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
 export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
-export real_line, halfline, negative_halfline, interval, open_interval, closed_interval
+export real_line, halfline, negative_halfline, interval, open_interval,
+    closed_interval, unitinterval
 export leftendpoint, rightendpoint, open_left, open_right
 export similar_interval
 # from domains/simple.jl
