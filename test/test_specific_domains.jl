@@ -495,9 +495,9 @@ function test_mapped_domain()
     D = circle()
     D1 = 2*D
     @test typeof(D1) <: MappedDomain
-    @test typeof(src(D1)) <: UnitSphere
+    @test typeof(source(D1)) <: UnitSphere
     D2 = 2*D1
-    @test typeof(src(D2)) <: UnitSphere
+    @test typeof(source(D2)) <: UnitSphere
 
     D = cube(Val{2})
     show(io,rotate(D,1.))

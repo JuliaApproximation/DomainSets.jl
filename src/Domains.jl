@@ -119,7 +119,7 @@ export TranslatedDomain
 
 # from generic/mapped_domain.jl
 export MappedDomain, ForwardMappedDomain, InverseMappedDomain, BidirectionalMappedDomain
-export src, target, mapping
+export source, target, mapping
 export map_domain, forwardmap_domain, inversemap_domain
 
 # from generic/arithmetics.jl

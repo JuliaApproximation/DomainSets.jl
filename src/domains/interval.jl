@@ -76,11 +76,11 @@ end
 const MappedInterval{D <: AbstractInterval,T} = MappedDomain{D,T}
 
 for op in (:leftendpoint, :rightendpoint)
-    @eval $op(d::MappedInterval) = forward_map(d) * $op(src(d))
+    @eval $op(d::MappedInterval) = forward_map(d) * $op(source(d))
 end
 
 for op in (:open_left, :open_right, :closed_left, :closed_right)
-    @eval $op(d::MappedInterval) = $op(src(d))
+    @eval $op(d::MappedInterval) = $op(source(d))
 end
 
 
