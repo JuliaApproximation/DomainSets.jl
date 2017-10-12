@@ -41,7 +41,7 @@ A `ForwardMappedDomain` stores the `source` domain and the forward map `f`, whic
 maps `source` to `target`.
 """
 struct ForwardMappedDomain{F,D,T} <: MappedDomain{D,T}
-    source     ::  D
+    source  ::  D
     fwmap   ::  F
 end
 
@@ -95,7 +95,7 @@ forwardmap_domain(fwmap, domain::ForwardMappedDomain) = forwardmap_domain(fwmap 
 An `InverseMappedDomain` stores the `source` and the inverse of the map `f`.
 """
 struct InverseMappedDomain{F,D,T} <: MappedDomain{D,T}
-    source     ::  D
+    source  ::  D
     invmap  ::  F
 end
 
@@ -128,7 +128,7 @@ inversemap_domain(invmap, d::MappedDomain) = inversemap_domain(inverse_map(d) âˆ
 A `BidirectionalMappedDomain` stores the `source` domain and both the map `f` and its inverse.
 """
 struct BidirectionalMappedDomain{F1,F2,D,T} <: MappedDomain{D,T}
-    source     ::  D
+    source  ::  D
     fwmap   ::  F1
     invmap  ::  F2
 end
