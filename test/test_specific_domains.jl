@@ -3,6 +3,7 @@
 const v = TypeFactory{SVector}()
 
 const io = IOBuffer()
+
 function test_specific_domains()
     @testset "$(rpad("Specific domains",80))" begin
         test_emptyspace()
@@ -12,18 +13,18 @@ function test_specific_domains()
         test_unitball()
         test_derived_unitball()
         test_cube()
-        test_circle()
+        test_sphere()
         test_mapped_domain()
         test_simplex()
         test_sphere()
         test_arithmetics()
         test_cartesianproduct_domain()
+        test_embedded_domain()
     end
 
     @testset "$(rpad("Set operations",80))" begin
-      test_set_operations()
+        test_set_operations()
     end
-
 end
 
 function test_emptyspace()
@@ -45,6 +46,7 @@ function test_emptyspace()
     d2 = EmptySpace(SVector{2,Float64})
     @test isempty(d2)
     @test v[0.1,0.2] ∉ d2
+    @test !approx_in(v[0.1,0.2], d2)
 end
 
 function test_fullspace()
@@ -63,6 +65,7 @@ function test_fullspace()
 
     d2 = FullSpace(SVector{2,Float64})
     @test v[0.1,0.2] ∈ d2
+    @test approx_in(v[0.1,0.2], d2)
 
     @test d2 == Domain(SVector{2,Float64})
     @test d2 == convert(Domain,SVector{2,Float64})
@@ -75,6 +78,8 @@ function test_point()
     @test d isa Point
     @test 1 ∈ d
     @test 1.1 ∉ d
+    @test approx_in(1.1, d, 0.2)
+    @test !approx_in(1.2, d, 0.1)
 
     @test d+1 == Domain(2.0)
     @test 1+d == Domain(2.0)
@@ -104,6 +109,10 @@ function test_interval(T = Float64)
     @test 1.1f0 ∉ d
     @test BigFloat(0.5) ∈ d
     @test BigFloat(1.1) ∉ d
+    @test approx_in(-0.1, d, 0.2)
+    @test approx_in(1.1, d, 0.2)
+    @test !approx_in(-0.2, d, 0.1)
+    @test !approx_in(1.2, d, 0.1)
 
     @test leftendpoint(d) == zero(T)
     @test rightendpoint(d) == one(T)
@@ -114,6 +123,9 @@ function test_interval(T = Float64)
     @test !isopen(d)
     @test iscompact(d)
     @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
+
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∈ ∂(d)
 
     d = UnitInterval{T}()
     @test leftendpoint(d) == zero(T)
@@ -147,8 +159,12 @@ function test_interval(T = Float64)
     @test !iscompact(d)
     @test 1. ∈ d
     @test -1. ∉ d
+    @test approx_in(-0.1, d, 0.5)
+    @test !approx_in(-0.5, d, 0.1)
     @test similar_interval(d, T(0), T(Inf)) == d
 
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∉ ∂(d)
 
 
     d = negative_halfline(T)
@@ -163,7 +179,10 @@ function test_interval(T = Float64)
     @test !iscompact(d)
     @test -1. ∈ d
     @test 1. ∉ d
+    @test approx_in(0.5, d, 1.)
+    @test !approx_in(0.5, d, 0.4)
     @test similar_interval(d, T(-Inf), T(0)) == d
+
 
     d = Domains.open_interval()
     @test isopen(d)
@@ -174,6 +193,10 @@ function test_interval(T = Float64)
     @test supremum(d) == rightendpoint(d)
     @test_throws ArgumentError minimum(d)
     @test_throws ArgumentError maximum(d)
+    @test leftendpoint(d) ∉ ∂(d)
+    @test rightendpoint(d) ∉ ∂(d)
+
+    @test isempty(OpenInterval(1,1))
 
     d = Domains.closed_interval()
     @test !isopen(d)
@@ -182,6 +205,8 @@ function test_interval(T = Float64)
     @test rightendpoint(d) ∈ d
     @test minimum(d) == infimum(d) == leftendpoint(d)
     @test maximum(d) == supremum(d) == rightendpoint(d)
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∈ ∂(d)
 
     d = HalfOpenLeftInterval()
     @test !isopen(d)
@@ -191,6 +216,8 @@ function test_interval(T = Float64)
     @test infimum(d) == leftendpoint(d)
     @test maximum(d) == supremum(d) == rightendpoint(d)
     @test_throws ArgumentError minimum(d)
+    @test leftendpoint(d) ∉ ∂(d)
+    @test rightendpoint(d) ∈ ∂(d)
 
     d = HalfOpenRightInterval()
     @test !isopen(d)
@@ -200,6 +227,8 @@ function test_interval(T = Float64)
     @test minimum(d) == infimum(d) == leftendpoint(d)
     @test supremum(d) == rightendpoint(d)
     @test_throws ArgumentError maximum(d)
+    @test leftendpoint(d) ∈ ∂(d)
+    @test rightendpoint(d) ∉ ∂(d)
 
     @test typeof(UnitInterval{Float64}(interval(0.,1.))) <: UnitInterval
     @test typeof(ChebyshevInterval{Float64}(interval(-1,1.))) <: ChebyshevInterval
@@ -379,79 +408,71 @@ function test_interval(T = Float64)
 end
 
 function test_unitball()
-    C = disk(2.0)
-    @test in(v[1.4, 1.4], C)
-    @test !in(v[1.5, 1.5], C)
-    @test typeof(1.2*C)==typeof(C*1.2)
-    @test in(v[1.5,1.5],1.2*C)
-    @test in(v[1.5,1.5],C*1.2)
+    D = disk()
+    @test v[1.,0.] ∈ D
+    @test v[1.,1.] ∉ D
 
-    S = ball(2.0)
-    @test v[1.9,0.0,0.0] ∈ S
-    @test in(v[0,-1.9,0.0],S)
-    @test in(v[0.0,0.0,-1.9],S)
-    @test !in(v[1.9,1.9,0.0],S)
+    D = disk(2.0)
+    @test v[1.4, 1.4] ∈ D
+    @test v[1.5, 1.5] ∉ D
+    @test typeof(1.2*D)==typeof(D*1.2)
+    @test v[1.5,1.5] ∈ 1.2*D
+    @test v[1.5,1.5] ∈ D*1.2
+
+    D = disk(2.0, v[1.0,1.0])
+    @test v[2.4, 2.4] ∈ D
+    @test v[3.5, 2.5] ∉ D
+
+    B = ball()
+    @test v[1.,0.0,0.] ∈ B
+    @test v[1.,0.1,0.] ∉ B
+
+    B = ball(2.0)
+    @test v[1.9,0.0,0.0] ∈ B
+    @test v[0,-1.9,0.0] ∈ B
+    @test v[0.0,0.0,-1.9] ∈ B
+    @test v[1.9,1.9,0.0] ∉ B
+
+    B = ball(2.0, v[1.0,1.0,1.0])
+    @test v[2.9,1.0,1.0] ∈ B
+    @test v[1.0,-0.9,1.0] ∈ B
+    @test v[1.0,1.0,-0.9] ∈ B
+    @test v[2.9,2.9,1.0] ∉ B
 end
 
-function test_disk_ball()
-    C = disk(2.0, v[1.0,1.0])
-    @test in(v[2.4, 2.4], C)
-    @test !in(v[3.5, 2.5], C)
-
-    S = ball(2.0, v[1.0,1.0,1.0])
-    @test v[2.9,0.0,0.0] ∈ S
-    @test in(v[1,-0.9,1.0],S)
-    @test in(v[1.0,1.0,-0.9],S)
-    @test !in(v[2.9,2.9,1.0],S)
-end
 struct DerivedUnitBall<: DerivedDomain{SVector{2,Float64}}
     superdomain :: Domain
 
     DerivedUnitBall() = new(disk(2.0))
 end
 function test_derived_unitball()
-    C = DerivedUnitBall()
-    @test in(v[1.4, 1.4], C)
-    @test !in(v[1.5, 1.5], C)
-    @test typeof(1.2*C)==typeof(C*1.2)
-    @test in(v[1.5,1.5],1.2*C)
-    @test in(v[1.5,1.5],C*1.2)
-
-    S = ball(2.0)
-    @test v[1.9,0.0,0.0] ∈ S
-    @test in(v[0,-1.9,0.0],S)
-    @test in(v[0.0,0.0,-1.9],S)
-    @test !in(v[1.9,1.9,0.0],S)
-
-    @test Domains.supereltype(C) == eltype(disk(2.0))
+    B = DerivedUnitBall()
+    @test v[1.4, 1.4] ∈ B
+    @test v[1.5, 1.5] ∉ B
+    @test typeof(1.2*B)==typeof(B*1.2)
+    @test v[1.5,1.5] ∈ 1.2*B
+    @test v[1.5,1.5] ∈ B*1.2
+    @test Domains.supereltype(B) == eltype(disk(2.0))
 end
 
-function test_circle()
+function test_sphere()
     C = circle()
-    v[1.,0.] ∈ C
-    v[1.,1.] ∉ C
-    C = circle(2., v[1.,1.])
-    v[2.,1.] ∈ C
-    v[2.,1.] ∉ C
-    S = sphere()
-    v[1.,0.,0.] ∈ S
-    v[1.,0.,1.] ∉ S
-    S = sphere(2., v[1.,1.,1.])
-    v[1.,2.,1.] ∈ S
-    v[2.,2.,1.] ∉ S
+    @test v[1.,0.] ∈ C
+    @test v[1.,1.] ∉ C
+    @test approx_in(v[1.,0.], C)
+    @test !approx_in(v[1.,1.], C)
 
-    C = disk()
-    v[1.,0.] ∈ C
-    v[1.,1.] ∉ C
-    C = disk(2., v[1.,1.])
-    v[2.,1.] ∈ C
-    v[2.,1.] ∉ C
-    S = ball()
-    v[1.,0.,0.] ∈ S
-    v[1.,0.,1.] ∉ S
-    S = ball(2., v[1.,1.,1.])
-    v[1.,2.,1.] ∈ S
-    v[2.,2.,1.] ∉ S
+    C = circle(2., v[1.,1.])
+    @test approx_in(v[3.,1.], C)
+
+    S = sphere()
+    @test v[1.,0.,0.] ∈ S
+    @test v[1.,0.,1.] ∉ S
+    @test approx_in(v[cos(1.),sin(1.),0.], S)
+
+    S = sphere(2., v[1.,1.,1.])
+    @test approx_in(v[1.+2*cos(1.),1.+2*sin(1.),1.], S)
+    @test !approx_in(v[4.,1.,5.], S)
 end
 
 function test_cube()
@@ -460,6 +481,8 @@ function test_cube()
     @test v[0.9, 0.9] ∈ D
     @test v[1.1, 1.1] ∉ D
 
+    @test approx_in(v[-0.1,-0.1], D, 0.1)
+    @test !approx_in(v[-0.1,-0.1], D, 0.09)
 
     #Cube
     D = cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0)
@@ -468,28 +491,37 @@ function test_cube()
 end
 
 function test_mapped_domain()
-  D = cube(Val{2})
-  show(io,rotate(D,1.))
-  @test String(take!(io)) == "A mapped domain based on the interval [0.0, 1.0] x the interval [0.0, 1.0]"
+    # Test chaining of maps
+    D = circle()
+    D1 = 2*D
+    @test typeof(D1) <: MappedDomain
+    @test typeof(source(D1)) <: UnitSphere
+    D2 = 2*D1
+    @test typeof(source(D2)) <: UnitSphere
 
-  D = rotate(cube(Val{2}),pi)
-  @test v[-0.9, -0.9] ∈ D
-  @test v[-1.1, -1.1] ∉ D
+    D = cube(Val{2})
+    show(io,rotate(D,1.))
+    @test String(take!(io)) == "A mapped domain based on the interval [0.0, 1.0] x the interval [0.0, 1.0]"
 
-  D = rotate(cube(Val{2}),pi,v[-.5,-.5])
-  @test v[0.9, 0.9] ∈ D
-  @test v[1.1, 1.1] ∉ D
+    D = rotate(cube(Val{2}),pi)
+    @test v[-0.9, -0.9] ∈ D
+    @test v[-1.1, -1.1] ∉ D
 
-  D = rotate(cube(Val{3})+v[-.5,-.5,-.5], pi, pi, pi)
-  @test v[0.4, 0.4, 0.4] ∈ D
-  @test v[0.6, 0.6, 0.6] ∉ D
+    D = rotate(cube(Val{2}),pi,v[-.5,-.5])
+    @test v[-1.5, -1.5] ∈ D
+    @test v[-0.5, -0.5] ∉ D
 
-  D = rotate(cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0),pi,pi,pi,v[.35, .65, -2.])
-  @test v[0.9, 0.6, -2.5] ∈ D
-  @test v[0.0, 0.6, 0.0] ∉ D
+    D = rotate(cube(Val{3})+v[-.5,-.5,-.5], pi, pi, pi)
+    @test v[0.4, 0.4, 0.4] ∈ D
+    @test v[0.6, 0.6, 0.6] ∉ D
+
+    D = rotate(cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0),pi,pi,pi,v[.35, .65, -2.])
+    @test v[0.9, 0.6, -2.5] ∈ D
+    @test v[0.0, 0.6, 0.0] ∉ D
 end
 
 function test_simplex()
+    println("- simplex")
     d = simplex(Val{2})
     # We test a point in the interior, a point on each of the boundaries and
     # all corners.
@@ -505,6 +537,9 @@ function test_simplex()
     @test v[0.5,0.6] ∉ d
     @test v[-0.2,0.2] ∉ d
     @test v[0.2,-0.2] ∉ d
+
+    @test approx_in(v[-0.1,-0.1], d, 0.1)
+    @test !approx_in(v[-0.1,-0.1], d, 0.09)
 
     d3 = simplex(Val{3}, BigFloat)
     x0 = big(0.0)
@@ -522,9 +557,6 @@ function test_simplex()
     @test v[x2,-x2,x2] ∉ d3
     @test v[x2,x2,-x2] ∉ d3
     @test v[x1,x1,x1] ∉ d3
-end
-
-function test_sphere()
 end
 
 function test_arithmetics()
@@ -558,6 +590,7 @@ function test_arithmetics()
 end
 
 function test_cartesianproduct_domain()
+    println("- cartesian products")
     # ProductDomain 1
     T1 = interval(-1.0, 1.0)^2
     @test v[0.5,0.5] ∈ T1
@@ -596,96 +629,111 @@ end
 
 
 function test_set_operations()
-  d1 = disk()
-  d2 = interval(-.9,.9)^2
-  d3 = rectangle(-.5,-.1,.5,.1)
+    d1 = disk()
+    d2 = interval(-.9,.9)^2
+    d3 = rectangle(-.5,-.1,.5,.1)
 
-  println("- union")
-  u1 = d1 ∪ d2
-  u2 = u1 ∪ d3
+    println("- union")
+    u1 = d1 ∪ d2
+    u2 = u1 ∪ d3
 
-  u3 = d3 ∪ u1
-  u4 = u1 ∪ u2
-  x = SVector(0.,.15)
-  y = SVector(1.1,.75)
-  @test x∈u3
-  @test x∈u4
+    u3 = d3 ∪ u1
+    u4 = u1 ∪ u2
+    x = SVector(0.,.15)
+    y = SVector(1.1,.75)
+    @test x∈u3
+    @test x∈u4
 
-  @test y∉u3
-  @test y∉u4
+    @test y∉u3
+    @test y∉u4
 
-  ũ1 = UnionDomain(d1,d2)
-  @test u1 == ũ1
-  ũ1 = UnionDomain((d1,d2))
-  @test u1 == ũ1
-  ũ2 = UnionDomain([d1,d2])
-  @test ũ2 == ũ2
-  @test u1 == ũ2
+    ũ1 = UnionDomain(d1,d2)
+    @test u1 == ũ1
+    ũ1 = UnionDomain((d1,d2))
+    @test u1 == ũ1
+    ũ2 = UnionDomain([d1,d2])
+    @test ũ2 == ũ2
+    @test u1 == ũ2
 
-  # ordering doesn't matter
-  @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
+    # ordering doesn't matter
+    @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
-  @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
+    @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
 
-  show(io,u1)
-  @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
+    show(io,u1)
+    @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.9, 0.9] x the interval [-0.9, 0.9]\n"
 
-  println("- intersection")
-  d1 = disk()
-  d2 = interval(-.4,.4)^2
-  d3 = rectangle(-.5,.5,-.1,.1)
-  # intersection of productdomains
-  i1 = d2 & d3
-  show(io,i1)
-  @test String(take!(io)) == "the interval [-0.4, 0.4] x the interval [-0.1, 0.1]"
-  i2 = d1 & d2
-  show(io,i2)
-  @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.4, 0.4] x the interval [-0.4, 0.4]\n"
+    println("- intersection")
+    d1 = disk()
+    d2 = interval(-.4,.4)^2
+    d3 = rectangle(-.5,.5,-.1,.1)
+    # intersection of productdomains
+    i1 = d2 & d3
+    show(io,i1)
+    @test String(take!(io)) == "the interval [-0.4, 0.4] x the interval [-0.1, 0.1]"
+    i2 = d1 & d2
+    show(io,i2)
+    @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.4, 0.4] x the interval [-0.4, 0.4]\n"
 
-  i3 = d3 & i2
-  i4 = i2 & d3
-  i5 = i3 & i2
+    i3 = d3 & i2
+    i4 = i2 & d3
+    i5 = i3 & i2
 
-  x = SVector(0.,.05)
-  y = SVector(0.,.75)
-  @test x∈i3
-  @test x∈i4
+    x = SVector(0.,.05)
+    y = SVector(0.,.75)
+    @test x∈i3
+    @test x∈i4
 
-  @test y∉i3
-  @test y∉i4
+    @test y∉i3
+    @test y∉i4
 
-  println("- difference")
-  d1 = disk()
-  d2 = rectangle(-.5,.5,-.1,.1)
-  # intersection of productdomains
-  d = d1\d2
-  show(io,d)
-  @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.5, 0.5] x the interval [-0.1, 0.1]\n"
+    println("- difference")
+    d1 = disk()
+    d2 = rectangle(-.5,.5,-.1,.1)
+    # intersection of productdomains
+    d = d1\d2
+    show(io,d)
+    @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: the interval [-0.5, 0.5] x the interval [-0.1, 0.1]\n"
 
-  x = SVector(0.,.74)
-  y = SVector(0.,.25)
-  @test x∈d
-  @test x∈d
+    x = SVector(0.,.74)
+    y = SVector(0.,.25)
+    @test x∈d
+    @test x∈d
 
-  println("- arithmetic")
-  d1 = interval(0,1)
-  d2 = interval(2,3)
-  d = d1 ∪ d2
+    println("- arithmetic")
+    d1 = interval(0,1)
+    d2 = interval(2,3)
+    d = d1 ∪ d2
 
-  @test d+1 == (d1+1) ∪ (d2+1)
-  @test d-1 == (d1-1) ∪ (d2-1)
-  @test 2d  == (2d1)  ∪ (2d2)
-  @test d*2 == (d1*2) ∪ (d2*2)
-  @test d/2 == (d1/2) ∪ (d2/2)
-  @test 2\d == (2\d1) ∪ (2\d2)
+    @test d+1 == (d1+1) ∪ (d2+1)
+    @test d-1 == (d1-1) ∪ (d2-1)
+    @test 2d  == (2d1)  ∪ (2d2)
+    @test d*2 == (d1*2) ∪ (d2*2)
+    @test d/2 == (d1/2) ∪ (d2/2)
+    @test 2\d == (2\d1) ∪ (2\d2)
 
-  @test infimum(d) == minimum(d) == 0
-  @test supremum(d) == maximum(d) == 3
+    @test infimum(d) == minimum(d) == 0
+    @test supremum(d) == maximum(d) == 3
 
-  println("- different types")
-  d̃1 = interval(0,1)
-  d1 = interval(0f0, 1f0)
-  d2 = interval(2,3)
+    println("- different types")
+    d̃1 = interval(0,1)
+    d1 = interval(0f0, 1f0)
+    d2 = interval(2,3)
 
-  @test d1 ∪ d2 == d̃1 ∪ d2
+    @test d1 ∪ d2 == d̃1 ∪ d2
+end
+
+function test_embedded_domain()
+    println("- embedded domains")
+    i = interval(0.0, 1.0)
+    e = embedding_map(Complex{Float64}, Float64)
+    r = restriction_map(Float64, Complex{Float64})
+    ei = Domains.forwardmap_domain(e, i)
+
+    @test 0.5+1im ∉ ei
+    @test 0.5+0im ∈ ei
+    @test 0.5-0im ∈ ei
+    @test 1.1+0im ∉ ei
+    @test approx_in(0.8+1e-5im, ei, 1e-5)
+    @test !approx_in(0.8+1e-5im, ei, 1e-6)
 end

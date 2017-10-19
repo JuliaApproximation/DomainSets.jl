@@ -29,3 +29,6 @@ tensorproduct(map1::AbstractMap, map2::ProductMap) = ProductMap(map1, elements(m
 tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
 
 inv(pm::ProductMap) = ProductMap(map(inv, elements(pm))...)
+
+left_inverse(pm::ProductMap) = ProductMap(map(left_inverse, elements(pm))...)
+right_inverse(pm::ProductMap) = ProductMap(map(right_inverse, elements(pm))...)

@@ -99,7 +99,7 @@ end
 
 Base.getindex(v::TypeFactory{T}, args...) where {T} = T(args...)
 
-# const v = TypeFactory{SVector}()
+const v = TypeFactory{SVector}()
 
 ###############
 # Type conversion

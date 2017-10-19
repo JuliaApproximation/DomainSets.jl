@@ -85,7 +85,7 @@ cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elemen
 
 indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d))
 
-# THe line below allocates a little bit of memory...
+# The line below allocates a little bit of memory...
 _indomain(x, d::ProductDomain, el) = reduce(&, map(indomain, x, el))
 
 # ...hence these special cases:
@@ -96,6 +96,14 @@ _indomain(x::Tuple{A,B,C}, d::ProductDomain, el) where {A,B,C} = indomain(x[1], 
 _indomain(x::Tuple{A,B,C,D}, d::ProductDomain, el) where {A,B,C,D} = indomain(x[1], el[1]) &&
     indomain(x[2], el[2]) && indomain(x[3], el[3]) && indomain(x[4], el[4])
 
+approx_indomain(x, d::ProductDomain, tolerance) =
+    _approx_indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d), tolerance)
+
+_approx_indomain(x, d::ProductDomain, el, tolerance) = reduce(&, map((u,v) -> approx_indomain(u,v,tolerance), x, el))
+
+isempty(d::ProductDomain) = mapreduce(isempty, &, elements(d))
+
+point_in_domain(d::ProductDomain) = convert_space(spaceof(d), map(point_in_domain, elements(d)))
 
 function show(io::IO, t::ProductDomain)
     L = nb_elements(t)

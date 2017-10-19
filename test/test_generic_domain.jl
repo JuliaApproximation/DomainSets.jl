@@ -13,7 +13,21 @@ function test_generic_domains()
     end
 end
 
+# We test the generic functionality of a domain.
+# These tests check whether the given domain correctly implements the
+# interface of a domain.
 function test_generic_domain(d::Domain)
-  @test eltype(eltype(d)) == subeltype(d)
-  @test isreal(d) == isreal(subeltype(d))
+    @test eltype(eltype(d)) == subeltype(d)
+    @test isreal(d) == isreal(subeltype(d))
+
+    if !isempty(d)
+        x = point_in_domain(d)
+        @test x ∈ d
+    else
+        try
+            x = point_in_domain(d)
+            @test false
+        catch
+        end
+    end
 end
