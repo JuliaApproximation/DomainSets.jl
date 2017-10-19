@@ -36,6 +36,8 @@ show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", source(d
 
 point_in_domain(d::MappedDomain) = forward_map(d) * point_in_domain(source(d))
 
+elements(d::MappedDomain{D,T}) where {D<:ProductDomain,T} = map(x->forward_map(d)*x, elements(source(d)))
+
 """
 A `ForwardMappedDomain` stores the `source` domain and the forward map `f`, which
 maps `source` to `target`.
