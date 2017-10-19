@@ -38,3 +38,5 @@ map_domain(f, domain::Domain) = MappedDomain(domain, f)
 map_domain(f, domain::MappedDomain) = map_domain(mapping(domain) ∘ f, superdomain(domain))
 
 show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", superdomain(d))
+
+elements(d::MappedDomain{D,F,T}) where {D<:ProductDomain,F,T} = map(x->map_domain(mapping(d),x), elements(d.superdomain))
