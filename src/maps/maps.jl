@@ -11,12 +11,12 @@ domaintype(map::AbstractMap) = domaintype(typeof(map))
 domaintype(::Type{AbstractMap{T,S}}) where {T,S} = S
 domaintype(::Type{M}) where {M <: AbstractMap} = domaintype(supertype(M))
 
-rangetype(map::AbstractMap) = rangetype(typeof(map))
-rangetype(::Type{AbstractMap{T,S}}) where {T,S} = T
-rangetype(::Type{M}) where {M <: AbstractMap} = rangetype(supertype(M))
+codomaintype(map::AbstractMap) = codomaintype(typeof(map))
+codomaintype(::Type{AbstractMap{T,S}}) where {T,S} = T
+codomaintype(::Type{M}) where {M <: AbstractMap} = codomaintype(supertype(M))
 
 domain_space(map::AbstractMap) = GeometricSpace{domaintype(map)}()
-range_space(map::AbstractMap) = GeometricSpace{rangetype(map)}()
+range_space(map::AbstractMap) = GeometricSpace{codomaintype(map)}()
 
 (*)(map::AbstractMap, x) = applymap(map, x)
 
@@ -53,7 +53,7 @@ of `m`.
 right_inverse(m::AbstractMap) = inv(m)
 
 
-isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(rangetype(m))
+isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(codomaintype(m))
 isreal(::Type{Complex{T}}) where {T<:Real} = false
 isreal(::Type{T}) where {T<:Real} = true
 isreal(::Type{SVector{N,T}}) where {N,T} = isreal(T)

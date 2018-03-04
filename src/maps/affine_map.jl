@@ -34,7 +34,7 @@ LinearMap(a::T) where {T <: Number} = LinearMap{T,T,T}(a)
 
 matrix(m::LinearMap) = m.a
 
-vector(m::LinearMap) = zero(rangetype(m))
+vector(m::LinearMap) = zero(codomaintype(m))
 
 (m::LinearMap)(x) = applymap(m, x)
 

@@ -12,7 +12,7 @@ end
 function ProductMap(maps...)
     MAPS = typeof(maps)
     S = typeof(map(x->zero(domaintype(x)), maps))
-    T = typeof(map(x->zero(rangetype(x)), maps))
+    T = typeof(map(x->zero(codomaintype(x)), maps))
 
     ProductMap{MAPS,T,S}(maps)
 end

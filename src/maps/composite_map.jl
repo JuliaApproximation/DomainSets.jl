@@ -14,7 +14,7 @@ function CompositeMap(maps...)
     MAPS = typeof(maps)
     # TODO: check all intermediate types
     S = domaintype(maps[1])
-    T = rangetype(maps[end])
+    T = codomaintype(maps[end])
     CompositeMap{MAPS,T,S}(maps)
 end
 
