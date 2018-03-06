@@ -14,6 +14,11 @@ jacobian(m::AbstractAffineMap, x) = matrix(m)
 islinear(map::AbstractMap) = false
 islinear(map::AbstractAffineMap) = true
 
+update_eltype(map::AbstractAffineMap{T,S}, ::Type{T}) where {T,S} = map
+
+update_eltype(map::AbstractAffineMap{T,S}, ::Type{U}) where {T,S,U} =
+    map_update_eltype(map, U)
+
 """
 A `LinearMap` is an affine map that represents `y = a*x`, where `a` can have any
 type such that `a*x` maps type `S` to type `T.`
@@ -35,6 +40,11 @@ LinearMap(a::T) where {T <: Number} = LinearMap{T,T,T}(a)
 matrix(m::LinearMap) = m.a
 
 vector(m::LinearMap) = zero(codomaintype(m))
+
+function map_update_eltype(m::LinearMap, T)
+    a = map(T, matrix(m))
+    LinearMap(a)
+end
 
 (m::LinearMap)(x) = applymap(m, x)
 
@@ -62,6 +72,11 @@ translation_map(vector::T) where {T} = Translation{T}(vector)
 matrix(m::Translation{T}) where {T} = diagm(ones(T))
 
 vector(m::Translation) = m.vector
+
+function map_update_eltype(m::Translation, T)
+    b = map(T, vector(m))
+    Translation(b)
+end
 
 (m::Translation)(x) = applymap(m, x)
 
@@ -95,6 +110,11 @@ matrix(m::AffineMap) = m.a
 
 vector(m::AffineMap) = m.b
 
+function map_update_eltype(m::AffineMap, T)
+    a = map(T, matrix(m))
+    b = map(T, vector(m))
+    AffineMap(a, b)
+end
 
 (m::AffineMap)(x) = applymap(m, x)
 
