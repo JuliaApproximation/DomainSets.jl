@@ -7,8 +7,6 @@
 abstract type AbstractInterval{T} <: Domain{T}
 end
 
-ndims(::Type{D}) where {D <: AbstractInterval} = 1
-
 "The left endpoint of the interval."
 leftendpoint(d::AbstractInterval) = d.a
 
@@ -17,7 +15,27 @@ rightendpoint(d::AbstractInterval) = d.b
 
 isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
 
+"Is the interval closed at the left endpoint?"
+function closed_left() end
 
+"Is the interval closed at the right endpoint?"
+function closed_right() end
+
+# open_left and open_right are implemented in terms of closed_* above, so those
+# are the only ones that should be implemented for specific intervals
+"Is the interval open at the left endpoint?"
+open_left(d::AbstractInterval) = !closed_left(d)
+
+"Is the interval open at the right endpoint?"
+open_right(d::AbstractInterval) = !closed_right(d)
+
+# Only closed if closed at both endpoints, and similar for open
+isclosed(d::AbstractInterval) = closed_left(d) && closed_right(d)
+isopen(d::AbstractInterval) = open_left(d) && open_right(d)
+
+
+approx_indomain(x, d::AbstractInterval, tolerance) =
+    (x <= rightendpoint(d)+tolerance) && (x >= leftendpoint(d)-tolerance)
 
 function infimum(d::AbstractInterval{T}) where T
     a = leftendpoint(d)
@@ -33,9 +51,45 @@ function supremum(d::AbstractInterval{T}) where T
     b
 end
 
-## Some special intervals
+center(d::AbstractInterval) = one(eltype(d))/2 * (leftendpoint(d) + rightendpoint(d))
+
+function point_in_domain(d::AbstractInterval)
+    isempty(d) && throw(BoundsError())
+    center(d)
+end
+
+# This routine it not type-stable as written on the level of abstractinterval,
+# but it is convenient here since it can be implemented generically.
+function ∂(d::AbstractInterval{T}) where {T}
+    if isclosed(d)
+        Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
+    elseif closed_left(d)
+        Point(leftendpoint(d))
+    elseif closed_right(d)
+        Point(rightendpoint(d))
+    else
+        EmptySpace{T}()
+    end
+end
+
+# We extend some functionality of intervals to mapped intervals
+const MappedInterval{D <: AbstractInterval,T} = MappedDomain{D,T}
+
+for op in (:leftendpoint, :rightendpoint)
+    @eval $op(d::MappedInterval) = forward_map(d) * $op(source(d))
+end
+
+for op in (:open_left, :open_right, :closed_left, :closed_right)
+    @eval $op(d::MappedInterval) = $op(source(d))
+end
+
+
+## Some special intervals follow, e.g.:
 # - the unit interval [0,1]
 # - the 'Chebyshev' interval [-1,1]
+# - ...
+# Unlike a generic interval, these specific intervals have no data, and only one
+# type parameter (T).
 
 """
 The abstract type `FixedInterval` is the supertype of intervals with endpoints
@@ -46,8 +100,8 @@ abstract type FixedInterval{T} <: AbstractInterval{T}
 end
 
 # We assume by default that fixed intervals are closed. Override if they aren't.
-isclosed(d::FixedInterval) = true
-isopen(d::FixedInterval) = false
+closed_left(d::FixedInterval) = true
+closed_right(d::FixedInterval) = true
 
 # We also assume that the domain is compact. Override if it is not.
 iscompact(d::FixedInterval) = true
@@ -103,13 +157,11 @@ halfline(::Type{T} = Float64) where {T <: AbstractFloat} = Halfline{T}()
 leftendpoint(d::Halfline{T}) where {T} = zero(T)
 rightendpoint(d::Halfline{T}) where {T} = T(Inf)
 
-
 minimum(d::Halfline) = infimum(d)
 maximum(d::Halfline) = throw(ArgumentError("$d is unbounded. Use supremum."))
 
-# A half-open domain is neither open nor closed
-isclosed(d::Halfline) = false
-isopen(d::Halfline) = false
+# Open at the right endpoint
+closed_right(d::Halfline) = false
 
 iscompact(d::Halfline) = false
 
@@ -120,6 +172,8 @@ function similar_interval(d::Halfline, a, b)
     @assert isinf(b) && b > 0
     d
 end
+
+point_in_domain(d::Halfline) = zero(eltype(d))
 
 
 "The open negative halfline `(-∞,0)`."
@@ -135,8 +189,9 @@ rightendpoint(d::NegativeHalfline{T}) where {T} = zero(T)
 minimum(d::NegativeHalfline) = throw(ArgumentError("$d is unbounded. Use infimum."))
 maximum(d::NegativeHalfline) = supremum(d)
 
-isclosed(d::NegativeHalfline) = false
-isopen(d::NegativeHalfline) = true
+# Open at both endpoints
+closed_right(d::NegativeHalfline) = false
+closed_left(d::NegativeHalfline) = false
 
 iscompact(d::NegativeHalfline) = false
 
@@ -147,6 +202,9 @@ function similar_interval(d::NegativeHalfline, a, b)
     @assert b == 0
     d
 end
+
+point_in_domain(d::NegativeHalfline) = -one(eltype(d))
+
 
 
 """
@@ -214,13 +272,12 @@ minimum(d::Interval{:open}) = throw(ArgumentError("$d is open on the left. Use i
 maximum(d::Interval{L,:closed}) where L = supremum(d)
 maximum(d::Interval{L,:open}) where L = throw(ArgumentError("$d is open on the right. Use supremum."))
 
+# Open and closed at endpoints
+closed_left(d::Interval{:closed}) = true
+closed_left(d::Interval{:open}) = false
+closed_right(d::Interval{L,:closed}) where {L} = true
+closed_right(d::Interval{L,:open}) where {L} = false
 
-# The interval is closed if it is closed at both endpoints, and open if it
-# is open at both endpoints. In all other cases, it is neither open nor closed.
-isclosed(d::ClosedInterval) = true
-isopen(d::OpenInterval) = true
-isclosed(d::Interval) = false
-isopen(d::Interval) = false
 isempty(d::Union{OpenInterval,HalfOpenLeftInterval,HalfOpenRightInterval}) = leftendpoint(d) ≥ rightendpoint(d)
 
 

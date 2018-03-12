@@ -134,38 +134,56 @@ function test_identity_map(T)
 end
 
 function test_rotation_map(T)
-  theta = T(rand())
-  phi = T(rand())
-  psi = T(rand())
-  m2 = rotation_map(theta)
-  test_generic_map(T, m2)
-  m3 = rotation_map(phi, theta, psi)
-  test_generic_map(T, m3)
+    ϕ = T(pi)/4
+    m = rotation_map(ϕ)
+    x = v[one(T), zero(T)]
+    y = m*x
+    @test y[1] ≈ sqrt(T(2))/2
+    @test y[2] ≈ sqrt(T(2))/2
 
-  r = suitable_point_to_map(m2)
-  @test norm(m2*r)≈norm(r)
+    ϕ = T(pi)/4
+    m = rotation_map(ϕ, 0, 0)
+    x = v[zero(T), one(T), zero(T)]
+    y = m*x
+    @test y[1] ≈ 0
+    @test y[2] ≈ sqrt(T(2))/2
+    @test y[3] ≈ sqrt(T(2))/2
 
-  r = suitable_point_to_map(m3)
-  @test norm(m3*r)≈norm(r)
-  @test islinear(m3)
+    # TODO: add more tests for a 3D rotation
+
+    theta = T(rand())
+    phi = T(rand())
+    psi = T(rand())
+    m2 = rotation_map(theta)
+    test_generic_map(T, m2)
+    m3 = rotation_map(phi, theta, psi)
+    test_generic_map(T, m3)
+
+    r = suitable_point_to_map(m2)
+    @test norm(m2*r)≈norm(r)
+
+    r = suitable_point_to_map(m3)
+    @test norm(m3*r)≈norm(r)
+    @test islinear(m3)
 end
 
 function test_translation_map(T)
-  v = randvec(T,3)
-  m = translation_map(v)
-  test_generic_map(T, m)
-  @test islinear(m)
+    v = randvec(T,3)
+    m = translation_map(v)
+    test_generic_map(T, m)
+    @test islinear(m)
 end
 
 function test_cart_polar_map(T)
-  m1 = CartToPolarMap{T}()
-  test_generic_map(T, m1)
-  @test !islinear(m1)
+    m1 = CartToPolarMap{T}()
+    test_generic_map(T, m1)
+    @test !islinear(m1)
 
-  m2 = PolarToCartMap{T}()
-  test_generic_map(T, m2)
-  @test !islinear(m2)
+    m2 = PolarToCartMap{T}()
+    test_generic_map(T, m2)
+    @test !islinear(m2)
 end
+
 function test_embedding_maps()
     T1 = Float64
     T2 = Complex{Float64}
@@ -210,67 +228,66 @@ function test_isomorphism_map(T1, T2)
 end
 
 function test_composite_map(T)
-  a = T(0)
-  b = T(1)
-  c = T(2)
-  d = T(3)
-  ma = IdentityMap{T}()
-  mb = interval_map(a, b, c, d)
+    a = T(0)
+    b = T(1)
+    c = T(2)
+    d = T(3)
+    ma = IdentityMap{T}()
+    mb = interval_map(a, b, c, d)
 
-  r = suitable_point_to_map(ma)
-  m1 = ma∘mb
-  test_generic_map(T, m1)
-  @test m1(r) ≈ ma(mb(r))
-  m2 = m1∘mb
-  test_generic_map(T, m2)
-  @test m2(r) ≈ m1(mb(r))
-  m3 = mb∘m2
-  test_generic_map(T, m3)
-  @test m3(r) ≈ mb(m2(r))
-  m = m2∘m3
-  test_generic_map(T, m)
-  @test m(r) ≈ m2(m3(r))
+    r = suitable_point_to_map(ma)
+    m1 = ma∘mb
+    test_generic_map(T, m1)
+    @test m1(r) ≈ ma(mb(r))
+    m2 = m1∘mb
+    test_generic_map(T, m2)
+    @test m2(r) ≈ m1(mb(r))
+    m3 = mb∘m2
+    test_generic_map(T, m3)
+    @test m3(r) ≈ mb(m2(r))
+    m = m2∘m3
+    test_generic_map(T, m)
+    @test m(r) ≈ m2(m3(r))
 
-  @test !(typeof(CompositeMap(ma)) <: CompositeMap)
+    @test !(typeof(CompositeMap(ma)) <: CompositeMap)
 end
 
 function test_product_map(T)
-  a = T(0)
-  b = T(1)
-  c = T(2)
-  d = T(3)
-  ma = IdentityMap{T}()
-  mb = interval_map(a, b, c, d)
+    a = T(0)
+    b = T(1)
+    c = T(2)
+    d = T(3)
+    ma = IdentityMap{T}()
+    mb = interval_map(a, b, c, d)
 
-  r1 = suitable_point_to_map(ma)
-  r2 = suitable_point_to_map(ma)
-  r3 = suitable_point_to_map(ma)
-  r4 = suitable_point_to_map(ma)
-  r5 = suitable_point_to_map(ma)
+    r1 = suitable_point_to_map(ma)
+    r2 = suitable_point_to_map(ma)
+    r3 = suitable_point_to_map(ma)
+    r4 = suitable_point_to_map(ma)
+    r5 = suitable_point_to_map(ma)
 
-  m1 = tensorproduct(ma,mb)
-  test_generic_map(T, m1)
-  @test compare_tupple(m1((r1,r2)), (ma(r1),mb(r2)))
-  m2 = tensorproduct(m1,mb)
-  test_generic_map(T, m2)
-  @test compare_tupple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
-  m3 = tensorproduct(mb,m2)
-  test_generic_map(T, m3)
-  @test compare_tupple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
-  m = tensorproduct(m1,m2)
-  test_generic_map(T, m)
-  @test compare_tupple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
-
+    m1 = tensorproduct(ma,mb)
+    test_generic_map(T, m1)
+    @test compare_tuple(m1((r1,r2)), (ma(r1),mb(r2)))
+    m2 = tensorproduct(m1,mb)
+    test_generic_map(T, m2)
+    @test compare_tuple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
+    m3 = tensorproduct(mb,m2)
+    test_generic_map(T, m3)
+    @test compare_tuple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
+    m = tensorproduct(m1,m2)
+    test_generic_map(T, m)
+    @test compare_tuple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
 end
 
-Base.isapprox(a::NTuple{L,SVector{N,T}}, b::NTuple{L,SVector{N,T}}) where {L,N,T} = compare_tupple(a,b)
-Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tupple(a,b)
+Base.isapprox(a::NTuple{L,SVector{N,T}}, b::NTuple{L,SVector{N,T}}) where {L,N,T} = compare_tuple(a,b)
+Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tuple(a,b)
 
-function compare_tupple(a, b)
-  for i in length(a)
-    if !(a[i]≈b[i])
-      return false
+function compare_tuple(a, b)
+    for i in length(a)
+        if !(a[i]≈b[i])
+            return false
+        end
     end
-  end
-  true
+    true
 end

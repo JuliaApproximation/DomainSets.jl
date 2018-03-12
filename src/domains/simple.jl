@@ -16,6 +16,8 @@ const Ball{T} = UnitBall{3,T}
 
 indomain(x, ::UnitBall) = norm(x) <= 1
 
+approx_indomain(x, ::UnitBall, tolerance) = norm(x) <= 1+tolerance
+
 disk(::Type{T} = Float64) where {T} = Disk{T}()
 disk(radius::Number) = radius * disk(typeof(radius))
 disk(radius::Number, center::AbstractVector) = disk(radius) + center
@@ -26,7 +28,8 @@ ball(radius::Number, center::AbstractVector) = ball(radius) + center
 
 show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
 
-
+# We choose the origin here
+point_in_domain(d::UnitBall) = zero(eltype(d))
 
 
 ###########################
@@ -38,7 +41,12 @@ end
 
 indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 
+approx_indomain(x, ::UnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
+
 simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
+
+# We pick the origin, because it belongs to the domain regardless of what T is
+point_in_domain(d::UnitSimplex) = zero(eltype(d))
 
 
 #########################
@@ -95,6 +103,13 @@ convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x
+
+approx_indomain(x, d::Point, tolerance) = norm(x-d.x) <= tolerance
+
+isopen(d::Point) = false
+isclosed(d::Point) = true
+
+point_in_domain(d::Point) = d.x
 
 for op in (:*,:+,:-)
     @eval begin

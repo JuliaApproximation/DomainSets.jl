@@ -21,7 +21,7 @@ UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} =
 UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
 
 function UnionDomain(domains::Domain...)
-    # TODO: implement promote_space_type for domains and to the promotion properly
+    # TODO: implement promote_space_type for domains and do the promotion properly
     T = eltype(domains[1])
     for d in domains
         @assert eltype(d) == T
@@ -54,6 +54,8 @@ union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 # The union of domains corresponds to a logical OR of their characteristic functions
 indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
 
+point_in_domain(d::UnionDomain) = point_in_domain(element(d,1))
+
 ==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
 
 function show(io::IO, d::UnionDomain)
@@ -82,6 +84,7 @@ end
 
 
 setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), d2))
+
 function setdiff(d1::UnionDomain, d2::Domain)
     s = Set(elements(d1))
     # check if any element is in d1 and just remove
@@ -90,6 +93,7 @@ function setdiff(d1::UnionDomain, d2::Domain)
 
     UnionDomain(setdiff.(elements(d1), d2))
 end
+
 function setdiff(d1::Domain, d2::UnionDomain)
     ret = d1
     for d in elements(d2)
@@ -97,6 +101,10 @@ function setdiff(d1::Domain, d2::UnionDomain)
     end
     ret
 end
+
+# use \ as a synomym for setdiff, in the context of domains (though, generically,
+# \ means left division in Julia)
+\(d1::Domain, d2::Domain) = setdiff(d1, d2)
 
 ###################################
 # The intersection of two domains

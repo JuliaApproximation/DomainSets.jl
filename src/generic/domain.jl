@@ -54,12 +54,30 @@ function in(x, d::Domain)
    in(convert(T, x), convert(Domain{T}, d))
 end
 
-# Be forgiving for a 1D case. Good idea or not? This is really an isomorphism.
-# dlfivefifty: NOT!
-in(x::SVector{1,T}, d::Domain{T}) where {T <: Number}  = in(x[1], d)
-
 # The user may supply a vector. We attempt to convert it to the right space.
 in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)
+
+"""
+Return a suitable tolerance to use for verifying whether a point is close to
+a domain. Typically, the tolerance is close to the precision limit of the numeric
+type associated with the domain.
+"""
+default_tolerance(d::Domain) = default_tolerance(d, subeltype(d))
+default_tolerance(d::Domain, ::Type{T}) where {T <: Real} = 100eps(T)
+default_tolerance(d::Domain, ::Type{Complex{T}}) where {T <: Real} = 100eps(T)
+# Default tolerance for integers and for any other type is zero
+default_tolerance(d::Domain, ::Type{T}) where {T <: Integer} = zero(T)
+default_tolerance(d::Domain, ::Type{T}) where {T} = zero(T)
+
+approx_in(x::T, d::Domain{T}, tolerance = default_tolerance(d)) where {T} =
+   approx_indomain(x, d, tolerance)
+
+function approx_in(x, d::Domain, tolerance = default_tolerance(d))
+   T = promote_type(typeof(x), eltype(d))
+   T == Any && return false
+   approx_in(convert(T, x), convert(Domain{T}, d), tolerance)
+end
+
 
 isreal(d::Domain) = isreal(spaceof(d))
 
@@ -67,3 +85,5 @@ infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the in
 supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
 
 # override minimum and maximum for closed sets
+
+boundary(d::Domain) = ∂(d)

@@ -34,15 +34,19 @@ LinearMap(a::T) where {T <: Number} = LinearMap{T,T,T}(a)
 
 matrix(m::LinearMap) = m.a
 
+vector(m::LinearMap) = zero(rangetype(m))
+
 (m::LinearMap)(x) = applymap(m, x)
 
 applymap(m::LinearMap, x) = matrix(m) * x
 
 inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))
 
-apply_inverse(m::LinearMap, y) = applymap(inv(m), y)
+# Because StaticArrays does not currently support `pinv` we include a workaround:
+LinAlg.pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
 
-vector(m::LinearMap) = zero(rangetype(m))
+left_inverse(m::LinearMap{T,S}) where {T,S} =  LinearMap{S,T}(pinv(matrix(m)))
+right_inverse(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(pinv(matrix(m)))
 
 
 """
@@ -68,6 +72,10 @@ apply_inverse(m::Translation, y) = y - vector(m)
 inv(m::Translation) = Translation(-vector(m))
 
 
+"""
+`AffineMap` represents `y = a*x + b`, i.e. it combines a `LinearMap` and a
+`Translation`.
+"""
 struct AffineMap{T,S,A} <: AbstractAffineMap{T,S}
     a   ::  A
     b   ::  T
@@ -95,6 +103,8 @@ applymap(m::AffineMap, x) = m.a * x + m.b
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap{T,S}) where {T,S} = AffineMap{S,T}(inv(m.a), -inv(m.a)*m.b)
 
+# Todo: implement `full` for affine maps, which would result in `a` always being
+# a dense matrix.
 
 
 ########################
@@ -127,15 +137,16 @@ scaling_map(a, b, c, d) = LinearMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,
 # Rotations around the origin
 #############################
 
-# Rotation in positive direction
-rotationmatrix(theta) = SMatrix{2,2}(cos(theta), -sin(theta), sin(theta), cos(theta))
+# Rotation in positive (counterclockwise) direction
+# (Note: the SMatrix constructor expects the arguments column-first)
+rotationmatrix(theta) = SMatrix{2,2}(cos(theta), sin(theta), -sin(theta), cos(theta))
 
 # Rotation about X-axis (phi), Y-axis (theta) and Z-axis (psi)
+# As above, the matrix is given column-by-column
 rotationmatrix(phi,theta,psi) =
-    SMatrix{3,3}(cos(theta)*cos(psi), cos(phi)*sin(psi)+sin(phi)*sin(theta)*cos(psi),
-        sin(phi)*sin(psi)-cos(phi)*sin(theta)*cos(psi), -cos(theta)*sin(psi),
-        cos(phi)*cos(psi)-sin(phi)*sin(theta)*sin(psi), sin(phi)*cos(psi)+cos(phi)*sin(theta)*sin(psi),
-        sin(theta), -sin(phi)*cos(theta), cos(phi)*cos(theta))
+    SMatrix{3,3}(cos(theta)*cos(psi), cos(theta)*sin(psi), -sin(theta),
+        -cos(phi)*sin(psi)+sin(phi)*sin(theta)*cos(psi), cos(phi)*cos(psi)+sin(phi)*sin(theta)*sin(psi), sin(phi)*cos(theta),
+        sin(phi)*sin(psi)+cos(phi)*sin(theta)*cos(psi), -sin(phi)*cos(psi)+cos(phi)*sin(theta)*sin(psi), cos(phi)*cos(theta))
 
 rotation_map(theta) = LinearMap(rotationmatrix(theta))
 
