@@ -465,20 +465,6 @@ function test_interval(T = Float64)
 end
 
 function test_unitball()
-<<<<<<< HEAD
-    C = disk(2.0)
-    @test in(v[1.4, 1.4], C)
-    @test !in(v[1.5, 1.5], C)
-    @test typeof(1.2*C) == typeof(C*1.2)
-    @test in(v[1.5,1.5],1.2*C)
-    @test in(v[1.5,1.5],C*1.2)
-
-    S = ball(2.0)
-    @test v[1.9,0.0,0.0] ∈ S
-    @test in(v[0,-1.9,0.0],S)
-    @test in(v[0.0,0.0,-1.9],S)
-    @test !in(v[1.9,1.9,0.0],S)
-=======
     D = disk()
     @test v[1.,0.] ∈ D
     @test v[1.,1.] ∉ D
@@ -509,7 +495,6 @@ function test_unitball()
     @test v[1.0,-0.9,1.0] ∈ B
     @test v[1.0,1.0,-0.9] ∈ B
     @test v[2.9,2.9,1.0] ∉ B
->>>>>>> ce2c071b415e5b561145f611a10f56424e522721
 end
 
 struct DerivedUnitBall<: DerivedDomain{SVector{2,Float64}}
