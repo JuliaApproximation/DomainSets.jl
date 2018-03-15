@@ -17,11 +17,9 @@ function suitable_point_to_map(m)
   end
 end
 
-function suitable_point_to_map(m::Domains.EmbeddingMap{T1,T2}) where {T1,T2}
-    x = T2(1)
-end
+suitable_point_to_map(m::Domains.EmbeddingMap{S,T}) where {S,T} = one(S)
 
-function suitable_point_to_map(m::Domains.EmbeddingMap{T1,SVector{N,T}}) where {T1,T,N}
+function suitable_point_to_map(m::Domains.EmbeddingMap{SVector{N,S},T}) where {S,T,N}
     x = @SVector ones(N)
 end
 
@@ -198,7 +196,7 @@ end
 
 function test_embedding_map(T1, T2)
     x = nonzero_element(T1)
-    m = embedding_map(T2, T1)
+    m = embedding_map(T1, T2)
 
     x = suitable_point_to_map(m)
     y1 = applymap(m, x)
@@ -208,7 +206,7 @@ function test_embedding_map(T1, T2)
     @test y1 == y3
 
     @test applymap(m, x) == convert_space(spacetype(T2), x)
-    m2 = restriction_map(T1, T2)
+    m2 = restriction_map(T2, T1)
     y = nonzero_element(T2)
     @test applymap(m2, y) == restrict_space(spacetype(T1), y)
 end
@@ -218,10 +216,10 @@ function test_isomorphism_map(T1, T2)
     test_embedding_map(T2, T1)
     @test inv(isomorphism_map(T1,T2)) == isomorphism_map(T2, T1)
     x = nonzero_element(T1)
-    m = isomorphism_map(T2, T1)
+    m = isomorphism_map(T1, T2)
     y = applymap(m, x)
     @test apply_inverse(m, y) == x
-    m2 = isomorphism_map(T1, T2)
+    m2 = isomorphism_map(T2, T1)
     y2 = nonzero_element(T2)
     x2 = applymap(m2, y2)
     @test apply_inverse(m2, x2) == y2
@@ -283,11 +281,5 @@ end
 Base.isapprox(a::NTuple{L,SVector{N,T}}, b::NTuple{L,SVector{N,T}}) where {L,N,T} = compare_tuple(a,b)
 Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tuple(a,b)
 
-function compare_tuple(a, b)
-    for i in length(a)
-        if !(a[i]≈b[i])
-            return false
-        end
-    end
-    true
-end
+# Compare two iterable sequences for element-wise equality
+compare_tuple(a, b) = reduce(&, map(isapprox, a, b))

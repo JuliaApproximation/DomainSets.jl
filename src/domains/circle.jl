@@ -27,18 +27,18 @@ sphere(radius::Number, center::AbstractVector) = sphere(radius) + center
 """
 The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 """
-struct CircleMap{T,S} <: AbstractMap{T,S}
+struct CircleMap{S,T} <: AbstractMap{S,T}
 end
 
 parameterization(d::Circle) = CircleMap{eltype(d),subeltype(d)}()
 
-domain(d::CircleMap{T,S}) where {T,S} = HalfOpenRightInterval{S}(0, 1)
+domain(d::CircleMap{S,T}) where {S,T} = HalfOpenRightInterval{S}(0, 1)
 
-range(m::CircleMap{T,S}) where {T,S} = Circle{T}()
+range(m::CircleMap{S,T}) where {S,T} = Circle{T}()
 
-applymap(m::CircleMap{T,S}, t) where {T,S} = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
+applymap(m::CircleMap{S,T}, t) where {S,T} = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
 
-function gradient(m::CircleMap{T,S}, t) where {T,S}
+function gradient(m::CircleMap{S,T}, t) where {S,T}
     a = 2*S(pi)
     SVector(-a*sin(a*t), a*cos(a*t))
 end
@@ -49,12 +49,12 @@ end
 the intersection point with the unit circle of the line connecting `x` to the
 origin. The angle of this point, scaled to the interval `[0,1)`, is the result.
 """
-struct AngleMap{T,S} <: AbstractMap{T,S}
+struct AngleMap{S,T} <: AbstractMap{S,T}
 end
 
-domain(d::AngleMap{T,S}) where {T,S} = FullSpace{S}()
+domain(d::AngleMap{S,T}) where {S,T} = FullSpace{S}()
 
-range(m::AngleMap{T,S}) where {T,S} = HalfOpenRightInterval{T}(0, 1)
+range(m::AngleMap{S,T}) where {S,T} = HalfOpenRightInterval{T}(0, 1)
 
 function applymap(m::AngleMap, x)
     twopi = 2*convert(codomaintype(m), pi)
@@ -67,6 +67,6 @@ function applymap(m::AngleMap, x)
     θ / twopi
 end
 
-left_inverse(m::CircleMap{T,S}) where {T,S} = AngleMap{S,T}()
+left_inverse(m::CircleMap{S,T}) where {S,T} = AngleMap{T,S}()
 
-right_inverse(m::AngleMap{T,S}) where {T,S} = CircleMap{S,T}()
+right_inverse(m::AngleMap{S,T}) where {S,T} = CircleMap{T,S}()

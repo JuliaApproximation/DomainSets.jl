@@ -6,7 +6,7 @@ and `y` such that the expression is valid.
 
 We use matrix and vector to denote `a` and `b` respectively.
 """
-abstract type AbstractAffineMap{T,S} <: AbstractMap{T,S}
+abstract type AbstractAffineMap{S,T} <: AbstractMap{S,T}
 end
 
 jacobian(m::AbstractAffineMap, x) = matrix(m)
@@ -14,24 +14,24 @@ jacobian(m::AbstractAffineMap, x) = matrix(m)
 islinear(map::AbstractMap) = false
 islinear(map::AbstractAffineMap) = true
 
-update_eltype(map::AbstractAffineMap{T,S}, ::Type{T}) where {T,S} = map
+update_eltype(map::AbstractAffineMap{S,T}, ::Type{T}) where {S,T} = map
 
-update_eltype(map::AbstractAffineMap{T,S}, ::Type{U}) where {T,S,U} =
+update_eltype(map::AbstractAffineMap{S,T}, ::Type{U}) where {S,T,U} =
     map_update_eltype(map, U)
 
 """
 A `LinearMap` is an affine map that represents `y = a*x`, where `a` can have any
 type such that `a*x` maps type `S` to type `T.`
 """
-struct LinearMap{T,S,A} <: AbstractAffineMap{T,S}
+struct LinearMap{S,T,A} <: AbstractAffineMap{S,T}
     a   ::  A
 end
 
 LinearMap{T}(a) where {T} = LinearMap{T,T}(a)
 
-LinearMap{T,S}(a) where {T,S} = LinearMap{T,S,typeof(a)}(a)
+LinearMap{S,T}(a) where {S,T} = LinearMap{S,T,typeof(a)}(a)
 
-LinearMap(a::SMatrix{M,N,T}) where {M,N,T} = LinearMap{SVector{M,T},SVector{N,T},typeof(a)}(a)
+LinearMap(a::SMatrix{M,N,T}) where {M,N,T} = LinearMap{SVector{N,T},SVector{M,T},typeof(a)}(a)
 
 LinearMap(a::Matrix{T}) where {T} = LinearMap{Vector{T},Vector{T},typeof(a)}(a)
 
@@ -50,13 +50,13 @@ end
 
 applymap(m::LinearMap, x) = matrix(m) * x
 
-inv(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(inv(matrix(m)))
+inv(m::LinearMap{S,T}) where {S,T} = LinearMap{T,S}(inv(matrix(m)))
 
 # Because StaticArrays does not currently support `pinv` we include a workaround:
 LinAlg.pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
 
-left_inverse(m::LinearMap{T,S}) where {T,S} =  LinearMap{S,T}(pinv(matrix(m)))
-right_inverse(m::LinearMap{T,S}) where {T,S} = LinearMap{S,T}(pinv(matrix(m)))
+left_inverse(m::LinearMap{S,T}) where {S,T} =  LinearMap{T,S}(pinv(matrix(m)))
+right_inverse(m::LinearMap{S,T}) where {S,T} = LinearMap{T,S}(pinv(matrix(m)))
 
 
 """
@@ -91,17 +91,17 @@ inv(m::Translation) = Translation(-vector(m))
 `AffineMap` represents `y = a*x + b`, i.e. it combines a `LinearMap` and a
 `Translation`.
 """
-struct AffineMap{T,S,A} <: AbstractAffineMap{T,S}
+struct AffineMap{S,T,A} <: AbstractAffineMap{S,T}
     a   ::  A
     b   ::  T
 end
 
-AffineMap{T,S}(a::A, b) where {T,S,A} = AffineMap{T,S,A}(a, b)
+AffineMap{S,T}(a::A, b) where {S,T,A} = AffineMap{S,T,A}(a, b)
 
 AffineMap(a::T, b::T) where {T} = AffineMap{T,T,T}(a, b)
 
 AffineMap(a::SMatrix{M,N,T}, b::SVector{M,T}) where {M,N,T} =
-    AffineMap{SVector{M,T},SVector{N,T},typeof(a)}(a, b)
+    AffineMap{SVector{N,T},SVector{M,T},typeof(a)}(a, b)
 
 AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
     AffineMap(eye(SMatrix{N,N,T}), b)
@@ -121,7 +121,7 @@ end
 applymap(m::AffineMap, x) = m.a * x + m.b
 
 # If y = a*x+b, then x = inv(a)*(y-b).
-inv(m::AffineMap{T,S}) where {T,S} = AffineMap{S,T}(inv(m.a), -inv(m.a)*m.b)
+inv(m::AffineMap{S,T}) where {S,T} = AffineMap{T,S}(inv(m.a), -inv(m.a)*m.b)
 
 # Todo: implement `full` for affine maps, which would result in `a` always being
 # a dense matrix.

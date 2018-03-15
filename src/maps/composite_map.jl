@@ -3,7 +3,7 @@
 """
 The composition of several maps.
 """
-struct CompositeMap{MAPS,T,S} <: AbstractMap{T,S}
+struct CompositeMap{MAPS,S,T} <: AbstractMap{S,T}
     maps    ::  MAPS
 end
 
@@ -15,7 +15,7 @@ function CompositeMap(maps...)
     # TODO: check all intermediate types
     S = domaintype(maps[1])
     T = codomaintype(maps[end])
-    CompositeMap{MAPS,T,S}(maps)
+    CompositeMap{MAPS,S,T}(maps)
 end
 
 

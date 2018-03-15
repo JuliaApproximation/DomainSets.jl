@@ -1,52 +1,52 @@
 # embedding_map.jl
 
 "A map between embedded spaces."
-struct EmbeddingMap{T,S} <: AbstractMap{T,S}
-    function EmbeddingMap{T,S}() where {T,S}
+struct EmbeddingMap{S,T} <: AbstractMap{S,T}
+    function EmbeddingMap{S,T}() where {S,T}
         @assert embedded(spacetype(S), spacetype(T))
-        new{T,S}()
+        new{S,T}()
     end
 end
 
-embedding_map(::Type{T}, ::Type{S}) where {T,S} = EmbeddingMap{T,S}()
+embedding_map(::Type{S}, ::Type{T}) where {S,T} = EmbeddingMap{S,T}()
 embedding_map(::Type{T}, ::Type{T}) where {T} = IdentityMap{T}()
 
 (m::EmbeddingMap)(x) = applymap(m, x)
 
-applymap(map::EmbeddingMap{T,S}, x::S) where {T,S} = convert_space(spacetype(T), x)
+applymap(map::EmbeddingMap{S,T}, x::S) where {S,T} = convert_space(spacetype(T), x)
 
 
 "A restriction map from a space to an embedded space."
-struct RestrictionMap{T,S} <: AbstractMap{T,S}
-    function RestrictionMap{T,S}() where {T,S}
+struct RestrictionMap{S,T} <: AbstractMap{S,T}
+    function RestrictionMap{S,T}() where {S,T}
         @assert embedded(spacetype(T), spacetype(S))
-        new{T,S}()
+        new{S,T}()
     end
 end
 
-restriction_map(::Type{T}, ::Type{S}) where {T,S} = RestrictionMap{T,S}()
+restriction_map(::Type{S}, ::Type{T}) where {S,T} = RestrictionMap{S,T}()
 restriction_map(::Type{T}, ::Type{T}) where {T} = IdentityMap{T}()
 
-applymap(map::RestrictionMap{T,S}, x::S) where {T,S} = restrict_space(spacetype(T), x)
+applymap(map::RestrictionMap{S,T}, x::S) where {S,T} = restrict_space(spacetype(T), x)
 
-left_inverse(map::EmbeddingMap{T,S}) where {T,S} = RestrictionMap{S,T}()
-right_inverse(map::RestrictionMap{T,S}) where {T,S} = EmbeddingMap{S,T}()
+left_inverse(map::EmbeddingMap{S,T}) where {S,T} = RestrictionMap{T,S}()
+right_inverse(map::RestrictionMap{S,T}) where {S,T} = EmbeddingMap{T,S}()
 
 
 
 "A map between isomorphic spaces."
-struct IsomorphismMap{T,S} <: AbstractMap{T,S}
-    function IsomorphismMap{T,S}() where {T,S}
+struct IsomorphismMap{S,T} <: AbstractMap{S,T}
+    function IsomorphismMap{S,T}() where {S,T}
         @assert embedded(spacetype(T), spacetype(S))
-        new{T,S}()
+        new{S,T}()
     end
 end
 
-isomorphism_map(::Type{T}, ::Type{S}) where {T,S} = IsomorphismMap{T,S}()
+isomorphism_map(::Type{S}, ::Type{T}) where {S,T} = IsomorphismMap{S,T}()
 isomorphism_map(::Type{T}, ::Type{T}) where {T} = IdentityMap{T}()
 
-applymap(map::IsomorphismMap{T,S}, x::S) where {T,S} = convert_space(spacetype(T), x)
+applymap(map::IsomorphismMap{S,T}, x::S) where {S,T} = convert_space(spacetype(T), x)
 
-apply_inverse(map::IsomorphismMap{T,S}, y::T) where {T,S} = convert_space(spacetype(S), y)
+apply_inverse(map::IsomorphismMap{S,T}, y::T) where {S,T} = convert_space(spacetype(S), y)
 
-inv(map::IsomorphismMap{T,S}) where {T,S} = IsomorphismMap{S,T}()
+inv(map::IsomorphismMap{S,T}) where {S,T} = IsomorphismMap{T,S}()

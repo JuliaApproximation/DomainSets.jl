@@ -726,8 +726,8 @@ end
 function test_embedded_domain()
     println("- embedded domains")
     i = interval(0.0, 1.0)
-    e = embedding_map(Complex{Float64}, Float64)
-    r = restriction_map(Float64, Complex{Float64})
+    e = embedding_map(Float64, Complex{Float64})
+    r = restriction_map(Complex{Float64}, Float64)
     ei = Domains.forwardmap_domain(e, i)
 
     @test 0.5+1im ∉ ei
