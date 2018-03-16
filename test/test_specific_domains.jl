@@ -473,6 +473,26 @@ function test_sphere()
     S = sphere(2., v[1.,1.,1.])
     @test approx_in(v[1.+2*cos(1.),1.+2*sin(1.),1.], S)
     @test !approx_in(v[4.,1.,5.], S)
+
+    # Create an ellipse, the curve
+    E = ellipse(2.0, 4.0)
+    @test v[2.0,0.0] ∈ E
+    @test v[0.0,4.0] ∈ E
+    @test v[2.0+1e-10,0.0] ∉ E
+    @test v[0.0,0.0] ∉ E
+    E = ellipse(1, 2.0)
+    @test eltype(E) == SVector{2,Float64}
+
+    # Create an ellipse, the domain with volume
+    E2 = ellipse_shape(2.0, 4.0)
+    @test v[2.0,0.0] ∈ E2
+    @test v[0.0,4.0] ∈ E2
+    @test v[2.0+1e-10,0.0] ∉ E2
+    @test v[0.0,0.0] ∈ E2
+    @test v[1.0,1.0] ∈ E2
+
+    E2 = ellipse_shape(1, 2.0)
+    @test eltype(E) == SVector{2,Float64}
 end
 
 function test_cube()

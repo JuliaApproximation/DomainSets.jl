@@ -23,6 +23,14 @@ sphere(::Type{T} = Float64) where {T} = Sphere{T}()
 sphere(radius::Number) = radius * sphere(float(typeof(radius)))
 sphere(radius::Number, center::AbstractVector) = sphere(radius) + center
 
+"Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
+ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)
+ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b) * Circle{T}()
+
+"Create an ellipse-shaped domain with semi-axes lengths `a` and `b` respectively."
+ellipse_shape(a::Number, b::Number) = ellipse_shape(promote(a,b)...)
+ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b) * Disk{T}()
+
 
 """
 The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.

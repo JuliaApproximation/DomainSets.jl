@@ -145,7 +145,7 @@ export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere, Point
 export disk, ball, cube, simplex, cylinder, rectangle
 # from domains/circle.jl
 export Circle, Sphere
-export circle, sphere
+export circle, sphere, ellipse, ellipse_shape
 export parameterization, gradient
 
 include("util/common.jl")
