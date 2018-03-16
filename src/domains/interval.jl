@@ -423,3 +423,31 @@ function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     @assert b2 ≤ a1
     d1
 end
+
+
+## Iteration over intervals
+
+const AbstractFloatInterval{T <: AbstractFloat} = AbstractInterval{T}
+const AbstractIntegerInterval{T <: Integer} = AbstractInterval{T}
+
+# - For floating point types: use nextfloat
+Base.start(d::AbstractFloatInterval) =
+    open_left(d) ? nextfloat(leftendpoint(d)) : leftendpoint(d)
+Base.next(d::AbstractFloatInterval, st) = st, nextfloat(st)
+Base.done(d::AbstractFloatInterval, st) =
+    open_right(d) ? st >= rightendpoint(d) : st > rightendpoint(d)
+
+"Compute the cardinality of a domain by iterating over its elements."
+function cardinality(d::Union{AbstractFloatInterval,AbstractIntegerInterval})
+    k = 0
+    for x in d
+        k += 1
+    end
+    k
+end
+
+# - For integer types:
+Base.start(d::AbstractIntegerInterval) = open_left(d) ? leftendpoint(d)+1 : leftendpoint(d)
+Base.next(d::AbstractIntegerInterval, st) = st, st+1
+Base.done(d::AbstractIntegerInterval, st) =
+    open_right(d) ? st >= rightendpoint(d) : st > rightendpoint(d)
