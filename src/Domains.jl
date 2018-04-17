@@ -1,5 +1,5 @@
 # Domains.jl
-
+__precompile__(true)
 module Domains
 
 # We use static vectors internally
