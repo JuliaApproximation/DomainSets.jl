@@ -38,15 +38,15 @@ The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 struct CircleMap{S,T} <: AbstractMap{S,T}
 end
 
-parameterization(d::Circle) = CircleMap{eltype(d),subeltype(d)}()
+parameterization(d::Circle) = CircleMap{subeltype(d),eltype(d)}()
 
-domain(d::CircleMap{S,T}) where {S,T} = HalfOpenRightInterval{S}(0, 1)
+domain(d::CircleMap{S}) where S = HalfOpenRightInterval{S}(0, 1)
 
-range(m::CircleMap{S,T}) where {S,T} = Circle{T}()
+range(m::CircleMap{S}) where S = Circle{S}()
 
-applymap(m::CircleMap{S,T}, t) where {S,T} = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
+applymap(m::CircleMap{S}, t) where S = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
 
-function gradient(m::CircleMap{S,T}, t) where {S,T}
+function gradient(m::CircleMap{S}, t) where S
     a = 2*S(pi)
     SVector(-a*sin(a*t), a*cos(a*t))
 end
