@@ -87,3 +87,6 @@ show(io::IO, d::FullSpace) = print(io, "the full space with eltype ", eltype(d))
 
 convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()
 convert(::Type{Domain{S}}, ::Type{T}) where {T,S} = convert(Domain{S}, convert(Domain, T))
+
+infimum(d::FullSpace{T}) where {T} = typemin(T)
+supremum(d::FullSpace{T}) where {T} = typemax(T)

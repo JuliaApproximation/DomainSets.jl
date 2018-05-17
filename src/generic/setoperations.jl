@@ -53,6 +53,7 @@ union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 
 # The union of domains corresponds to a logical OR of their characteristic functions
 indomain(x, d::UnionDomain) = mapreduce(d->in(x, d), |, elements(d))
+approx_indomain(x, d::UnionDomain, tol = default_tolerance(d)) = mapreduce(d->approx_in(x, d, tol), |, elements(d))
 
 point_in_domain(d::UnionDomain) = point_in_domain(element(d,1))
 

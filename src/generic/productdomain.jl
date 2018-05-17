@@ -105,6 +105,10 @@ isempty(d::ProductDomain) = mapreduce(isempty, &, elements(d))
 
 point_in_domain(d::ProductDomain) = convert_space(spaceof(d), map(point_in_domain, elements(d)))
 
+infimum(d::ProductDomain) = convert_space(spaceof(d), map(infimum, elements(d)))
+supremum(d::ProductDomain) = convert_space(spaceof(d), map(supremum, elements(d)))
+
+
 function show(io::IO, t::ProductDomain)
     L = nb_elements(t)
     for i in 1:L-1
