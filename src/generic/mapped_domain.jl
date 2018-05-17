@@ -47,7 +47,7 @@ struct ForwardMappedDomain{F,D,T} <: MappedDomain{D,T}
     fwmap   ::  F
 end
 
-ForwardMappedDomain(source::Domain{S}, fwmap::AbstractMap{T,S}) where {T,S} =
+ForwardMappedDomain(source::Domain{S}, fwmap::AbstractMap{S,T}) where {S,T} =
     ForwardMappedDomain{typeof(fwmap),typeof(source),T}(source, fwmap)
 
 forward_map(d::ForwardMappedDomain) = d.fwmap
@@ -101,7 +101,7 @@ struct InverseMappedDomain{F,D,T} <: MappedDomain{D,T}
     invmap  ::  F
 end
 
-InverseMappedDomain(source::Domain{T}, invmap::AbstractMap{T,S}) where {S,T} =
+InverseMappedDomain(source::Domain{T}, invmap::AbstractMap{S,T}) where {S,T} =
     InverseMappedDomain{typeof(invmap),typeof(source),S}(source, invmap)
 
 function InverseMappedDomain(source::Domain{T}, invmap) where {T}
@@ -137,7 +137,7 @@ end
 
 BidirectionalMappedDomain(source::Domain, fwmap::AbstractMap) = BidirectionalMappedDomain(source, fwmap, inv(fwmap))
 
-BidirectionalMappedDomain(source::Domain{S}, fwmap::AbstractMap{T,S}, invmap::AbstractMap{S,T}) where {S,T} =
+BidirectionalMappedDomain(source::Domain{S}, fwmap::AbstractMap{S,T}, invmap::AbstractMap{T,S}) where {S,T} =
     BidirectionalMappedDomain{typeof(fwmap),typeof(invmap),typeof(source),T}(source, fwmap, invmap)
 
 forward_map(d::BidirectionalMappedDomain) = d.fwmap

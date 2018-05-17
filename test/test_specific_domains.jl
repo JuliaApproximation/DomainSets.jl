@@ -137,6 +137,17 @@ function test_interval(T = Float64)
     @test !isopen(d)
     @test iscompact(d)
 
+    @test convert(Domain, d) ≡ d
+    @test convert(Domain{T}, d) ≡ d
+    @test convert(AbstractInterval, d) ≡ d
+    @test convert(AbstractInterval{T}, d) ≡ d
+    @test convert(UnitInterval, d) ≡ d
+    @test convert(UnitInterval{T}, d) ≡ d
+    @test convert(Domain{Float64}, d) ≡ UnitInterval()
+    @test convert(AbstractInterval{Float64}, d) ≡ UnitInterval()
+    @test convert(UnitInterval{Float64}, d) ≡ UnitInterval()
+
+
     d = ChebyshevInterval{T}()
     @test leftendpoint(d) == -one(T)
     @test rightendpoint(d) == one(T)
@@ -146,6 +157,16 @@ function test_interval(T = Float64)
     @test isclosed(d)
     @test !isopen(d)
     @test iscompact(d)
+
+    @test convert(Domain, d) ≡ d
+    @test convert(Domain{T}, d) ≡ d
+    @test convert(AbstractInterval, d) ≡ d
+    @test convert(AbstractInterval{T}, d) ≡ d
+    @test convert(ChebyshevInterval, d) ≡ d
+    @test convert(ChebyshevInterval{T}, d) ≡ d
+    @test convert(Domain{Float64}, d) ≡ ChebyshevInterval()
+    @test convert(AbstractInterval{Float64}, d) ≡ ChebyshevInterval()
+    @test convert(ChebyshevInterval{Float64}, d) ≡ ChebyshevInterval()
 
     d = halfline(T)
     @test leftendpoint(d) == zero(T)
@@ -405,6 +426,61 @@ function test_interval(T = Float64)
     @test_throws ArgumentError maximum(d)
     @test_throws ArgumentError infimum(d)
     @test_throws ArgumentError supremum(d)
+
+    # - iteration over intervals
+    ## for integers
+    I = ClosedInterval{Int}(1,1)
+    @test cardinality(I) == 1
+    I = ClosedInterval{Int}(1,5)
+    @test cardinality(I) == 5
+    I = OpenInterval{Int}(1,1)
+    @test cardinality(I) == 0
+    I = OpenInterval{Int}(1,5)
+    @test cardinality(I) == 3
+    ## for floats
+    I = ClosedInterval(1.0,1.0)
+    @test cardinality(I) == 1
+    I = OpenInterval(1.0,1.0)
+    @test cardinality(I) == 0
+    I = ClosedInterval(0.0,1e-316)
+    @test cardinality(I) == 20240226
+    I = OpenInterval(0.0,1e-316)
+    @test cardinality(I) == 20240224
+
+    # - convert
+    d = interval(zero(T), one(T))
+    @test d ≡ Interval(zero(T), one(T))
+    @test d ≡ ClosedInterval(zero(T), one(T))
+
+    @test convert(Domain, d) ≡ d
+    @test Domain(d) ≡ d
+    @test convert(Domain{Float32}, d) ≡ interval(0f0, 1f0)
+    @test Domain{Float32}(d) ≡ interval(0f0, 1f0)
+    @test convert(Domain{Float64}, d) ≡ interval(0.0, 1.0)
+    @test Domain{Float64}(d) ≡ interval(0.0, 1.0)
+    @test convert(Domain, zero(T)..one(T)) ≡ d
+    @test Domain(zero(T)..one(T)) ≡ d
+    @test convert(Domain{T}, zero(T)..one(T)) ≡ d
+    @test Domain{T}(zero(T)..one(T)) ≡ d
+    @test convert(AbstractInterval, zero(T)..one(T)) ≡ d
+    @test AbstractInterval(zero(T)..one(T)) ≡ d
+    @test convert(AbstractInterval{T}, zero(T)..one(T)) ≡ d
+    @test AbstractInterval{T}(zero(T)..one(T)) ≡ d
+    @test convert(Interval, zero(T)..one(T)) ≡ d
+    @test Interval(zero(T)..one(T)) ≡ d
+    @test convert(ClosedInterval, zero(T)..one(T)) ≡ d
+    @test ClosedInterval(zero(T)..one(T)) ≡ d
+    @test convert(ClosedInterval{T}, zero(T)..one(T)) ≡ d
+    @test ClosedInterval{T}(zero(T)..one(T)) ≡ d
+
+
+    # tests conversion from other types
+    @test convert(Domain{T}, 0..1) ≡ d
+    @test Domain{T}(0..1) ≡ d
+    @test convert(AbstractInterval{T}, 0..1) ≡ d
+    @test AbstractInterval{T}(0..1) ≡ d
+    @test convert(ClosedInterval{T}, 0..1) ≡ d
+    @test ClosedInterval{T}(0..1) ≡ d
 end
 
 function test_unitball()
@@ -473,6 +549,26 @@ function test_sphere()
     S = sphere(2., v[1.,1.,1.])
     @test approx_in(v[1.+2*cos(1.),1.+2*sin(1.),1.], S)
     @test !approx_in(v[4.,1.,5.], S)
+
+    # Create an ellipse, the curve
+    E = ellipse(2.0, 4.0)
+    @test v[2.0,0.0] ∈ E
+    @test v[0.0,4.0] ∈ E
+    @test v[2.0+1e-10,0.0] ∉ E
+    @test v[0.0,0.0] ∉ E
+    E = ellipse(1, 2.0)
+    @test eltype(E) == SVector{2,Float64}
+
+    # Create an ellipse, the domain with volume
+    E2 = ellipse_shape(2.0, 4.0)
+    @test v[2.0,0.0] ∈ E2
+    @test v[0.0,4.0] ∈ E2
+    @test v[2.0+1e-10,0.0] ∉ E2
+    @test v[0.0,0.0] ∈ E2
+    @test v[1.0,1.0] ∈ E2
+
+    E2 = ellipse_shape(1, 2.0)
+    @test eltype(E) == SVector{2,Float64}
 end
 
 function test_cube()
@@ -726,8 +822,8 @@ end
 function test_embedded_domain()
     println("- embedded domains")
     i = interval(0.0, 1.0)
-    e = embedding_map(Complex{Float64}, Float64)
-    r = restriction_map(Float64, Complex{Float64})
+    e = embedding_map(Float64, Complex{Float64})
+    r = restriction_map(Complex{Float64}, Float64)
     ei = Domains.forwardmap_domain(e, i)
 
     @test 0.5+1im ∉ ei

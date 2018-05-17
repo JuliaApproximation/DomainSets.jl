@@ -168,10 +168,6 @@ function test_basic_spaces()
     @test issubspace(Z, Z)
     @test issubspace(Z, AnySpace)
     @test !issubspace(AnySpace, Z)
-    println("issubspace not implemented")
-      # @test issubspace(N, Z)
-      # @test !issubspace(Z, N)
-    # Duplication
 
     @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}))
     @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))

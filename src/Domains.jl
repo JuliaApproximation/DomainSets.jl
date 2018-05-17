@@ -1,10 +1,10 @@
 # Domains.jl
-
+__precompile__(true)
 module Domains
 
 # We use static vectors internally
 using StaticArrays
-
+import IntervalSets
 
 ################################
 ## Exhaustive list of imports
@@ -39,6 +39,10 @@ import Base: show
 
 # Various
 import Base: isopen, Bool
+
+# IntervalSets
+import IntervalSets: (..)
+export ..
 
 
 ################################
@@ -140,12 +144,13 @@ export real_line, halfline, negative_halfline, interval, open_interval,
     closed_interval, unitinterval
 export leftendpoint, rightendpoint, open_left, open_right
 export similar_interval
+export cardinality
 # from domains/simple.jl
 export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere, Point
 export disk, ball, cube, simplex, cylinder, rectangle
 # from domains/circle.jl
 export Circle, Sphere
-export circle, sphere
+export circle, sphere, ellipse, ellipse_shape
 export parameterization, gradient
 
 include("util/common.jl")

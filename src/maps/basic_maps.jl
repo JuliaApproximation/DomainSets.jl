@@ -21,7 +21,7 @@ islinear(::IdentityMap) = true
 """
 The constant map `f(x) = c`.
 """
-struct ConstantMap{T,S} <: AbstractMap{T,S}
+struct ConstantMap{S,T} <: AbstractMap{S,T}
     c   ::  T
 end
 
