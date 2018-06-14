@@ -78,9 +78,11 @@ export ProductSpace
 ## Maps
 
 # from maps/maps.jl
-export AbstractMap, applymap, apply_inverse, jacobian, linearize
+export AbstractMap, applymap, jacobian, linearize
 export domaintype, codomaintype
 export left_inverse, right_inverse
+export apply_inverse, apply_left_inverse, apply_right_inverse
+export image
 # from maps/composite_map.jl
 export CompositeMap
 export ∘

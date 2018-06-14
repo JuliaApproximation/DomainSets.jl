@@ -42,7 +42,7 @@ parameterization(d::Circle) = CircleMap{subeltype(d),eltype(d)}()
 
 domain(d::CircleMap{S}) where S = HalfOpenRightInterval{S}(0, 1)
 
-range(m::CircleMap{S}) where S = Circle{S}()
+image(m::CircleMap{S}) where S = Circle{S}()
 
 applymap(m::CircleMap{S}, t) where S = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
 
