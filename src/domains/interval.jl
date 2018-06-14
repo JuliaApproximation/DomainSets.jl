@@ -310,7 +310,7 @@ for STyp in (:Domain, :AbstractInterval, :FixedInterval),
         Typ in (:ChebyshevInterval, :UnitInterval, :Halfline, :NegativeHalfline)
     @eval begin
         convert(::Type{$STyp{T}}, d::$Typ{T}) where {T} = d
-        convert(::Type{$STyp{T}}, d::$Typ) where T = $Typ{T}
+        convert(::Type{$STyp{T}}, d::$Typ) where T = $Typ{T}()
     end
 end
 
@@ -409,6 +409,33 @@ function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,
     end
 end
 
+# This method is necessary to accomodate unions with fixed intervals
+function union(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T}
+    a1 = leftendpoint(d1)
+    b1 = rightendpoint(d1)
+    a2 = leftendpoint(d2)
+    b2 = rightendpoint(d2)
+    
+
+    if (b1 < a2) || (b2 < a1) || (b1 == a2 && open_right(d1) && open_left(d2)) ||
+                    (b2 == a1 && open_right(d2) && open_left(d1))
+        UnionDomain(d1, d2)
+    else
+        a = min(a1, a2)
+        b = max(b1, b2)
+        if a==a1
+            L = closed_left(d1) ? :closed : :open
+        else
+            L = closed_left(d2) ? :closed : :open
+        end
+        if b==b1
+            R = closed_right(d1) ? :closed : :open
+        else
+            R = closed_right(d2) ? :closed : :open
+        end
+        Interval{L,R,T}(a, b)
+    end
+end
 
 function intersect(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
@@ -440,6 +467,16 @@ function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
 
     @assert b2 ≤ a1
     d1
+end
+
+function *(map::Domains.AffineMap, domain::Domains.AbstractInterval) 
+    le = map*leftendpoint(domain)
+    re = map*rightendpoint(domain)
+    if le<re
+        Domains.similar_interval(domain,le,re)
+    else
+        Domains.similar_interval(domain,re,le)
+    end
 end
 
 
