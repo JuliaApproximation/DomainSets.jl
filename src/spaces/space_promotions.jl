@@ -61,7 +61,7 @@ Returns true if `A` is isomorphic to `B`, and false otherwise.
 isomorphic(a::GSpace, b::GSpace) = isomorphic(typeof(a), typeof(b))
 isomorphic(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} = result(isomorphism(A, B))
 
-"The symbol ≅ (\cong) is a synonym for `isomorphic`."
+"The symbol ≅ (\\cong) is a synonym for `isomorphic`."
 ≅ = isomorphic
 
 
@@ -135,7 +135,7 @@ Returns true if `A` is embedded in `B`.
 embedded(a::GSpace, b::GSpace) = embedded(typeof(a), typeof(b))
 embedded(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} = result(embedding(A, B))
 
-"The symbol ↪ (\hookrightarrow) is a synonym for `embedded`."
+"The symbol ↪ (\\hookrightarrow) is a synonym for `embedded`."
 ↪ = embedded
 
 
@@ -146,8 +146,7 @@ embedded(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} = result(embedding(
 """
 Convert the variable `x` to an element of the space `B`. This is possible if
 the space of `x` is embedded in `B`.
-"""
-# We don't need to do anything if the space of x is B
+"""# We don't need to do anything if the space of x is B
 convert_space(B::Type{GSpace{T}}, x::T) where {T} = x
 
 # If it isn't, then we dispatch on the type of embedding
@@ -191,8 +190,7 @@ of `convert_space(B, x)` for `x` in space `A`. This means that
 `restrict_space(A, convert_space(B, x)) == x` for any `x` in space `A`. However,
 `restrict_space(A, y)` for a `y` not in the range of `convert_space(B, x)` could
 take any value.
-"""
-# We don't need to do anything if the space of x is B
+"""# We don't need to do anything if the space of x is B
 restrict_space(B::Type{GSpace{T}}, x::T) where {T} = x
 
 # If it isn't, then we dispatch on the type of embedding

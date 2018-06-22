@@ -40,16 +40,14 @@ inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse.")
 Return a left inverse of the given map. This left inverse `mli` is not unique,
 but in any case it is such that `(mli ∘ m) * x = x` for each `x` in the domain
 of `m`.
-"""
-# By default we invoke inv
+"""# By default we invoke inv
 left_inverse(m::AbstractMap) = inv(m)
 
 """
 Return a right inverse of the given map. This right inverse `mri` is not unique,
 but in any case it is such that `(m ∘ mri) * y = y` for each `y` in the range
 of `m`.
-"""
-# By default we invoke inv
+"""# By default we invoke inv
 right_inverse(m::AbstractMap) = inv(m)
 
 
@@ -65,8 +63,7 @@ the given map is applied to a variable of type `U`.
 
 For any `AbstractMap{S,T}`, we have that `return_type(map, S) = T`. We also return
 `T` if `U` can be promoted to `T` using Julia's promotion system.
-"""
-# - If the map maps S to T and x has type S, then the result is T
+"""# - If the map maps S to T and x has type S, then the result is T
 return_type(map::AbstractMap{S,T}, ::Type{S}) where {S,T} = T
 # - If x has a type different from S, perhaps it can be promoted to S?
 return_type(map::AbstractMap{S,T}, ::Type{U}) where {S,T,U} = _return_type(map, T, promotes_to(U,S))

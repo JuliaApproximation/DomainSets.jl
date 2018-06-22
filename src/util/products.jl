@@ -20,6 +20,6 @@ cartesianproduct(a::Tuple) = cartesianproduct(a...)
 cartesianproduct(a) = a
 
 # Create a cartesian product with n times the same element
-cartesianproduct(a, n::Int) = n==1? a : cartesianproduct(ntuple(t->a, n)...)
+cartesianproduct(a, n::Int) = (n==1) ? a : cartesianproduct(ntuple(t->a, n)...)
 
 cartesianproduct(a, ::Type{Val{N}}) where {N} = cartesianproduct(ntuple(t->a, Val{N})...)

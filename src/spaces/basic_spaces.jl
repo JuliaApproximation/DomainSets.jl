@@ -49,13 +49,13 @@ similar_space(::Type{ArraySpace{N,T}}, ::Type{S}) where {N,T,S} = ArraySpace{N,S
 
 ## Some standard spaces
 
-"The set of integers of type Int (ℤ = \BbbZ)."
+"The set of integers of type Int (ℤ = \\BbbZ)."
 const ℤ = IntegerSpace{Int}
-"The set of rational numbers of type Rational{Int} (ℚ = \BbbQ)."
+"The set of rational numbers of type Rational{Int} (ℚ = \\BbbQ)."
 const ℚ = RationalSpace{Int}
-"The set of reals of type Float64 (ℝ = \BbbR)."
+"The set of reals of type Float64 (ℝ = \\BbbR)."
 const ℝ = RealSpace{Float64}
-"The complex plane with Float64 real and imaginar parts (ℂ = \BbbC)."
+"The complex plane with Float64 real and imaginar parts (ℂ = \\BbbC)."
 const ℂ = ComplexSpace{Float64}
 
 "The space ℝ^1"

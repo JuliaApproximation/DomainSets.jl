@@ -79,7 +79,7 @@ cylinder(::Type{T} = Float64) where {T} = disk(T) × unitinterval(T)
 
 cylinder(radius::T, length::T) where {T} = disk(radius) × interval(0,length)
 
-doc"""
+@doc doc"""
     Point(x)
 
 represents a single point at `x`.

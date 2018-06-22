@@ -58,7 +58,6 @@ can implement `elements` and provide a generic way to access their components.
 
 `nb_elements(t)`: return the number of elements of the composite type `t`
 """
-# Forward declaration
 elements() = nothing
 
 """
@@ -66,16 +65,16 @@ Return the i-th element of a composite structure.
 
 See also: `elements`.
 """
-# By default, we index elements(o)
 element(t, i) = elements(t)[i]
+# By default, we index elements(o)
 
 """
 Return the number of elements of a composite structure.
 
 See also: `elements`.
 """
-# By default, we return length(elements(t))
 nb_elements(t) = length(elements(t))
+# By default, we return length(elements(t))
 
 
 ###############

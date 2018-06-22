@@ -16,7 +16,7 @@ import Base: |, &
 import Base: ∪, ∩
 import Base: ==
 import Base: ∘
-import Base: cross, ×
+import LinearAlgebra: cross, ×
 
 # Set operations
 import Base: intersect, union, setdiff, in, isempty, minimum, maximum
@@ -26,7 +26,7 @@ import Base: size, length, ndims, getindex, eltype, ndims, hash
 import Base: inv
 import Base: isreal
 import Base: zero
-import Base: gradient
+import LinearAlgebra: gradient
 
 # Types, promotions and conversions
 import Base: convert, widen

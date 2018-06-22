@@ -112,8 +112,7 @@ indomain(x, d::FixedInterval) = leftendpoint(d) <= x <= rightendpoint(d)
 """
 Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.
-"""
-# Assume a closed interval by default
+"""# Assume a closed interval by default
 similar_interval(d::FixedInterval{T}, a, b) where {T} = ClosedInterval{T}(a, b)
 
 
@@ -415,7 +414,7 @@ function union(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T}
     b1 = rightendpoint(d1)
     a2 = leftendpoint(d2)
     b2 = rightendpoint(d2)
-    
+
 
     if (b1 < a2) || (b2 < a1) || (b1 == a2 && open_right(d1) && open_left(d2)) ||
                     (b2 == a1 && open_right(d2) && open_left(d1))
@@ -469,7 +468,7 @@ function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     d1
 end
 
-function *(map::Domains.AffineMap, domain::Domains.AbstractInterval) 
+function *(map::Domains.AffineMap, domain::Domains.AbstractInterval)
     le = map*leftendpoint(domain)
     re = map*rightendpoint(domain)
     if le<re

@@ -6,12 +6,12 @@
 # The union of two domains
 ############################
 
-"""
-A `UnionDomain` represents the union of a set of domains.
-"""
 # DD can be any collection type: a Tuple, or a Vector
 # Eventually it will likely be forced to be an AbstractSet
 #
+"""
+A `UnionDomain` represents the union of a set of domains.
+"""
 struct UnionDomain{DD,T} <: Domain{T}
     domains  ::  DD
 end

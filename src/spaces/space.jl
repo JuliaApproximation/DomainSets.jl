@@ -113,8 +113,7 @@ superspaceof(x) = superspace(spaceof(x))
 
 """
 A space `A` is a subspace of space `B` if `B` is a supertype of `A`.
-"""
-# Any space is a subspace of itself
+"""  # Any space is a subspace of itself
 issubspace(A::Type{GeometricSpace{T}}, B::Type{GeometricSpace{T}}) where {T} = true
 # So is AnySpace. This is covered by the line above, but we make it explicit for clarity
 issubspace(A::Type{AnySpace}, B::Type{AnySpace}) = true

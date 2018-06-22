@@ -53,7 +53,7 @@ applymap(m::LinearMap, x) = matrix(m) * x
 inv(m::LinearMap{S,T}) where {S,T} = LinearMap{T,S}(inv(matrix(m)))
 
 # Because StaticArrays does not currently support `pinv` we include a workaround:
-LinAlg.pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
+LinearAlgebra.pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
 
 left_inverse(m::LinearMap{S,T}) where {S,T} =  LinearMap{T,S}(pinv(matrix(m)))
 right_inverse(m::LinearMap{S,T}) where {S,T} = LinearMap{T,S}(pinv(matrix(m)))
