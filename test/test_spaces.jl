@@ -170,8 +170,8 @@ function test_basic_spaces()
     @test !issubspace(AnySpace, Z)
 
     @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}))
-    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))
-    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{Complex128}, GeometricSpace{SVector{2,Float64}}))
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{ComplexF64}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}))
+    @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}))
     @test_throws ErrorException  Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{1,Float64}}, GeometricSpace{Float64})
 end
 

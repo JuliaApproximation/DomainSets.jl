@@ -295,7 +295,13 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 #################################
 # Conversions between intervals
 #################################
+# Avoid depcrecated warning: Warning: Constructors no longer fall back to `convert`.
+# example: A constructor `Domains.AbstractInterval{Float64}(::IntervalSets.ClosedInterval{Float64})` should be defined instead.
 
+(::Type{T})(d::AbstractInterval) where {T<:AbstractInterval} = convert(T, d)
+(::Type{T})(d::IntervalSets.AbstractInterval) where {T<:AbstractInterval} = convert(T, d)
+(::Type{Domain{T}})(d::AbstractInterval) where {T} = convert(Domain{T}, d)
+(::Type{Domain{T}})(d::IntervalSets.AbstractInterval) where {T} = convert(Domain{T}, d)
 
 for STyp in (:Domain, :AbstractInterval)
     @eval begin

@@ -4,6 +4,9 @@ module Domains
 
 # We use static vectors internally
 using StaticArrays
+using Base
+using LinearAlgebra
+using Markdown
 import IntervalSets
 
 ################################

@@ -79,7 +79,7 @@ cylinder(::Type{T} = Float64) where {T} = disk(T) × unitinterval(T)
 
 cylinder(radius::T, length::T) where {T} = disk(radius) × interval(0,length)
 
-@doc doc"""
+md"""
     Point(x)
 
 represents a single point at `x`.
@@ -100,6 +100,7 @@ convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
 
 convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
 
+Domain(d) = convert(Domain, d)
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x

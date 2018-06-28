@@ -1,4 +1,0 @@
-julia 0.7
-StaticArrays 0.3
-IntervalSets 0.0.2
-LinearAlgebra

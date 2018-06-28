@@ -1,7 +1,8 @@
 module test_suite
 
 
-using Base.Test
+using Test
+using LinearAlgebra
 using Domains
 using StaticArrays
 

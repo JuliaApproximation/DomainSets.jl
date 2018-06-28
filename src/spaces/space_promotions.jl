@@ -164,7 +164,7 @@ convert_spaces(x, A, B, ::Type{False}, ::Type{True}, d3) =
 convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{True}) =
     convert_space_via_superspace(x, A, B)
 convert_spaces(x, A, B, ::Type{False}, ::Type{False}, ::Type{False}) =
-    throw(InexactError())
+    throw(InexactError(:convert_spaces, B, x))
 
 
 # Embedding via promotion: promote the type of x using convert
@@ -215,7 +215,7 @@ restrict_spaces2(x, A, B, ::Type{False}, ::Type{True}, d3) =
 restrict_spaces2(x, A, B, ::Type{False}, ::Type{False}, ::Type{True}) =
     restrict_space_via_superspace(x, A, B)
 restrict_spaces2(x, A, B, ::Type{False}, ::Type{False}, ::Type{False}) =
-    throw(InexactError())
+    throw(InexactError(:restrict_spaces, B, x))
 
 
 # Embedding via promotion

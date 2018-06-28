@@ -547,7 +547,7 @@ function test_sphere()
     @test approx_in(v[cos(1.),sin(1.),0.], S)
 
     S = sphere(2., v[1.,1.,1.])
-    @test approx_in(v[1.+2*cos(1.),1.+2*sin(1.),1.], S)
+    @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
     @test !approx_in(v[4.,1.,5.], S)
 
     # Create an ellipse, the curve
