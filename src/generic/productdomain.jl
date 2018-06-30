@@ -110,7 +110,7 @@ supremum(d::ProductDomain) = convert_space(spaceof(d), map(supremum, elements(d)
 
 
 function show(io::IO, t::ProductDomain)
-    L = nb_elements(t)
+    L = numelements(t)
     for i in 1:L-1
         show(io, element(t, i))
         print(io, " x ")

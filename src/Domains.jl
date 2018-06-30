@@ -52,7 +52,7 @@ export ..
 ## Utils
 
 # from util/common.jl
-export elements, element, nb_elements
+export elements, element, numelements
 export TypeFactory
 
 # from util/tensorproducts.jl

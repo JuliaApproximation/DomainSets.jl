@@ -56,7 +56,7 @@ can implement `elements` and provide a generic way to access their components.
 
 `element(t, i)`: return the `i`-th element of the composite type `t`
 
-`nb_elements(t)`: return the number of elements of the composite type `t`
+`numelements(t)`: return the number of elements of the composite type `t`
 """
 # Forward declaration
 elements() = nothing
@@ -75,7 +75,7 @@ Return the number of elements of a composite structure.
 See also: `elements`.
 """
 # By default, we return length(elements(t))
-nb_elements(t) = length(elements(t))
+numelements(t) = length(elements(t))
 
 
 ###############

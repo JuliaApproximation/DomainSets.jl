@@ -60,7 +60,7 @@ point_in_domain(d::UnionDomain) = point_in_domain(element(d,1))
 ==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
 
 function show(io::IO, d::UnionDomain)
-    print(io, "a union of $(nb_elements(d)) domains:\n")
+    print(io, "a union of $(numelements(d)) domains:\n")
     for (i,e) in enumerate(elements(d))
         print(io, "\t$i.\t: ", e, "\n")
     end
@@ -142,8 +142,8 @@ indomain(x, d::IntersectionDomain) = mapreduce(d->in(x, d), &, elements(d))
 (&)(d1::Domain, d2::Domain) = intersect(d1,d2)
 
 function intersect(d1::ProductDomain, d2::ProductDomain)
-    if nb_elements(d1) == nb_elements(d2)
-        ProductDomain([intersect(element(d1,i), element(d2,i)) for i in 1:nb_elements(d1)]...)
+    if numelements(d1) == numelements(d2)
+        ProductDomain([intersect(element(d1,i), element(d2,i)) for i in 1:numelements(d1)]...)
     else
         IntersectionDomain(d1, d2)
     end
@@ -151,7 +151,7 @@ end
 
 
 function show(io::IO, d::IntersectionDomain)
-    print(io, "the intersection of $(nb_elements(d)) domains:\n")
+    print(io, "the intersection of $(numelements(d)) domains:\n")
     print(io, "\t1.\t: ", element(d,1), "\n")
     print(io, "\t2.\t: ", element(d,2), "\n")
 end
