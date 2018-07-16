@@ -11,7 +11,7 @@ end
 
 (m::CartToPolarMap)(x) = applymap(m, x)
 
-applymap(map::CartToPolarMap, x::SVector{2,T}) where {T} = SVector{2,T}(sqrt(x[1]^2+x[2]^2)*2-1, atan2(x[2],x[1])/pi)
+applymap(map::CartToPolarMap, x::SVector{2,T}) where {T} = SVector{2,T}(sqrt(x[1]^2+x[2]^2)*2-1, atan(x[2],x[1])/pi)
 
 inv(map::CartToPolarMap{T}) where {T} = PolarToCartMap{T}()
 

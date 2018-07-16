@@ -71,3 +71,9 @@ return_type(map::AbstractMap{S,T}, ::Type{U}) where {S,T,U} = _return_type(map, 
 _return_type(map, ::Type{T}, ::Type{True}) where {T} = T
 # -- No, it can not. We return Any.
 _return_type(map, ::Type{T}, ::Type{False}) where {T} = Any
+
+# The expected type of the Jacobian of a map for some combination of types
+jac_type(::Type{S},::Type{T}) where {S<:Number,T<:Number} = T
+jac_type(::Type{S},::Type{SVector{M,T}}) where {S<:Number,M,T} = SMatrix{M,1,T,M}
+jac_type(::Type{SVector{N,S}},::Type{T}) where {N,S,T<:Number} = SVector{N,S}
+jac_type(::Type{SVector{N,S}},::Type{SVector{M,T}}) where {N,S,M,T} = SMatrix{M,N,T,M*N}

@@ -1,7 +1,7 @@
 language:
   julia
 julia:
-  - 0.6
+  - 0.7
 env:
   - PLOTS_DEFAULT_BACKEND="plotly"
 notifications:

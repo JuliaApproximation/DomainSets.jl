@@ -55,7 +55,7 @@ export ..
 ## Utils
 
 # from util/common.jl
-export elements, element, nb_elements
+export elements, element, numelements
 export TypeFactory
 
 # from util/tensorproducts.jl
@@ -93,7 +93,7 @@ export ∘
 export ProductMap
 export tensorproduct
 # from maps/basic_maps.jl
-export IdentityMap
+export IdentityMap, ConstantMap
 # from maps/embedding_map.jl
 export embedding_map, restriction_map, isomorphism_map
 # from maps/affine_maps.jl

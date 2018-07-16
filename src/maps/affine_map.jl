@@ -11,6 +11,11 @@ end
 
 jacobian(m::AbstractAffineMap, x) = matrix(m)
 
+function jacobian(m::AbstractAffineMap{S,T}) where {S,T}
+    A = matrix(m) * one(jac_type(S,T))
+    ConstantMap{S,typeof(A)}(A)
+end
+
 islinear(map::AbstractMap) = false
 islinear(map::AbstractAffineMap) = true
 
@@ -67,9 +72,9 @@ struct Translation{T} <: AbstractAffineMap{T,T}
     vector  ::  T
 end
 
-translation_map(vector::T) where {T} = Translation{T}(vector)
+translation_map(vector::T) where T = Translation{T}(vector)
 
-matrix(m::Translation{T}) where {T} = diagm(ones(T))
+matrix(m::Translation{T}) where T = one(jac_type(T,T))
 
 vector(m::Translation) = m.vector
 
@@ -104,7 +109,7 @@ AffineMap(a::SMatrix{M,N,T}, b::SVector{M,T}) where {M,N,T} =
     AffineMap{SVector{N,T},SVector{M,T},typeof(a)}(a, b)
 
 AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
-    AffineMap(eye(SMatrix{N,N,T}), b)
+    AffineMap(SMatrix{N,N,T}(1.0I), b)
 
 matrix(m::AffineMap) = m.a
 

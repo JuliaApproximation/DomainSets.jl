@@ -9,12 +9,12 @@ function test_maps()
 end
 
 function suitable_point_to_map(m)
-  T = domaintype(m)
-  if T <: SVector
-    randvec(eltype(T),length(T))
-  else
-    x = T(rand())
-  end
+    T = domaintype(m)
+    if T <: SVector
+        randvec(eltype(T),length(T))
+    else
+        x = T(rand())
+    end
 end
 
 suitable_point_to_map(m::Domains.EmbeddingMap{S,T}) where {S,T} = one(S)
@@ -117,18 +117,18 @@ function test_maps(T)
 end
 
 function test_scaling_maps(T)
-  test_generic_map(T, scaling_map(T(2)))
+    test_generic_map(T, scaling_map(T(2)))
 
-  test_generic_map(T, scaling_map(T(2)))
-  test_generic_map(T, scaling_map(T(2), T(3)))
-  test_generic_map(T, scaling_map(T(2), T(3), T(4)))
-  test_generic_map(T, scaling_map(T(2), T(3), T(4), T(5)))
+    test_generic_map(T, scaling_map(T(2)))
+    test_generic_map(T, scaling_map(T(2), T(3)))
+    test_generic_map(T, scaling_map(T(2), T(3), T(4)))
+    test_generic_map(T, scaling_map(T(2), T(3), T(4), T(5)))
 end
 
 function test_identity_map(T)
-  test_generic_map(T, IdentityMap{T}())
-  test_generic_map(T, IdentityMap{SVector{2,T}}())
-  @test islinear(IdentityMap{T}())
+    test_generic_map(T, IdentityMap{T}())
+    test_generic_map(T, IdentityMap{SVector{2,T}}())
+    @test islinear(IdentityMap{T}())
 end
 
 function test_rotation_map(T)
