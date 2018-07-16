@@ -10,7 +10,7 @@ before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 before_script:
   - julia -e 'using Pkg'
-  - julia -e 'Pkg.clone(pwd())'
+  - julia -e 'Pkg.add(pwd())'
 script:
   - julia --check-bounds=yes -e 'Pkg.test("Domains", coverage=true)'
 after_success:
