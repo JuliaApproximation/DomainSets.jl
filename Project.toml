@@ -1,6 +1,6 @@
-authors = ["authors"]
 name = "Domains"
 uuid = "a4a0b8aa-7ac0-11e8-2da9-8385f1ed8077"
+authors = ["authors"]
 version = "0.0.1"
 
 [deps]

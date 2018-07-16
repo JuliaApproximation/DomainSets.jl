@@ -3,9 +3,9 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "f3e87ca1e2df8e1e4f82ea504fddf0b9b0894f61"
+git-tree-sha1 = "eb98811a03884748e0e7fc0ceb6849f3bb727ffd"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "0.69.0"
+version = "0.70.0"
 
 [[Dates]]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -65,10 +65,13 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[StaticArrays]]
-deps = ["Compat", "InteractiveUtils", "LinearAlgebra", "Random"]
-git-tree-sha1 = "39adecbac9304fe6991920bd10fc67b67766275f"
+deps = ["InteractiveUtils", "LinearAlgebra", "Random", "Statistics", "Test"]
+git-tree-sha1 = "d998a83bc2cd507e12b08203e7523f2e60ac9ee6"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "0.7.2"
+version = "0.8.2"
+
+[[Statistics]]
+uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[Test]]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
