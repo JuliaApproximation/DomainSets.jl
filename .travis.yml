@@ -9,7 +9,7 @@ notifications:
 before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 before_script:
-  - julia -e 'Pkg.init()'
+  - julia -e 'using Pkg'
   - julia -e 'Pkg.clone(pwd())'
 script:
   - julia --check-bounds=yes -e 'Pkg.test("Domains", coverage=true)'
