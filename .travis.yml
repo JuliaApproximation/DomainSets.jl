@@ -1,17 +1,25 @@
-language:
-  julia
+# language:
+#   julia
+# julia:
+#   - 0.7
+# env:
+#   - PLOTS_DEFAULT_BACKEND="plotly"
+# notifications:
+#   email: false
+# before_install:
+#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+# before_script:
+#   - julia -e 'using Pkg'
+#   - julia -e 'Pkg.add(pwd())'
+# script:
+#   - julia --check-bounds=yes -e 'Pkg.test("Domains", coverage=true)'
+# after_success:
+#   - julia -e 'cd(Pkg.dir("Domains")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+language: julia
+os:
+  - linux
+  - osx
 julia:
-  - 0.7
-env:
-  - PLOTS_DEFAULT_BACKEND="plotly"
+  - nightly
 notifications:
   email: false
-before_install:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-before_script:
-  - julia -e 'using Pkg'
-  - julia -e 'Pkg.add(pwd())'
-script:
-  - julia --check-bounds=yes -e 'Pkg.test("Domains", coverage=true)'
-after_success:
-  - julia -e 'cd(Pkg.dir("Domains")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
