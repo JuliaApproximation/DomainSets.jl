@@ -16,22 +16,22 @@ rightendpoint(d::AbstractInterval) = d.b
 isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
 
 "Is the interval closed at the left endpoint?"
-function closed_left() end
+function isclosed_left() end
 
 "Is the interval closed at the right endpoint?"
-function closed_right() end
+function isclosed_right() end
 
-# open_left and open_right are implemented in terms of closed_* above, so those
+# isopen_left and isopen_right are implemented in terms of closed_* above, so those
 # are the only ones that should be implemented for specific intervals
 "Is the interval open at the left endpoint?"
-open_left(d::AbstractInterval) = !closed_left(d)
+isopen_left(d::AbstractInterval) = !isclosed_left(d)
 
 "Is the interval open at the right endpoint?"
-open_right(d::AbstractInterval) = !closed_right(d)
+isopen_right(d::AbstractInterval) = !isclosed_right(d)
 
 # Only closed if closed at both endpoints, and similar for open
-isclosed(d::AbstractInterval) = closed_left(d) && closed_right(d)
-isopen(d::AbstractInterval) = open_left(d) && open_right(d)
+isclosed(d::AbstractInterval) = isclosed_left(d) && isclosed_right(d)
+isopen(d::AbstractInterval) = isopen_left(d) && isopen_right(d)
 
 
 approx_indomain(x, d::AbstractInterval, tolerance) =
@@ -63,9 +63,9 @@ end
 function ∂(d::AbstractInterval{T}) where {T}
     if isclosed(d)
         Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
-    elseif closed_left(d)
+    elseif isclosed_left(d)
         Point(leftendpoint(d))
-    elseif closed_right(d)
+    elseif isclosed_right(d)
         Point(rightendpoint(d))
     else
         EmptySpace{T}()
@@ -79,7 +79,7 @@ for op in (:leftendpoint, :rightendpoint)
     @eval $op(d::MappedInterval) = forward_map(d) * $op(source(d))
 end
 
-for op in (:open_left, :open_right, :closed_left, :closed_right)
+for op in (:isopen_left, :isopen_right, :isclosed_left, :isclosed_right)
     @eval $op(d::MappedInterval) = $op(source(d))
 end
 
@@ -100,8 +100,8 @@ abstract type FixedInterval{T} <: AbstractInterval{T}
 end
 
 # We assume by default that fixed intervals are closed. Override if they aren't.
-closed_left(d::FixedInterval) = true
-closed_right(d::FixedInterval) = true
+isclosed_left(d::FixedInterval) = true
+isclosed_right(d::FixedInterval) = true
 
 # We also assume that the domain is compact. Override if it is not.
 iscompact(d::FixedInterval) = true
@@ -160,7 +160,7 @@ minimum(d::Halfline) = infimum(d)
 maximum(d::Halfline) = throw(ArgumentError("$d is unbounded. Use supremum."))
 
 # Open at the right endpoint
-closed_right(d::Halfline) = false
+isclosed_right(d::Halfline) = false
 
 iscompact(d::Halfline) = false
 
@@ -189,8 +189,8 @@ minimum(d::NegativeHalfline) = throw(ArgumentError("$d is unbounded. Use infimum
 maximum(d::NegativeHalfline) = supremum(d)
 
 # Open at both endpoints
-closed_right(d::NegativeHalfline) = false
-closed_left(d::NegativeHalfline) = false
+isclosed_right(d::NegativeHalfline) = false
+isclosed_left(d::NegativeHalfline) = false
 
 iscompact(d::NegativeHalfline) = false
 
@@ -272,10 +272,10 @@ maximum(d::Interval{L,:closed}) where L = supremum(d)
 maximum(d::Interval{L,:open}) where L = throw(ArgumentError("$d is open on the right. Use supremum."))
 
 # Open and closed at endpoints
-closed_left(d::Interval{:closed}) = true
-closed_left(d::Interval{:open}) = false
-closed_right(d::Interval{L,:closed}) where {L} = true
-closed_right(d::Interval{L,:open}) where {L} = false
+isclosed_left(d::Interval{:closed}) = true
+isclosed_left(d::Interval{:open}) = false
+isclosed_right(d::Interval{L,:closed}) where {L} = true
+isclosed_right(d::Interval{L,:open}) where {L} = false
 
 isempty(d::Union{OpenInterval,HalfOpenLeftInterval,HalfOpenRightInterval}) = leftendpoint(d) ≥ rightendpoint(d)
 
@@ -422,21 +422,21 @@ function union(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T}
     b2 = rightendpoint(d2)
 
 
-    if (b1 < a2) || (b2 < a1) || (b1 == a2 && open_right(d1) && open_left(d2)) ||
-                    (b2 == a1 && open_right(d2) && open_left(d1))
+    if (b1 < a2) || (b2 < a1) || (b1 == a2 && isopen_right(d1) && isopen_left(d2)) ||
+                    (b2 == a1 && isopen_right(d2) && isopen_left(d1))
         UnionDomain(d1, d2)
     else
         a = min(a1, a2)
         b = max(b1, b2)
         if a==a1
-            L = closed_left(d1) ? :closed : :open
+            L = isclosed_left(d1) ? :closed : :open
         else
-            L = closed_left(d2) ? :closed : :open
+            L = isclosed_left(d2) ? :closed : :open
         end
         if b==b1
-            R = closed_right(d1) ? :closed : :open
+            R = isclosed_right(d1) ? :closed : :open
         else
-            R = closed_right(d2) ? :closed : :open
+            R = isclosed_right(d2) ? :closed : :open
         end
         Interval{L,R,T}(a, b)
     end
@@ -493,10 +493,10 @@ end
 #
 # # - For floating point types: use nextfloat
 # Base.start(d::AbstractFloatInterval) =
-#     open_left(d) ? nextfloat(leftendpoint(d)) : leftendpoint(d)
+#     isopen_left(d) ? nextfloat(leftendpoint(d)) : leftendpoint(d)
 # Base.next(d::AbstractFloatInterval, st) = st, nextfloat(st)
 # Base.done(d::AbstractFloatInterval, st) =
-#     open_right(d) ? st >= rightendpoint(d) : st > rightendpoint(d)
+#     isopen_right(d) ? st >= rightendpoint(d) : st > rightendpoint(d)
 #
 # "Compute the cardinality of a domain by iterating over its elements."
 # function cardinality(d::Union{AbstractFloatInterval,AbstractIntegerInterval})
@@ -508,7 +508,7 @@ end
 # end
 #
 # # - For integer types:
-# Base.start(d::AbstractIntegerInterval) = open_left(d) ? leftendpoint(d)+1 : leftendpoint(d)
+# Base.start(d::AbstractIntegerInterval) = isopen_left(d) ? leftendpoint(d)+1 : leftendpoint(d)
 # Base.next(d::AbstractIntegerInterval, st) = st, st+1
 # Base.done(d::AbstractIntegerInterval, st) =
-#     open_right(d) ? st >= rightendpoint(d) : st > rightendpoint(d)
+#     isopen_right(d) ? st >= rightendpoint(d) : st > rightendpoint(d)

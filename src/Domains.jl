@@ -28,7 +28,8 @@ import Base: ==
 import Base: ∘
 
 # Set operations
-import Base: intersect, union, setdiff, in, isempty, minimum, maximum
+import Base: intersect, union, setdiff, in, isempty, minimum, maximum,
+    issubset
 
 # Arrays
 import Base: size, length, ndims, getindex, eltype, ndims, hash
