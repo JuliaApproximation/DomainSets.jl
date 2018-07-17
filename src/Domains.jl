@@ -3,10 +3,17 @@ __precompile__(true)
 module Domains
 
 # We use static vectors internally
+
 using StaticArrays
 using Base
-using LinearAlgebra
-using Markdown
+
+if VERSION < v"0.7-"
+    import Base: cross, ×, gradient, pinv
+else
+    using LinearAlgebra
+    import LinearAlgebra: cross, ×, gradient, pinv
+end
+
 import IntervalSets
 
 ################################
@@ -19,7 +26,6 @@ import Base: |, &
 import Base: ∪, ∩
 import Base: ==
 import Base: ∘
-import LinearAlgebra: cross, ×
 
 # Set operations
 import Base: intersect, union, setdiff, in, isempty, minimum, maximum
@@ -29,7 +35,6 @@ import Base: size, length, ndims, getindex, eltype, ndims, hash
 import Base: inv
 import Base: isreal
 import Base: zero
-import LinearAlgebra: gradient
 
 # Types, promotions and conversions
 import Base: convert, widen

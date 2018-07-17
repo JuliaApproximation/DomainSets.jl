@@ -1,8 +1,13 @@
 module test_suite
 
+if VERSION < v"0.7-"
+    using Base.Test
+    const ComplexF64 = Complex{Float64}
+else
+    using Test
+    using LinearAlgebra
+end
 
-using Test
-using LinearAlgebra
 using Domains
 using StaticArrays
 

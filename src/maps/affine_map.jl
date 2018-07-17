@@ -58,7 +58,7 @@ applymap(m::LinearMap, x) = matrix(m) * x
 inv(m::LinearMap{S,T}) where {S,T} = LinearMap{T,S}(inv(matrix(m)))
 
 # Because StaticArrays does not currently support `pinv` we include a workaround:
-LinearAlgebra.pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
+pinv(m::SMatrix{M,N}) where {M,N}  = SMatrix{N,M}(pinv(convert(Array,m)))
 
 left_inverse(m::LinearMap{S,T}) where {S,T} =  LinearMap{T,S}(pinv(matrix(m)))
 right_inverse(m::LinearMap{S,T}) where {S,T} = LinearMap{T,S}(pinv(matrix(m)))
@@ -108,8 +108,13 @@ AffineMap(a::T, b::T) where {T} = AffineMap{T,T,T}(a, b)
 AffineMap(a::SMatrix{M,N,T}, b::SVector{M,T}) where {M,N,T} =
     AffineMap{SVector{N,T},SVector{M,T},typeof(a)}(a, b)
 
-AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
-    AffineMap(SMatrix{N,N,T}(1.0I), b)
+if VERSION < v"0.7-"
+    AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
+         AffineMap(eye(SMatrix{N,N,T}), b)
+else
+    AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
+         AffineMap(SMatrix{N,N,T}(1.0I), b)
+end
 
 matrix(m::AffineMap) = m.a
 
