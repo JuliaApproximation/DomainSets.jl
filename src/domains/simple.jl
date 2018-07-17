@@ -146,3 +146,5 @@ function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
 
     return d
 end
+
+issubset(p::Point, d::Domain) = p.x ∈ d

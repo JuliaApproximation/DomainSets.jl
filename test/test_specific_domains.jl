@@ -427,7 +427,14 @@ function test_interval(T = Float64)
     @test_throws ArgumentError infimum(d)
     @test_throws ArgumentError supremum(d)
 
-    ## Disable tests until semantics of iteration over domains are defined
+    # Subset relations of intervals
+    @test issubset(interval(zero(T),one(T)), interval(zero(T), 2*one(T)))
+    @test issubset(interval(zero(T),one(T)), interval(zero(T), one(T)))
+    @test issubset(open_interval(zero(T),one(T)), closed_interval(zero(T), one(T)))
+    @test !issubset(closed_interval(zero(T),one(T)), open_interval(zero(T), one(T)))
+    @test issubset(UnitInterval{T}(), ChebyshevInterval{T}())
+
+    ## Disable iteration tests until semantics of iteration over domains are defined
     # # - iteration over intervals
     # ## for integers
     # I = ClosedInterval{Int}(1,1)

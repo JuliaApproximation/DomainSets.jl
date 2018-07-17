@@ -398,6 +398,34 @@ show(io::IO, d::Interval{:open,:closed}) = print(io, "the interval (", leftendpo
 show(io::IO, d::Interval{:open,:open}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), ")")
 
 
+function issubset(d1::AbstractInterval, d2::AbstractInterval)
+    a1 = leftendpoint(d1)
+    b1 = rightendpoint(d1)
+    a2 = leftendpoint(d2)
+    b2 = rightendpoint(d2)
+
+    # We look at the left endpoint first
+    result_left = false
+    if a2 < a1
+        result_left = true
+    elseif (a1 == a2) && (isclosed_left(d2) || (isopen_left(d1) && isopen_left(d2)))
+        result_left = true
+    else
+        result_left = false
+    end
+    if !result_left
+        # Conditions at left endpoint not satisfied, we can stop
+        return false
+    end
+    if b2 > b1
+        return true
+    elseif b1 == b2 && (isclosed_right(d2) || (isopen_right(d1) && isopen_right(d2)))
+        return true
+    else
+        return false
+    end
+end
+
 function union(d1::Interval{L1,R1,T}, d2::Interval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
     b1 = rightendpoint(d1)
