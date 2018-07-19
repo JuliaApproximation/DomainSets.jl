@@ -128,7 +128,7 @@ end
 
 (m::AffineMap)(x) = applymap(m, x)
 
-applymap(m::AffineMap, x) = m.a * x + m.b
+applymap(m::AffineMap, x) = m.a * x .+ m.b
 
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap{S,T}) where {S,T} = AffineMap{T,S}(inv(m.a), -inv(m.a)*m.b)

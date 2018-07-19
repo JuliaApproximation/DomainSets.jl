@@ -66,7 +66,7 @@ range(m::AngleMap{S,T}) where {S,T} = HalfOpenRightInterval{T}(0, 1)
 
 function applymap(m::AngleMap, x)
     twopi = 2*convert(codomaintype(m), pi)
-    θ = atan2(x[2],x[1])
+    θ = (VERSION < v"0.7-") ? atan2(x[2],x[1]) : atan(x[2],x[1])
     if θ < 0
         # atan2 returns an angle in (-π,π], convert to [0,2π) using periodicity.
         θ += twopi
