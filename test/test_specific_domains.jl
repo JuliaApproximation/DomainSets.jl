@@ -427,25 +427,33 @@ function test_interval(T = Float64)
     @test_throws ArgumentError infimum(d)
     @test_throws ArgumentError supremum(d)
 
-    # - iteration over intervals
-    ## for integers
-    I = ClosedInterval{Int}(1,1)
-    @test cardinality(I) == 1
-    I = ClosedInterval{Int}(1,5)
-    @test cardinality(I) == 5
-    I = OpenInterval{Int}(1,1)
-    @test cardinality(I) == 0
-    I = OpenInterval{Int}(1,5)
-    @test cardinality(I) == 3
-    ## for floats
-    I = ClosedInterval(1.0,1.0)
-    @test cardinality(I) == 1
-    I = OpenInterval(1.0,1.0)
-    @test cardinality(I) == 0
-    I = ClosedInterval(0.0,1e-316)
-    @test cardinality(I) == 20240226
-    I = OpenInterval(0.0,1e-316)
-    @test cardinality(I) == 20240224
+    # Subset relations of intervals
+    @test issubset(interval(zero(T),one(T)), interval(zero(T), 2*one(T)))
+    @test issubset(interval(zero(T),one(T)), interval(zero(T), one(T)))
+    @test issubset(open_interval(zero(T),one(T)), closed_interval(zero(T), one(T)))
+    @test !issubset(closed_interval(zero(T),one(T)), open_interval(zero(T), one(T)))
+    @test issubset(UnitInterval{T}(), ChebyshevInterval{T}())
+
+    ## Disable iteration tests until semantics of iteration over domains are defined
+    # # - iteration over intervals
+    # ## for integers
+    # I = ClosedInterval{Int}(1,1)
+    # @test cardinality(I) == 1
+    # I = ClosedInterval{Int}(1,5)
+    # @test cardinality(I) == 5
+    # I = OpenInterval{Int}(1,1)
+    # @test cardinality(I) == 0
+    # I = OpenInterval{Int}(1,5)
+    # @test cardinality(I) == 3
+    # ## for floats
+    # I = ClosedInterval(1.0,1.0)
+    # @test cardinality(I) == 1
+    # I = OpenInterval(1.0,1.0)
+    # @test cardinality(I) == 0
+    # I = ClosedInterval(0.0,1e-316)
+    # @test cardinality(I) == 20240226
+    # I = OpenInterval(0.0,1e-316)
+    # @test cardinality(I) == 20240224
 
     # - convert
     d = interval(zero(T), one(T))

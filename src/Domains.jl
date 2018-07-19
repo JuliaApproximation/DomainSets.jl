@@ -28,7 +28,8 @@ import Base: ==
 import Base: ∘
 
 # Set operations
-import Base: intersect, union, setdiff, in, isempty, minimum, maximum
+import Base: intersect, union, setdiff, in, isempty, minimum, maximum,
+    issubset
 
 # Arrays
 import Base: size, length, ndims, getindex, eltype, ndims, hash
@@ -152,7 +153,7 @@ export euclideanspace, emptyspace, fullspace
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
 export real_line, halfline, negative_halfline, interval, open_interval,
     closed_interval, unitinterval
-export leftendpoint, rightendpoint, open_left, open_right
+export leftendpoint, rightendpoint, isopen_left, isopen_right
 export similar_interval
 export cardinality
 # from domains/simple.jl
