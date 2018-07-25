@@ -58,9 +58,19 @@ function point_in_domain(d::AbstractInterval)
     center(d)
 end
 
+==(d1::AbstractInterval, d2::AbstractInterval) =
+    isopen_left(d1) == isopen_left(d2) &&
+    isopen_right(d1) == isopen_right(d2) &&
+    leftendpoint(d1) == leftendpoint(d2) &&
+    rightendpoint(d1) == rightendpoint(d2)
+
+isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
+    isapprox(leftendpoint(d1), leftendpoint(d2); kwds...) &&
+    isapprox(rightendpoint(d1), rightendpoint(d2); kwds...)
+
 # This routine it not type-stable as written on the level of abstractinterval,
 # but it is convenient here since it can be implemented generically.
-function ∂(d::AbstractInterval{T}) where {T}
+function boundary(d::AbstractInterval{T}) where {T}
     if isclosed(d)
         Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
     elseif isclosed_left(d)
@@ -391,7 +401,12 @@ for op in (:*, :\)
 end
 
 
-show(io::IO, d::AbstractInterval) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::AbstractInterval) = print(io, "an interval of type ", typeof(d), " ",
+                                            isopen_left(d) ? "(" : "[", leftendpoint(d), ", ",
+                                            rightendpoint(d), isopen_right(d) ? ")" : "]")
+show(io::IO, d::ChebyshevInterval) = print(io,  "the Chebyshev interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::UnitInterval) = print(io,  "the unit interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
+show(io::IO, d::Halfline) = print(io,  "the half-line [", leftendpoint(d), ", ", rightendpoint(d), ")")                                          
 show(io::IO, d::Interval{:closed,:closed}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
 show(io::IO, d::Interval{:closed,:open}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), ")")
 show(io::IO, d::Interval{:open,:closed}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), "]")

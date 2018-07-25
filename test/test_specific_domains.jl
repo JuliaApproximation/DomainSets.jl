@@ -359,6 +359,10 @@ function test_interval(T = Float64)
     @test leftendpoint(d4) == zero(T)
     @test rightendpoint(d4) == T(1)/T(2)
 
+    # Equality
+    @test ChebyshevInterval() == ClosedInterval(-1.0,1.0) == ClosedInterval(-1,1)
+    @test ChebyshevInterval() ≠ Interval{:closed,:open}(-1.0,1.0)
+    @test ChebyshevInterval() ≈ ClosedInterval(-1.0,1.0) ≈ Interval{:closed,:open}(-1.0,1.0)
 
     # Union and intersection of intervals
     i1 = interval(zero(T), one(T))
@@ -605,7 +609,7 @@ function test_mapped_domain()
 
     D = cube(Val{2})
     show(io,rotate(D,1.))
-    @test String(take!(io)) == "A mapped domain based on the interval [0.0, 1.0] x the interval [0.0, 1.0]"
+    @test String(take!(io)) == "A mapped domain based on the unit interval [0.0, 1.0] x the unit interval [0.0, 1.0]"
 
     D = rotate(cube(Val{2}),pi)
     @test v[-0.9, -0.9] ∈ D

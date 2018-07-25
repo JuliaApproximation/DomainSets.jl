@@ -24,7 +24,7 @@ import IntervalSets
 import Base: *, +, -, /, \, ^
 import Base: |, &
 import Base: ∪, ∩
-import Base: ==
+import Base: ==, isapprox
 import Base: ∘
 
 # Set operations

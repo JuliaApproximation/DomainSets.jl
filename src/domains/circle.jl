@@ -13,7 +13,7 @@ indomain(x, ::UnitSphere) = norm(x) == 1
 
 approx_indomain(x, ::UnitSphere, tolerance) = 1-tolerance <= norm(x) <= 1+tolerance
 
-∂(::UnitBall{N,T}) where {N,T} = UnitSphere{N,T}()
+boundary(::UnitBall{N,T}) where {N,T} = UnitSphere{N,T}()
 
 circle(::Type{T} = Float64) where {T} = Circle{T}()
 circle(radius::Number) = radius * circle(float(typeof(radius)))

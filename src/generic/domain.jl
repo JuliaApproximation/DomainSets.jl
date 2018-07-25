@@ -85,5 +85,5 @@ infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the in
 supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
 
 # override minimum and maximum for closed sets
-
-boundary(d::Domain) = ∂(d)
+function boundary end
+const ∂ = boundary
