@@ -95,7 +95,8 @@ function test_point()
 
     @test d1 == d2
 
-    convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
+    @test convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
+    @test Number(Point(1)) ≡ convert(Number, Point(1)) ≡ convert(Int, Point(1)) ≡ 1
 end
 
 
