@@ -313,6 +313,9 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 (::Type{Domain{T}})(d::AbstractInterval) where {T} = convert(Domain{T}, d)
 (::Type{Domain{T}})(d::IntervalSets.AbstractInterval) where {T} = convert(Domain{T}, d)
 
+leftendpoint(d::IntervalSets.ClosedInterval) = d.left
+rightendpoint(d::IntervalSets.ClosedInterval) = d.right
+
 for STyp in (:Domain, :AbstractInterval)
     @eval begin
         convert(::Type{$STyp{T}}, d::Interval{L,R,T}) where {L,R,T} = d
@@ -406,7 +409,7 @@ show(io::IO, d::AbstractInterval) = print(io, "an interval of type ", typeof(d),
                                             rightendpoint(d), isopen_right(d) ? ")" : "]")
 show(io::IO, d::ChebyshevInterval) = print(io,  "the Chebyshev interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
 show(io::IO, d::UnitInterval) = print(io,  "the unit interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
-show(io::IO, d::Halfline) = print(io,  "the half-line [", leftendpoint(d), ", ", rightendpoint(d), ")")                                          
+show(io::IO, d::Halfline) = print(io,  "the half-line [", leftendpoint(d), ", ", rightendpoint(d), ")")
 show(io::IO, d::Interval{:closed,:closed}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
 show(io::IO, d::Interval{:closed,:open}) = print(io, "the interval [", leftendpoint(d), ", ", rightendpoint(d), ")")
 show(io::IO, d::Interval{:open,:closed}) = print(io, "the interval (", leftendpoint(d), ", ", rightendpoint(d), "]")
