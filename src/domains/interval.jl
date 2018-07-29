@@ -4,8 +4,8 @@
 ### An interval
 ##################
 
-abstract type AbstractInterval{T} <: Domain{T}
-end
+abstract type AbstractInterval{T} <: Domain{T} end
+abstract type TypedEndpointsInterval{L,R,T} <: AbstractInterval{T} end
 
 "The left endpoint of the interval."
 leftendpoint(d::AbstractInterval) = d.a
@@ -17,9 +17,11 @@ isempty(d::AbstractInterval) = leftendpoint(d) > rightendpoint(d)
 
 "Is the interval closed at the left endpoint?"
 function isclosed_left() end
+isclosed_left(::TypedEndpointsInterval{:closed}) = true
 
 "Is the interval closed at the right endpoint?"
 function isclosed_right() end
+isclosed_right(::TypedEndpointsInterval{_,:closed}) where _ = true
 
 # isopen_left and isopen_right are implemented in terms of closed_* above, so those
 # are the only ones that should be implemented for specific intervals
@@ -106,29 +108,18 @@ The abstract type `FixedInterval` is the supertype of intervals with endpoints
 determined by the type, rather than field values. Examples include `UnitInterval`
 and `ChebyshevInterval`.
 """
-abstract type FixedInterval{T} <: AbstractInterval{T}
-end
-
-# We assume by default that fixed intervals are closed. Override if they aren't.
-isclosed_left(d::FixedInterval) = true
-isclosed_right(d::FixedInterval) = true
-
-# We also assume that the domain is compact. Override if it is not.
-iscompact(d::FixedInterval) = true
-
-# We assume a closed domain for membership.
-indomain(x, d::FixedInterval) = leftendpoint(d) <= x <= rightendpoint(d)
+abstract type FixedInterval{L,R,T} <: TypedEndpointsInterval{L,R,T} end
+const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
 
 """
 Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.
 """# Assume a closed interval by default
-similar_interval(d::FixedInterval{T}, a, b) where {T} = ClosedInterval{T}(a, b)
+similar_interval(d::ClosedFixedInterval{T}, a, b) where {T} = ClosedInterval{T}(a, b)
 
 
 "The closed unit interval [0,1]."
-struct UnitInterval{T} <: FixedInterval{T}
-end
+struct UnitInterval{T} <: ClosedFixedInterval{T} end
 
 UnitInterval() = UnitInterval{Float64}()
 
@@ -142,7 +133,7 @@ maximum(d::UnitInterval) = supremum(d)
 
 
 "The closed interval [-1,1]."
-struct ChebyshevInterval{T} <: FixedInterval{T}
+struct ChebyshevInterval{T} <: ClosedFixedInterval{T}
 end
 
 ChebyshevInterval() = ChebyshevInterval{Float64}()
@@ -158,7 +149,7 @@ real_line(::Type{T} = Float64) where {T <: AbstractFloat} = FullSpace{T}()
 
 
 "The half-open positive halfline `[0,∞)`."
-struct Halfline{T} <: FixedInterval{T}
+struct Halfline{T} <: FixedInterval{:closed,:open,T}
 end
 
 halfline(::Type{T} = Float64) where {T <: AbstractFloat} = Halfline{T}()
@@ -186,7 +177,7 @@ point_in_domain(d::Halfline) = zero(eltype(d))
 
 
 "The open negative halfline `(-∞,0)`."
-struct NegativeHalfline{T} <: FixedInterval{T}
+struct NegativeHalfline{T} <: FixedInterval{:open,:open,T}
 end
 
 negative_halfline(::Type{T} = Float64) where {T <: AbstractFloat} = NegativeHalfline{T}()
@@ -308,6 +299,8 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 # Avoid depcrecated warning: Warning: Constructors no longer fall back to `convert`.
 # example: A constructor `Domains.AbstractInterval{Float64}(::IntervalSets.ClosedInterval{Float64})` should be defined instead.
 
+promote_rule(::Type{ClosedInterval{T}}, d2::Type{ClosedInterval{V}}) where {T,V} = ClosedInterval{promote_type(T,V)}
+
 (::Type{T})(d::AbstractInterval) where {T<:AbstractInterval} = convert(T, d)
 (::Type{T})(d::IntervalSets.AbstractInterval) where {T<:AbstractInterval} = convert(T, d)
 (::Type{Domain{T}})(d::AbstractInterval) where {T} = convert(Domain{T}, d)
@@ -324,7 +317,7 @@ for STyp in (:Domain, :AbstractInterval)
     end
 end
 
-for STyp in (:Domain, :AbstractInterval, :FixedInterval),
+for STyp in (:Domain, :AbstractInterval, :ClosedFixedInterval),
         Typ in (:ChebyshevInterval, :UnitInterval, :Halfline, :NegativeHalfline)
     @eval begin
         convert(::Type{$STyp{T}}, d::$Typ{T}) where {T} = d
@@ -508,10 +501,10 @@ function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     a2 = leftendpoint(d2)
     b2 = rightendpoint(d2)
 
-    a1 > b1 && return d1
-    a2 > b2 && return d1
+    isempty(d1) && return d1
+    isempty(d2) && return d1
     b1 < a2 && return d1
-    a1 < a2 < b1 ≤ b2 && return interval(a1, a2)
+    a1 < a2 ≤ b1 ≤ b2 && return interval(a1, a2)
     a1 < a2 ≤ b2 < b1 && return interval(a1, a2) ∪ interval(b2, b1)
     a2 ≤ a1 < b2 < b1 && return interval(b2, b1)
     a2 ≤ a1 ≤ b1 ≤ b2 && return EmptySpace{T}()
@@ -519,6 +512,8 @@ function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     @assert b2 ≤ a1
     d1
 end
+
+setdiff(d1::AbstractInterval, d2::AbstractInterval) = setdiff(promote(d1,d2)...)
 
 function *(map::Domains.AffineMap, domain::Domains.AbstractInterval)
     le = map*leftendpoint(domain)

@@ -35,6 +35,14 @@ UnionDomain(domains::AbstractVector) =
     UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
 UnionDomain(domains::Tuple) = UnionDomain(domains...)
 
+convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
+convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
+convert(::Type{Domain}, v::AbstractVector) = convert(Domain, Domain.(v))
+convert(::Type{Domain}, v::AbstractSet) = convert(Domain, Domain.(v))
+
+Domain(v::AbstractVector) = convert(Domain, v)
+Domain(v::AbstractSet) = convert(Domain, v)
+
 elements(d::UnionDomain) = d.domains
 
 hash(d::UnionDomain, h::UInt) = hash(Set(d.domains), h)
