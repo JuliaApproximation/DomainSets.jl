@@ -27,9 +27,9 @@ end
 
 function UnionDomain(domains::Domain...)
     T = mapreduce(eltype, promote_type, domains)
-    UnionDomain(Domain{T}.(domains)...)
+    UnionDomain(convert.(Domain{T},domains)...)
 end
-UnionDomain(domains...) = UnionDomain(Domain.(domains)...)
+UnionDomain(domains...) = UnionDomain(convert.(Domain,domains)...)
 
 UnionDomain(domains::AbstractVector) =
     UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
@@ -37,8 +37,8 @@ UnionDomain(domains::Tuple) = UnionDomain(domains...)
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
-convert(::Type{Domain}, v::AbstractVector) = convert(Domain, Domain.(v))
-convert(::Type{Domain}, v::AbstractSet) = convert(Domain, Domain.(v))
+convert(::Type{Domain}, v::AbstractVector) = convert(Domain, convert.(Domain,v))
+convert(::Type{Domain}, v::AbstractSet) = convert(Domain, convert.(Domain,v))
 
 Domain(v::AbstractVector) = convert(Domain, v)
 Domain(v::AbstractSet) = convert(Domain, v)

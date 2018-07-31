@@ -138,7 +138,7 @@ point_in_domain(d::NegativeHalfline) = -one(eltype(d))
 
 
 similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
-    Interval{L,R,T}(a, b)
+    Interval{L,R,float(T)}(a, b)
 
 
 #################################
