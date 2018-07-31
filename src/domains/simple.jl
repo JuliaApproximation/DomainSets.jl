@@ -57,12 +57,12 @@ cube(::Type{Val{N}}, ::Type{T} = Float64) where {N,T} = cartesianproduct(UnitInt
 
 cube() = cube(Val{3})
 
-rectangle(a, b, c, d) = interval(a,b) × interval(c,d)
+rectangle(a, b, c, d) = (a..b) × (c..d)
 
-cube(a, b, c, d, e, f) = interval(a,b) × interval(c,d) × interval(e,f)
+cube(a, b, c, d, e, f) = (a..b) × (c..d) × (e..f)
 
 # This one is not type-stable
-cube(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} = ProductDomain(map((ai,bi)->interval(T,ai,bi), a, b)...)
+cube(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} = ProductDomain(map((ai,bi)->ClosedInterval{T}(ai,bi), a, b)...)
 # This one isn't either
 cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), tuple(b...))
 
@@ -77,7 +77,7 @@ cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), t
 
 cylinder(::Type{T} = Float64) where {T} = disk(T) × unitinterval(T)
 
-cylinder(radius::T, length::T) where {T} = disk(radius) × interval(0,length)
+cylinder(radius::T, length::T) where {T} = disk(radius) × (0 .. length)
 
 """
     Point(x)
@@ -127,8 +127,8 @@ end
 
 for op in (:*,:+)
     @eval begin
-        $op(a::Point,v::AbstractVector) = map(y->$op(a,y),v)
-        $op(v::AbstractVector,a::Point) = map(y->$op(y,a),v)
+        $op(a::Point, v::AbstractVector) = map(y->$op(a,y),v)
+        $op(v::AbstractVector, a::Point) = map(y->$op(y,a),v)
     end
 end
 
@@ -138,7 +138,7 @@ function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
     b = rightendpoint(d)
 
     a == p.x && return Interval{:open,R}(a,b)
-    a < p.x < b && return Interval{L,:open}(a,p.x) ∪ Interval{:open,R}(p.x,b)
+    a < p.x < b && return UnionDomain(Interval{L,:open}(a,p.x)) ∪ UnionDomain(Interval{:open,R}(p.x,b))
     b == p.x && return Interval{L,:open}(a,b)
 
     return d

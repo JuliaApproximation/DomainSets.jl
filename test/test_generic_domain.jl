@@ -2,7 +2,7 @@
 
 function test_generic_domains()
     domains = [
-        interval(),
+        0..1,
         cube(),
     ]
 

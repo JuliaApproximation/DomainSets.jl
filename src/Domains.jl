@@ -10,11 +10,11 @@ using Base
 if VERSION < v"0.7-"
     import Base: cross, ×, gradient, pinv
 else
-    using LinearAlgebra
+    using LinearAlgebra, Statistics
     import LinearAlgebra: cross, ×, gradient, pinv
 end
 
-import IntervalSets
+using IntervalSets
 
 ################################
 ## Exhaustive list of imports
@@ -47,10 +47,13 @@ import Base: start, next, done
 import Base: show
 
 # Various
-import Base: isopen, Bool
+import Base: Bool
 
 # IntervalSets
-import IntervalSets: (..)
+import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
+                        leftendpoint, rightendpoint, isleftopen, isleftclosed,
+                        isrightopen, isrightclosed, isopen, isclosed,
+                        infimum, supremum
 export ..
 
 
@@ -153,7 +156,7 @@ export euclideanspace, emptyspace, fullspace
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
 export real_line, halfline, negative_halfline, interval, open_interval,
     closed_interval, unitinterval
-export leftendpoint, rightendpoint, isopen_left, isopen_right
+export leftendpoint, rightendpoint, isleftopen, isrightopen
 export similar_interval
 export cardinality
 # from domains/simple.jl

@@ -22,21 +22,23 @@ isempty(d::EmptySpace) = true
 
 # Arithmetic operations
 
-union(d1::EmptySpace{T}, d2::EmptySpace{T}) where {T} = d1
-union(d1::Domain{T}, d2::EmptySpace{T}) where {T} = d1
-union(d1::EmptySpace{T}, d2::Domain{T}) where {T} = d2
+union(d1::EmptySpace, d2::EmptySpace) = d1
+union(d1::Domain, d2::EmptySpace) = d1
+union(d1::EmptySpace, d2::Domain) = d2
 
-intersect(d1::EmptySpace{T}, d2::EmptySpace{T}) where {T} = d1
-intersect(d1::Domain{T}, d2::EmptySpace{T}) where {T} = d2
-intersect(d1::EmptySpace{T}, d2::Domain{T}) where {T} = d1
+intersect(d1::EmptySpace, d2::EmptySpace) = d1
+intersect(d1::Domain, d2::EmptySpace) = d2
+intersect(d1::EmptySpace, d2::Domain) = d1
 
-setdiff(d1::EmptySpace{T}, d2::EmptySpace{T}) where {T} = d1
-setdiff(d1::EmptySpace{T}, d2::Domain{T}) where {T} = d1
-setdiff(d1::Domain{T}, d2::EmptySpace{T}) where {T} = d1
+setdiff(d1::EmptySpace, d2::EmptySpace) = d1
+setdiff(d1::EmptySpace, d2::Domain) = d1
+setdiff(d1::Domain, d2::EmptySpace) = d1
 
 # TODO: verify these - should we restrict x?
 (+)(d::EmptySpace, x::Number) = d
 (*)(d::EmptySpace, x::Number) = d
+
+==(::EmptySpace, ::EmptySpace) = true
 
 show(io::IO, d::EmptySpace) = print(io, "the empty space with eltype ", eltype(d))
 
@@ -68,13 +70,13 @@ point_in_domain(d::FullSpace) = zero(eltype(d))
 
 # Arithmetic operations
 
-union(d1::FullSpace{T}, d2::FullSpace{T}) where {T} = d1
-union(d1::Domain{T}, d2::FullSpace{T}) where {T} = d2
-union(d1::FullSpace{T}, d2::Domain{T}) where {T} = d1
+union(d1::FullSpace, d2::FullSpace) = d1
+union(d1::Domain, d2::FullSpace) = d2
+union(d1::FullSpace, d2::Domain) = d1
 
-intersect(d1::FullSpace{T}, d2::FullSpace{T}) where {T} = d1
-intersect(d1::Domain{T}, d2::FullSpace{T}) where {T} = d1
-intersect(d1::FullSpace{T}, d2::Domain{T}) where {T} = d2
+intersect(d1::FullSpace, d2::FullSpace) = d1
+intersect(d1::Domain, d2::FullSpace) = d1
+intersect(d1::FullSpace, d2::Domain) = d2
 
 
 (+)(d::FullSpace{T}, x::T) where {T} = d

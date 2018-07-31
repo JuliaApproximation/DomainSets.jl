@@ -20,15 +20,15 @@ UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} =
     UnionDomain{DD,T}(domains)
 UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
 
-function UnionDomain(domains::Domain...)
+function UnionDomain(domains::Domain{T}...) where T
     # TODO: implement promote_space_type for domains and do the promotion properly
-    T = eltype(domains[1])
-    for d in domains
-        @assert eltype(d) == T
-    end
     UnionDomain{typeof(domains),T}(domains)
 end
 
+function UnionDomain(domains::Domain...)
+    T = mapreduce(eltype, promote_type, domains)
+    UnionDomain(Domain{T}.(domains)...)
+end
 UnionDomain(domains...) = UnionDomain(Domain.(domains)...)
 
 UnionDomain(domains::AbstractVector) =

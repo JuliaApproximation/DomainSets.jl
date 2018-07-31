@@ -1,16 +1,6 @@
 # domain.jl
 # Definition of the abstract Domain type and its interface
 
-"""
-`Domain{T}` is the abstract supertype of all subsets of the geometric space
-`GeometricSpace{T}`.
-
-A domain is defined mathematically by its indicator or characteristic function.
-This is implemented via `in`: one can write `x ∈ D` or `in(x,D)`, and this
-evaluates to true or false.
-"""
-abstract type Domain{T}
-end
 
 spaceof(::Domain{T}) where {T} = spacetype(T)
 
@@ -48,6 +38,11 @@ const Domain4d{T} = EuclideanDomain{4,T}
 # Concrete subtypes should implement `indomain`, rather than `in`.
 in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 
+in(v::T, I::TypedEndpointsInterval{:closed,:closed,T}) where T = leftendpoint(I) ≤ v ≤ rightendpoint(I)
+in(v::T, I::TypedEndpointsInterval{:open,:open,T}) where T = leftendpoint(I) < v < rightendpoint(I)
+in(v::T, I::TypedEndpointsInterval{:closed,:open,T}) where T = leftendpoint(I) ≤ v < rightendpoint(I)
+in(v::T, I::TypedEndpointsInterval{:open,:closed,T}) where T = leftendpoint(I) < v ≤ rightendpoint(I)
+
 function in(x, d::Domain)
    T = promote_type(typeof(x), eltype(d))
    T == Any && return false
@@ -83,6 +78,7 @@ isreal(d::Domain) = isreal(spaceof(d))
 
 infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
 supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
+
 
 # override minimum and maximum for closed sets
 function boundary end
