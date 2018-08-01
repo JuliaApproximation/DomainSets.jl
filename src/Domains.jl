@@ -120,7 +120,7 @@ export CartToPolarMap, PolarToCartMap
 export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
 export indomain, dimension
 export approx_in, approx_indomain
-export isclosed, isopen, iscompact
+export isclosed, iscompact
 export boundary, ∂
 export point_in_domain
 
