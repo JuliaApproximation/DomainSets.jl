@@ -40,9 +40,6 @@ import Base: zero
 # Types, promotions and conversions
 import Base: convert, widen, promote_rule
 
-# Iteration protocol
-import Base: start, next, done
-
 # Display
 import Base: show
 
