@@ -20,8 +20,9 @@ os:
   - linux
   - osx
 julia:
+  - 0.7
+  - 1.0
   - nightly
-  - 0.6
 notifications:
   email: false
 after_success:
