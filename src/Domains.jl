@@ -11,7 +11,7 @@ if VERSION < v"0.7-"
     import Base: cross, ×, gradient, pinv
 else
     using LinearAlgebra, Statistics
-    import LinearAlgebra: cross, ×, gradient, pinv
+    import LinearAlgebra: cross, ×, pinv
 end
 
 using IntervalSets

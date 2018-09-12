@@ -177,6 +177,10 @@ struct DifferenceDomain{D1,D2,T} <: Domain{T}
 end
 
 DifferenceDomain(d1::Domain{T}, d2::Domain{T}) where {T} = DifferenceDomain{typeof(d1),typeof(d2),T}(d1,d2)
+function DifferenceDomain(d1::Domain{T}, d2::Domain{V}) where {T,V}
+    TV = promote_type(T,V)
+    DifferenceDomain(convert(Domain{T}, d1), convert(Domain{V}, d2))
+end
 
 function setdiff(d1::Domain{T}, d2::Domain) where T
     d1 == d2 && return EmptySpace{T}()
