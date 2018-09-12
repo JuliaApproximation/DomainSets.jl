@@ -17,7 +17,7 @@ struct UnionDomain{DD,T} <: Domain{T}
 end
 
 UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} =
-    UnionDomain{DD,T}(domains)
+    UnionDomain{AbstractSet{DD},T}(domains)
 UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
 
 function UnionDomain(domains::Domain{T}...) where T
@@ -137,7 +137,10 @@ end
 
 elements(d::IntersectionDomain) = d.domains
 
-intersect(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
+intersect(d1::Domain, d2::Domain) = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
+intersect(d1::UnionDomain, d2::UnionDomain) = error("Implement")
+intersect(d1::UnionDomain, d2::Domain) = union(intersect.(d1.domains, Ref(d2))...)
+intersect(d1::Domain, d2::UnionDomain) = union(intersect.(Ref(d1), d2.domains)...)
 
 # Avoid creating nested unions
 intersect(d1::IntersectionDomain, d2::Domain) = IntersectionDomain(elements(d1)..., d2)
