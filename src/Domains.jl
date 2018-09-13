@@ -73,15 +73,9 @@ export cartesianproduct
 # from spaces/space.jl
 export GeometricSpace, AnySpace
 export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
-# from spaces/space_promotions.jl
-export convert_space, restrict_space, demote, promote_space, promote_space_type
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
-export IntegerSpace, RationalSpace, RealSpace, ComplexSpace
-export VectorSpace, EuclideanSpace, ArraySpace
 export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
-# from spaces/productspace.jl
-export ProductSpace
 
 
 ## Maps
