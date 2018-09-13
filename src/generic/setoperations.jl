@@ -55,7 +55,7 @@ end
 
 # Avoid creating nested unions
 union(d1::UnionDomain, d2::UnionDomain) = UnionDomain(elements(d1)..., elements(d2)...)
-union(d1::UnionDomain, d2::Domain) = UnionDomain(elements(d1)..., d2)
+union(d1::UnionDomain, d2::Domain) = UnionDomain(union(elements(d1), (d2,))...)
 union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 
 
@@ -138,7 +138,10 @@ end
 elements(d::IntersectionDomain) = d.domains
 
 intersect(d1::Domain, d2::Domain) = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
-intersect(d1::UnionDomain, d2::UnionDomain) = error("Implement")
+function intersect(d1::UnionDomain, d2::UnionDomain)
+    d1 == d2 && return d1
+    union(intersect.(Ref(d1), elements(d2))...)
+end
 intersect(d1::UnionDomain, d2::Domain) = union(intersect.(d1.domains, Ref(d2))...)
 intersect(d1::Domain, d2::UnionDomain) = union(intersect.(Ref(d1), d2.domains)...)
 
