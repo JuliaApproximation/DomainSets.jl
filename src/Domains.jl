@@ -71,7 +71,6 @@ export cartesianproduct
 ## Spaces
 
 # from spaces/space.jl
-export GeometricSpace, AnySpace
 export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
@@ -141,7 +140,6 @@ export infimum, supremum
 ## Specific domains
 
 # from domains/trivial.jl
-export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
 export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval

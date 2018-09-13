@@ -1,3 +1,6 @@
+import Domains: convert_space, restrict_space, IntegerSpace, RationalSpace, RealSpace, ComplexSpace,
+                VectorSpace, AnySpace, EmptySpace, FullSpace, GeometricSpace, promote_space_type, promote_space
+
 # test_spaces.jl
 
 function test_spaces()
