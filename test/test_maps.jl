@@ -1,13 +1,5 @@
 # test_maps.jl
 
-function test_maps()
-    @testset "$(rpad("Maps",80))" begin
-        test_maps(Float64)
-        test_maps(BigFloat)
-        test_embedding_maps()
-    end
-end
-
 function suitable_point_to_map(m)
     T = domaintype(m)
     if T <: SVector
@@ -134,14 +126,14 @@ end
 function test_rotation_map(T)
     ϕ = T(pi)/4
     m = rotation_map(ϕ)
-    x = v[one(T), zero(T)]
+    x = [one(T), zero(T)]
     y = m*x
     @test y[1] ≈ sqrt(T(2))/2
     @test y[2] ≈ sqrt(T(2))/2
 
     ϕ = T(pi)/4
     m = rotation_map(ϕ, 0, 0)
-    x = v[zero(T), one(T), zero(T)]
+    x = [zero(T), one(T), zero(T)]
     y = m*x
     @test y[1] ≈ 0
     @test y[2] ≈ sqrt(T(2))/2
@@ -180,18 +172,6 @@ function test_cart_polar_map(T)
     m2 = PolarToCartMap{T}()
     test_generic_map(T, m2)
     @test !islinear(m2)
-end
-
-function test_embedding_maps()
-    T1 = Float64
-    T2 = Complex{Float64}
-    T3 = SVector{1,Float64}
-    T4 = SVector{2,Float64}
-    T5 = SVector{2,Complex{Float64}}
-
-    test_embedding_map(T1, T2)
-    test_embedding_map(T3, T4)
-    test_isomorphism_map(T2, T4)
 end
 
 function test_embedding_map(T1, T2)
@@ -283,3 +263,21 @@ Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tuple(a,b)
 
 # Compare two iterable sequences for element-wise equality
 compare_tuple(a, b) = reduce(&, map(isapprox, a, b))
+
+
+@testset "maps" begin
+    test_maps(Float64)
+    test_maps(BigFloat)
+
+    @testset "embedding map" begin
+        T1 = Float64
+        T2 = Complex{Float64}
+        T3 = SVector{1,Float64}
+        T4 = SVector{2,Float64}
+        T5 = SVector{2,Complex{Float64}}
+
+        test_embedding_map(T1, T2)
+        test_embedding_map(T3, T4)
+        test_isomorphism_map(T2, T4)
+    end
+end
