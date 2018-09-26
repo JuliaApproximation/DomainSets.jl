@@ -1,5 +1,4 @@
 # Domains.jl
-__precompile__(true)
 module Domains
 
 # We use static vectors internally
@@ -7,12 +6,8 @@ module Domains
 using StaticArrays
 using Base
 
-if VERSION < v"0.7-"
-    import Base: cross, ×, gradient, pinv
-else
-    using LinearAlgebra, Statistics
-    import LinearAlgebra: cross, ×, pinv
-end
+using LinearAlgebra, Statistics
+import LinearAlgebra: cross, ×, pinv
 
 using IntervalSets
 

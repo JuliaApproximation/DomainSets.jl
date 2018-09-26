@@ -108,13 +108,8 @@ AffineMap(a::T, b::T) where {T} = AffineMap{T,T,T}(a, b)
 AffineMap(a::SMatrix{M,N,T}, b::SVector{M,T}) where {M,N,T} =
     AffineMap{SVector{N,T},SVector{M,T},typeof(a)}(a, b)
 
-if VERSION < v"0.7-"
-    AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
-         AffineMap(eye(SMatrix{N,N,T}), b)
-else
-    AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
-         AffineMap(SMatrix{N,N,T}(1.0I), b)
-end
+AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
+     AffineMap(SMatrix{N,N,T}(1.0I), b)
 
 matrix(m::AffineMap) = m.a
 
