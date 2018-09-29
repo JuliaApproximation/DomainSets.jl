@@ -1,17 +1,5 @@
 # test_generic_domain.jl
 
-function test_generic_domains()
-    domains = [
-        interval(),
-        cube(),
-    ]
-
-    @testset "$(rpad("Generic domains",80))" begin
-        for domain in domains
-            test_generic_domain(domain)
-        end
-    end
-end
 
 # We test the generic functionality of a domain.
 # These tests check whether the given domain correctly implements the
@@ -28,6 +16,20 @@ function test_generic_domain(d::Domain)
             x = point_in_domain(d)
             @test false
         catch
+        end
+    end
+end
+
+
+@testset "generic domains" begin
+    domains = [
+        0..1,
+        cube(),
+    ]
+
+    @testset "$(rpad("Generic domains",80))" begin
+        for domain in domains
+            test_generic_domain(domain)
         end
     end
 end

@@ -10,11 +10,11 @@ using Base
 if VERSION < v"0.7-"
     import Base: cross, ×, gradient, pinv
 else
-    using LinearAlgebra
-    import LinearAlgebra: cross, ×, gradient, pinv
+    using LinearAlgebra, Statistics
+    import LinearAlgebra: cross, ×, pinv
 end
 
-import IntervalSets
+using IntervalSets
 
 ################################
 ## Exhaustive list of imports
@@ -38,19 +38,19 @@ import Base: isreal
 import Base: zero
 
 # Types, promotions and conversions
-import Base: convert, widen
-
-# Iteration protocol
-import Base: start, next, done
+import Base: convert, widen, promote_rule
 
 # Display
 import Base: show
 
 # Various
-import Base: isopen, Bool
+import Base: Bool
 
 # IntervalSets
-import IntervalSets: (..)
+import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
+                        leftendpoint, rightendpoint, isleftopen, isleftclosed,
+                        isrightopen, isrightclosed, isopen, isclosed,
+                        infimum, supremum
 export ..
 
 
@@ -71,17 +71,10 @@ export cartesianproduct
 ## Spaces
 
 # from spaces/space.jl
-export GeometricSpace, AnySpace
 export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
-# from spaces/space_promotions.jl
-export convert_space, restrict_space, demote, promote_space, promote_space_type
 export isomorphic, ≅, embedded, ↪
 # from spaces/basic_spaces.jl
-export IntegerSpace, RationalSpace, RealSpace, ComplexSpace
-export VectorSpace, EuclideanSpace, ArraySpace
 export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
-# from spaces/productspace.jl
-export ProductSpace
 
 
 ## Maps
@@ -117,7 +110,7 @@ export CartToPolarMap, PolarToCartMap
 export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
 export indomain, dimension
 export approx_in, approx_indomain
-export isclosed, isopen, iscompact
+export isclosed, iscompact
 export boundary, ∂
 export point_in_domain
 
@@ -147,13 +140,12 @@ export infimum, supremum
 ## Specific domains
 
 # from domains/trivial.jl
-export EmptySpace, FullSpace, AnyEmptySpace, AnyFullSpace
 export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
 export real_line, halfline, negative_halfline, interval, open_interval,
     closed_interval, unitinterval
-export leftendpoint, rightendpoint, isopen_left, isopen_right
+export leftendpoint, rightendpoint, isleftopen, isrightopen
 export similar_interval
 export cardinality
 # from domains/simple.jl

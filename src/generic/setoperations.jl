@@ -17,23 +17,31 @@ struct UnionDomain{DD,T} <: Domain{T}
 end
 
 UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} =
-    UnionDomain{DD,T}(domains)
+    UnionDomain{AbstractSet{DD},T}(domains)
 UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
 
-function UnionDomain(domains::Domain...)
+function UnionDomain(domains::Domain{T}...) where T
     # TODO: implement promote_space_type for domains and do the promotion properly
-    T = eltype(domains[1])
-    for d in domains
-        @assert eltype(d) == T
-    end
     UnionDomain{typeof(domains),T}(domains)
 end
 
-UnionDomain(domains...) = UnionDomain(Domain.(domains)...)
+function UnionDomain(domains::Domain...)
+    T = mapreduce(eltype, promote_type, domains)
+    UnionDomain(convert.(Domain{T},domains)...)
+end
+UnionDomain(domains...) = UnionDomain(convert.(Domain,domains)...)
 
 UnionDomain(domains::AbstractVector) =
     UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
 UnionDomain(domains::Tuple) = UnionDomain(domains...)
+
+convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
+convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
+convert(::Type{Domain}, v::AbstractVector) = convert(Domain, convert.(Domain,v))
+convert(::Type{Domain}, v::AbstractSet) = convert(Domain, convert.(Domain,v))
+
+Domain(v::AbstractVector) = convert(Domain, v)
+Domain(v::AbstractSet) = convert(Domain, v)
 
 elements(d::UnionDomain) = d.domains
 
@@ -47,7 +55,7 @@ end
 
 # Avoid creating nested unions
 union(d1::UnionDomain, d2::UnionDomain) = UnionDomain(elements(d1)..., elements(d2)...)
-union(d1::UnionDomain, d2::Domain) = UnionDomain(elements(d1)..., d2)
+union(d1::UnionDomain, d2::Domain) = UnionDomain(union(elements(d1), (d2,))...)
 union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 
 
@@ -129,7 +137,13 @@ end
 
 elements(d::IntersectionDomain) = d.domains
 
-intersect(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
+intersect(d1::Domain, d2::Domain) = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
+function intersect(d1::UnionDomain, d2::UnionDomain)
+    d1 == d2 && return d1
+    union(intersect.(Ref(d1), elements(d2))...)
+end
+intersect(d1::UnionDomain, d2::Domain) = union(intersect.(d1.domains, Ref(d2))...)
+intersect(d1::Domain, d2::UnionDomain) = union(intersect.(Ref(d1), d2.domains)...)
 
 # Avoid creating nested unions
 intersect(d1::IntersectionDomain, d2::Domain) = IntersectionDomain(elements(d1)..., d2)
@@ -169,6 +183,10 @@ struct DifferenceDomain{D1,D2,T} <: Domain{T}
 end
 
 DifferenceDomain(d1::Domain{T}, d2::Domain{T}) where {T} = DifferenceDomain{typeof(d1),typeof(d2),T}(d1,d2)
+function DifferenceDomain(d1::Domain{T}, d2::Domain{V}) where {T,V}
+    TV = promote_type(T,V)
+    DifferenceDomain(convert(Domain{T}, d1), convert(Domain{V}, d2))
+end
 
 function setdiff(d1::Domain{T}, d2::Domain) where T
     d1 == d2 && return EmptySpace{T}()
