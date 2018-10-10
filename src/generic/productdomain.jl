@@ -10,7 +10,7 @@ Create an eltype that is suitable for a product domain. The result is a tuple
 type, where each of the elements is the eltype of the corresponding element
 of the product domain.
 """
-product_eltype(domains::Domain...) = Tuple{map(eltype, domains)...}
+product_eltype(domains...) = Tuple{map(eltype, domains)...}
 
 """
 Try to simplify the type of a product domain to a type to which it is isomorphic.
@@ -61,6 +61,9 @@ function ProductDomain(domains...)
     ProductDomain{DD,S,T}(domains)
 end
 
+convert(::Type{Domain{SVector{N,T}}}, d::ProductDomain{<:Tuple{Vararg{<:Any,N}}}) where {N,T} =
+	ProductDomain(convert.(Domain{T}, d.domains))
+
 elements(d::ProductDomain) = d.domains
 
 internal_eltype(::Type{ProductDomain{DD,S,T}}) where {DD,S,T} = S
@@ -108,6 +111,7 @@ point_in_domain(d::ProductDomain) = convert_space(spaceof(d), map(point_in_domai
 infimum(d::ProductDomain) = convert_space(spaceof(d), map(infimum, elements(d)))
 supremum(d::ProductDomain) = convert_space(spaceof(d), map(supremum, elements(d)))
 
+isempty(d::ProductDomain) = any(isempty, d.domains)
 
 function show(io::IO, t::ProductDomain)
     L = numelements(t)

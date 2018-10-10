@@ -13,7 +13,11 @@ by the type `Halfline{Float64}()`.
 
 ### Intervals
 
+Domains.jl uses IntervalSets.jl for Closed and open intervals.
+
 ### Rectangles
+
+Rectangles can be constructed as
 
 ### Circles
 
@@ -21,7 +25,7 @@ by the type `Halfline{Float64}()`.
 
 ### Union of domains
 
-## The domain interface
+### The domain interface
 
 A domain is any type that implements the functions `eltype` and `in`. If
 `d` is an instance of a type that implements the domain interface, then
@@ -32,7 +36,7 @@ Domains often represent continuous mathematical domains, for example, a domain
 `d`  representing the interval `[0,1]` would have `eltype(d) == Int` but still
 have `0.2 in d` return true.
 
-## The `Domain` type
+### The `Domain` type
 
 Domains.jl contains an abstract type `Domain{T}`. All subtypes of `Domain{T}`
 must implement the domain interface, and in addition support `convert(Domain{T}, d)`.

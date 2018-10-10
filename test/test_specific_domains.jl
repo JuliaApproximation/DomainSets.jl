@@ -692,6 +692,8 @@ end
     d2 = (-.9..0.9)^2
     d3 = rectangle(-.5,-.1,.5,.1)
 
+    @test isempty(d3)
+
     @testset "union" begin
         u1 = d1 ∪ d2
         u2 = u1 ∪ d3
