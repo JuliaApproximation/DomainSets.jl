@@ -62,7 +62,7 @@ function ProductDomain(domains...)
 end
 
 convert(::Type{Domain{SVector{N,T}}}, d::ProductDomain{<:Tuple{Vararg{<:Any,N}}}) where {N,T} =
-	ProductDomain(convert.(Domain{T}, d.domains))
+	ProductDomain(convert.(Domain{T}, d.domains)...)
 
 elements(d::ProductDomain) = d.domains
 
@@ -89,22 +89,20 @@ cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elemen
 indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d))
 
 # The line below allocates a little bit of memory...
-_indomain(x, d::ProductDomain, el) = reduce(&, map(indomain, x, el))
+_indomain(x, d::ProductDomain, el) = reduce(&, map(in, x, el))
 
 # ...hence these special cases:
-_indomain(x::Tuple{A,B}, d::ProductDomain, el) where {A,B} = indomain(x[1], el[1]) &&
-    indomain(x[2], el[2])
-_indomain(x::Tuple{A,B,C}, d::ProductDomain, el) where {A,B,C} = indomain(x[1], el[1]) &&
-    indomain(x[2], el[2]) && indomain(x[3], el[3])
-_indomain(x::Tuple{A,B,C,D}, d::ProductDomain, el) where {A,B,C,D} = indomain(x[1], el[1]) &&
-    indomain(x[2], el[2]) && indomain(x[3], el[3]) && indomain(x[4], el[4])
+_indomain(x::Tuple{A,B}, d::ProductDomain, el) where {A,B} = in(x[1], el[1]) &&
+    in(x[2], el[2])
+_indomain(x::Tuple{A,B,C}, d::ProductDomain, el) where {A,B,C} = in(x[1], el[1]) &&
+    in(x[2], el[2]) && in(x[3], el[3])
+_indomain(x::Tuple{A,B,C,D}, d::ProductDomain, el) where {A,B,C,D} = in(x[1], el[1]) &&
+    in(x[2], el[2]) && in(x[3], el[3]) && in(x[4], el[4])
 
 approx_indomain(x, d::ProductDomain, tolerance) =
     _approx_indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d), tolerance)
 
 _approx_indomain(x, d::ProductDomain, el, tolerance) = reduce(&, map((u,v) -> approx_indomain(u,v,tolerance), x, el))
-
-isempty(d::ProductDomain) = mapreduce(isempty, &, elements(d))
 
 point_in_domain(d::ProductDomain) = convert_space(spaceof(d), map(point_in_domain, elements(d)))
 

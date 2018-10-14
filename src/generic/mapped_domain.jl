@@ -114,7 +114,7 @@ end
 forward_map(d::InverseMappedDomain) = inv(d.invwmap)
 inverse_map(d::InverseMappedDomain) = d.invmap
 
-indomain(x, d::InverseMappedDomain) = indomain(d.invmap * x, source(d))
+indomain(x, d::InverseMappedDomain) = in(d.invmap * x, source(d))
 
 approx_indomain(x, d::InverseMappedDomain, tolerance) = approx_indomain(d.invmap * x, source(d), tolerance)
 

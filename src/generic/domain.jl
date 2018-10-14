@@ -36,18 +36,16 @@ const Domain4d{T} = EuclideanDomain{4,T}
 # The implementation of `in` at the level of Domain converts the point into
 # the element type of the domain using promotion, and calls `indomain`.
 # Concrete subtypes should implement `indomain`, rather than `in`.
-in(x::T, d::Domain{T}) where {T} = indomain(x, d)
+_in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 
-in(v::T, I::TypedEndpointsInterval{:closed,:closed,T}) where T = leftendpoint(I) ≤ v ≤ rightendpoint(I)
-in(v::T, I::TypedEndpointsInterval{:open,:open,T}) where T = leftendpoint(I) < v < rightendpoint(I)
-in(v::T, I::TypedEndpointsInterval{:closed,:open,T}) where T = leftendpoint(I) ≤ v < rightendpoint(I)
-in(v::T, I::TypedEndpointsInterval{:open,:closed,T}) where T = leftendpoint(I) < v ≤ rightendpoint(I)
-
-function in(x, d::Domain)
+function _in(x, d::Domain)
    T = promote_type(typeof(x), eltype(d))
    T == Any && return false
    in(convert(T, x), convert(Domain{T}, d))
 end
+
+in(x, d::Domain) = _in(x, d)
+
 
 # The user may supply a vector. We attempt to convert it to the right space.
 in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)

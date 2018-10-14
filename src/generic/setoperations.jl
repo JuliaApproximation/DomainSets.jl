@@ -196,7 +196,7 @@ end
 setdiff(d1::Domain, d2) = setdiff(d1, convert(Domain, d2))
 
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
-indomain(x, d::DifferenceDomain) = indomain(x, d.d1) && (~indomain(x, d.d2))
+indomain(x, d::DifferenceDomain) = in(x, d.d1) && (~in(x, d.d2))
 
 \(d1::Domain, d2) = setdiff(d1, d2)
 

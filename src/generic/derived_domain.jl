@@ -20,4 +20,4 @@ superdomain(d::DerivedDomain) = d.superdomain
 "Return the eltype of the superdomain."
 supereltype(d::DerivedDomain) = eltype(superdomain(d))
 
-indomain(x, d::DerivedDomain) = indomain(x, superdomain(d))
+indomain(x, d::DerivedDomain) = in(x, superdomain(d))

@@ -1,17 +1,8 @@
 # interval.jl
 
 
-"A half-open interval `(a,b]`."
-const HalfOpenLeftInterval{T} = Interval{:open,:closed,T}
-
-"A half-open interval `[a,b)`."
-const HalfOpenRightInterval{T} = Interval{:closed,:open,T}
-
-
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
-
-indomain(x, d::AbstractInterval) = x ∈ d
 
 
 ##################

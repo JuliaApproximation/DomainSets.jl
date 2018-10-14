@@ -16,7 +16,7 @@ emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
 
-approx_indomain(x, d::EmptySpace, tolerance) = indomain(x, d)
+approx_indomain(x, d::EmptySpace, tolerance) = in(x, d)
 
 isempty(d::EmptySpace) = true
 
@@ -63,7 +63,7 @@ euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace(SVector{N,T})
 indomain(x::T, d::FullSpace{T}) where {T} = true
 indomain(x::S, d::FullSpace{T}) where {T,S} = promotes_to(S,T) == Val{true}
 
-approx_indomain(x, d::FullSpace, tolerance) = indomain(x, d)
+approx_indomain(x, d::FullSpace, tolerance) = in(x, d)
 
 # We choose the origin as a point in the full space
 point_in_domain(d::FullSpace) = zero(eltype(d))

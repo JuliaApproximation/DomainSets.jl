@@ -1,4 +1,4 @@
-import Domains: isopen
+using StaticArrays, Domains, Test
 
 # test_specific_domains.jl
 
@@ -106,7 +106,7 @@ end
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
             @test isclosed(d)
-            @test !isopen(d)
+            @test !Domains.isopen(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -127,7 +127,7 @@ end
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
             @test isclosed(d)
-            @test !isopen(d)
+            @test !Domains.isopen(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -149,7 +149,7 @@ end
             @test_throws ArgumentError maximum(d)
 
             @test !isclosed(d)
-            @test !isopen(d)
+            @test !Domains.isopen(d)
             @test !iscompact(d)
             @test 1. ∈ d
             @test -1. ∉ d
@@ -170,7 +170,7 @@ end
             @test_throws ArgumentError maximum(d)
 
             @test !isclosed(d)
-            @test isopen(d)
+            @test Domains.isopen(d)
             @test !iscompact(d)
             @test -1. ∈ d
             @test 1. ∉ d
@@ -191,11 +191,11 @@ end
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
 
-            d = HalfOpenLeftInterval(0,1)
+            d = Interval{:open,:closed}(0,1)
             @test leftendpoint(d) ∉ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
 
-            d = HalfOpenRightInterval(0,1)
+            d = Interval{:closed,:open}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∉ ∂(d)
         end
@@ -693,6 +693,7 @@ end
     d3 = rectangle(-.5,-.1,.5,.1)
 
     @test isempty(d3)
+    @test convert(Domain{SVector{2,Float64}}, d3) isa Domain{SVector{2,Float64}}
 
     @testset "union" begin
         u1 = d1 ∪ d2
