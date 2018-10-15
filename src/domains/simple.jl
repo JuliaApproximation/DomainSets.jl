@@ -22,7 +22,7 @@ disk(::Type{T} = Float64) where {T} = UnitDisk{T}()
 disk(radius::Number) = radius * disk(typeof(radius))
 disk(radius::Number, center::AbstractVector) = disk(radius) + center
 
-ball(::Type{T} = Float64) where {T} = Ball{T}()
+ball(::Type{T} = Float64) where {T} = UnitBall{T}()
 ball(radius::Number) = radius * ball(typeof(radius))
 ball(radius::Number, center::AbstractVector) = ball(radius) + center
 

@@ -1,4 +1,5 @@
 using StaticArrays, Domains, Test
+import Domains: MappedDomain, similar_interval
 
 # test_specific_domains.jl
 
@@ -557,7 +558,7 @@ end
 
         D = cube(Val{2})
         show(io,rotate(D,1.))
-        @test String(take!(io)) == "A mapped domain based on the unit interval [0.0, 1.0] x the unit interval [0.0, 1.0]"
+        @test String(take!(io)) == "A mapped domain based on 0.0..1.0 (Unit) x 0.0..1.0 (Unit)"
 
         D = rotate(cube(Val{2}),pi)
         @test v[-0.9, -0.9] ∈ D
