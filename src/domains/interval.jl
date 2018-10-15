@@ -191,12 +191,18 @@ for op in (:*, :\)
 end
 
 
-show(io::IO, d::AbstractInterval) = print(io, "an interval of type ", typeof(d), " ",
-                                            isleftopen(d) ? "(" : "[", leftendpoint(d), ", ",
-                                            rightendpoint(d), isrightopen(d) ? ")" : "]")
-show(io::IO, d::ChebyshevInterval) = print(io,  "the Chebyshev interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
-show(io::IO, d::UnitInterval) = print(io,  "the unit interval [", leftendpoint(d), ", ", rightendpoint(d), "]")
-show(io::IO, d::Halfline) = print(io,  "the half-line [", leftendpoint(d), ", ", rightendpoint(d), ")")
+function show(io::IO, d::ChebyshevInterval)
+    print(io, Interval(d))
+    print(io, " (Chebyshev)")
+end
+function show(io::IO, d::UnitInterval)
+    print(io, Interval(d))
+    print(io, " (Unit)")
+end
+function show(io::IO, d::Halfline)
+    print(io, Interval(d))
+    print(io, " (Halfline)")
+end
 
 function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     a1 = leftendpoint(d1)

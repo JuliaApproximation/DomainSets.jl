@@ -122,9 +122,8 @@ export UnionDomain, IntersectionDomain, DifferenceDomain
 export TranslatedDomain
 
 # from generic/mapped_domain.jl
-export MappedDomain, ForwardMappedDomain, InverseMappedDomain, BidirectionalMappedDomain
-export source, target, forward_map, inverse_map
-export map_domain, forwardmap_domain, inversemap_domain
+export source, target
+
 
 # from generic/arithmetics.jl
 export rotate
@@ -141,13 +140,12 @@ export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeft
 export real_line, halfline, negative_halfline, interval, open_interval,
     closed_interval, unitinterval
 export leftendpoint, rightendpoint, isleftopen, isrightopen
-export similar_interval
 export cardinality
 # from domains/simple.jl
-export UnitBall, Disk, Ball, Cube, Simplex, UnitSimplex, UnitSphere, Point
+export UnitHyperBall, UnitDisk, UnitBall, Cube, Simplex, UnitSimplex, UnitHyperSphere, Point
 export disk, ball, cube, simplex, cylinder, rectangle
 # from domains/circle.jl
-export Circle, Sphere
+export UnitCircle, UnitSphere
 export circle, sphere, ellipse, ellipse_shape
 export parameterization, gradient
 

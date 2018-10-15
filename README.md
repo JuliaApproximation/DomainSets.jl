@@ -21,13 +21,34 @@ Rectangles can be constructed as a product of intervals, where the elements of t
 are `SVector{2}`:
 
 ```julia
+julia> using Domains, StaticArrays; import Domains: ×
 
+julia> SVector(1,2) in (-1..1) × (0..3)
+true
 ```
-
 
 ### Circles and Spheres
 
+A `UnitHyperSphere{N,T}`  contains `x::SVector{N,T}` if `norm(x) == one(T)`. `UnitCircle` and `UnitSphere` are two important cases:
+```julia
+julia> SVector(1,0) in UnitCircle()
+true
+
+julia> SVector(1,0,0) in UnitSphere()
+true
+```
+
 ### Disks and Balls
+
+A `UnitHyperBall{N,T}`  contains `x::SVector{N,T}` if `norm(x) ≤ one(T)`. `UnitDisk` and `UnitHyperBall` are two important cases:
+```julia
+julia> SVector(0.1,0.2) in UnitDisk()
+true
+
+julia> SVector(0.1,0.2,0.3) in UnitBall()
+true
+```
+
 
 ### Union of domains
 

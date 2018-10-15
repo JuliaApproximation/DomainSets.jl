@@ -8,17 +8,17 @@
 """
 The unit ball (of radius 1) in `N` dimensions.
 """
-struct UnitBall{N,T} <: EuclideanDomain{N,T}
+struct UnitHyperBall{N,T} <: EuclideanDomain{N,T}
 end
 
-const Disk{T} = UnitBall{2,T}
-const Ball{T} = UnitBall{3,T}
+const UnitDisk{T} = UnitHyperBall{2,T}
+const UnitBall{T} = UnitHyperBall{3,T}
 
-indomain(x, ::UnitBall) = norm(x) <= 1
+indomain(x, ::UnitHyperBall) = norm(x) <= 1
 
-approx_indomain(x, ::UnitBall, tolerance) = norm(x) <= 1+tolerance
+approx_indomain(x, ::UnitHyperBall, tolerance) = norm(x) <= 1+tolerance
 
-disk(::Type{T} = Float64) where {T} = Disk{T}()
+disk(::Type{T} = Float64) where {T} = UnitDisk{T}()
 disk(radius::Number) = radius * disk(typeof(radius))
 disk(radius::Number, center::AbstractVector) = disk(radius) + center
 
@@ -26,10 +26,10 @@ ball(::Type{T} = Float64) where {T} = Ball{T}()
 ball(radius::Number) = radius * ball(typeof(radius))
 ball(radius::Number, center::AbstractVector) = ball(radius) + center
 
-show(io::IO, d::UnitBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
+show(io::IO, d::UnitHyperBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
 
 # We choose the origin here
-point_in_domain(d::UnitBall) = zero(eltype(d))
+point_in_domain(d::UnitHyperBall) = zero(eltype(d))
 
 
 ###########################

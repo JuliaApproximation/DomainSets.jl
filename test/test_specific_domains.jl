@@ -7,10 +7,10 @@ const v = TypeFactory{SVector}()
 const io = IOBuffer()
 
 
-struct DerivedUnitBall<: DerivedDomain{SVector{2,Float64}}
+struct DerivedUnitHyperBall<: DerivedDomain{SVector{2,Float64}}
     superdomain :: Domain
 
-    DerivedUnitBall() = new(disk(2.0))
+    DerivedUnitHyperBall() = new(disk(2.0))
 end
 
 @testset "Specific domains" begin
@@ -471,7 +471,7 @@ end
 
 
     @testset "derived unit ball" begin
-        B = DerivedUnitBall()
+        B = DerivedUnitHyperBall()
         @test v[1.4, 1.4] ∈ B
         @test v[1.5, 1.5] ∉ B
         @test typeof(1.2*B)==typeof(B*1.2)
@@ -533,16 +533,27 @@ end
 
         E2 = ellipse_shape(1, 2.0)
         @test eltype(E) == SVector{2,Float64}
+
+        D = UnitCircle()
+        @test convert(Domain{SVector{2,BigFloat}}, D) ≡ UnitCircle{BigFloat}()
+        @test SVector(1,0) in D
+        @test SVector(nextfloat(1.0),0) ∉ D
+
+        D = UnitSphere()
+        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{BigFloat}()
+        @test SVector(1,0,0) in D
+        @test SVector(nextfloat(1.0),0,0) ∉ D
     end
+
 
     @testset "mapped_domain" begin
         # Test chaining of maps
         D = circle()
         D1 = 2*D
         @test typeof(D1) <: MappedDomain
-        @test typeof(source(D1)) <: UnitSphere
+        @test typeof(source(D1)) <: UnitHyperSphere
         D2 = 2*D1
-        @test typeof(source(D2)) <: UnitSphere
+        @test typeof(source(D2)) <: UnitHyperSphere
 
         D = cube(Val{2})
         show(io,rotate(D,1.))

@@ -1,59 +1,64 @@
 # circle.jl
 
+abstract type AbstractHyperSphere{N,T} <: EuclideanDomain{N,T} end
+
 """
 The unit sphere (of radius 1) in `N` dimensions.
 """
-struct UnitSphere{N,T} <: EuclideanDomain{N,T}
-end
+struct UnitHyperSphere{N,T} <: AbstractHyperSphere{N,T} end
 
-const Circle{T} = UnitSphere{2,T}
-const Sphere{T} = UnitSphere{3,T}
+UnitHyperSphere{N}() where N = UnitHyperSphere{N,Float64}()
 
-indomain(x, ::UnitSphere) = norm(x) == 1
+const UnitCircle{T} = UnitHyperSphere{2,T}
+const UnitSphere{T} = UnitHyperSphere{3,T}
 
-approx_indomain(x, ::UnitSphere, tolerance) = 1-tolerance <= norm(x) <= 1+tolerance
+convert(::Type{Domain{SVector{N,T}}}, d::UnitHyperSphere{N}) where {N,T} =
+    UnitHyperSphere{N,T}()
 
-boundary(::UnitBall{N,T}) where {N,T} = UnitSphere{N,T}()
+indomain(x, ::UnitHyperSphere) = norm(x) == 1
 
-circle(::Type{T} = Float64) where {T} = Circle{T}()
+approx_indomain(x, ::UnitHyperSphere, tolerance) = 1-tolerance <= norm(x) <= 1+tolerance
+
+boundary(::UnitHyperBall{N,T}) where {N,T} = UnitHyperSphere{N,T}()
+
+circle(::Type{T} = Float64) where {T} = UnitCircle{T}()
 circle(radius::Number) = radius * circle(float(typeof(radius)))
 circle(radius::Number, center::AbstractVector) = circle(radius) + center
 
-sphere(::Type{T} = Float64) where {T} = Sphere{T}()
+sphere(::Type{T} = Float64) where {T} = UnitSphere{T}()
 sphere(radius::Number) = radius * sphere(float(typeof(radius)))
 sphere(radius::Number, center::AbstractVector) = sphere(radius) + center
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)
-ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b) * Circle{T}()
+ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b) * UnitCircle{T}()
 
 "Create an ellipse-shaped domain with semi-axes lengths `a` and `b` respectively."
 ellipse_shape(a::Number, b::Number) = ellipse_shape(promote(a,b)...)
-ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b) * Disk{T}()
+ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b) * UnitDisk{T}()
 
 
 """
 The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 """
-struct CircleMap{S,T} <: AbstractMap{S,T}
-end
+struct UnitCircleMap{S,T} <: AbstractMap{S,T} end
 
-parameterization(d::Circle) = CircleMap{subeltype(d),eltype(d)}()
+parameterization(d::UnitCircle) = UnitCircleMap{subeltype(d),eltype(d)}()
 
-domain(d::CircleMap{S}) where S = HalfOpenRightInterval{S}(0, 1)
+domain(d::UnitCircleMap{S}) where S = HalfOpenRightInterval{S}(0, 1)
 
-image(m::CircleMap{S}) where S = Circle{S}()
+image(m::UnitCircleMap{S}) where S = UnitCircle{S}()
 
-applymap(m::CircleMap{S}, t) where S = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
+applymap(m::UnitCircleMap{S}, t) where S = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
 
-function gradient(m::CircleMap{S}, t) where S
+function gradient(m::UnitCircleMap{S}, t) where S
     a = 2*S(pi)
     SVector(-a*sin(a*t), a*cos(a*t))
 end
 
 
 """
-`AngleMap` is a left inverse of `CircleMap`. A 2D vector `x` is projected onto
+`AngleMap` is a left inverse of `UnitCircleMap`. A 2D vector `x` is projected onto
 the intersection point with the unit circle of the line connecting `x` to the
 origin. The angle of this point, scaled to the interval `[0,1)`, is the result.
 """
@@ -75,6 +80,6 @@ function applymap(m::AngleMap, x)
     θ / twopi
 end
 
-left_inverse(m::CircleMap{S,T}) where {S,T} = AngleMap{T,S}()
+left_inverse(m::UnitCircleMap{S,T}) where {S,T} = AngleMap{T,S}()
 
-right_inverse(m::AngleMap{S,T}) where {S,T} = CircleMap{T,S}()
+right_inverse(m::AngleMap{S,T}) where {S,T} = UnitCircleMap{T,S}()
