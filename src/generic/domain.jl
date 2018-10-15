@@ -71,6 +71,7 @@ function approx_in(x, d::Domain, tolerance = default_tolerance(d))
    approx_in(convert(T, x), convert(Domain{T}, d), tolerance)
 end
 
+isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 
 isreal(d::Domain) = isreal(spaceof(d))
 

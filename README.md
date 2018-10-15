@@ -17,11 +17,17 @@ Domains.jl uses IntervalSets.jl for Closed and open intervals.
 
 ### Rectangles
 
-Rectangles can be constructed as
+Rectangles can be constructed as a product of intervals, where the elements of the domain
+are `SVector{2}`:
 
-### Circles
+```julia
 
-### Disks
+```
+
+
+### Circles and Spheres
+
+### Disks and Balls
 
 ### Union of domains
 
