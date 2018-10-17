@@ -67,6 +67,7 @@ point_in_domain(d::UnionDomain) = point_in_domain(element(d,1))
 
 ==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
 
+isempty(d::UnionDomain) = all(isempty, d.domains)
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(numelements(d)) domains:\n")
     for (i,e) in enumerate(elements(d))
@@ -163,7 +164,6 @@ function intersect(d1::ProductDomain, d2::ProductDomain)
     end
 end
 
-
 function show(io::IO, d::IntersectionDomain)
     print(io, "the intersection of $(numelements(d)) domains:\n")
     print(io, "\t1.\t: ", element(d,1), "\n")
@@ -199,6 +199,7 @@ setdiff(d1::Domain, d2) = setdiff(d1, convert(Domain, d2))
 indomain(x, d::DifferenceDomain) = in(x, d.d1) && (~in(x, d.d2))
 
 \(d1::Domain, d2) = setdiff(d1, d2)
+
 
 
 function show(io::IO, d::DifferenceDomain)

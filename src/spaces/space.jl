@@ -81,6 +81,9 @@ in(x, ::GeometricSpace) = false
 in(x, ::Type{GeometricSpace{T}}) where {T} = false
 in(x::T, ::Type{GeometricSpace{T}}) where {T} = true
 
+# spaces cannot be empty
+isempty(::GeometricSpace) = false
+
 
 # Make the space bigger by widening the numeric type
 widen(A::Type{GeometricSpace{T}}) where {T} = _widen(A, eltype(A), subeltype(A))

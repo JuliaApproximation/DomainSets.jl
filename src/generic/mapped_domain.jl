@@ -87,6 +87,9 @@ function approx_indomain(x, d::ForwardMappedDomain, tolerance)
     end
 end
 
+# we must map any point somewhere
+isempty(d::ForwardMappedDomain) = isempty(d.source)
+
 forwardmap_domain(fwmap, domain::Domain) = ForwardMappedDomain(domain, fwmap)
 
 # Avoid chain of multiple mappings, use composite map instead

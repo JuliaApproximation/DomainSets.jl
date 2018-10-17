@@ -68,6 +68,8 @@ approx_indomain(x, d::FullSpace, tolerance) = in(x, d)
 # We choose the origin as a point in the full space
 point_in_domain(d::FullSpace) = zero(eltype(d))
 
+isempty(::FullSpace) = false # constains zero
+
 # Arithmetic operations
 
 union(d1::FullSpace, d2::FullSpace) = d1

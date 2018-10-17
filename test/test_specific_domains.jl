@@ -52,6 +52,7 @@ end
         d2 = FullSpace(SVector{2,Float64})
         @test v[0.1,0.2] ∈ d2
         @test approx_in(v[0.1,0.2], d2)
+        @test !isempty(d2)
 
         @test d2 == Domain(SVector{2,Float64})
         @test d2 == convert(Domain,SVector{2,Float64})
@@ -65,6 +66,7 @@ end
         @test 1.1 ∉ d
         @test approx_in(1.1, d, 0.2)
         @test !approx_in(1.2, d, 0.1)
+        @test !isempty(d)
 
         @test d+1 == Domain(2.0)
         @test 1+d == Domain(2.0)
@@ -441,6 +443,7 @@ end
         D = disk()
         @test v[1.,0.] ∈ D
         @test v[1.,1.] ∉ D
+        @test !isempty(D)
 
         D = disk(2.0)
         @test v[1.4, 1.4] ∈ D
@@ -448,26 +451,31 @@ end
         @test typeof(1.2*D)==typeof(D*1.2)
         @test v[1.5,1.5] ∈ 1.2*D
         @test v[1.5,1.5] ∈ D*1.2
+        @test !isempty(D)
 
         D = disk(2.0, v[1.0,1.0])
         @test v[2.4, 2.4] ∈ D
         @test v[3.5, 2.5] ∉ D
+        @test !isempty(D)
 
         B = ball()
         @test v[1.,0.0,0.] ∈ B
         @test v[1.,0.1,0.] ∉ B
+        @test !isempty(B)
 
         B = ball(2.0)
         @test v[1.9,0.0,0.0] ∈ B
         @test v[0,-1.9,0.0] ∈ B
         @test v[0.0,0.0,-1.9] ∈ B
         @test v[1.9,1.9,0.0] ∉ B
+        @test !isempty(B)
 
         B = ball(2.0, v[1.0,1.0,1.0])
         @test v[2.9,1.0,1.0] ∈ B
         @test v[1.0,-0.9,1.0] ∈ B
         @test v[1.0,1.0,-0.9] ∈ B
         @test v[2.9,2.9,1.0] ∉ B
+        @test !isempty(B)
     end
 
 
@@ -486,6 +494,7 @@ end
         D = cube(Val{2})
         @test v[0.9, 0.9] ∈ D
         @test v[1.1, 1.1] ∉ D
+        @test !isempty(D)
 
         @test approx_in(v[-0.1,-0.1], D, 0.1)
         @test !approx_in(v[-0.1,-0.1], D, 0.09)
@@ -502,6 +511,7 @@ end
         @test v[1.,1.] ∉ C
         @test approx_in(v[1.,0.], C)
         @test !approx_in(v[1.,1.], C)
+        @test !isempty(C)
 
         C = circle(2., v[1.,1.])
         @test approx_in(v[3.,1.], C)
@@ -510,6 +520,7 @@ end
         @test v[1.,0.,0.] ∈ S
         @test v[1.,0.,1.] ∉ S
         @test approx_in(v[cos(1.),sin(1.),0.], S)
+        @test !isempty(S)
 
         S = sphere(2., v[1.,1.,1.])
         @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
@@ -733,6 +744,8 @@ end
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
         @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
+
+        @test !isempty(u1)
 
         show(io,u1)
         @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"

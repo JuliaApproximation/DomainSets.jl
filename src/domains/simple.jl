@@ -18,6 +18,8 @@ indomain(x, ::UnitHyperBall) = norm(x) <= 1
 
 approx_indomain(x, ::UnitHyperBall, tolerance) = norm(x) <= 1+tolerance
 
+isempty(::UnitHyperBall) = false
+
 disk(::Type{T} = Float64) where {T} = UnitDisk{T}()
 disk(radius::Number) = radius * disk(typeof(radius))
 disk(radius::Number, center::AbstractVector) = disk(radius) + center
@@ -42,6 +44,8 @@ end
 indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 
 approx_indomain(x, ::UnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
+
+isempty(::UnitSimplex) = false
 
 simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
 
@@ -101,6 +105,7 @@ Domain(d) = convert(Domain, d)
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x
+isempty(::Point) = false
 
 approx_indomain(x, d::Point, tolerance) = norm(x-d.x) <= tolerance
 

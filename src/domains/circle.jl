@@ -2,6 +2,8 @@
 
 abstract type AbstractHyperSphere{N,T} <: EuclideanDomain{N,T} end
 
+
+
 """
 The unit sphere (of radius 1) in `N` dimensions.
 """
@@ -20,6 +22,8 @@ indomain(x, ::UnitHyperSphere) = norm(x) == 1
 approx_indomain(x, ::UnitHyperSphere, tolerance) = 1-tolerance <= norm(x) <= 1+tolerance
 
 boundary(::UnitHyperBall{N,T}) where {N,T} = UnitHyperSphere{N,T}()
+
+isempty(::UnitHyperSphere) = false
 
 circle(::Type{T} = Float64) where {T} = UnitCircle{T}()
 circle(radius::Number) = radius * circle(float(typeof(radius)))
