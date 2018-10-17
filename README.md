@@ -50,7 +50,29 @@ true
 ```
 
 
-### Union of domains
+### Union, intersection, and setdiff of domains
+
+Domains can be unioned and intersected together:
+```julia
+julia> d = UnitCircle() ∪ 2UnitCircle();
+
+julia> in.([SVector(1,0),SVector(0,2), SVector(1.5,1.5)], Ref(d))
+3-element BitArray{1}:
+  true
+  true
+ false
+
+julia> d = UnitCircle() ∩ (2UnitCircle() + SVector(1.0,0.0))
+the intersection of 2 domains:
+	1.	: UnitHyperSphere{2,Float64}()
+	2.	: A mapped domain based on UnitHyperSphere{2,Float64}()
+
+julia> SVector(1,0) in d
+false
+
+julia> SVector(-1,0) in d
+true
+```
 
 ### The domain interface
 

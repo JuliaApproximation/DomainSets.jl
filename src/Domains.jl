@@ -55,10 +55,6 @@ export ..
 
 ## Utils
 
-# from util/common.jl
-export elements, element, numelements
-export TypeFactory
-
 # from util/tensorproducts.jl
 export cartesianproduct
 

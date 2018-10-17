@@ -1,4 +1,5 @@
 using Test, LinearAlgebra, Domains, StaticArrays
+import Domains: elements, TypeFactory
 
 include("test_spaces.jl")
 include("test_maps.jl")
