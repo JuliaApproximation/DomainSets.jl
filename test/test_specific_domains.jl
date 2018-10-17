@@ -694,6 +694,11 @@ end
             show(io,T1)
             @test String(take!(io)) == "-1.0..1.0 x -1.0..1.0"
         end
+        @testset "mixed intervals" begin
+            d = (0..1) × (0.0..1)
+            @test (0.1,0.2) ∈ d
+            @test d isa Domain2d
+        end
     end
     @testset "embedded" begin
         i = 0.0 .. 1.0

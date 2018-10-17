@@ -10,7 +10,12 @@ Create an eltype that is suitable for a product domain. The result is a tuple
 type, where each of the elements is the eltype of the corresponding element
 of the product domain.
 """
-product_eltype(domains...) = Tuple{map(eltype, domains)...}
+_product_eltype(t) = t
+_product_eltype(::Type{Tuple{T,V}}) where {T<:Real,V<:Real} =
+	NTuple{2,promote_type(T,V)}
+_product_eltype(::Type{Tuple{T,V}}) where {T<:Complex,V<:Complex} =
+	NTuple{2,promote_type(T,V)}
+product_eltype(domains...) = _product_eltype(Tuple{map(eltype, domains)...})
 
 """
 Try to simplify the type of a product domain to a type to which it is isomorphic.
