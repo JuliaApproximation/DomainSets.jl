@@ -8,8 +8,9 @@
 """
 The unit ball (of radius 1) in `N` dimensions.
 """
-struct UnitHyperBall{N,T} <: EuclideanDomain{N,T}
-end
+struct UnitHyperBall{N,T} <: EuclideanDomain{N,T} end
+
+UnitHyperBall{N}() where N = UnitHyperBall{N,Float64}()
 
 const UnitDisk{T} = UnitHyperBall{2,T}
 const UnitBall{T} = UnitHyperBall{3,T}
@@ -19,14 +20,6 @@ indomain(x, ::UnitHyperBall) = norm(x) <= 1
 approx_indomain(x, ::UnitHyperBall, tolerance) = norm(x) <= 1+tolerance
 
 isempty(::UnitHyperBall) = false
-
-disk(::Type{T} = Float64) where {T} = UnitDisk{T}()
-disk(radius::Number) = radius * disk(typeof(radius))
-disk(radius::Number, center::AbstractVector) = disk(radius) + center
-
-ball(::Type{T} = Float64) where {T} = UnitBall{T}()
-ball(radius::Number) = radius * ball(typeof(radius))
-ball(radius::Number, center::AbstractVector) = ball(radius) + center
 
 show(io::IO, d::UnitHyperBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
 
@@ -38,8 +31,8 @@ point_in_domain(d::UnitHyperBall) = zero(eltype(d))
 # An n-dimensional simplex
 ###########################
 
-struct UnitSimplex{N,T} <: EuclideanDomain{N,T}
-end
+struct UnitSimplex{N,T} <: EuclideanDomain{N,T} end
+UnitSimplex{N}() where N = UnitSimplex{N,Float64}()
 
 indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 
@@ -47,31 +40,8 @@ approx_indomain(x, ::UnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &
 
 isempty(::UnitSimplex) = false
 
-simplex(::Type{Val{N}}, ::Type{T} = Float64) where {T,N} = UnitSimplex{N,T}()
-
 # We pick the origin, because it belongs to the domain regardless of what T is
 point_in_domain(d::UnitSimplex) = zero(eltype(d))
-
-
-#########################
-# An n-dimensional cube
-#########################
-
-cube(::Type{Val{N}}, ::Type{T} = Float64) where {N,T} = cartesianproduct(UnitInterval{T}(), Val{N})
-
-cube() = cube(Val{3})
-
-rectangle(a, b, c, d) = (a..b) × (c..d)
-
-cube(a, b, c, d, e, f) = (a..b) × (c..d) × (e..f)
-
-# This one is not type-stable
-cube(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} = ProductDomain(map((ai,bi)->ClosedInterval{T}(ai,bi), a, b)...)
-# This one isn't either
-cube(a::AbstractVector{T}, b::AbstractVector{T}) where {T} = cube(tuple(a...), tuple(b...))
-
-# const Square{T} = UnitCube{2,T}
-# const Cube{T} = UnitCube{3,T}}
 
 
 

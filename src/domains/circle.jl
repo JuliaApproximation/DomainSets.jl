@@ -25,14 +25,6 @@ boundary(::UnitHyperBall{N,T}) where {N,T} = UnitHyperSphere{N,T}()
 
 isempty(::UnitHyperSphere) = false
 
-circle(::Type{T} = Float64) where {T} = UnitCircle{T}()
-circle(radius::Number) = radius * circle(float(typeof(radius)))
-circle(radius::Number, center::AbstractVector) = circle(radius) + center
-
-sphere(::Type{T} = Float64) where {T} = UnitSphere{T}()
-sphere(radius::Number) = radius * sphere(float(typeof(radius)))
-sphere(radius::Number, center::AbstractVector) = sphere(radius) + center
-
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)
 ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b) * UnitCircle{T}()

@@ -7,7 +7,7 @@
 Domains.jl is a package designed to represent simple infinite sets, that
 can be used to encode domains of functions. For example, the domain of the
 function `log(x::Float64)` is the infinite open interval, which is represented
-by the type `Halfline{Float64}()`.
+by the type `HalfLine{Float64}()`.
 
 ## Examples
 

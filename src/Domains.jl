@@ -88,8 +88,7 @@ export IdentityMap, ConstantMap
 export embedding_map, restriction_map, isomorphism_map
 # from maps/affine_maps.jl
 export AffineMap, Translation, LinearMap
-export islinear, matrix, vector
-export update_eltype
+export islinear
 export linear_map, interval_map, scaling_map, rotation_map, translation_map
 # from maps/coordinates.jl
 export CartToPolarMap, PolarToCartMap
@@ -99,8 +98,8 @@ export CartToPolarMap, PolarToCartMap
 
 # from generic/domain.jl
 export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
-export indomain, dimension
-export approx_in, approx_indomain
+export dimension
+export approx_in
 export isclosed, iscompact
 export boundary, ∂
 export point_in_domain
@@ -111,7 +110,6 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain
-export product_eltype
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
@@ -129,20 +127,17 @@ export infimum, supremum
 
 ## Specific domains
 
-# from domains/trivial.jl
-export euclideanspace, emptyspace, fullspace
 # from domains/interval.jl
-export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, HalfOpenLeftInterval, HalfOpenRightInterval, OpenInterval, ClosedInterval
-export real_line, halfline, negative_halfline, interval, open_interval,
-    closed_interval, unitinterval
+export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, OpenInterval, ClosedInterval
 export leftendpoint, rightendpoint, isleftopen, isrightopen
 export cardinality
+export HalfLine, NegativeHalfLine
 # from domains/simple.jl
 export UnitHyperBall, UnitDisk, UnitBall, Cube, Simplex, UnitSimplex, UnitHyperSphere, Point
-export disk, ball, cube, simplex, cylinder, rectangle
+export cylinder
 # from domains/circle.jl
 export UnitCircle, UnitSphere
-export circle, sphere, ellipse, ellipse_shape
+export ellipse, ellipse_shape
 export parameterization, gradient
 
 include("util/common.jl")

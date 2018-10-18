@@ -11,7 +11,7 @@ const io = IOBuffer()
 struct DerivedUnitHyperBall<: DerivedDomain{SVector{2,Float64}}
     superdomain :: Domain
 
-    DerivedUnitHyperBall() = new(disk(2.0))
+    DerivedUnitHyperBall() = new(2UnitDisk())
 end
 
 @testset "Specific domains" begin
@@ -37,7 +37,7 @@ end
     end
 
     @testset "full space" begin
-        d1 = FullSpace()
+        d1 = FullSpace{Float64}()
         show(io,d1)
         @test String(take!(io)) == "the full space with eltype Float64"
         @test 0.5 ∈ d1
@@ -46,10 +46,10 @@ end
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
-        @test typeof(fullspace(0..1)+1) <: FullSpace
-        @test typeof(fullspace(0..1)*3) <: FullSpace
+        @test typeof(FullSpace(0..1)+1) <: FullSpace
+        @test typeof(FullSpace(0..1)*3) <: FullSpace
 
-        d2 = FullSpace(SVector{2,Float64})
+        d2 = FullSpace{SVector{2,Float64}}()
         @test v[0.1,0.2] ∈ d2
         @test approx_in(v[0.1,0.2], d2)
         @test !isempty(d2)
@@ -143,8 +143,8 @@ end
             @test convert(AbstractInterval{Float64}, d) ≡ ChebyshevInterval()
             @test convert(ChebyshevInterval{Float64}, d) ≡ ChebyshevInterval()
         end
-        @testset "halfline($T)" begin
-            d = halfline(T)
+        @testset "HalfLine{$T}" begin
+            d = HalfLine{T}()
             @test leftendpoint(d) == zero(T)
             @test rightendpoint(d) == T(Inf)
             @test minimum(d) == infimum(d) == leftendpoint(d)
@@ -163,8 +163,8 @@ end
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∉ ∂(d)
         end
-        @testset "negative_halfline($T)" begin
-            d = negative_halfline(T)
+        @testset "NegativeHalfLine{$T}" begin
+            d = NegativeHalfLine{T}()
             @test leftendpoint(d) == -T(Inf)
             @test rightendpoint(d) == zero(T)
             @test infimum(d) == leftendpoint(d)
@@ -440,12 +440,12 @@ end
     end
 
     @testset "unit ball" begin
-        D = disk()
+        D = UnitDisk()
         @test v[1.,0.] ∈ D
         @test v[1.,1.] ∉ D
         @test !isempty(D)
 
-        D = disk(2.0)
+        D = 2UnitDisk()
         @test v[1.4, 1.4] ∈ D
         @test v[1.5, 1.5] ∉ D
         @test typeof(1.2*D)==typeof(D*1.2)
@@ -453,24 +453,24 @@ end
         @test v[1.5,1.5] ∈ D*1.2
         @test !isempty(D)
 
-        D = disk(2.0, v[1.0,1.0])
+        D = 2UnitDisk() + v[1.0,1.0]
         @test v[2.4, 2.4] ∈ D
         @test v[3.5, 2.5] ∉ D
         @test !isempty(D)
 
-        B = ball()
+        B = UnitBall()
         @test v[1.,0.0,0.] ∈ B
         @test v[1.,0.1,0.] ∉ B
         @test !isempty(B)
 
-        B = ball(2.0)
+        B = 2UnitBall()
         @test v[1.9,0.0,0.0] ∈ B
         @test v[0,-1.9,0.0] ∈ B
         @test v[0.0,0.0,-1.9] ∈ B
         @test v[1.9,1.9,0.0] ∉ B
         @test !isempty(B)
 
-        B = ball(2.0, v[1.0,1.0,1.0])
+        B = 2.0UnitBall() + v[1.0,1.0,1.0]
         @test v[2.9,1.0,1.0] ∈ B
         @test v[1.0,-0.9,1.0] ∈ B
         @test v[1.0,1.0,-0.9] ∈ B
@@ -486,12 +486,12 @@ end
         @test typeof(1.2*B)==typeof(B*1.2)
         @test v[1.5,1.5] ∈ 1.2*B
         @test v[1.5,1.5] ∈ B*1.2
-        @test Domains.supereltype(B) == eltype(disk(2.0))
+        @test Domains.supereltype(B) == eltype(2UnitDisk())
     end
 
     @testset "cube" begin
         #Square
-        D = cube(Val{2})
+        D = UnitInterval()^2
         @test v[0.9, 0.9] ∈ D
         @test v[1.1, 1.1] ∉ D
         @test !isempty(D)
@@ -500,32 +500,32 @@ end
         @test !approx_in(v[-0.1,-0.1], D, 0.09)
 
         #Cube
-        D = cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0)
+        D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
         @test v[0.9, 0.6, -2.5] ∈ D
         @test v[0.0, 0.6, 0.0] ∉ D
     end
 
     @testset "sphere" begin
-        C = circle()
+        C = UnitCircle()
         @test v[1.,0.] ∈ C
         @test v[1.,1.] ∉ C
         @test approx_in(v[1.,0.], C)
         @test !approx_in(v[1.,1.], C)
         @test !isempty(C)
 
-        C = circle(2., v[1.,1.])
+        C = 2UnitCircle() + v[1.,1.]
         @test approx_in(v[3.,1.], C)
 
         C = UnitCircle() + v[1,1]
         @test approx_in(v[2,1], C)
 
-        S = sphere()
+        S = UnitSphere()
         @test v[1.,0.,0.] ∈ S
         @test v[1.,0.,1.] ∉ S
         @test approx_in(v[cos(1.),sin(1.),0.], S)
         @test !isempty(S)
 
-        S = sphere(2., v[1.,1.,1.])
+        S = 2UnitSphere() + v[1.,1.,1.]
         @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
         @test !approx_in(v[4.,1.,5.], S)
 
@@ -563,36 +563,36 @@ end
 
     @testset "mapped_domain" begin
         # Test chaining of maps
-        D = circle()
+        D = UnitCircle()
         D1 = 2*D
         @test typeof(D1) <: MappedDomain
         @test typeof(source(D1)) <: UnitHyperSphere
         D2 = 2*D1
         @test typeof(source(D2)) <: UnitHyperSphere
 
-        D = cube(Val{2})
+        D = UnitInterval()^2
         show(io,rotate(D,1.))
         @test String(take!(io)) == "A mapped domain based on 0.0..1.0 (Unit) x 0.0..1.0 (Unit)"
 
-        D = rotate(cube(Val{2}),pi)
+        D = rotate(UnitInterval()^2, π)
         @test v[-0.9, -0.9] ∈ D
         @test v[-1.1, -1.1] ∉ D
 
-        D = rotate(cube(Val{2}),pi,v[-.5,-.5])
+        D = rotate(UnitInterval()^2, π, v[-.5,-.5])
         @test v[-1.5, -1.5] ∈ D
         @test v[-0.5, -0.5] ∉ D
 
-        D = rotate(cube(Val{3})+v[-.5,-.5,-.5], pi, pi, pi)
+        D = rotate(UnitInterval()^3 + v[-.5,-.5,-.5], pi, pi, pi)
         @test v[0.4, 0.4, 0.4] ∈ D
         @test v[0.6, 0.6, 0.6] ∉ D
 
-        D = rotate(cube(-1.5, 2.2, 0.5, 0.7, -3.0, -1.0),pi,pi,pi,v[.35, .65, -2.])
+        D = rotate((-1.5.. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0), π, π, π, v[.35, .65, -2.])
         @test v[0.9, 0.6, -2.5] ∈ D
         @test v[0.0, 0.6, 0.0] ∉ D
     end
 
     @testset "simplex" begin
-        d = simplex(Val{2})
+        d = UnitSimplex{2}()
         # We test a point in the interior, a point on each of the boundaries and
         # all corners.
         @test v[0.2,0.2] ∈ d
@@ -611,7 +611,7 @@ end
         @test approx_in(v[-0.1,-0.1], d, 0.1)
         @test !approx_in(v[-0.1,-0.1], d, 0.09)
 
-        d3 = simplex(Val{3}, BigFloat)
+        d3 = UnitSimplex{3,BigFloat}()
         x0 = big(0.0)
         x1 = big(1.0)
         x2 = big(0.3)
@@ -630,8 +630,8 @@ end
     end
 
     @testset "arithmetics" begin
-        D = cube(Val{3})
-        S = ball(2.0)
+        D = UnitInterval()^3
+        S = 2UnitBall()
         @testset "joint domain" begin
             DS = D ∪ S
             @test v[0.0, 0.6, 0.0] ∈ DS
@@ -677,7 +677,7 @@ end
         @testset "ProductDomain 2" begin
             T1 = cartesianproduct((-1.0 .. 1.0), 2)
 
-            T3 = ProductDomain(disk(1.05), (-1.0 .. 1.0))
+            T3 = ProductDomain(1.05UnitDisk(), (-1.0 .. 1.0))
             @test v[0.5,0.5,0.8] ∈ T3
             @test v[-1.1,0.3,0.1] ∉ T3
 
@@ -719,9 +719,9 @@ end
 end
 
 @testset "Set operations" begin
-    d1 = disk()
+    d1 = UnitDisk()
     d2 = (-.9..0.9)^2
-    d3 = rectangle(-.5,-.1,.5,.1)
+    d3 = (-.5 .. -.1) × (.5 .. 0.1)
 
     @test isempty(d3)
     @test convert(Domain{SVector{2,Float64}}, d3) isa Domain{SVector{2,Float64}}
@@ -760,9 +760,9 @@ end
     end
 
     @testset "intersection" begin
-        d1 = disk()
+        d1 = UnitDisk()
         d2 = (-.4..0.4)^2
-        d3 = rectangle(-.5,.5,-.1,.1)
+        d3 = (-.5 .. 0.5) × (-.1.. 0.1)
         # intersection of productdomains
         i1 = d2 & d3
         show(io,i1)
@@ -786,8 +786,8 @@ end
     end
 
     @testset "difference" begin
-        d1 = disk()
-        d2 = rectangle(-.5,.5,-.1,.1)
+        d1 = UnitDisk()
+        d2 = (-.5..0.5) × (-.1..0.1)
         # intersection of productdomains
         d = d1\d2
         show(io,d)

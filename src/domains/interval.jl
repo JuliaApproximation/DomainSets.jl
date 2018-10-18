@@ -69,7 +69,6 @@ similar_interval(d::ClosedFixedInterval{T}, a, b) where {T} = ClosedInterval{flo
 struct UnitInterval{T} <: ClosedFixedInterval{T} end
 
 UnitInterval() = UnitInterval{Float64}()
-unitinterval(::Type{T} = Float64) where {T} = UnitInterval{T}()
 
 endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 
@@ -82,50 +81,47 @@ ChebyshevInterval() = ChebyshevInterval{Float64}()
 
 endpoints(d::ChebyshevInterval{T}) where {T} = (-one(T),one(T))
 
-real_line(::Type{T} = Float64) where {T <: AbstractFloat} = FullSpace{T}()
-
 
 "The half-open positive halfline `[0,∞)`."
-struct Halfline{T} <: FixedInterval{:closed,:open,T}
-end
-
-halfline(::Type{T} = Float64) where {T <: AbstractFloat} = Halfline{T}()
-
-endpoints(d::Halfline{T}) where {T} = (zero(T), T(Inf))
+struct HalfLine{T} <: FixedInterval{:closed,:open,T} end
+HalfLine() = HalfLine{Float64}()
 
 
-indomain(x, d::Halfline) = x >= 0
+endpoints(d::HalfLine{T}) where {T} = (zero(T), T(Inf))
 
-function similar_interval(d::Halfline, a, b)
+
+indomain(x, d::HalfLine) = x >= 0
+
+function similar_interval(d::HalfLine, a, b)
     @assert a == 0
     @assert isinf(b) && b > 0
     d
 end
 
-point_in_domain(d::Halfline) = zero(eltype(d))
+point_in_domain(d::HalfLine) = zero(eltype(d))
 
 
 "The open negative halfline `(-∞,0)`."
-struct NegativeHalfline{T} <: FixedInterval{:open,:open,T}
-end
+struct NegativeHalfLine{T} <: FixedInterval{:open,:open,T} end
+NegativeHalfLine() = NegativeHalfLine{Float64}()
 
-negative_halfline(::Type{T} = Float64) where {T <: AbstractFloat} = NegativeHalfline{T}()
 
-endpoints(d::NegativeHalfline{T}) where {T} = (-T(Inf), zero(T))
+
+endpoints(d::NegativeHalfLine{T}) where {T} = (-T(Inf), zero(T))
 
 
 # Open at both endpoints
 
 
-indomain(x, d::NegativeHalfline) = x < 0
+indomain(x, d::NegativeHalfLine) = x < 0
 
-function similar_interval(d::NegativeHalfline, a, b)
+function similar_interval(d::NegativeHalfLine, a, b)
     @assert isinf(a) && a < 0
     @assert b == 0
     d
 end
 
-point_in_domain(d::NegativeHalfline) = -one(eltype(d))
+point_in_domain(d::NegativeHalfLine) = -one(eltype(d))
 
 
 similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
@@ -199,9 +195,9 @@ function show(io::IO, d::UnitInterval)
     print(io, Interval(d))
     print(io, " (Unit)")
 end
-function show(io::IO, d::Halfline)
+function show(io::IO, d::HalfLine)
     print(io, Interval(d))
-    print(io, " (Halfline)")
+    print(io, " (HalfLine)")
 end
 
 function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T

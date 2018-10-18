@@ -47,18 +47,14 @@ show(io::IO, d::EmptySpace) = print(io, "the empty space with eltype ", eltype(d
 ### The whole space R^N (or C^N)
 ##################################
 
-struct FullSpace{T} <: Domain{T}
-end
+struct FullSpace{T} <: Domain{T} end
 
 const AnyFullSpace = FullSpace{Any}
 
-FullSpace() = FullSpace{Float64}()
-FullSpace(::Type{T}) where {T} = FullSpace{T}()
-
-fullspace(d::Domain) = FullSpace{eltype(d)}()
+FullSpace(d) = FullSpace{eltype(d)}()
 
 euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
-euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace(SVector{N,T})
+euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace{SVector{N,T}}()
 
 indomain(x::T, d::FullSpace{T}) where {T} = true
 indomain(x::S, d::FullSpace{T}) where {T,S} = promotes_to(S,T) == Val{true}

@@ -24,7 +24,7 @@ end
 @testset "generic domains" begin
     domains = [
         0..1,
-        cube(),
+        UnitInterval()^3
     ]
 
     @testset "$(rpad("Generic domains",80))" begin
