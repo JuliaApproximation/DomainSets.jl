@@ -516,6 +516,9 @@ end
         C = circle(2., v[1.,1.])
         @test approx_in(v[3.,1.], C)
 
+        C = UnitCircle() + v[1,1]
+        @test approx_in(v[2,1], C)
+
         S = sphere()
         @test v[1.,0.,0.] ∈ S
         @test v[1.,0.,1.] ∉ S

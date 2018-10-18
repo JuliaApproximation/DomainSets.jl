@@ -47,8 +47,9 @@ struct ForwardMappedDomain{F,D,T} <: MappedDomain{D,T}
     fwmap   ::  F
 end
 
-ForwardMappedDomain(source::Domain{S}, fwmap::AbstractMap{S,T}) where {S,T} =
+ForwardMappedDomain(source::Domain, fwmap::AbstractMap{S,T}) where {S,T} =
     ForwardMappedDomain{typeof(fwmap),typeof(source),T}(source, fwmap)
+
 
 forward_map(d::ForwardMappedDomain) = d.fwmap
 inverse_map(d::ForwardMappedDomain) = inv(d.fwmap)
