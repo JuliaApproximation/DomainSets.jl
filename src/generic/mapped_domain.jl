@@ -58,7 +58,6 @@ inverse_map(d::ForwardMappedDomain) = inv(d.fwmap)
 # The point x that is given can be any point in T. Yet, the map from S to T does
 # not have to be fully invertible on T. It is sufficient that it is invertible
 # on its range, and that it has a left inverse that is defined on T.
-# that is defined on the space of T.
 # Then we can proceed as follows:
 # - we compute the left inverse of the point x ∈ T and check that the resulting
 #   point t ∈ S lies in the source domain
@@ -131,7 +130,8 @@ inversemap_domain(invmap, d::MappedDomain) = inversemap_domain(inverse_map(d) �
 
 
 """
-A `BidirectionalMappedDomain` stores the `source` domain and both the map `f` and its inverse.
+A `BidirectionalMappedDomain` stores the `source` domain and both the map `f`
+and a left inverse.
 """
 struct BidirectionalMappedDomain{F1,F2,D,T} <: MappedDomain{D,T}
     source  ::  D
@@ -146,3 +146,25 @@ BidirectionalMappedDomain(source::Domain{S}, fwmap::AbstractMap{S,T}, invmap::Ab
 
 forward_map(d::BidirectionalMappedDomain) = d.fwmap
 inverse_map(d::BidirectionalMappedDomain) = d.invmap
+
+# We proceed as we do for ForwardMappedDomain, except that we can use the stored
+# left inverse. This should be refactored.
+function indomain(x, d::BidirectionalMappedDomain)
+    t = d.invmap * x
+    if t ∈ source(d)
+        x2 = d.fwmap * t
+        norm(x-x2) <= default_tolerance(d)
+    else
+        false
+    end
+end
+
+function approx_indomain(x, d::BidirectionalMappedDomain, tolerance)
+    t = d.invmap * x
+    if approx_indomain(t, source(d), tolerance)
+        x2 = d.fwmap * t
+        norm(x-x2) <= tolerance
+    else
+        false
+    end
+end
