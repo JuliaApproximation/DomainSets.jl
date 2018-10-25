@@ -132,7 +132,7 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 # Conversions between intervals
 #################################
 # Avoid depcrecated warning: Warning: Constructors no longer fall back to `convert`.
-# example: A constructor `Domains.AbstractInterval{Float64}(::IntervalSets.ClosedInterval{Float64})` should be defined instead.
+# example: A constructor `AbstractInterval{Float64}(::IntervalSets.ClosedInterval{Float64})` should be defined instead.
 
 function convert(::Type{UnitInterval{T}}, d::AbstractInterval) where {T}
     endpoints(d) == (0,1) || throw(InexactError(:convert,UnitInterval,d))

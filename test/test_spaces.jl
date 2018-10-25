@@ -1,4 +1,4 @@
-import Domains: convert_space, restrict_space, IntegerSpace, RationalSpace, RealSpace, ComplexSpace,
+import DomainSets: convert_space, restrict_space, IntegerSpace, RationalSpace, RealSpace, ComplexSpace,
                 VectorSpace, AnySpace, EmptySpace, FullSpace, GeometricSpace, promote_space_type, promote_space
 
 # test_spaces.jl
@@ -153,8 +153,8 @@ end
         @test_throws InexactError convert_space(RealSpace{Float64}, RealSpace)
         @test_throws InexactError restrict_space(RealSpace{Float64}, RealSpace)
 
-        @test Domains._promote_via_embedding_reduction(AnySpace, AnySpace, AnySpace, ℤ, 1) == AnySpace
-        @test Domains._promote_via_embedding_reduction(AnySpace, AnySpace, 1, AnySpace, ℤ) == AnySpace
+        @test DomainSets._promote_via_embedding_reduction(AnySpace, AnySpace, AnySpace, ℤ, 1) == AnySpace
+        @test DomainSets._promote_via_embedding_reduction(AnySpace, AnySpace, 1, AnySpace, ℤ) == AnySpace
 
         @test !(zero(Z) ∈ R())
         @test !(zero(Z) ∈ R())
@@ -170,10 +170,10 @@ end
         @test issubspace(Z, AnySpace)
         @test !issubspace(AnySpace, Z)
 
-        @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}))
-        @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{ComplexF64}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}))
-        @test Domains.result(Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}))
-        @test_throws ErrorException  Domains.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{1,Float64}}, GeometricSpace{Float64})
+        @test DomainSets.result(DomainSets.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}))
+        @test DomainSets.result(DomainSets.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{ComplexF64}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}))
+        @test DomainSets.result(DomainSets.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}, GeometricSpace{ComplexF64}, GeometricSpace{SVector{2,Float64}}))
+        @test_throws ErrorException  DomainSets.isomorphism_reduction_result(GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{Float64}, GeometricSpace{SVector{1,Float64}}, GeometricSpace{Float64})
     end
 
     @testset "product spaces" begin

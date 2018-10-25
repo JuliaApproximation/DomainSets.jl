@@ -12,9 +12,9 @@
 #   - julia -e 'using Pkg'
 #   - julia -e 'Pkg.add(pwd())'
 # script:
-#   - julia --check-bounds=yes -e 'Pkg.test("Domains", coverage=true)'
+#   - julia --check-bounds=yes -e 'Pkg.test("DomainSets", coverage=true)'
 # after_success:
-#   - julia -e 'cd(Pkg.dir("Domains")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+#   - julia -e 'cd(Pkg.dir("DomainSets")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
 language: julia
 os:
   - linux
@@ -26,4 +26,4 @@ julia:
 notifications:
   email: false
 after_success:
-    - julia -e 'cd(Pkg.dir("Domains")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+    - julia -e 'cd(Pkg.dir("DomainSets")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

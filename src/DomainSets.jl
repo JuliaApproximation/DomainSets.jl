@@ -1,5 +1,5 @@
-# Domains.jl
-module Domains
+# DomainSets.jl
+module DomainSets
 
 # We use static vectors internally
 

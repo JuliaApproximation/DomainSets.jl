@@ -1,5 +1,5 @@
-using StaticArrays, Domains, Test
-import Domains: MappedDomain, similar_interval
+using StaticArrays, DomainSets, Test
+import DomainSets: MappedDomain, similar_interval
 
 # test_specific_domains.jl
 
@@ -109,7 +109,7 @@ end
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
             @test isclosed(d)
-            @test !Domains.isopen(d)
+            @test !DomainSets.isopen(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -130,7 +130,7 @@ end
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
             @test isclosed(d)
-            @test !Domains.isopen(d)
+            @test !DomainSets.isopen(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -152,7 +152,7 @@ end
             @test_throws ArgumentError maximum(d)
 
             @test !isclosed(d)
-            @test !Domains.isopen(d)
+            @test !DomainSets.isopen(d)
             @test !iscompact(d)
             @test 1. ∈ d
             @test -1. ∉ d
@@ -173,7 +173,7 @@ end
             @test_throws ArgumentError maximum(d)
 
             @test !isclosed(d)
-            @test Domains.isopen(d)
+            @test DomainSets.isopen(d)
             @test !iscompact(d)
             @test -1. ∈ d
             @test 1. ∉ d
@@ -486,7 +486,7 @@ end
         @test typeof(1.2*B)==typeof(B*1.2)
         @test v[1.5,1.5] ∈ 1.2*B
         @test v[1.5,1.5] ∈ B*1.2
-        @test Domains.supereltype(B) == eltype(2UnitDisk())
+        @test DomainSets.supereltype(B) == eltype(2UnitDisk())
     end
 
     @testset "cube" begin
@@ -707,7 +707,7 @@ end
         i = 0.0 .. 1.0
         e = embedding_map(Float64, Complex{Float64})
         r = restriction_map(Complex{Float64}, Float64)
-        ei = Domains.forwardmap_domain(e, i)
+        ei = DomainSets.forwardmap_domain(e, i)
 
         @test 0.5+1im ∉ ei
         @test 0.5+0im ∈ ei

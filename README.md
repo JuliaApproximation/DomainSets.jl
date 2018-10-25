@@ -1,10 +1,10 @@
-# Domains.jl
+# DomainSets.jl
 
-[![Build Status](https://travis-ci.org/JuliaApproximation/Domains.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/Domains.jl)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaApproximation/Domains.jl/badge.svg)](https://coveralls.io/github/JuliaApproximation/Domains.jl)
+[![Build Status](https://travis-ci.org/JuliaApproximation/DomainSets.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/DomainSets.jl)
+[![Coverage Status](https://coveralls.io/repos/github/JuliaApproximation/DomainSets.jl/badge.svg)](https://coveralls.io/github/JuliaApproximation/DomainSets.jl)
 
 
-Domains.jl is a package designed to represent simple infinite sets, that
+DomainSets.jl is a package designed to represent simple infinite sets, that
 can be used to encode domains of functions. For example, the domain of the
 function `log(x::Float64)` is the infinite open interval, which is represented
 by the type `HalfLine{Float64}()`.
@@ -13,7 +13,7 @@ by the type `HalfLine{Float64}()`.
 
 ### Intervals
 
-Domains.jl uses IntervalSets.jl for Closed and open intervals.
+DomainSets.jl uses IntervalSets.jl for Closed and open intervals.
 
 ### Rectangles
 
@@ -21,7 +21,7 @@ Rectangles can be constructed as a product of intervals, where the elements of t
 are `SVector{2}`:
 
 ```julia
-julia> using Domains, StaticArrays; import Domains: ×
+julia> using DomainSets, StaticArrays; import DomainSets: ×
 
 julia> SVector(1,2) in (-1..1) × (0..3)
 true
@@ -87,5 +87,5 @@ have `0.2 in d` return true.
 
 ### The `Domain` type
 
-Domains.jl contains an abstract type `Domain{T}`. All subtypes of `Domain{T}`
+DomainSets.jl contains an abstract type `Domain{T}`. All subtypes of `Domain{T}`
 must implement the domain interface, and in addition support `convert(Domain{T}, d)`.

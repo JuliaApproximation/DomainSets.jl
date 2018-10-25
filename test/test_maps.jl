@@ -10,13 +10,13 @@ function suitable_point_to_map(m)
     end
 end
 
-suitable_point_to_map(m::Domains.EmbeddingMap{S,T}) where {S,T} = one(S)
+suitable_point_to_map(m::DomainSets.EmbeddingMap{S,T}) where {S,T} = one(S)
 
-function suitable_point_to_map(m::Domains.EmbeddingMap{SVector{N,S},T}) where {S,T,N}
+function suitable_point_to_map(m::DomainSets.EmbeddingMap{SVector{N,S},T}) where {S,T,N}
     x = @SVector ones(N)
 end
 
-function suitable_point_to_map(m::Domains.ProductMap)
+function suitable_point_to_map(m::DomainSets.ProductMap)
     x = ()
     for map in elements(m)
         x = (x..., suitable_point_to_map(map))
