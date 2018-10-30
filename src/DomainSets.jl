@@ -97,7 +97,7 @@ export CartToPolarMap, PolarToCartMap
 ## Generic domains
 
 # from generic/domain.jl
-export Domain, EuclideanDomain, Domain1d, Domain2d, Domain3d, Domain4d
+export Domain, EuclideanDomain
 export dimension
 export approx_in
 export isclosed, iscompact
