@@ -122,10 +122,6 @@ end
             @test typeof(promote_space(1, 1.0)) == Tuple{typeof(1.0),typeof(1.0)}
         end
 
-        @testset "no promote_space(1, SVector(1.,1.)" begin
-            @test_throws ErrorException promote_space(1, spaceof(1))
-        end
-
         @test promote_space_type(RealSpace{Float64}, RealSpace{BigFloat}) == RealSpace{BigFloat}
         @test promote_space_type(VectorSpace{1,BigFloat}, VectorSpace{2,Float64}) == VectorSpace{2,BigFloat}
         @test promote_space_type(VectorSpace{1,Float64}, VectorSpace{2,BigFloat}) == VectorSpace{2,BigFloat}
