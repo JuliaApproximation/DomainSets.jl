@@ -159,12 +159,16 @@ ChebyshevInterval{T}(d::AbstractInterval) where T = convert(ChebyshevInterval{T}
 -(d::ChebyshevInterval) = d
 -(d::AbstractInterval) = similar_interval(d, -rightendpoint(d), -leftendpoint(d))
 
-for op in (:+, :-)
-    @eval $op(d::AbstractInterval, x::Real) = similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
+for op in (:+, :-), Inter in (:AbstractInterval, :ClosedInterval)
+    @eval $op(d::$Inter, x::Real) = similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
 end
 
-+(x::Real, d::AbstractInterval) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
--(x::Real, d::AbstractInterval) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
+for Inter in (:AbstractInterval, :ClosedInterval)
+    @eval begin
+        +(x::Real, d::$Inter) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
+        -(x::Real, d::$Inter) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
+    end
+end
 
 for op in (:*, :/)
     @eval function $op(d::AbstractInterval, x::Real)
@@ -176,8 +180,8 @@ for op in (:*, :/)
     end
 end
 
-for op in (:*, :\)
-    @eval function $op(x::Real, d::AbstractInterval)
+for op in (:*, :\), Inter in (:AbstractInterval, :ClosedInterval)
+    @eval function $op(x::Real, d::$Inter)
         if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
             similar_interval(d, $op(x,leftendpoint(d)), $op(x,rightendpoint(d)))
         else
