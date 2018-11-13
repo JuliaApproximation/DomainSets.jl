@@ -23,10 +23,10 @@ end
 +(x::AbstractVector, d::Domain) = d+x
 
 # Rotation around the origin
-rotate(d::Domain2d, θ) = rotation_map(θ) * d
+rotate(d::EuclideanDomain{2}, θ) = rotation_map(θ) * d
 
-rotate(d::Domain3d, phi, theta, psi) = rotation_map(phi,theta,psi) * d
+rotate(d::EuclideanDomain{3}, phi, theta, psi) = rotation_map(phi,theta,psi) * d
 # Rotation around a fixed center.
-rotate(d::Domain2d, θ, center::SVector{T}) where {T} = Translation(center) * (rotation_map(θ) * (Translation(-center) * d))
+rotate(d::EuclideanDomain{2}, θ, center::SVector{T}) where {T} = Translation(center) * (rotation_map(θ) * (Translation(-center) * d))
 
-rotate(d::Domain3d, phi, theta, psi, center::SVector{T}) where {T} = Translation(center) * (rotation_map(phi,theta,psi) * (Translation(-center) * d))
+rotate(d::EuclideanDomain{3}, phi, theta, psi, center::SVector{T}) where {T} = Translation(center) * (rotation_map(phi,theta,psi) * (Translation(-center) * d))

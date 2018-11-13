@@ -700,7 +700,7 @@ end
         @testset "mixed intervals" begin
             d = (0..1) × (0.0..1)
             @test v[0.1,0.2] ∈ d
-            @test d isa Domain2d
+            @test d isa EuclideanDomain{2} 
         end
     end
     @testset "embedded" begin

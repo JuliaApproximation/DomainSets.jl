@@ -25,13 +25,6 @@ subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 
 
-# Convenient aliases
-const Domain1d{T <: Number} = Domain{T}
-const Domain2d{T} = EuclideanDomain{2,T}
-const Domain3d{T} = EuclideanDomain{3,T}
-const Domain4d{T} = EuclideanDomain{4,T}
-
-
 # We implement the indicator function by overriding `in`.
 # The implementation of `in` at the level of Domain converts the point into
 # the element type of the domain using promotion, and calls `indomain`.

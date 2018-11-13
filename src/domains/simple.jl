@@ -49,9 +49,9 @@ point_in_domain(d::UnitSimplex) = zero(eltype(d))
 # A cylinder
 ##############
 
-cylinder(::Type{T} = Float64) where {T} = disk(T) × unitinterval(T)
+cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
 
-cylinder(radius::T, length::T) where {T} = disk(radius) × (0 .. length)
+cylinder(radius::T, length::T) where {T} = radius * UnitDisk{T}() × (0 .. length)
 
 """
     Point(x)
