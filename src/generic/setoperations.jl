@@ -101,7 +101,7 @@ function setdiff(d1::UnionDomain, d2::Domain)
     s2 = Set(setdiff(s, tuple(d2)))
     s2 ≠ s && return UnionDomain(s2)
 
-    UnionDomain( map(d->setdiff(d, d2), elements(d1))...)
+    UnionDomain(setdiff.(elements(d1), Ref(d2)))
 end
 
 function setdiff(d1::Domain, d2::UnionDomain)
