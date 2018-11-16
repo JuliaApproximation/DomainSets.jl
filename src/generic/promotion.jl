@@ -1,8 +1,11 @@
 
 ## Conversion
 
+"""
+Convert a domain object to a domain object with the given element type `T`.
+"""
 convert_domain(::Type{T}, d::Domain{T}) where {T} = d
-convert_domain(::Type{S}, d::Domain{T}) where {S,T} = convert(Domain{S}, d)
+convert_domain(::Type{T}, d::Domain{S}) where {S,T} = convert(Domain{T}, d)
 
 convert_domain(::Type{T}, d) where {T} = _convert_domain(T, d, eltype(d))
 _convert_domain(::Type{T}, d, ::Type{T}) where {T} = d
@@ -11,23 +14,22 @@ _convert_domain(::Type{T}, d, ::Type{S}) where {S,T} =
 
 convert_domain(::Type{T}, d::Number) where {T} = convert(T, d)
 
-convert_domain(::Type{T}, d::AbstractArray{T}) where {T} = d
-convert_domain(::Type{T}, d::AbstractArray{S}) where {S,T} = (b = similar(d, T); b .= d)
-
+_convert_domain(::Type{T}, d::AbstractArray{S}, ::Type{S}) where {S,T} = (b = similar(d, T); b .= d)
+_convert_domain(::Type{T}, d::Set{S}, ::Type{S}) where {S,T} = convert(Set{T}, d)
 
 ## Promotion
 
-# We want to make sure that a set of domains, that may have different types,
-# are promoted to domains with a joined element type.
+"""
+Promote the given domains to have a common element type.
+"""
+promote_domain() = ()
+promote_domain(domains...) = promote_domains(domains)
+
+"""
+Promote an iterable list of domains to have a common element type.
+"""
+promote_domains(domains) = _promote_domains(mapreduce(eltype, promote_type, domains), domains)
+
 # We simply rely on Julia's promotion system to promote the element types, and
 # we invoke `convert_domain` on the domains with the resulting type.
-
-promote_domain() = ()
-promote_domain(a) = (a,)
-
-promote_domain(x, y) = _promote_domain(promote_type(eltype(x), eltype(y)), x, y)
-promote_domain(x, y, zs...) = _promote_domain(promote_type(map(eltype, (x, y, zs...))), x, y, zs...)
-
-_promote_domain(::Type{T}, x, y) where {T} = (convert_domain(T, x), convert_domain(T, y))
-_promote_domain(::Type{T}, x, y, zs...) where {T} =
-    map(d -> convert_domain(T, d), (x, y, zs...))
+_promote_domains(::Type{T}, domains) where {T} = convert_domain.(T, domains)
