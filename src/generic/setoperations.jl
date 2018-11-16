@@ -16,29 +16,20 @@ struct UnionDomain{DD,T} <: Domain{T}
     domains  ::  DD
 end
 
-UnionDomain(domains::AbstractSet{DD}) where {DD<:Domain{T}} where {T} =
-    UnionDomain{AbstractSet{DD},T}(domains)
-UnionDomain(domains::AbstractSet) = UnionDomain(map(Domain, domains))
+"""
+The `UnionDomain` constructor can be invoked in one of three ways:
+- with a list of arguments: UnionDomain(d1, d2)
+- with a single domain: UnionDomain(d::Domain)
+- or with any iterable list of domains: UnionDomain(domains)
+"""
+UnionDomain(domains...) = UnionDomain(domains)
+UnionDomain(d::Domain) = UnionDomain((d,))
 
-function UnionDomain(domains::Domain{T}...) where T
-    # TODO: implement promote_space_type for domains and do the promotion properly
-    UnionDomain{typeof(domains),T}(domains)
-end
-
-function UnionDomain(domains::Domain...)
-    T = mapreduce(eltype, promote_type, domains)
-    UnionDomain(convert.(Domain{T},domains)...)
-end
-UnionDomain(domains...) = UnionDomain(convert.(Domain,domains)...)
-
-UnionDomain(domains::AbstractVector) =
-    UnionDomain{typeof(domains),eltype(eltype(domains))}(domains)
-UnionDomain(domains::Tuple) = UnionDomain(domains...)
+UnionDomain(domains) = _UnionDomain(promote_domains(domains))
+_UnionDomain(domains) = UnionDomain{typeof(domains),eltype(first(domains))}(domains)
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
-convert(::Type{Domain}, v::AbstractVector) = convert(Domain, convert.(Domain,v))
-convert(::Type{Domain}, v::AbstractSet) = convert(Domain, convert.(Domain,v))
 
 Domain(v::AbstractVector) = convert(Domain, v)
 Domain(v::AbstractSet) = convert(Domain, v)
@@ -68,6 +59,7 @@ point_in_domain(d::UnionDomain) = point_in_domain(element(d,1))
 ==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
 
 isempty(d::UnionDomain) = all(isempty, d.domains)
+
 function show(io::IO, d::UnionDomain)
     print(io, "a union of $(numelements(d)) domains:\n")
     for (i,e) in enumerate(elements(d))

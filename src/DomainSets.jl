@@ -157,10 +157,12 @@ include("maps/affine_map.jl")
 include("maps/coordinates.jl")
 
 include("generic/domain.jl")
+include("generic/lazy.jl")
 include("generic/derived_domain.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
 include("generic/mapped_domain.jl")
+include("generic/promotion.jl")
 include("generic/arithmetics.jl")
 
 include("domains/trivial.jl")

@@ -146,7 +146,8 @@ embedded(A::Type{GSpace{T}}, B::Type{GSpace{S}}) where {T,S} = result(embedding(
 """
 Convert the variable `x` to an element of the space `B`. This is possible if
 the space of `x` is embedded in `B`.
-"""# We don't need to do anything if the space of x is B
+"""
+# We don't need to do anything if the space of x is B
 convert_space(B::Type{GSpace{T}}, x::T) where {T} = x
 
 # If it isn't, then we dispatch on the type of embedding
@@ -267,24 +268,19 @@ restrict_space_via_superspace(x, A, B) = restrict_space(B, restrict_space(supers
 # - If that is not the case, then both spaces (one at a time) are upgraded to
 #   their superspaces and promote_space_type is called again.
 # - It ends as soon as a joined promotable type is found. If that is not the case,
-#   all branches end in AnySpace. In that case, a and b are interpreted as
-#   elements of AnySpace and they remain unaltered.
+#   all branches end in AnySpace.
 
 """
 Promote the geometric spaces of the arguments to a joined space, to which all
 arguments can be converted using embeddings. If no such concrete space exists,
-the joined space is AnySpace and the arguments remain unaltered.
+this leads to `AnySpace`.
 """
 promote_space() = ()
 promote_space(x) = (x,)
 promote_space(x::T, y::T) where {T} = (x,y)
-function promote_space(x::T, y::S) where {T,S}
-    space_type = promote_space_type(spaceof(x),spaceof(y))
-    if space_type == AnySpace
-      error("No conversion to AnySpace possible")
-    end
-    (convert_space(space_type, x), convert_space(space_type, y))
-end
+
+promote_space(x, y) = _promote_space(x, y, promote_space_type(spaceof(x),spaceof(y)))
+_promote_space(x, y, G) = (convert_space(G, x), convert_space(G, y))
 
 promote_space_type(::Type{AnySpace}, ::Type{AnySpace}) = AnySpace
 promote_space_type(::Type{AnySpace}, ::Type{GSpace{T}}) where {T} = AnySpace
