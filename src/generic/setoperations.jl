@@ -1,6 +1,4 @@
-# setoperations.jl
 # Code for computing with domains.
-
 
 ############################
 # The union of two domains
@@ -25,11 +23,19 @@ The `UnionDomain` constructor can be invoked in one of three ways:
 UnionDomain(domains...) = UnionDomain(domains)
 UnionDomain(d::Domain) = UnionDomain((d,))
 
-UnionDomain(domains) = _UnionDomain(promote_domains(domains))
+UnionDomain(domains) = _UnionDomain(expand_union(promote_domains(domains)...))
 _UnionDomain(domains) = UnionDomain{typeof(domains),eltype(first(domains))}(domains)
+
+"Return all arguments in a tuple of domains, with each `UnionDomain` replaced by its elements."
+expand_union() = ()
+expand_union(domain, domains...) = (domain, expand_union(domains...)...)
+expand_union(domain::UnionDomain, domains...) = (elements(domain)..., expand_union(domains...)...)
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
+
+convert(::Type{Domain{T}}, d::UnionDomain{S}) where {S,T} =
+    UnionDomain(convert_domain.(T, elements(d)))
 
 Domain(v::AbstractVector) = convert(Domain, v)
 Domain(v::AbstractSet) = convert(Domain, v)
@@ -38,16 +44,10 @@ elements(d::UnionDomain) = d.domains
 
 hash(d::UnionDomain, h::UInt) = hash(Set(d.domains), h)
 
-union(d1::Domain{T}, d2::Domain{T}) where {T} = d1 == d2 ? d1 : UnionDomain(d1, d2)
-function union(d1::Domain{S}, d2::Domain{T}) where {S,T}
-    TS = promote_type(S, T)
-    union(convert(Domain{TS}, d1), convert(Domain{TS}, d2))
-end
+union(domains::Domain...) = UnionDomain(domains...)
 
-# Avoid creating nested unions
-union(d1::UnionDomain, d2::UnionDomain) = UnionDomain(elements(d1)..., elements(d2)...)
-union(d1::UnionDomain, d2::Domain) = UnionDomain(union(elements(d1), (d2,))...)
-union(d1::Domain, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
+# Catch one specific case
+union(d1::Domain, d2::Domain)  = d1 == d2 ? d1 : UnionDomain(d1, d2)
 
 
 # The union of domains corresponds to a logical OR of their characteristic functions
@@ -85,7 +85,7 @@ for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:suprem
 end
 
 
-setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), d2))
+setdiff(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiff.(elements(d1), Ref(d2)))
 
 function setdiff(d1::UnionDomain, d2::Domain)
     s = Set(elements(d1))
@@ -108,9 +108,10 @@ end
 # \ means left division in Julia)
 \(d1::Domain, d2::Domain) = setdiff(d1, d2)
 
-###################################
-# The intersection of two domains
-###################################
+
+##############################
+# The intersection of domains
+##############################
 
 """
 An `IntersectionDomain` represents the intersection of a set of domains.
@@ -119,14 +120,22 @@ struct IntersectionDomain{DD,T} <: Domain{T}
     domains ::  DD
 end
 
-function IntersectionDomain(domains::Domain...)
-    # TODO: implement promote_space_type for domains and to the promotion properly
-    T = eltype(domains[1])
-    for d in domains
-        @assert eltype(d) == T
-    end
-    IntersectionDomain{typeof(domains),T}(domains)
-end
+"""
+The `IntersectionDomain` constructor can be invoked in one of three ways:
+- with a list of arguments: IntersectionDomain(d1, d2)
+- with a single domain: IntersectionDomain(d::Domain)
+- or with any iterable list of domains: IntersectionDomain(domains)
+"""
+IntersectionDomain(domains...) = IntersectionDomain(domains)
+IntersectionDomain(d::Domain) = IntersectionDomain((d,))
+
+IntersectionDomain(domains) = _IntersectionDomain(expand_intersection(promote_domains(domains)...))
+_IntersectionDomain(domains) = IntersectionDomain{typeof(domains),eltype(first(domains))}(domains)
+
+"Return all arguments in a tuple of domains, with each `UnionDomain` replaced by its elements."
+expand_intersection() = ()
+expand_intersection(domain, domains...) = (domain, expand_intersection(domains...)...)
+expand_intersection(domain::IntersectionDomain, domains...) = (elements(domain)..., expand_intersection(domains...)...)
 
 elements(d::IntersectionDomain) = d.domains
 
@@ -137,11 +146,6 @@ function intersect(d1::UnionDomain, d2::UnionDomain)
 end
 intersect(d1::UnionDomain, d2::Domain) = union(intersect.(d1.domains, Ref(d2))...)
 intersect(d1::Domain, d2::UnionDomain) = union(intersect.(Ref(d1), d2.domains)...)
-
-# Avoid creating nested unions
-intersect(d1::IntersectionDomain, d2::Domain) = IntersectionDomain(elements(d1)..., d2)
-intersect(d1::IntersectionDomain, d2::IntersectionDomain) = IntersectionDomain(elements(d1)..., elements(d2)...)
-intersect(d1::Domain, d2::IntersectionDomain) = IntersectionDomain(d1, elements(d2)...)
 
 # The intersection of domains corresponds to a logical AND of their characteristic functions
 indomain(x, d::IntersectionDomain) = mapreduce(d->in(x, d), &, elements(d))
@@ -156,6 +160,10 @@ function intersect(d1::ProductDomain, d2::ProductDomain)
     end
 end
 
+convert(::Type{Domain{T}}, d::IntersectionDomain{S}) where {S,T} =
+    IntersectionDomain(convert_domain.(T, elements(d)))
+
+
 function show(io::IO, d::IntersectionDomain)
     print(io, "the intersection of $(numelements(d)) domains:\n")
     print(io, "\t1.\t: ", element(d,1), "\n")
@@ -163,29 +171,28 @@ function show(io::IO, d::IntersectionDomain)
 end
 
 
-################################################################################
+#########################################
 ### The difference between two domains
-################################################################################
+#########################################
 
 struct DifferenceDomain{D1,D2,T} <: Domain{T}
     d1    ::  D1
     d2    ::  D2
-
-    DifferenceDomain{D1,D2,T}(d1::Domain{T}, d2::Domain{T}) where {D1,D2,T} = new{D1,D2,T}(d1, d2)
 end
 
-DifferenceDomain(d1::Domain{T}, d2::Domain{T}) where {T} = DifferenceDomain{typeof(d1),typeof(d2),T}(d1,d2)
-function DifferenceDomain(d1::Domain{T}, d2::Domain{V}) where {T,V}
-    TV = promote_type(T,V)
-    DifferenceDomain(convert(Domain{T}, d1), convert(Domain{V}, d2))
-end
+DifferenceDomain(d1, d2) = _DifferenceDomain(promote_domain(d1, d2)...)
+_DifferenceDomain(d1, d2) = DifferenceDomain{typeof(d1),typeof(d2),eltype(d1)}(d1, d2)
+
+convert(::Type{Domain{T}}, d::DifferenceDomain{S}) where {S,T} =
+    DifferenceDomain(convert_domain(T, d.d1), convert_domain(T, d.d2))
 
 function setdiff(d1::Domain{T}, d2::Domain) where T
     d1 == d2 && return EmptySpace{T}()
     DifferenceDomain(d1, d2)
 end
 
-setdiff(d1::Domain, d2) = setdiff(d1, convert(Domain, d2))
+setdiff(d1::Domain, d2) = DifferenceDomain(d1, d2)
+setdiff(d1, d2::Domain) = DifferenceDomain(d1, d2)
 
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
 indomain(x, d::DifferenceDomain) = in(x, d.d1) && (~in(x, d.d2))
