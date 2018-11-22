@@ -700,7 +700,7 @@ end
         @testset "mixed intervals" begin
             d = (0..1) × (0.0..1)
             @test v[0.1,0.2] ∈ d
-            @test d isa EuclideanDomain{2} 
+            @test d isa EuclideanDomain{2}
         end
     end
     @testset "embedded" begin
@@ -719,14 +719,16 @@ end
 end
 
 @testset "Set operations" begin
-    d1 = UnitDisk()
-    d2 = (-.9..0.9)^2
-    d3 = (-.5 .. -.1) × (.5 .. 0.1)
-
-    @test isempty(d3)
-    @test convert(Domain{SVector{2,Float64}}, d3) isa Domain{SVector{2,Float64}}
-
     @testset "union" begin
+        d1 = UnitDisk()
+        d2 = (-.9..0.9)^2
+        d3 = (-.5 .. -.1) × (.5 .. 0.1)
+        d4 = (0.0..1.5)
+        d5 = [1.0,3.0]
+
+        @test isempty(d3)
+        @test convert(Domain{SVector{2,Float64}}, d3) isa Domain{SVector{2,Float64}}
+
         u1 = d1 ∪ d2
         u2 = u1 ∪ d3
 
@@ -748,6 +750,17 @@ end
         @test ũ2 == ũ2
         @test u1 == ũ2
 
+        # Don't create a union with two identical elements
+        @test (d1 ∪ d1) isa typeof(d1)
+
+        # union with non-Domain type that implements domain interface
+        u45 = UnionDomain(d4, d5)
+        @test u45 isa Domain{Float64}
+        @test 0.2 ∈ u45
+        @test 1.2 ∈ u45
+        @test -1.2 ∉ u45
+        @test convert(Domain{BigFloat}, u45) isa Domain{BigFloat}
+
         # ordering doesn't matter
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
@@ -763,6 +776,9 @@ end
         d1 = UnitDisk()
         d2 = (-.4..0.4)^2
         d3 = (-.5 .. 0.5) × (-.1.. 0.1)
+        d4 = (0.0..1.5)
+        d5 = [1.0,3.0]
+
         # intersection of productdomains
         i1 = d2 & d3
         show(io,i1)
@@ -783,11 +799,19 @@ end
         @test y∉i3
         @test y∉i4
 
+        d45 = IntersectionDomain(d4, d5)
+        @test d45 isa Domain{Float64}
+        @test 1.0 ∈ d45
+        @test 1.1 ∉ d45
+        @test convert(Domain{BigFloat}, d45) isa Domain{BigFloat}
     end
 
     @testset "difference" begin
         d1 = UnitDisk()
         d2 = (-.5..0.5) × (-.1..0.1)
+        d3 = 0.0..3.0
+        d4 = [1.0, 2.5]
+
         # intersection of productdomains
         d = d1\d2
         show(io,d)
@@ -797,6 +821,13 @@ end
         y = SVector(0.,.25)
         @test x∈d
         @test x∈d
+
+        d34 = DifferenceDomain(d3, d4)
+        @test d34 isa Domain{Float64}
+        @test d34 isa DifferenceDomain
+        @test 0.99 ∈ d34
+        @test 1.0 ∉ d34
+        @test convert(Domain{BigFloat}, d34) isa Domain{BigFloat}
     end
 
     @testset "arithmetic" begin
