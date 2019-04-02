@@ -114,7 +114,7 @@ function InverseMappedDomain(source::Domain{T}, invmap) where {T}
     InverseMappedDomain{typeof(invmap),typeof(source),S}(source, invmap)
 end
 
-forward_map(d::InverseMappedDomain) = inv(d.invwmap)
+forward_map(d::InverseMappedDomain) = inv(d.invmap)
 inverse_map(d::InverseMappedDomain) = d.invmap
 
 indomain(x, d::InverseMappedDomain) = in(d.invmap * x, source(d))
