@@ -15,6 +15,9 @@ using IntervalSets
 ## Exhaustive list of imports
 ################################
 
+# Generated functions
+import Base: @ncall
+
 # Operator symbols
 import Base: *, +, -, /, \, ^
 import Base: |, &
