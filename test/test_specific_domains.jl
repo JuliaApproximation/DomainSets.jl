@@ -1,5 +1,5 @@
 using StaticArrays, DomainSets, Test
-import DomainSets: MappedDomain, similar_interval
+import DomainSets: MappedDomain, similar_interval, convert_space, spacetype, internal_eltype
 
 # test_specific_domains.jl
 
@@ -852,5 +852,15 @@ end
         d2 = (2..3)
 
         @test UnionDomain(d1) ∪ d2 == UnionDomain(d̃1) ∪ d2
+    end
+
+    @testset "disk × interval" begin
+        d = (0.0..1) × UnitDisk()
+        @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (0.1, SVector(0.2,0.3))
+        @test SVector(0.1, 0.2, 0.3) ∈ d
+
+        d = UnitDisk() × (0.0..1)
+        @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (SVector(0.1,0.2),0.3)
+        @test SVector(0.1, 0.2, 0.3) ∈ d
     end
 end

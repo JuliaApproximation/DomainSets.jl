@@ -60,10 +60,53 @@ convert_space(::Type{VectorSpace{3,T}}, x::Tuple{Tuple{T,T},T}) where {T} = SVec
 # # Due to #22239, we temporarily disable this isomorphism
 # # We identity ([T,T],T) with [T,T,T]
 #
-isomorphism_reduction(::Type{VectorSpace{3,T}}, ::Type{ProductSpace{Tuple{SVector{2,S},S}}}) where {T,S} =
-    (GeometricSpace{T}, GeometricSpace{S})
+@generated function isomorphism_reduction(::Type{VectorSpace{N,T}}, ::Type{ProductSpace{Tuple{SVector{M,S},S}}}) where {N,M,T,S}
+    if M+1 == N
+        quote (GeometricSpace{T}, GeometricSpace{S}) end
+    else
+        quote False end
+    end
+end
 
-convert_space(::Type{ProductSpace{Tuple{SVector{2,T},T}}}, x::SVector{3,T}) where {T} = (SVector{2,T}(x[1], x[2]), x[3])
+@generated function isomorphism_reduction(::Type{VectorSpace{N,T}}, ::Type{ProductSpace{Tuple{S,SVector{M,S}}}}) where {N,M,T,S}
+    if M+1 == N
+        quote (GeometricSpace{T}, GeometricSpace{S}) end
+    else
+        quote False end
+    end
+end
+
+@generated function convert_space(::Type{ProductSpace{Tuple{SVector{M,T},T}}}, x::SVector{N,T}) where {N,M,T}
+    if M+1 == N
+        quote
+            sv = @ncall $M SVector{$M,T} i->x[i]
+            (sv, x[$N])
+        end
+    else
+        quote
+            throw(ArgumentError())
+        end
+    end
+end
+
+# Following is commented out as it is broken in Julia v1.1 (https://github.com/JuliaLang/julia/issues/31861)
+
+# function convert_space(::Type{ProductSpace{Tuple{T,SVector{M,T}}}}, x::SVector{N,T}) where {N,M,T}
+#     if M+1 == N
+#         quote
+#             # sv = @ncall $M SVector{$M,T} i->x[i+1]
+#             (x[1], sv)
+#         end
+#     else
+#         quote
+#             throw(ArgumentError())
+#         end
+#     end
+# end
+
+convert_space(::Type{ProductSpace{Tuple{T,SVector{2,T}}}}, x::SVector{3,T}) where T =
+    (x[1], SVector(x[2],x[3]))
+
 convert_space(::Type{VectorSpace{3,T}}, x::Tuple{SVector{2,T},T}) where {T} = SVector{3,T}(x[1][1], x[1][2], x[2])
 
 # We can identify a product space with equal types with a vector space of the
