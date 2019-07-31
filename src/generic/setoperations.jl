@@ -8,6 +8,8 @@
 # Eventually it will likely be forced to be an AbstractSet
 #
 """
+```using DomainSets```
+
 A `UnionDomain` represents the union of a set of domains.
 """
 struct UnionDomain{DD,T} <: Domain{T}
