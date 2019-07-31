@@ -1,6 +1,7 @@
 # DomainSets.jl
 
 [![Build Status](https://travis-ci.org/JuliaApproximation/DomainSets.jl.svg?branch=master)](https://travis-ci.org/JuliaApproximation/DomainSets.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/gc75y13g0kerxll8?svg=true)](https://ci.appveyor.com/project/dlfivefifty/domainsets-jl)
 [![Coverage Status](https://coveralls.io/repos/github/JuliaApproximation/DomainSets.jl/badge.svg)](https://coveralls.io/github/JuliaApproximation/DomainSets.jl)
 
 
