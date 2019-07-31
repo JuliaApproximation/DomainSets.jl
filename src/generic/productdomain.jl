@@ -60,6 +60,8 @@ end
 #######################
 
 """
+```using DomainSets```
+
 A `ProductDomain` represents the cartesian product of other domains.
 
 A product domain has two eltypes, an internal type `S` and an external type `T`.
