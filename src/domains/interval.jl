@@ -128,6 +128,66 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
     Interval{L,R,float(T)}(a, b)
 
 
+#########################################
+# A few set operations with known result
+#########################################
+
+# We define an exhaustive list of combinations of the four fixed intervals
+# combined above in the routines 'intersect', 'union' and 'setdiff' where
+# the output is known explicitly.
+
+# Since fixed intervals are fully determined by their type,
+# the result of intersect, union or setdiff is always known for two
+# domains of the same type.
+intersect(d1::D, d2::D) where {D <: FixedInterval} = d1
+union(d1::D, d2::D) where {D <: FixedInterval} = d1
+setdiff(d1::D, d2::D) where {D <: FixedInterval} = EmptySpace{eltype(D)}()
+
+# [0,1] ∩ [-1,1] = [0,1]
+intersect(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
+intersect(d1::ChebyshevInterval{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
+# [0,1] ∩ [0,∞) = [0,1]
+intersect(d1::UnitInterval{T}, d2::HalfLine{T}) where {T} = UnitInterval{T}()
+intersect(d1::HalfLine{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
+# [0,1] ∩ (-∞,0) = {}
+intersect(d1::UnitInterval{T}, d2::NegativeHalfLine{T}) where {T} = EmptySpace{T}()
+intersect(d1::NegativeHalfLine{T}, d2::UnitInterval{T}) where {T} = EmptySpace{T}()
+# [-1,1] ∩ [0,∞) = [0,1]
+intersect(d1::ChebyshevInterval{T}, d2::HalfLine{T}) where {T} = UnitInterval{T}()
+intersect(d1::HalfLine{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
+# [0,∞) ∩ (-∞,0) = {}
+intersect(d1::HalfLine{T}, d2::NegativeHalfLine{T}) where {T} = EmptySpace{T}()
+intersect(d1::NegativeHalfLine{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
+
+# [0,1] ∪ [-1,1] = [-1,1]
+union(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = ChebyshevInterval{T}()
+union(d1::ChebyshevInterval{T}, d2::UnitInterval{T}) where {T} = ChebyshevInterval{T}()
+# [0,1] ∪ [0,∞) = [0,∞)
+union(d1::UnitInterval{T}, d2::HalfLine{T}) where {T} = HalfLine{T}()
+union(d1::HalfLine{T}, d2::UnitInterval{T}) where {T} = HalfLine{T}()
+
+# (-∞,0) ∪ [0,∞) = (-∞,∞)
+# Note: T<:real to ensure that FullSpace{T} is not larger than intended.
+union(d1::NegativeHalfLine{T}, d2::HalfLine{T}) where {T<:Real} = FullSpace{T}()
+union(d1::HalfLine{T}, d2::NegativeHalfLine{T}) where {T<:Real} = FullSpace{T}()
+
+
+# [0,1] ∖ [-1,1] = {}
+setdiff(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = EmptySpace{T}()
+# [0,1] ∖ [0,∞) = {}
+setdiff(d1::UnitInterval{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
+# [0,1] ∖ (-∞,0) = [0,1]
+setdiff(d1::UnitInterval{T}, d2::NegativeHalfLine{T}) where {T} = UnitInterval{T}()
+# [-1,1] ∖ (-∞,0) = [0,1]
+setdiff(d1::ChebyshevInterval{T}, d2::NegativeHalfLine{T}) where {T} = UnitInterval{T}()
+# [0,∞) ∖ (-∞,0) = [0,∞)
+setdiff(d1::HalfLine{T}, d2::NegativeHalfLine{T}) where {T} = HalfLine{T}()
+# (-∞,0) ∖ [0,1] = (-∞,0)
+setdiff(d1::NegativeHalfLine{T}, d2::UnitInterval{T}) where {T} = NegativeHalfLine{T}()
+# (-∞,0) ∖ [0,∞) = (-∞,0)
+setdiff(d1::NegativeHalfLine{T}, d2::HalfLine{T}) where {T} = NegativeHalfLine{T}()
+
+
 #################################
 # Conversions between intervals
 #################################

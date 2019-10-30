@@ -108,6 +108,10 @@ end
             @test minimum(d) == infimum(d) == leftendpoint(d)
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
+            @test d ∩ d === d
+            @test d ∪ d === d
+            @test d \ d === EmptySpace{T}()
+
             @test isclosed(d)
             @test !DomainSets.isopen(d)
             @test iscompact(d)
@@ -128,6 +132,12 @@ end
             @test rightendpoint(d) == one(T)
             @test minimum(d) == infimum(d) == leftendpoint(d)
             @test maximum(d) == supremum(d) == rightendpoint(d)
+
+            @test d ∩ d === d
+            @test d ∪ d === d
+            @test d \ d === EmptySpace{T}()
+            @test d ∩ UnitInterval{T}() === UnitInterval{T}()
+            @test d ∪ UnitInterval{T}() === d
 
             @test isclosed(d)
             @test !DomainSets.isopen(d)
@@ -151,6 +161,10 @@ end
             @test supremum(d) == rightendpoint(d)
             @test_throws ArgumentError maximum(d)
 
+            @test d ∩ d === d
+            @test d ∪ d === d
+            @test d \ d == EmptySpace{T}()
+
             @test !isclosed(d)
             @test !DomainSets.isopen(d)
             @test !iscompact(d)
@@ -171,6 +185,11 @@ end
             @test supremum(d) == rightendpoint(d)
             @test_throws ArgumentError minimum(d)
             @test_throws ArgumentError maximum(d)
+
+            @test d ∩ d === d
+            @test d ∪ d === d
+            @test d \ d == EmptySpace{T}()
+            @test d ∪ HalfLine{T}() === FullSpace{T}()
 
             @test !isclosed(d)
             @test DomainSets.isopen(d)
