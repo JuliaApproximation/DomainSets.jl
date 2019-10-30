@@ -512,6 +512,12 @@ end
         @test approx_in(v[1.,0.], C)
         @test !approx_in(v[1.,1.], C)
         @test !isempty(C)
+        p = parameterization(C)
+        x = applymap(p, 1/2)
+        @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
+        @test approx_in(x, C)
+        q = left_inverse(p)
+        @test applymap(q, x) ≈ 1/2
 
         C = 2UnitCircle() + v[1.,1.]
         @test approx_in(v[3.,1.], C)

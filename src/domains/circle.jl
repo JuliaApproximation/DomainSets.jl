@@ -1,4 +1,3 @@
-# circle.jl
 
 abstract type AbstractHyperSphere{N,T} <: EuclideanDomain{N,T} end
 
@@ -41,7 +40,7 @@ struct UnitCircleMap{S,T} <: AbstractMap{S,T} end
 
 parameterization(d::UnitCircle) = UnitCircleMap{subeltype(d),eltype(d)}()
 
-domain(d::UnitCircleMap{S}) where S = HalfOpenRightInterval{S}(0, 1)
+domain(d::UnitCircleMap{S}) where {S} = Interval{:closed,:open,S}(0, 1)
 
 image(m::UnitCircleMap{S}) where S = UnitCircle{S}()
 
@@ -63,7 +62,7 @@ end
 
 domain(d::AngleMap{S,T}) where {S,T} = FullSpace{S}()
 
-range(m::AngleMap{S,T}) where {S,T} = HalfOpenRightInterval{T}(0, 1)
+range(m::AngleMap{S,T}) where {S,T} = Interval{:closed,:open,T}(0, 1)
 
 function applymap(m::AngleMap, x)
     twopi = 2*convert(codomaintype(m), pi)
