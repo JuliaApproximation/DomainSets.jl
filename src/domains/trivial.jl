@@ -1,56 +1,53 @@
-# trivial.jl
 
-######################
-## The empty domain
-######################
-
-struct EmptySpace{T} <: Domain{T}
+"The empty domain with elements of type `T`."
+struct EmptyDomain{T} <: Domain{T}
 end
 
-const AnyEmptySpace = EmptySpace{Any}
+# For temporary backwards compatibility, to be removed later
+const EmptySpace = EmptyDomain
 
-EmptySpace() = EmptySpace{Float64}()
-EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
+const AnyEmptyDomain = EmptyDomain{Any}
 
-emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
+EmptyDomain() = EmptyDomain{Float64}()
+EmptyDomain(::Type{T}) where {T} = EmptyDomain{T}()
 
-indomain(x::T, d::EmptySpace{T}) where {T} = false
+EmptyDomain(d::Domain{T}) where {T} = EmptyDomain{T}()
 
-approx_indomain(x, d::EmptySpace, tolerance) = in(x, d)
+indomain(x::T, d::EmptyDomain{T}) where {T} = false
 
-isempty(d::EmptySpace) = true
+approx_indomain(x, d::EmptyDomain, tolerance) = in(x, d)
+
+isempty(d::EmptyDomain) = true
 
 # Arithmetic operations
 
-union(d1::EmptySpace, d2::EmptySpace) = d1
-union(d1::Domain, d2::EmptySpace) = d1
-union(d1::EmptySpace, d2::Domain) = d2
+union(d1::EmptyDomain, d2::EmptyDomain) = d1
+union(d1::Domain, d2::EmptyDomain) = d1
+union(d1::EmptyDomain, d2::Domain) = d2
 
-intersect(d1::EmptySpace, d2::EmptySpace) = d1
-intersect(d1::Domain, d2::EmptySpace) = d2
-intersect(d1::EmptySpace, d2::Domain) = d1
+intersect(d1::EmptyDomain, d2::EmptyDomain) = d1
+intersect(d1::Domain, d2::EmptyDomain) = d2
+intersect(d1::EmptyDomain, d2::Domain) = d1
 
-setdiff(d1::EmptySpace, d2::EmptySpace) = d1
-setdiff(d1::EmptySpace, d2::Domain) = d1
-setdiff(d1::Domain, d2::EmptySpace) = d1
+setdiff(d1::EmptyDomain, d2::EmptyDomain) = d1
+setdiff(d1::EmptyDomain, d2::Domain) = d1
+setdiff(d1::Domain, d2::EmptyDomain) = d1
 
 # TODO: verify these - should we restrict x?
-(+)(d::EmptySpace, x::Number) = d
-(*)(d::EmptySpace, x::Number) = d
+(+)(d::EmptyDomain, x::Number) = d
+(*)(d::EmptyDomain, x::Number) = d
 
-==(::EmptySpace, ::EmptySpace) = true
+==(::EmptyDomain, ::EmptyDomain) = true
 
-show(io::IO, d::EmptySpace) = print(io, "the empty space with eltype ", eltype(d))
+show(io::IO, d::EmptyDomain) = print(io, "{} (empty domain)")
 
 
-##################################
-### The whole space R^N (or C^N)
-##################################
-
+"The full space of elements of type `T`."
 struct FullSpace{T} <: Domain{T} end
 
 const AnyFullSpace = FullSpace{Any}
 
+FullSpace() = FullSpace{Float64}()
 FullSpace(d) = FullSpace{eltype(d)}()
 
 euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
@@ -82,7 +79,7 @@ intersect(d1::FullSpace, d2::Domain) = d2
 (*)(d::FullSpace, x::Number) = d
 
 
-show(io::IO, d::FullSpace) = print(io, "the full space with eltype ", eltype(d))
+show(io::IO, d::FullSpace{T}) where {T} = print(io, "{x} (full space)")
 
 
 convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()

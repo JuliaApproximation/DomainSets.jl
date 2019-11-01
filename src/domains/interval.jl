@@ -26,7 +26,7 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
 boundary(d::TypedEndpointsInterval{:closed,:closed}) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 boundary(d::TypedEndpointsInterval{:closed,:open}) = Point(leftendpoint(d))
 boundary(d::TypedEndpointsInterval{:open,:closed}) = Point(rightendpoint(d))
-boundary(d::TypedEndpointsInterval{:open,:open,T}) where T = EmptySpace{T}()
+boundary(d::TypedEndpointsInterval{:open,:open,T}) where T = EmptyDomain{T}()
 boundary(d::AbstractInterval) = boundary(Interval(d))
 
 
@@ -141,7 +141,7 @@ similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
 # domains of the same type.
 intersect(d1::D, d2::D) where {D <: FixedInterval} = d1
 union(d1::D, d2::D) where {D <: FixedInterval} = d1
-setdiff(d1::D, d2::D) where {D <: FixedInterval} = EmptySpace{eltype(D)}()
+setdiff(d1::D, d2::D) where {D <: FixedInterval} = EmptyDomain{eltype(D)}()
 
 # [0,1] ∩ [-1,1] = [0,1]
 intersect(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
@@ -150,14 +150,14 @@ intersect(d1::ChebyshevInterval{T}, d2::UnitInterval{T}) where {T} = UnitInterva
 intersect(d1::UnitInterval{T}, d2::HalfLine{T}) where {T} = UnitInterval{T}()
 intersect(d1::HalfLine{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
 # [0,1] ∩ (-∞,0) = {}
-intersect(d1::UnitInterval{T}, d2::NegativeHalfLine{T}) where {T} = EmptySpace{T}()
-intersect(d1::NegativeHalfLine{T}, d2::UnitInterval{T}) where {T} = EmptySpace{T}()
+intersect(d1::UnitInterval{T}, d2::NegativeHalfLine{T}) where {T} = EmptyDomain{T}()
+intersect(d1::NegativeHalfLine{T}, d2::UnitInterval{T}) where {T} = EmptyDomain{T}()
 # [-1,1] ∩ [0,∞) = [0,1]
 intersect(d1::ChebyshevInterval{T}, d2::HalfLine{T}) where {T} = UnitInterval{T}()
 intersect(d1::HalfLine{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
 # [0,∞) ∩ (-∞,0) = {}
-intersect(d1::HalfLine{T}, d2::NegativeHalfLine{T}) where {T} = EmptySpace{T}()
-intersect(d1::NegativeHalfLine{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
+intersect(d1::HalfLine{T}, d2::NegativeHalfLine{T}) where {T} = EmptyDomain{T}()
+intersect(d1::NegativeHalfLine{T}, d2::HalfLine{T}) where {T} = EmptyDomain{T}()
 
 # [0,1] ∪ [-1,1] = [-1,1]
 union(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = ChebyshevInterval{T}()
@@ -173,9 +173,9 @@ union(d1::HalfLine{T}, d2::NegativeHalfLine{T}) where {T<:Real} = FullSpace{T}()
 
 
 # [0,1] ∖ [-1,1] = {}
-setdiff(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = EmptySpace{T}()
+setdiff(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = EmptyDomain{T}()
 # [0,1] ∖ [0,∞) = {}
-setdiff(d1::UnitInterval{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
+setdiff(d1::UnitInterval{T}, d2::HalfLine{T}) where {T} = EmptyDomain{T}()
 # [0,1] ∖ (-∞,0) = [0,1]
 setdiff(d1::UnitInterval{T}, d2::NegativeHalfLine{T}) where {T} = UnitInterval{T}()
 # [-1,1] ∖ (-∞,0) = [0,1]
@@ -276,7 +276,7 @@ function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     a1 < a2 ≤ b1 ≤ b2 && return (a1 .. a2)
     a1 < a2 ≤ b2 < b1 && return UnionDomain(a1 .. a2) ∪ UnionDomain(b2 .. b1)
     a2 ≤ a1 < b2 < b1 && return (b2 .. b1)
-    a2 ≤ a1 ≤ b1 ≤ b2 && return EmptySpace{T}()
+    a2 ≤ a1 ≤ b1 ≤ b2 && return EmptyDomain{T}()
 
     @assert b2 ≤ a1
     d1
