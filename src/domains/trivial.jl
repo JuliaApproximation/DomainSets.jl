@@ -1,45 +1,42 @@
 
 "The empty domain with elements of type `T`."
-struct EmptyDomain{T} <: Domain{T}
+struct EmptySpace{T} <: Domain{T}
 end
 
-# For temporary backwards compatibility, to be removed later
-const EmptySpace = EmptyDomain
+const AnyEmptySpace = EmptySpace{Any}
 
-const AnyEmptyDomain = EmptyDomain{Any}
+EmptySpace() = EmptySpace{Float64}()
+EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 
-EmptyDomain() = EmptyDomain{Float64}()
-EmptyDomain(::Type{T}) where {T} = EmptyDomain{T}()
+EmptySpace(d::Domain{T}) where {T} = EmptySpace{T}()
 
-EmptyDomain(d::Domain{T}) where {T} = EmptyDomain{T}()
+indomain(x::T, d::EmptySpace{T}) where {T} = false
 
-indomain(x::T, d::EmptyDomain{T}) where {T} = false
+approx_indomain(x, d::EmptySpace, tolerance) = in(x, d)
 
-approx_indomain(x, d::EmptyDomain, tolerance) = in(x, d)
-
-isempty(d::EmptyDomain) = true
+isempty(d::EmptySpace) = true
 
 # Arithmetic operations
 
-union(d1::EmptyDomain, d2::EmptyDomain) = d1
-union(d1::Domain, d2::EmptyDomain) = d1
-union(d1::EmptyDomain, d2::Domain) = d2
+union(d1::EmptySpace, d2::EmptySpace) = d1
+union(d1::Domain, d2::EmptySpace) = d1
+union(d1::EmptySpace, d2::Domain) = d2
 
-intersect(d1::EmptyDomain, d2::EmptyDomain) = d1
-intersect(d1::Domain, d2::EmptyDomain) = d2
-intersect(d1::EmptyDomain, d2::Domain) = d1
+intersect(d1::EmptySpace, d2::EmptySpace) = d1
+intersect(d1::Domain, d2::EmptySpace) = d2
+intersect(d1::EmptySpace, d2::Domain) = d1
 
-setdiff(d1::EmptyDomain, d2::EmptyDomain) = d1
-setdiff(d1::EmptyDomain, d2::Domain) = d1
-setdiff(d1::Domain, d2::EmptyDomain) = d1
+setdiff(d1::EmptySpace, d2::EmptySpace) = d1
+setdiff(d1::EmptySpace, d2::Domain) = d1
+setdiff(d1::Domain, d2::EmptySpace) = d1
 
 # TODO: verify these - should we restrict x?
-(+)(d::EmptyDomain, x::Number) = d
-(*)(d::EmptyDomain, x::Number) = d
+(+)(d::EmptySpace, x::Number) = d
+(*)(d::EmptySpace, x::Number) = d
 
-==(::EmptyDomain, ::EmptyDomain) = true
+==(::EmptySpace, ::EmptySpace) = true
 
-show(io::IO, d::EmptyDomain) = print(io, "{} (empty domain)")
+show(io::IO, d::EmptySpace) = print(io, "{} (empty domain)")
 
 
 "The full space of elements of type `T`."

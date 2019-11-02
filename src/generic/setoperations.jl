@@ -189,7 +189,7 @@ convert(::Type{Domain{T}}, d::DifferenceDomain{S}) where {S,T} =
     DifferenceDomain(convert_domain(T, d.d1), convert_domain(T, d.d2))
 
 function setdiff(d1::Domain{T}, d2::Domain) where T
-    d1 == d2 && return EmptyDomain{T}()
+    d1 == d2 && return EmptySpace{T}()
     DifferenceDomain(d1, d2)
 end
 

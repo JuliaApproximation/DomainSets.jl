@@ -16,7 +16,7 @@ end
 
 @testset "Specific domains" begin
     @testset "empty space" begin
-        d1 = EmptyDomain()
+        d1 = EmptySpace()
         show(io,d1)
         @test isempty(d1)
         @test String(take!(io)) == "{} (empty domain)"
@@ -30,7 +30,7 @@ end
         @test d2 \ d1 == d2
         @test d2 \ d2 == d1
 
-        d2 = EmptyDomain(SVector{2,Float64})
+        d2 = EmptySpace(SVector{2,Float64})
         @test isempty(d2)
         @test v[0.1,0.2] ∉ d2
         @test !approx_in(v[0.1,0.2], d2)
@@ -39,7 +39,7 @@ end
     @testset "full space" begin
         d1 = FullSpace{Float64}()
         show(io,d1)
-        @test String(take!(io)) == "{x} (full space)"
+            @test String(take!(io)) == "{x} (full space)"
         @test 0.5 ∈ d1
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1
@@ -110,7 +110,7 @@ end
 
             @test d ∩ d === d
             @test d ∪ d === d
-            @test d \ d === EmptyDomain{T}()
+            @test d \ d === EmptySpace{T}()
 
             @test isclosed(d)
             @test !DomainSets.isopen(d)
@@ -135,13 +135,13 @@ end
 
             @test d ∩ d === d
             @test d ∪ d === d
-            @test d \ d === EmptyDomain{T}()
+            @test d \ d === EmptySpace{T}()
             unit = UnitInterval{T}()
             @test d ∩ unit === unit
             @test unit ∩ d === unit
             @test d ∪ unit === d
             @test unit ∪ d === d
-            @test unit \ d === EmptyDomain{T}()
+            @test unit \ d === EmptySpace{T}()
 
             @test isclosed(d)
             @test !DomainSets.isopen(d)
@@ -167,7 +167,7 @@ end
 
             @test d ∩ d === d
             @test d ∪ d === d
-            @test d \ d == EmptyDomain{T}()
+            @test d \ d == EmptySpace{T}()
             unit = UnitInterval{T}()
             cheb = ChebyshevInterval{T}()
             @test d ∩ unit === unit
@@ -176,7 +176,7 @@ end
             @test cheb ∩ d === unit
             @test d ∪ unit === d
             @test unit ∪ d === d
-            @test unit \ d === EmptyDomain{T}()
+            @test unit \ d === EmptySpace{T}()
 
             @test !isclosed(d)
             @test !DomainSets.isopen(d)
@@ -201,14 +201,14 @@ end
 
             @test d ∩ d === d
             @test d ∪ d === d
-            @test d \ d == EmptyDomain{T}()
+            @test d \ d == EmptySpace{T}()
             unit = UnitInterval{T}()
             cheb = ChebyshevInterval{T}()
             halfline = HalfLine{T}()
-            @test unit ∩ d === EmptyDomain{T}()
-            @test d ∩ unit === EmptyDomain{T}()
-            @test d ∩ halfline === EmptyDomain{T}()
-            @test halfline ∩ d === EmptyDomain{T}()
+            @test unit ∩ d === EmptySpace{T}()
+            @test d ∩ unit === EmptySpace{T}()
+            @test d ∩ halfline === EmptySpace{T}()
+            @test halfline ∩ d === EmptySpace{T}()
             @test d ∪ halfline === FullSpace{T}()
             @test halfline ∪ d === FullSpace{T}()
             @test unit \ d === unit
@@ -405,7 +405,7 @@ end
         @test d1 \ (zero(T) .. 3one(T)) == (-2one(T) .. zero(T))
         @test d1 \ (-3one(T) .. zero(T)) == (zero(T) .. 2one(T))
         @test d1 \ (-4one(T) .. -3one(T)) == d1
-        @test d1 \ (-4one(T) .. 4one(T)) == EmptyDomain{T}()
+        @test d1 \ (-4one(T) .. 4one(T)) == EmptySpace{T}()
 
         d1 \ (-3one(T)) == d1
         d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))

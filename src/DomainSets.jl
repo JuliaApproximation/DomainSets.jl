@@ -131,7 +131,7 @@ export infimum, supremum
 ## Specific domains
 
 # from domains/simple.jl
-export EmptyDomain
+export EmptySpace, FullSpace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, OpenInterval, ClosedInterval
 export leftendpoint, rightendpoint, isleftopen, isrightopen
