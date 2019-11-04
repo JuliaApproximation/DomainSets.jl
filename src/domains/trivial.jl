@@ -8,7 +8,7 @@ const AnyEmptySpace = EmptySpace{Any}
 EmptySpace() = EmptySpace{Float64}()
 EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 
-EmptySpace(d::Domain{T}) where {T} = EmptySpace{T}()
+emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
 
@@ -76,7 +76,7 @@ intersect(d1::FullSpace, d2::Domain) = d2
 (*)(d::FullSpace, x::Number) = d
 
 
-show(io::IO, d::FullSpace{T}) where {T} = print(io, "{x} (full space)")
+show(io::IO, d::FullSpace) = print(io, "{x} (full space)")
 
 
 convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()
