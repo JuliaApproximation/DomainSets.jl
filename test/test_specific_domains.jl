@@ -19,7 +19,7 @@ end
         d1 = EmptySpace()
         show(io,d1)
         @test isempty(d1)
-        @test String(take!(io)) == "the empty space with eltype Float64"
+        @test String(take!(io)) == "{} (empty domain)"
         @test eltype(d1) == Float64
         @test 0.5 ∉ d1
         @test d1 ∩ d1 == d1
@@ -39,7 +39,7 @@ end
     @testset "full space" begin
         d1 = FullSpace{Float64}()
         show(io,d1)
-        @test String(take!(io)) == "the full space with eltype Float64"
+            @test String(take!(io)) == "{x} (full space)"
         @test 0.5 ∈ d1
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1

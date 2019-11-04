@@ -1,9 +1,5 @@
-# trivial.jl
 
-######################
-## The empty domain
-######################
-
+"The empty domain with elements of type `T`."
 struct EmptySpace{T} <: Domain{T}
 end
 
@@ -40,17 +36,15 @@ setdiff(d1::Domain, d2::EmptySpace) = d1
 
 ==(::EmptySpace, ::EmptySpace) = true
 
-show(io::IO, d::EmptySpace) = print(io, "the empty space with eltype ", eltype(d))
+show(io::IO, d::EmptySpace) = print(io, "{} (empty domain)")
 
 
-##################################
-### The whole space R^N (or C^N)
-##################################
-
+"The full space of elements of type `T`."
 struct FullSpace{T} <: Domain{T} end
 
 const AnyFullSpace = FullSpace{Any}
 
+FullSpace() = FullSpace{Float64}()
 FullSpace(d) = FullSpace{eltype(d)}()
 
 euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
@@ -82,7 +76,7 @@ intersect(d1::FullSpace, d2::Domain) = d2
 (*)(d::FullSpace, x::Number) = d
 
 
-show(io::IO, d::FullSpace) = print(io, "the full space with eltype ", eltype(d))
+show(io::IO, d::FullSpace) = print(io, "{x} (full space)")
 
 
 convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()
