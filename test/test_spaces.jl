@@ -54,12 +54,6 @@ end
         R1 = VectorSpace{1,Float64}
         R2 = VectorSpace{2,Float64}
         R3 = VectorSpace{3,Float64}
-        @test ℤ == Z
-        @test ℚ == Q
-        @test ℝ == R
-        @test ℝ1 == R1
-        @test ℝ2 == R2
-        @test ℝ3 == R3
 
         # The basic spaces are not isomorphic to each other
         @test !isomorphic(Z, Q)
@@ -147,8 +141,8 @@ end
         @test_throws InexactError convert_space(RealSpace{Float64}, RealSpace)
         @test_throws InexactError restrict_space(RealSpace{Float64}, RealSpace)
 
-        @test DomainSets._promote_via_embedding_reduction(AnySpace, AnySpace, AnySpace, ℤ, 1) == AnySpace
-        @test DomainSets._promote_via_embedding_reduction(AnySpace, AnySpace, 1, AnySpace, ℤ) == AnySpace
+        @test DomainSets._promote_via_embedding_reduction(AnySpace, AnySpace, AnySpace, Z, 1) == AnySpace
+        @test DomainSets._promote_via_embedding_reduction(AnySpace, AnySpace, 1, AnySpace, Z) == AnySpace
 
         @test !(zero(Z) ∈ R())
         @test !(zero(Z) ∈ R())
@@ -157,7 +151,7 @@ end
         @test origin(Z()) == zero(Z)
         @test typeof(origin(Z())) == typeof(zero(Z))
 
-        @test spaceof(1) == ℤ
+        @test spaceof(1) == Z
         @test superspaceof(1) == AnySpace
 
         @test issubspace(Z, Z)

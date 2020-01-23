@@ -66,8 +66,6 @@ export cartesianproduct
 # from spaces/space.jl
 export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
 export isomorphic, ≅, embedded, ↪
-# from spaces/basic_spaces.jl
-export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 
 
 ## Maps
@@ -131,6 +129,8 @@ export infimum, supremum
 
 # from domains/simple.jl
 export EmptySpace, FullSpace
+# from domains/trivial.jl
+export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, OpenInterval, ClosedInterval
 export leftendpoint, rightendpoint, isleftopen, isrightopen
