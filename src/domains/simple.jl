@@ -1,4 +1,4 @@
-# simple.jl
+
 # A collection of simple domains.
 
 ###########################

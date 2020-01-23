@@ -1,4 +1,3 @@
-# products.jl
 
 # Functions having to do with the creation of cartesian products.
 

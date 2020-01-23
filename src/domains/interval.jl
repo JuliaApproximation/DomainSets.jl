@@ -1,5 +1,3 @@
-# interval.jl
-
 
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false

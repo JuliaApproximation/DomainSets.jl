@@ -1,4 +1,3 @@
-# productspace.jl
 
 """
 By convention a geometric space with a tuple type `T` represents a product space

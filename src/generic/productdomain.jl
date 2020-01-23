@@ -1,4 +1,3 @@
-# productdomain.jl
 # Routines for a cartesian product of domains
 
 ###################
@@ -28,28 +27,28 @@ Examples of simplifications:
 simplify_product_eltype(::Type{T}) where {T} = T
 simplify_product_eltype(::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
 
-@generated function simplify_product_eltype(::Type{Tuple{SVector{N,T},T}}) where {N,T} 
+@generated function simplify_product_eltype(::Type{Tuple{SVector{N,T},T}}) where {N,T}
     M = N+1
     quote SVector{$M,T} end
 end
-@generated function simplify_product_eltype(::Type{Tuple{T,SVector{N,T}}}) where {N,T} 
+@generated function simplify_product_eltype(::Type{Tuple{T,SVector{N,T}}}) where {N,T}
     M = N+1
     quote SVector{$M,T} end
 end
-@generated function simplify_product_eltype(::Type{Tuple{SVector{N,T},SVector{K,T}}}) where {N,K,T} 
+@generated function simplify_product_eltype(::Type{Tuple{SVector{N,T},SVector{K,T}}}) where {N,K,T}
     M = N+K
     quote SVector{$M,T} end
 end
 
-@generated function simplify_product_eltype(::Type{Tuple{NTuple{N,T},T}}) where {N,T} 
+@generated function simplify_product_eltype(::Type{Tuple{NTuple{N,T},T}}) where {N,T}
     M = N+1
     quote SVector{$M,T} end
 end
-@generated function simplify_product_eltype(::Type{Tuple{T,NTuple{N,T}}}) where {N,T} 
+@generated function simplify_product_eltype(::Type{Tuple{T,NTuple{N,T}}}) where {N,T}
     M = N+1
     quote SVector{$M,T} end
 end
-@generated function simplify_product_eltype(::Type{Tuple{NTuple{N,T},NTuple{K,T}}}) where {N,K,T} 
+@generated function simplify_product_eltype(::Type{Tuple{NTuple{N,T},NTuple{K,T}}}) where {N,K,T}
     M = N+K
     quote SVector{$M,T} end
 end

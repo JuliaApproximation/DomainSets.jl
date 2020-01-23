@@ -1,4 +1,3 @@
-# mapped_domain.jl
 
 ################
 # Preliminaries

@@ -1,4 +1,3 @@
-# arithmetics.jl
 # Routines having to do with computations involving domains
 
 +(domain::Domain) = domain

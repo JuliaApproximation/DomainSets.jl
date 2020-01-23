@@ -1,5 +1,3 @@
-# test_generic_domain.jl
-
 
 # We test the generic functionality of a domain.
 # These tests check whether the given domain correctly implements the

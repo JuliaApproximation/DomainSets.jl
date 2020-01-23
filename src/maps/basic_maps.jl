@@ -1,5 +1,3 @@
-# basic_maps.jl
-
 
 """
 The identity map.

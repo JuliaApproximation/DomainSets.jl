@@ -1,4 +1,3 @@
-# affine_map.jl
 
 """
 An affine map has the general form `y = a*x + b`, with types for `a`, `b`, `x`

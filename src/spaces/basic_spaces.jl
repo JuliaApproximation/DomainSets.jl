@@ -1,4 +1,3 @@
-# basic_spaces.jl
 
 ##############################
 # Definitions of basic spaces

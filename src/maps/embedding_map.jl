@@ -1,4 +1,3 @@
-# embedding_map.jl
 
 "A map between embedded spaces."
 struct EmbeddingMap{S,T} <: AbstractMap{S,T}

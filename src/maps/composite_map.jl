@@ -1,4 +1,3 @@
-# composite_map.jl
 
 """
 The composition of several maps.

@@ -1,4 +1,3 @@
-# map_ranges.jl
 
 range(m::AbstractMap) = m * domain(m)
 

@@ -1,7 +1,6 @@
 using StaticArrays, DomainSets, Test
 import DomainSets: MappedDomain, similar_interval, convert_space, spacetype, internal_eltype
 
-# test_specific_domains.jl
 
 const v = TypeFactory{SVector}()
 

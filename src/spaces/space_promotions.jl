@@ -1,5 +1,3 @@
-# space_promotions.jl
-
 
 # Find the first space in a list of arguments that is not AnySpace
 lcd(::Type{GSpace{T}}) where {T} = GSpace{T}

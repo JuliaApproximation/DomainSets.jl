@@ -1,4 +1,3 @@
-# space.jl
 
 """
 A domain is always a subset of a geometric space. A geometric space is completely

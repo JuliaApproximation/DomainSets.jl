@@ -1,4 +1,3 @@
-# coordinates.jl
 # Maps having to do with coordinate transforms.
 
 """

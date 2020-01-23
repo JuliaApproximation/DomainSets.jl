@@ -1,5 +1,3 @@
-# common.jl
-
 
 ##############################
 # Booleans in the type domain

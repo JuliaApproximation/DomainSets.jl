@@ -1,6 +1,4 @@
 
-# test_maps.jl
-
 function suitable_point_to_map(m)
     T = domaintype(m)
     if T <: SVector

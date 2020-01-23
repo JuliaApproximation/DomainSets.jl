@@ -1,4 +1,3 @@
-# derived_domain.jl
 # Generic code for a domain that is implemented in terms of an underlying domain
 
 """

@@ -1,4 +1,3 @@
-# maps.jl
 
 """
 A map is any transformation of the form `y = f(x)`, where `x` has type `S` and

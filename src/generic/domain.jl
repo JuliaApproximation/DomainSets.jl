@@ -1,4 +1,3 @@
-# domain.jl
 # Definition of the abstract Domain type and its interface
 
 
