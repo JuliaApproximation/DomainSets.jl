@@ -32,7 +32,7 @@ _in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 
 function _in(x, d::Domain)
    T = promote_type(typeof(x), eltype(d))
-   T == Any && return false
+   T == Any && throw(InexactError(:convert, eltype(d), x))
    in(convert(T, x), convert(Domain{T}, d))
 end
 
@@ -59,7 +59,7 @@ approx_in(x::T, d::Domain{T}, tolerance = default_tolerance(d)) where {T} =
 
 function approx_in(x, d::Domain, tolerance = default_tolerance(d))
    T = promote_type(typeof(x), eltype(d))
-   T == Any && return false
+   T == Any && throw(InexactError(:convert, eltype(d), x))
    approx_in(convert(T, x), convert(Domain{T}, d), tolerance)
 end
 
