@@ -3,11 +3,10 @@
 
 spaceof(::Domain{T}) where {T} = spacetype(T)
 
-eltype(::Type{Domain{T}}) where {T} = T
-eltype(::Type{D}) where {D <: Domain} = eltype(supertype(D))
+eltype(::Type{<:Domain{T}}) where {T} = T
 
-dimension(::Type{Domain{T}}) where {T} = dimension_type(T)
-dimension(::Type{D}) where {D <: Domain} = dimension(supertype(D))
+# TODO: this should go elsewhere, perhaps in common.jl
+dimension(::Type{<:Domain{T}}) where {T} = dimension_type(T)
 dimension(d::Domain) = dimension(typeof(d))
 dimension_type(::Type{SVector{N,T}}) where {N,T} = N
 dimension_type(::Type{T}) where {T <: Number} = 1
@@ -24,23 +23,28 @@ subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 
 
-# We implement the indicator function by overriding `in`.
-# The implementation of `in` at the level of Domain converts the point into
-# the element type of the domain using promotion, and calls `indomain`.
-# Concrete subtypes should implement `indomain`, rather than `in`.
-_in(x::T, d::Domain{T}) where {T} = indomain(x, d)
+"NoDomain is a placeholder for the absence of a suitable domain."
+struct NoDomain{T} <: Domain{T} end
 
-function _in(x, d::Domain)
-   T = promote_type(typeof(x), eltype(d))
-   T == Any && throw(InexactError(:convert, eltype(d), x))
-   in(convert(T, x), convert(Domain{T}, d))
-end
+# At the level of Domain we attempt to promote the arguments to compatible
+# types, then we invoke indomain. Concrete subtypes should implement
+# indomain, and they can assume the types of the point and the domain compatible.
+in(x, d::Domain) = indomain(point_domain_promote(x, d)...)
+# Types of x and domain are incompatible: we return false
+indomain(x, domain::NoDomain) = false
 
-in(x, d::Domain) = _in(x, d)
+"""
+Promote a point and a domain to compatible types by promoting `x` and the
+element type of the domain to a joined supertype.
+"""
+point_domain_promote(x::T, domain::Domain{T}) where {T} = x, domain
+point_domain_promote(x, domain::Domain) =
+   _point_domain_promote(x, domain, promote_type(typeof(x), eltype(domain)))
 
+_point_domain_promote(x, domain::Domain, ::Type{T}) where {T} =
+   convert(T, x), convert(Domain{T}, domain)
+_point_domain_promote(x, domain::Domain, ::Type{Any}) = x, NoDomain{eltype(domain)}()
 
-# The user may supply a vector. We attempt to convert it to the right space.
-in(x::Vector{T}, d::Domain) where {T} = in(convert(eltype(d), x), d)
 
 """
 Return a suitable tolerance to use for verifying whether a point is close to
@@ -54,14 +58,10 @@ default_tolerance(d::Domain, ::Type{Complex{T}}) where {T <: Real} = 100eps(T)
 default_tolerance(d::Domain, ::Type{T}) where {T <: Integer} = zero(T)
 default_tolerance(d::Domain, ::Type{T}) where {T} = zero(T)
 
-approx_in(x::T, d::Domain{T}, tolerance = default_tolerance(d)) where {T} =
-   approx_indomain(x, d, tolerance)
+approx_in(x, domain::Domain, tolerance = default_tolerance(domain)) =
+   approx_indomain(point_domain_promote(x, domain)..., tolerance)
+approx_indomain(x, domain::NoDomain, tolerance) = false
 
-function approx_in(x, d::Domain, tolerance = default_tolerance(d))
-   T = promote_type(typeof(x), eltype(d))
-   T == Any && throw(InexactError(:convert, eltype(d), x))
-   approx_in(convert(T, x), convert(Domain{T}, d), tolerance)
-end
 
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 
