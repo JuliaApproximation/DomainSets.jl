@@ -5,7 +5,6 @@ spaceof(::Domain{T}) where {T} = spacetype(T)
 
 eltype(::Type{<:Domain{T}}) where {T} = T
 
-# TODO: this should go elsewhere, perhaps in common.jl
 dimension(::Type{<:Domain{T}}) where {T} = dimension_type(T)
 dimension(d::Domain) = dimension(typeof(d))
 dimension_type(::Type{SVector{N,T}}) where {N,T} = N
@@ -22,29 +21,45 @@ subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 
-
-"NoDomain is a placeholder for the absence of a suitable domain."
-struct NoDomain{T} <: Domain{T} end
-
 # At the level of Domain we attempt to promote the arguments to compatible
 # types, then we invoke indomain. Concrete subtypes should implement
-# indomain, and they can assume the types of the point and the domain compatible.
+# indomain, and they may specialize point_domain_promote in order to control
+# which types of points they support.
+# Here, `in` invokes `indomain` after promotion, rather than invoking itself
+# recursively with promoted arguments. That is because we can not predict
+# in general which signatures can be passed on to `indomain`.
 in(x, d::Domain) = indomain(point_domain_promote(x, d)...)
+
 # Types of x and domain are incompatible: we return false
-indomain(x, domain::NoDomain) = false
+indomain(x, ::Nothing) = false
 
 """
+```
+point_domain_promote(x, domain::Domain)
+```
+
 Promote a point and a domain to compatible types by promoting `x` and the
 element type of the domain to a joined supertype.
+
+Specific domains can enable users to invoke their implementation of `indomain`
+with different types of points by specializing `point_domain_promote`. If no
+suitable promotion exists, the function may return `x, nothing`. This will
+make `in` return false.
 """
 point_domain_promote(x::T, domain::Domain{T}) where {T} = x, domain
 point_domain_promote(x, domain::Domain) =
    _point_domain_promote(x, domain, promote_type(typeof(x), eltype(domain)))
 
+# A joined supertype exists: promote the point and the domain
 _point_domain_promote(x, domain::Domain, ::Type{T}) where {T} =
    convert(T, x), convert(Domain{T}, domain)
-_point_domain_promote(x, domain::Domain, ::Type{Any}) = x, NoDomain{eltype(domain)}()
+# No joined supertype exists: return nothing
+_point_domain_promote(x, domain::Domain, ::Type{Any}) =
+   x, nothing
 
+# As a special case, we allow any vector for Euclidean domains.
+point_domain_promote(x::AbstractVector, domain::EuclideanDomain) =
+   convert(eltype(domain), x), domain
 
 """
 Return a suitable tolerance to use for verifying whether a point is close to
@@ -60,7 +75,7 @@ default_tolerance(d::Domain, ::Type{T}) where {T} = zero(T)
 
 approx_in(x, domain::Domain, tolerance = default_tolerance(domain)) =
    approx_indomain(point_domain_promote(x, domain)..., tolerance)
-approx_indomain(x, domain::NoDomain, tolerance) = false
+approx_indomain(x, ::Nothing, tolerance) = false
 
 
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
