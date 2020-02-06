@@ -2,32 +2,6 @@
 # A collection of simple domains.
 
 ###########################
-# The unit ball and sphere
-###########################
-
-"""
-The unit ball (of radius 1) in `N` dimensions.
-"""
-struct UnitHyperBall{N,T} <: EuclideanDomain{N,T} end
-
-UnitHyperBall{N}() where N = UnitHyperBall{N,Float64}()
-
-const UnitDisk{T} = UnitHyperBall{2,T}
-const UnitBall{T} = UnitHyperBall{3,T}
-
-indomain(x, ::UnitHyperBall) = norm(x) <= 1
-
-approx_indomain(x, ::UnitHyperBall, tolerance) = norm(x) <= 1+tolerance
-
-isempty(::UnitHyperBall) = false
-
-show(io::IO, d::UnitHyperBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
-
-# We choose the origin here
-point_in_domain(d::UnitHyperBall) = zero(eltype(d))
-
-
-###########################
 # An n-dimensional simplex
 ###########################
 
@@ -43,15 +17,6 @@ isempty(::UnitSimplex) = false
 # We pick the origin, because it belongs to the domain regardless of what T is
 point_in_domain(d::UnitSimplex) = zero(eltype(d))
 
-
-
-##############
-# A cylinder
-##############
-
-cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
-
-cylinder(radius::T, length::T) where {T} = radius * UnitDisk{T}() × (0 .. length)
 
 """
     Point(x)

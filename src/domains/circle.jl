@@ -1,28 +1,169 @@
 
-abstract type AbstractHyperSphere{N,T} <: EuclideanDomain{N,T} end
-
-
+# The type hierarchy is as follows:
+# abstract HyperBall
+# |-> abstract UnitHyperBall: radius is 1
+#     |-> FixedUnitBall: dimension is part of type
+#     |-> FlexibleUnitBall: dimension is specified by int field
+# There are aliases for SVector{N,T} (type EuclideanX) and Vector{T}
+# (type VectorX).
 
 """
-The unit sphere (of radius 1) in `N` dimensions.
+Supertype of balls for which elements satisfy `norm(x) < radius(ball)` (open ball)
+or `norm(x) < radius(ball)` (closed ball).
 """
-struct UnitHyperSphere{N,T} <: AbstractHyperSphere{N,T} end
+abstract type HyperBall{T,C} <: Domain{T} end
 
-UnitHyperSphere{N}() where N = UnitHyperSphere{N,Float64}()
+"A ball in a fixed N-dimensional Euclidean space."
+const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
 
-const UnitCircle{T} = UnitHyperSphere{2,T}
-const UnitSphere{T} = UnitHyperSphere{3,T}
+"A ball with vector elements of variable length."
+const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
 
-convert(::Type{Domain{SVector{N,T}}}, d::UnitHyperSphere{N}) where {N,T} =
-    UnitHyperSphere{N,T}()
+isclosed(::HyperBall{T,:closed}) where {T} = true
+isclosed(::HyperBall{T,:open}) where {T} = false
 
-indomain(x, ::UnitHyperSphere) = norm(x) == 1
+indomain(x, ball::HyperBall) = norm(x) <= radius(ball)
+approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
 
-approx_indomain(x, ::UnitHyperSphere, tolerance) = 1-tolerance <= norm(x) <= 1+tolerance
+# A closed ball always contains at least the origin.
+isempty(ball::HyperBall{T,:closed}) where {T} = false
+isempty(ball::HyperBall{T,:open}) where {T} = radius(ball) == 0
+
+
+"The unit ball."
+abstract type UnitHyperBall{T,C} <: HyperBall{T,C} end
+
+radius(::UnitHyperBall) = 1
+
+"The unit ball with fixed dimension(s) specified by the element type."
+struct FixedUnitBall{T,C} <: UnitHyperBall{T,C}
+end
+
+FixedUnitBall{T}() where {T} = FixedUnitBall{T,:closed}()
+
+"The unit ball in a fixed N-dimensional space."
+const EuclideanUnitBall{N,T,C} = FixedUnitBall{SVector{N,T},C}
+
+const UnitDisk{T} = EuclideanUnitBall{2,T,:closed}
+const UnitBall{T} = EuclideanUnitBall{3,T,:closed}
+
+UnitDisk() = UnitDisk{Float64}()
+UnitBall() = UnitBall{Float64}()
+
+
+"The unit ball with variable dimension."
+struct FlexibleUnitBall{T,C} <: UnitHyperBall{T,C}
+    dimension   ::  Int
+end
+
+FlexibleUnitBall{T}(dimension::Int) where {T} =
+    FlexibleUnitBall{T,:closed}(dimension)
+
+dimension(ball::FlexibleUnitBall) = ball.dimension
+
+"The unit ball with vector elements of a given dimension."
+const VectorUnitBall{T,C} = FlexibleUnitBall{Vector{T},C}
+
+VectorUnitBall(dimension::Int = 3) = VectorUnitBall{Float64}(dimension)
+
+indomain(x, ball::FlexibleUnitBall) =
+    (length(x) == dimension(ball)) && (norm(x) <= radius(ball))
+approx_indomain(x, ball::FlexibleUnitBall, tolerance) =
+    (length(x) == dimension(ball)) && (norm(x) <= radius(ball)+tolerance)
+
+convert(::Type{Domain{T}}, ball::FixedUnitBall{S,C}) where {S,T,C} =
+    FixedUnitBall{T,C}()
+convert(::Type{Domain{T}}, ball::FlexibleUnitBall{S,C}) where {S,T,C} =
+    FlexibleUnitBall{T,C}(ball.dimension)
+
+
+show(io::IO, d::UnitHyperBall{T,:closed}) where {T} =
+    print(io, "the $(dimension(d))-dimensional closed unit ball")
+show(io::IO, d::UnitHyperBall{T,:open}) where {T} =
+    print(io, "the $(dimension(d))-dimensional open unit ball")
+
+# We choose the origin here
+point_in_domain(::HyperBall{T}) where {T} = zero(T)
+
+
+# The type hierarchy parallels that of Ball above
+# abstract HyperSphere
+# |-> abstract UnitHyperSphere: radius is 1
+#     |-> FixedUnitSphere: dimension is part of type
+#     |-> FlexibleUnitSphere: dimension is specified by int field
+# There are aliases for SVector{N,T} (EuclideanX) and Vector{T} (VectorX).
+
+"Supertype of spherical domains for which elements satisfy `norm(x) == radius(sphere)`."
+abstract type HyperSphere{T} <: Domain{T} end
+
+indomain(x, sphere::HyperSphere) = norm(x) == radius(sphere)
+approx_indomain(x, sphere::HyperSphere, tolerance) =
+    radius(sphere)-tolerance <= norm(x) <= radius(sphere)+tolerance
+
+isempty(::HyperSphere) = false
+isclosed(::HyperSphere) = true
+
+"A hypersphere in a fixed N-dimensional Euclidean space."
+const EuclideanHyperSphere{N,T} = HyperSphere{SVector{N,T}}
+
+"A sphere with vector elements of variable length."
+const VectorHyperSphere{T} = HyperSphere{Vector{T}}
+
+
+"The unit sphere."
+abstract type UnitHyperSphere{T} <: HyperSphere{T} end
+
+radius(::UnitHyperSphere) = 1
+
+"The unit sphere with fixed dimension(s) specified by the element type."
+struct FixedUnitSphere{T} <: UnitHyperSphere{T}
+end
+
+"The unit sphere in a fixed N-dimensional Euclidean space."
+const EuclideanUnitSphere{N,T} = FixedUnitSphere{SVector{N,T}}
+
+EuclideanUnitSphere{N}() where {N} = EuclideanUnitSphere{N,Float64}()
+
+
+"The unit circle in 2D."
+const UnitCircle{T} = EuclideanUnitSphere{2,T}
+"The unit sphere in 3D."
+const UnitSphere{T} = EuclideanUnitSphere{3,T}
+
+
+
+"The unit sphere with variable dimension."
+struct FlexibleUnitSphere{T} <: UnitHyperSphere{T}
+    dimension   ::  Int
+end
+
+dimension(sphere::FlexibleUnitSphere) = sphere.dimension
+
+"The unit sphere with vector elements of a given dimension."
+const VectorUnitSphere{T} = FlexibleUnitSphere{Vector{T}}
+
+VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
+
+convert(::Type{Domain{SVector{N,T}}}, d::EuclideanUnitSphere{N,S}) where {N,S,T} =
+    EuclideanUnitSphere{N,T}()
+convert(::Type{Domain{Vector{T}}}, d::EuclideanUnitSphere{N,S}) where {N,S,T} =
+    VectorUnitSphere{T}(N)
+
+show(io::IO, d::UnitHyperSphere) =
+    dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")
+
+
 
 boundary(::UnitHyperBall{N,T}) where {N,T} = UnitHyperSphere{N,T}()
 
-isempty(::UnitHyperSphere) = false
+
+################
+# Applications
+################
+
+"Create a cylinder with given radius and length."
+cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
+cylinder(radius::T, length::T) where {T} = radius * UnitDisk{T}() × (0 .. length)
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)

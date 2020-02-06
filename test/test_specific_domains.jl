@@ -1,7 +1,7 @@
 using StaticArrays, DomainSets, Test
 import DomainSets: MappedDomain, similar_interval, convert_space, spacetype, internal_eltype
 
-
+# TODO: StaticArrays has new syntax for this, e.g. SA[1,2,3]
 const v = TypeFactory{SVector}()
 
 const io = IOBuffer()
@@ -488,6 +488,7 @@ end
         @test v[1.,0.] ∈ D
         @test v[1.,1.] ∉ D
         @test !isempty(D)
+        @test isclosed(D)
 
         D = 2UnitDisk()
         @test v[1.4, 1.4] ∈ D
@@ -506,6 +507,7 @@ end
         @test v[1.,0.0,0.] ∈ B
         @test v[1.,0.1,0.] ∉ B
         @test !isempty(B)
+        @test isclosed(B)
 
         B = 2UnitBall()
         @test v[1.9,0.0,0.0] ∈ B
@@ -520,6 +522,14 @@ end
         @test v[1.0,1.0,-0.9] ∈ B
         @test v[2.9,2.9,1.0] ∉ B
         @test !isempty(B)
+
+        C = VectorUnitBall(4)
+        @test [0.0,0.1,0.2,0.1] ∈ C
+        @test v[0.0,0.1,0.2,0.1] ∈ C
+        @test [0.0,0.1] ∉ C
+        @test [0.0,1.1,0.2,0.1] ∉ C
+        @test !isempty(C)
+        @test isclosed(C)
     end
 
 
@@ -819,7 +829,7 @@ end
         @test !isempty(u1)
 
         show(io,u1)
-        @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
+        @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
     end
 
     @testset "intersection" begin
@@ -835,7 +845,7 @@ end
         @test String(take!(io)) == "-0.4..0.4 x -0.1..0.1"
         i2 = d1 & d2
         show(io,i2)
-        @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: -0.4..0.4 x -0.4..0.4\n"
+        @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.4..0.4 x -0.4..0.4\n"
 
         i3 = d3 & i2
         i4 = i2 & d3
@@ -865,7 +875,7 @@ end
         # intersection of productdomains
         d = d1\d2
         show(io,d)
-        @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
+        @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
 
         x = SVector(0.,.74)
         y = SVector(0.,.25)

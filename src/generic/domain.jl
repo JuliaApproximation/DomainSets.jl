@@ -21,6 +21,12 @@ subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 
+"""
+A `VectorDomain` is any domain whose eltype is `Vector{T}`. In this case
+the dimension of the domain is not included in its type.
+"""
+const VectorDomain{T} = Domain{Vector{T}}
+
 # At the level of Domain we attempt to promote the arguments to compatible
 # types, then we invoke indomain. Concrete subtypes should implement
 # indomain, and they may specialize point_domain_promote in order to control
@@ -57,9 +63,12 @@ _point_domain_promote(x, domain::Domain, ::Type{T}) where {T} =
 _point_domain_promote(x, domain::Domain, ::Type{Any}) =
    x, nothing
 
-# As a special case, we allow any vector for Euclidean domains.
+# As a special case, we allow any vector for Euclidean domains, with conversion
 point_domain_promote(x::AbstractVector, domain::EuclideanDomain) =
    convert(eltype(domain), x), domain
+# and any vector for Vector domains, without conversion
+point_domain_promote(x::AbstractVector, domain::VectorDomain) =
+   x, domain
 
 """
 Return a suitable tolerance to use for verifying whether a point is close to

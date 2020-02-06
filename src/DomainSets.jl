@@ -18,30 +18,23 @@ using IntervalSets
 import Base: @ncall
 
 # Operator symbols
-import Base: *, +, -, /, \, ^
-import Base: |, &
-import Base: ∪, ∩
-import Base: ==, isapprox
-import Base: ∘
-
-# Set operations
-import Base: intersect, union, setdiff, in, isempty, minimum, maximum,
-    issubset
-
-# Arrays
-import Base: size, length, ndims, getindex, eltype, ndims, hash
-import Base: inv
-import Base: isreal
-import Base: zero
-
-# Types, promotions and conversions
-import Base: convert, widen, promote_rule
-
-# Display
-import Base: show
-
-# Various
-import Base: Bool
+import Base: *, +, -, /, \, ^,
+    |, &,
+    ∪, ∩,
+    ==, isapprox,
+    ∘,
+    # Set operations
+    intersect, union, setdiff, in, isempty, minimum, maximum,
+    issubset,
+    # Arrays
+    size, length, ndims, getindex, eltype, ndims, hash,
+    inv, isreal, zero,
+    # Types, promotions and conversions
+    convert, widen, promote_rule,
+    # Display
+    show,
+    # Various
+    Bool
 
 # IntervalSets
 import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
@@ -132,17 +125,20 @@ export EmptySpace, FullSpace
 # from domains/trivial.jl
 export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from domains/interval.jl
-export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, OpenInterval, ClosedInterval
-export leftendpoint, rightendpoint, isleftopen, isrightopen
-export cardinality
-export HalfLine, NegativeHalfLine
+export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
+    OpenInterval, ClosedInterval,
+    leftendpoint, rightendpoint, isleftopen, isrightopen,
+    cardinality,
+    HalfLine, NegativeHalfLine
 # from domains/simple.jl
-export UnitHyperBall, UnitDisk, UnitBall, Cube, Simplex, UnitSimplex, UnitHyperSphere, Point
-export cylinder
+export Cube, Simplex, UnitSimplex, Point
 # from domains/circle.jl
-export UnitCircle, UnitSphere
-export ellipse, ellipse_shape
-export parameterization, gradient
+export UnitCircle, UnitSphere, UnitHyperSphere,
+    UnitDisk, UnitBall, UnitHyperBall,
+    EuclideanUnitBall, VectorUnitBall,
+    EuclideanUnitSphere, VectorUnitSphere,
+    ellipse, ellipse_shape, cylinder,
+    parameterization, gradient
 
 include("util/common.jl")
 include("util/products.jl")
