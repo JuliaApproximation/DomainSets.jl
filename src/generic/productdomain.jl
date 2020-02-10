@@ -115,6 +115,8 @@ function ProductDomain(domains::AbstractVector)
     ProductDomain{Vector{T}}(domains)
 end
 
+ProductDomain{T}(domains::Domain...) where {T} = ProductDomain{T}(domains)
+
 function ProductDomain{T}(domains::Tuple) where {T}
 	DD = typeof(domains)
 	DIM = map(dimension, domains)

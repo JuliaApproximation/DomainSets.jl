@@ -45,6 +45,8 @@ FixedUnitBall{T}() where {T} = FixedUnitBall{T,:closed}()
 "The unit ball in a fixed N-dimensional space."
 const EuclideanUnitBall{N,T,C} = FixedUnitBall{SVector{N,T},C}
 
+EuclideanUnitBall{N}() where {N} = EuclideanUnitBall{N,Float64}()
+
 const UnitDisk{T} = EuclideanUnitBall{2,T,:closed}
 const UnitBall{T} = EuclideanUnitBall{3,T,:closed}
 

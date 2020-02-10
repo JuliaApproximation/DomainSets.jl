@@ -51,7 +51,9 @@ export ..
 ## Utils
 
 # from util/common.jl
-export subeltype
+export subeltype,
+    dimension,
+    prectype
 # from util/tensorproducts.jl
 export cartesianproduct
 
@@ -72,8 +74,6 @@ export ProductMap
 export tensorproduct
 # from maps/basic_maps.jl
 export IdentityMap, ConstantMap
-# # from maps/embedding_map.jl
-# export embedding_map, restriction_map, isomorphism_map
 # from maps/affine_maps.jl
 export AffineMap, Translation, LinearMap
 export islinear
@@ -86,7 +86,6 @@ export CartToPolarMap, PolarToCartMap
 
 # from generic/domain.jl
 export Domain, EuclideanDomain, VectorDomain,
-    dimension,
     approx_in,
     isclosed, iscompact,
     boundary, ∂,
@@ -142,7 +141,6 @@ include("maps/maps.jl")
 include("maps/composite_map.jl")
 include("maps/productmap.jl")
 include("maps/basic_maps.jl")
-# include("maps/embedding_map.jl")
 include("maps/affine_map.jl")
 include("maps/coordinates.jl")
 

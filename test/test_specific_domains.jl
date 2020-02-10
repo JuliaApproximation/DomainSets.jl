@@ -489,6 +489,8 @@ end
         @test v[1.,1.] ∉ D
         @test !isempty(D)
         @test isclosed(D)
+        # test a tuple point
+        @test (0.3,0.5) ∈ D
 
         D = 2UnitDisk()
         @test v[1.4, 1.4] ∈ D
@@ -736,6 +738,13 @@ end
             T2 = (-1.0 .. 1.0) × (-1.5 .. 2.5)
             @test v[0.5,0.5] ∈ T2
             @test v[-1.1,0.3] ∉ T2
+
+            # Use the constructor ProductDomain{T} directly
+            T3 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
+            @test v[0.2,0.6] ∈ T3
+            @test (0.2,0.6) ∈ T3
+            @test [0.2,0.6] ∈ T3
+            @test v[0.2,0.8] ∉ T3
         end
         @testset "ProductDomain 2" begin
             T1 = cartesianproduct((-1.0 .. 1.0), 2)

@@ -103,10 +103,6 @@ Base.getindex(v::TypeFactory{T}, args...) where {T} = T(args...)
 
 const v = TypeFactory{SVector}()
 
-###############
-# Type conversion
-###############
-Base.convert(::Type{SVector}, ::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
 
 
 ###############
@@ -116,3 +112,38 @@ Base.convert(::Type{SVector}, ::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
 "Return the type of the elements of `x`."
 subeltype(x) = subeltype(typeof(x))
 subeltype(::Type{T}) where {T} = eltype(eltype(T))
+
+###############
+# Dimension
+###############
+
+dimension(x) = dimension(typeof(x))
+dimension(::Type{T}) where {T <: Number} = 1
+dimension(::Type{SVector{N,T}}) where {N,T} = N
+dimension(::Type{NTuple{N,T}}) where {N,T} = N
+dimension(::Type{Tuple{Vararg{<:Any,N}}}) where {N} = N
+# dimension(::Type{Tuple{A,B}}) where {A,B} = 2
+# dimension(::Type{Tuple{A,B,C}}) where {A,B,C} = 3
+# dimension(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = 4
+dimension(::Type{CartesianIndex{N}}) where {N} = N
+
+
+#################
+# Precision type
+#################
+
+"The floating point precision type associated with the argument."
+prectype(x) = prectype(typeof(x))
+prectype(::Type{<:Complex{T}}) where {T} = prectype(T)
+prectype(::Type{<:AbstractArray{T}}) where {T} = prectype(T)
+prectype(::Type{NTuple{N,T}}) where {N,T} = prectype(T)
+prectype(::Type{Tuple{A}}) where {A} = prectype(A)
+prectype(::Type{Tuple{A,B}}) where {A,B} = prectype(A,B)
+prectype(::Type{Tuple{A,B,C}}) where {A,B,C} = prectype(A,B,C)
+prectype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = prectype(A,B,C,D)
+prectype(::Type{Tuple{A,B,C,D,Vararg{Any}}}) where {A,B,C,D,N} = prectype(A,B,C,D)
+prectype(::Type{T}) where {T<:AbstractFloat} = T
+prectype(::Type{T}) where {T} = prectype(float(T))
+
+prectype(a, b) = promote_type(prectype(a), prectype(b))
+prectype(a, b, c...) = prectype(prectype(a, b), c...)
