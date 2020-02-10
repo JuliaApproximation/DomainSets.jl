@@ -1,8 +1,6 @@
 # Definition of the abstract Domain type and its interface
 
 
-spaceof(::Domain{T}) where {T} = spacetype(T)
-
 eltype(::Type{<:Domain{T}}) where {T} = T
 
 dimension(::Type{<:Domain{T}}) where {T} = dimension_type(T)
@@ -11,12 +9,7 @@ dimension_type(::Type{SVector{N,T}}) where {N,T} = N
 dimension_type(::Type{T}) where {T <: Number} = 1
 
 
-"""
-If the type `T` is a container type, the elements of `T` may have a different
-`subeltype`. If `T` is not a container, `subeltype` simply evaluates to `T`.
-"""
-subeltype(d::Domain) = subeltype(spaceof(d))
-subeltype(::Type{T}) where {T} = subeltype(GSpace{T})
+subeltype(d::Domain) = subeltype(eltype(d))
 
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
@@ -121,7 +114,7 @@ end
 
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 
-isreal(d::Domain) = isreal(spaceof(d))
+isreal(d::Domain) = isreal(eltype(d))
 
 infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
 supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum

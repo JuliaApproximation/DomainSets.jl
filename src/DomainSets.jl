@@ -50,15 +50,10 @@ export ..
 
 ## Utils
 
+# from util/common.jl
+export subeltype
 # from util/tensorproducts.jl
 export cartesianproduct
-
-
-## Spaces
-
-# from spaces/space.jl
-export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
-export isomorphic, ≅, embedded, ↪
 
 
 ## Maps
@@ -77,8 +72,8 @@ export ProductMap
 export tensorproduct
 # from maps/basic_maps.jl
 export IdentityMap, ConstantMap
-# from maps/embedding_map.jl
-export embedding_map, restriction_map, isomorphism_map
+# # from maps/embedding_map.jl
+# export embedding_map, restriction_map, isomorphism_map
 # from maps/affine_maps.jl
 export AffineMap, Translation, LinearMap
 export islinear
@@ -143,16 +138,11 @@ export UnitCircle, UnitSphere, UnitHyperSphere,
 include("util/common.jl")
 include("util/products.jl")
 
-include("spaces/space.jl")
-include("spaces/space_promotions.jl")
-include("spaces/basic_spaces.jl")
-include("spaces/productspace.jl")
-
 include("maps/maps.jl")
 include("maps/composite_map.jl")
 include("maps/productmap.jl")
 include("maps/basic_maps.jl")
-include("maps/embedding_map.jl")
+# include("maps/embedding_map.jl")
 include("maps/affine_map.jl")
 include("maps/coordinates.jl")
 

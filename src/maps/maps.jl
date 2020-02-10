@@ -14,9 +14,6 @@ codomaintype(map::AbstractMap) = codomaintype(typeof(map))
 codomaintype(::Type{AbstractMap{S,T}}) where {S,T} = T
 codomaintype(::Type{M}) where {M <: AbstractMap} = codomaintype(supertype(M))
 
-domain_space(map::AbstractMap) = GeometricSpace{domaintype(map)}()
-range_space(map::AbstractMap) = GeometricSpace{codomaintype(map)}()
-
 (*)(map::AbstractMap, x) = applymap(map, x)
 
 (\)(map::AbstractMap, y) = inv(map) * y

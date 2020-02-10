@@ -1,5 +1,5 @@
 using StaticArrays, DomainSets, Test
-import DomainSets: MappedDomain, similar_interval, convert_space, spacetype
+import DomainSets: MappedDomain, similar_interval
 
 # TODO: StaticArrays has new syntax for this, e.g. SA[1,2,3]
 const v = TypeFactory{SVector}()
@@ -782,19 +782,6 @@ end
             @test point_in_domain(d) ∈ d
         end
     end
-    @testset "embedded" begin
-        i = 0.0 .. 1.0
-        e = embedding_map(Float64, Complex{Float64})
-        r = restriction_map(Complex{Float64}, Float64)
-        ei = DomainSets.forwardmap_domain(e, i)
-
-        @test 0.5+1im ∉ ei
-        @test 0.5+0im ∈ ei
-        @test 0.5-0im ∈ ei
-        @test 1.1+0im ∉ ei
-        @test approx_in(0.8+1e-5im, ei, 1e-5)
-        @test !approx_in(0.8+1e-5im, ei, 1e-6)
-    end
 end
 
 @testset "Set operations" begin
@@ -935,11 +922,9 @@ end
 
     @testset "disk × interval" begin
         d = (0.0..1) × UnitDisk()
-        # @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (0.1, SVector(0.2,0.3))
         @test SVector(0.1, 0.2, 0.3) ∈ d
 
         d = UnitDisk() × (0.0..1)
-        # @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (SVector(0.1,0.2),0.3)
         @test SVector(0.1, 0.2, 0.3) ∈ d
     end
 end
