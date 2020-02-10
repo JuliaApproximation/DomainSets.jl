@@ -87,7 +87,7 @@ export CartToPolarMap, PolarToCartMap
 # from generic/domain.jl
 export Domain, EuclideanDomain, VectorDomain,
     approx_in,
-    isclosed, iscompact,
+    isopen, isclosed, iscompact,
     boundary, ∂,
     point_in_domain
 
@@ -114,18 +114,20 @@ export infimum, supremum
 
 ## Specific domains
 
-# from domains/simple.jl
-export EmptySpace, FullSpace
 # from domains/trivial.jl
-export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
+export EmptySpace, FullSpace,
+    ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     OpenInterval, ClosedInterval,
     leftendpoint, rightendpoint, isleftopen, isrightopen,
     cardinality,
     HalfLine, NegativeHalfLine
-# from domains/simple.jl
-export Cube, Simplex, UnitSimplex, Point
+# from domains/simplex.jl
+export EuclideanUnitSimplex, VectorUnitSimplex,
+    center, corners
+# from domains/point.jl
+export Point
 # from domains/ball.jl
 export UnitCircle, UnitSphere, UnitHyperSphere,
     UnitDisk, UnitBall, UnitHyperBall,
@@ -154,8 +156,9 @@ include("generic/promotion.jl")
 include("generic/arithmetics.jl")
 
 include("domains/trivial.jl")
+include("domains/point.jl")
 include("domains/interval.jl")
-include("domains/simple.jl")
+include("domains/simplex.jl")
 include("domains/ball.jl")
 
 end # module

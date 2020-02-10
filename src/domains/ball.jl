@@ -22,6 +22,7 @@ const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
 
 isclosed(::HyperBall{T,:closed}) where {T} = true
 isclosed(::HyperBall{T,:open}) where {T} = false
+isopen(ball::HyperBall) = !isclosed(ball)
 
 indomain(x, ball::HyperBall) = norm(x) <= radius(ball)
 approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
@@ -105,7 +106,9 @@ approx_indomain(x, sphere::HyperSphere, tolerance) =
     radius(sphere)-tolerance <= norm(x) <= radius(sphere)+tolerance
 
 isempty(::HyperSphere) = false
+
 isclosed(::HyperSphere) = true
+isopen(::HyperSphere) = false
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
 const EuclideanHyperSphere{N,T} = HyperSphere{SVector{N,T}}
@@ -148,10 +151,10 @@ const VectorUnitSphere{T} = FlexibleUnitSphere{Vector{T}}
 
 VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
 
-convert(::Type{Domain{SVector{N,T}}}, d::EuclideanUnitSphere{N,S}) where {N,S,T} =
-    EuclideanUnitSphere{N,T}()
-convert(::Type{Domain{Vector{T}}}, d::EuclideanUnitSphere{N,S}) where {N,S,T} =
-    VectorUnitSphere{T}(N)
+convert(::Type{Domain{T}}, sphere::FixedUnitSphere{S}) where {S,T} =
+    FixedUnitSphere{T}()
+convert(::Type{Domain{T}}, sphere::FlexibleUnitSphere{S}) where {S,T} =
+    FlexibleUnitsphere{T}(sphere.dimension)
 
 show(io::IO, d::UnitHyperSphere) =
     dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")

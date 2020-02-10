@@ -1,23 +1,4 @@
 
-# A collection of simple domains.
-
-###########################
-# An n-dimensional simplex
-###########################
-
-struct UnitSimplex{N,T} <: EuclideanDomain{N,T} end
-UnitSimplex{N}() where N = UnitSimplex{N,Float64}()
-
-indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
-
-approx_indomain(x, ::UnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
-
-isempty(::UnitSimplex) = false
-
-# We pick the origin, because it belongs to the domain regardless of what T is
-point_in_domain(d::UnitSimplex) = zero(eltype(d))
-
-
 """
     Point(x)
 

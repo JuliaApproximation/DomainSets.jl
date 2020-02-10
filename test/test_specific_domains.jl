@@ -491,6 +491,8 @@ end
         @test isclosed(D)
         # test a tuple point
         @test (0.3,0.5) ∈ D
+        D2 = convert(Domain{SVector{2,BigFloat}}, D)
+        @test eltype(D2) == SVector{2,BigFloat}
 
         D = 2UnitDisk()
         @test v[1.4, 1.4] ∈ D
@@ -575,6 +577,9 @@ end
         q = left_inverse(p)
         @test applymap(q, x) ≈ 1/2
 
+        C2 = convert(Domain{SVector{2,BigFloat}}, C)
+        @test eltype(C2) == SVector{2,BigFloat}
+
         C = 2UnitCircle() + v[1.,1.]
         @test approx_in(v[3.,1.], C)
 
@@ -586,6 +591,8 @@ end
         @test v[1.,0.,1.] ∉ S
         @test approx_in(v[cos(1.),sin(1.),0.], S)
         @test !isempty(S)
+        S2 = convert(Domain{SVector{3,BigFloat}}, S)
+        @test eltype(S2) == SVector{3,BigFloat}
 
         S = 2UnitSphere() + v[1.,1.,1.]
         @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
@@ -654,7 +661,7 @@ end
     end
 
     @testset "simplex" begin
-        d = UnitSimplex{2}()
+        d = EuclideanUnitSimplex{2}()
         # We test a point in the interior, a point on each of the boundaries and
         # all corners.
         @test v[0.2,0.2] ∈ d
@@ -673,7 +680,11 @@ end
         @test approx_in(v[-0.1,-0.1], d, 0.1)
         @test !approx_in(v[-0.1,-0.1], d, 0.09)
 
-        d3 = UnitSimplex{3,BigFloat}()
+        @test isclosed(d)
+        @test point_in_domain(d) ∈ d
+
+        d3 = EuclideanUnitSimplex{3,BigFloat}()
+        @test point_in_domain(d3) ∈ d3
         x0 = big(0.0)
         x1 = big(1.0)
         x2 = big(0.3)
@@ -689,6 +700,10 @@ end
         @test v[x2,-x2,x2] ∉ d3
         @test v[x2,x2,-x2] ∉ d3
         @test v[x1,x1,x1] ∉ d3
+
+        # open/closed
+        d = EuclideanUnitSimplex{2,Float64,:open}()
+        @test !isclosed(d)
     end
 
     @testset "arithmetics" begin
