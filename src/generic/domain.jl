@@ -29,58 +29,41 @@ const VectorDomain{T} = Domain{Vector{T}}
 
 # At the level of Domain we attempt to promote the arguments to compatible
 # types, then we invoke indomain. Concrete subtypes should implement
-# indomain, and they may specialize point_domain_promote in order to control
-# which types of points they support.
-# Here, `in` invokes `indomain` after promotion, rather than invoking itself
-# recursively with promoted arguments. That is because we can not predict
-# in general which signatures can be passed on to `indomain`.
-in(x, d::Domain) = indomain(point_domain_promote(x, d)...)
+# indomain. They may also implement `in` in order to accept more types.
+in(x::S, d::Domain{T}) where {S,T} = _in(x, d, promote_type(S,T))
+_in(x::T, domain::Domain{T}, ::Type{T}) where {T} = indomain(x, domain)
+_in(x::S, domain::Domain{T}, ::Type{U}) where {S,T,U} = indomain(convert(U, x), convert(Domain{U}, domain))
+_in(x::S, domain::Domain{T}, ::Type{S}) where {S,T} = indomain(x, convert(Domain{S}, domain))
+_in(x::S, domain::Domain{T}, ::Type{T}) where {S,T} = indomain(convert(T, x), domain)
 
-# Types of x and domain are incompatible: we return false
-indomain(x, ::Nothing) = false
-
-"""
-```
-point_domain_promote(x, domain::Domain)
-```
-
-Promote a point and a domain to compatible types by promoting `x` and the
-element type of the domain to a joined supertype.
-
-Specific domains can enable users to invoke their implementation of `indomain`
-with different types of points by specializing `point_domain_promote`. If no
-suitable promotion exists, the function may return `x, nothing`. This will
-make `in` return false.
-"""
-point_domain_promote(x::T, domain::Domain{T}) where {T} = x, domain
-point_domain_promote(x, domain::Domain) =
-   _point_domain_promote(x, domain, promote_type(typeof(x), eltype(domain)))
-
-# A joined supertype exists: promote the point and the domain
-_point_domain_promote(x, domain::Domain, ::Type{T}) where {T} =
-   convert(T, x), convert(Domain{T}, domain)
-# No joined supertype exists: return nothing
-# _point_domain_promote(x, domain::Domain, ::Type{Any}) =
-#    x, nothing
-_point_domain_promote(x, domain::Domain, ::Type{Any}) =
-   error("type mismatch")
+function _in(x::S, domain::Domain{T}, ::Type{Any}) where {S,T}
+    @warn "in: incompatible types $(S) and $(T). Returning false."
+    return false
+end
 
 # Special cases:
-# - We allow any vector for Euclidean domains, with conversion to static vector
-point_domain_promote(x::AbstractVector{T}, domain::EuclideanDomain{N,T}) where {N,T} =
-   convert(eltype(domain), x), domain
-point_domain_promote(x::AbstractVector{S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
-   convert(SVector{N,promote_type(T,S)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain)
+# - We allow any vector for Euclidean domains, with conversion to a static vector
+in(x::AbstractVector{T}, domain::EuclideanDomain{N,T}) where {N,T} =
+    indomain(convert(SVector{N,T}, x), domain)
+in(x::AbstractVector{S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
+    in(convert(SVector{N,promote_type(T,S)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain))
+
 # - we allow any abstract vector for Vector domains
-point_domain_promote(x::AbstractVector{T}, domain::VectorDomain{T}) where {T} =
-   x, domain
-point_domain_promote(x::AbstractVector{S}, domain::VectorDomain{T}) where {S,T} =
-   convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain)
+in(x::AbstractVector{T}, domain::VectorDomain{T}) where {T} = indomain(x, domain)
+in(x::AbstractVector{S}, domain::VectorDomain{T}) where {S,T} =
+   in(convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain))
+
 # - we allow tuples for Euclidean domains if they have the right length
-point_domain_promote(x::NTuple{N,T}, domain::EuclideanDomain{N,T}) where {N,T} =
-   x, domain
-point_domain_promote(x::NTuple{N,S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
-   convert(NTuple{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain)
+in(x::NTuple{N,T}, domain::EuclideanDomain{N,T}) where {N,T} = indomain(x, domain)
+in(x::NTuple{N,S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
+    in(convert(NTuple{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain))
+
+function indomain(x, domain::Domain)
+    @warn "Please implement `indomain` for domain $(domain) for points of type $(typeof(x)). Returning false."
+    return false
+end
+
+
 
 
 """
@@ -95,9 +78,45 @@ default_tolerance(d::Domain, ::Type{Complex{T}}) where {T <: Real} = 100eps(T)
 default_tolerance(d::Domain, ::Type{T}) where {T <: Integer} = zero(T)
 default_tolerance(d::Domain, ::Type{T}) where {T} = zero(T)
 
-approx_in(x, domain::Domain, tolerance = default_tolerance(domain)) =
-   approx_indomain(point_domain_promote(x, domain)..., tolerance)
-approx_indomain(x, ::Nothing, tolerance) = false
+
+approx_in(x, domain::Domain) = approx_in(x, domain, default_tolerance(domain))
+
+# We mimick the promotion rules of `in` above.
+approx_in(x::S, d::Domain{T}, tolerance) where {S,T} = _approx_in(x, d, tolerance, promote_type(S,T))
+_approx_in(x::S, domain::Domain{T}, tolerance, ::Type{U}) where {S,T,U} =
+    approx_indomain(convert(U, x), convert(Domain{U}, domain), tolerance)
+_approx_in(x::S, domain::Domain{T}, tolerance, ::Type{S}) where {S,T} =
+    approx_indomain(x, convert(Domain{S}, domain), tolerance)
+_approx_in(x::S, domain::Domain{T}, tolerance, ::Type{T}) where {S,T} =
+    approx_indomain(convert(T, x), domain, tolerance)
+
+function _approx_in(x::S, domain::Domain{T}, tolerance, ::Type{Any}) where {S,T}
+    @warn "in: incompatible types $(S) and $(T). Returning false."
+    return false
+end
+
+# Special cases analogous to the ones above for `in` follow:
+approx_in(x::AbstractVector{T}, domain::EuclideanDomain{N,T}, tolerance) where {N,T} =
+    approx_indomain(convert(SVector{N,T}, x), domain, tolerance)
+approx_in(x::AbstractVector{S}, domain::EuclideanDomain{N,T}, tolerance) where {N,S,T} =
+    approx_in(convert(SVector{N,promote_type(T,S)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain), tolerance)
+
+approx_in(x::AbstractVector{T}, domain::VectorDomain{T}, tolerance) where {T} =
+    approx_indomain(x, domain, tolerance)
+approx_in(x::AbstractVector{S}, domain::VectorDomain{T}, tolerance) where {S,T} =
+   approx_in(convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain), tolerance)
+
+approx_in(x::NTuple{N,T}, domain::EuclideanDomain{N,T}, tolerance) where {N,T} =
+    approx_indomain(x, domain, tolerance)
+approx_in(x::NTuple{N,S}, domain::EuclideanDomain{N,T}, tolerance) where {N,S,T} =
+    approx_in(convert(NTuple{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain), tolerance)
+
+function approx_indomain(x, domain::Domain, tolerance)
+    @warn "Please consider implementing `approx_in` for domain $(domain) for points of type $(typeof(x))."
+    # Fall back to in without tolerance
+    return in(x, domain)
+end
+
 
 
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
