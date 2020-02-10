@@ -70,9 +70,15 @@ element(t, i) = elements(t)[i]
 Return the number of elements of a composite structure.
 
 See also: `elements`.
-"""# By default, we return length(elements(t))
+"""
 numelements(t) = length(elements(t))
 
+"Expand all arguments of type C into their components."
+expand(::Type{C}) where {C} = ()
+expand(::Type{C}, domain, domains...) where {C} =
+    (domain, expand(C, domains...)...)
+expand(::Type{C}, domain::C, domains...) where {C} =
+    (elements(domain)..., expand(C, domains...)...)
 
 ###############
 # Type factory

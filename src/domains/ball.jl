@@ -4,8 +4,9 @@
 # |-> abstract UnitHyperBall: radius is 1
 #     |-> FixedUnitBall: dimension is part of type
 #     |-> FlexibleUnitBall: dimension is specified by int field
-# There are aliases for SVector{N,T} (type EuclideanX) and Vector{T}
-# (type VectorX).
+# There are aliases for SVector{N,T} and Vector{T}:
+#   EuclideanHyperBall, VectorHyperBall,
+#   EuclideanUnitBall (FixedUnitBall), VectorUnitBall (FlexibleUnitBall).
 
 """
 Supertype of balls for which elements satisfy `norm(x) < radius(ball)` (open ball)
@@ -86,12 +87,13 @@ show(io::IO, d::UnitHyperBall{T,:open}) where {T} =
 point_in_domain(::HyperBall{T}) where {T} = zero(T)
 
 
-# The type hierarchy parallels that of Ball above
+
+# The type hierarchy of spheres parallels that of Ball above:
 # abstract HyperSphere
 # |-> abstract UnitHyperSphere: radius is 1
 #     |-> FixedUnitSphere: dimension is part of type
 #     |-> FlexibleUnitSphere: dimension is specified by int field
-# There are aliases for SVector{N,T} (EuclideanX) and Vector{T} (VectorX).
+# There are aliases for SVector{N,T} and Vector{T}.
 
 "Supertype of spherical domains for which elements satisfy `norm(x) == radius(sphere)`."
 abstract type HyperSphere{T} <: Domain{T} end

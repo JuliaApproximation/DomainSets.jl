@@ -1,5 +1,5 @@
 using StaticArrays, DomainSets, Test
-import DomainSets: MappedDomain, similar_interval, convert_space, spacetype, internal_eltype
+import DomainSets: MappedDomain, similar_interval, convert_space, spacetype
 
 # TODO: StaticArrays has new syntax for this, e.g. SA[1,2,3]
 const v = TypeFactory{SVector}()
@@ -725,6 +725,9 @@ end
             T1 = (-1.0 .. 1.0)^2
             @test v[0.5,0.5] ∈ T1
             @test v[-1.1,0.3] ∉ T1
+            # Test vectors of wrong length
+            # @test v[0.0,0.0,0.0] ∉ T1
+            # @test v[0.0] ∉ T1
 
             T1 = cartesianproduct((-1.0 .. 1.0), 2)
             @test v[0.5,0.5] ∈ T1
@@ -740,18 +743,22 @@ end
             T3 = ProductDomain(1.05UnitDisk(), (-1.0 .. 1.0))
             @test v[0.5,0.5,0.8] ∈ T3
             @test v[-1.1,0.3,0.1] ∉ T3
+            @test point_in_domain(T3) ∈ T3
 
             T4 = T1×(-1.0..1.)
             @test v[0.5,0.5,0.8] ∈ T4
             @test v[-1.1,0.3,0.1] ∉ T4
+            @test point_in_domain(T4) ∈ T4
 
             T5 = (-1.0..1.)×T1
             @test v[0.,0.5,0.5] ∈ T5
             @test v[0.,-1.1,0.3] ∉ T5
+            @test point_in_domain(T5) ∈ T5
 
             T6 = T1×T1
             @test v[0.,0.,0.5,0.5] ∈ T6
             @test v[0.,0.,-1.1,0.3] ∉ T6
+            @test point_in_domain(T6) ∈ T6
 
             io = IOBuffer()
             show(io,T1)
@@ -761,6 +768,18 @@ end
             d = (0..1) × (0.0..1)
             @test v[0.1,0.2] ∈ d
             @test d isa EuclideanDomain{2}
+            @test point_in_domain(d) ∈ d
+        end
+        @testset "vector domains" begin
+            d = ProductDomain([0..1.0, 0..2.0])
+            @test [0.1,0.2] ∈ d
+            @test v[0.1,0.2] ∈ d
+            @test d isa VectorDomain{Float64}
+            @test point_in_domain(d) ∈ d
+            # Test an integer type as well
+            d2 = ProductDomain([0..1, 0..2])
+            @test [0.1,0.2] ∈ d2
+            @test point_in_domain(d) ∈ d
         end
     end
     @testset "embedded" begin
@@ -829,7 +848,7 @@ end
         @test !isempty(u1)
 
         show(io,u1)
-        @test String(take!(io)) == "a union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
+        @test String(take!(io)) == "the union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
     end
 
     @testset "intersection" begin
@@ -916,11 +935,11 @@ end
 
     @testset "disk × interval" begin
         d = (0.0..1) × UnitDisk()
-        @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (0.1, SVector(0.2,0.3))
+        # @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (0.1, SVector(0.2,0.3))
         @test SVector(0.1, 0.2, 0.3) ∈ d
 
         d = UnitDisk() × (0.0..1)
-        @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (SVector(0.1,0.2),0.3)
+        # @test convert_space(spacetype(internal_eltype(d)), SVector(0.1, 0.2, 0.3)) == (SVector(0.1,0.2),0.3)
         @test SVector(0.1, 0.2, 0.3) ∈ d
     end
 end

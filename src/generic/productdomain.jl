@@ -9,12 +9,14 @@ Create an eltype that is suitable for a product domain. The result is a tuple
 type, where each of the elements is the eltype of the corresponding element
 of the product domain.
 """
+product_eltype(domains::Domain...) = product_eltype(domains)
+product_eltype(domains::Tuple) = _product_eltype(Tuple{map(eltype, domains)...})
 _product_eltype(t) = t
 _product_eltype(::Type{Tuple{T,V}}) where {T<:Real,V<:Real} =
 	NTuple{2,promote_type(T,V)}
 _product_eltype(::Type{Tuple{T,V}}) where {T<:Complex,V<:Complex} =
 	NTuple{2,promote_type(T,V)}
-product_eltype(domains...) = _product_eltype(Tuple{map(eltype, domains)...})
+
 
 """
 Try to simplify the type of a product domain to a type to which it is isomorphic.
@@ -53,90 +55,110 @@ end
     quote SVector{$M,T} end
 end
 
+"""
+Convert a vector from a cartesian format to a nested tuple according to the
+given dimensions.
+
+For example:
+`convert_fromcartesian([1,2,3,4,5], Val{(2,2,1)}()) -> ([1,2],[3,4],5)`
+"""
+@generated function convert_fromcartesian(x::Tuple, ::Val{DIM}) where {DIM}
+	dimsum = [0; cumsum([d for d in DIM])]
+	E = Expr(:tuple, [ (dimsum[i+1]-dimsum[i] > 1 ? Expr(:tuple, [:(x[$j]) for j = dimsum[i]+1:dimsum[i+1]]...) : :(x[$(dimsum[i+1])])) for i in 1:length(DIM)]...)
+	return quote $(E) end
+end
+
+@generated function convert_fromcartesian(x::SVector, ::Val{DIM}) where {DIM}
+	dimsum = [0; cumsum([d for d in DIM])]
+	E = Expr(:tuple, [ (dimsum[i+1]-dimsum[i] > 1 ? Expr(:call, :SVector, [:(x[$j]) for j = dimsum[i]+1:dimsum[i+1]]...) : :(x[$(dimsum[i+1])])) for i in 1:length(DIM)]...)
+	return quote $(E) end
+end
+
+"The inverse function of `convert_fromcartesian`."
+@generated function convert_tocartesian(x, ::Val{DIM}) where {DIM}
+    dimsum = [0; cumsum([d for d in DIM])]
+    E = vcat([[:(x[$i][$j]) for j in 1:DIM[i]] for i in 1:length(DIM)]...)
+    quote SVector($(E...)) end
+end
 
 #######################
 # Main type definition
 #######################
 
+
+
 """
 ```using DomainSets```
 
 A `ProductDomain` represents the cartesian product of other domains.
-
-A product domain has two eltypes, an internal type `S` and an external type `T`.
-The internal type `S` is a tuple containing the eltypes of the elements of the
-product domain. The external eltype `T` is a type whose associated space is
-isomorphic to that of `S`, but which has been simplified. (See also
-`simplify_product_eltype`).
-
-For example, if `S` is `Tuple{Float64,Float64}`, then `T` is `SVector{2,Float64}`.
 """
-struct ProductDomain{DD,S,T} <: Domain{T}
-	# D is the type of an indexable list of domains, such as a tuple
+struct ProductDomain{T,DIM,DD} <: LazyDomain{T}
 	domains	::	DD
-
-	# Inner constructor to verify that S and T are correct
-	function ProductDomain{DD,S,T}(domains) where {DD,S,T}
-		@assert S == product_eltype(domains...)
-		@assert isomorphic(spacetype(S),spacetype(T))
-		new{DD,S,T}(domains)
-	end
 end
 
-function ProductDomain(domains...)
-    DD = typeof(domains)
+const TupleProductDomain{T,DIM,DD<:Tuple} = ProductDomain{T,DIM,DD}
+const VectorProductDomain{T,DD} = ProductDomain{T,0,DD}
+
+productdimension(d::TupleProductDomain{T,DIM,DD}) where {T,DIM,DD} = DIM
+productdimension(d::VectorProductDomain) = numelements(d)
+
+ProductDomain(domains::Domain...) = ProductDomain(domains)
+
+function ProductDomain(domains::Tuple)
     S = product_eltype(domains...)
 	T = simplify_product_eltype(S)
-    ProductDomain{DD,S,T}(domains)
+    ProductDomain{T}(domains)
 end
 
-convert(::Type{Domain{SVector{N,T}}}, d::ProductDomain{<:Tuple{Vararg{<:Any,N}}}) where {N,T} =
+function ProductDomain(domains::AbstractVector)
+    T = reduce(promote_type, map(eltype, domains))
+    ProductDomain{Vector{T}}(domains)
+end
+
+function ProductDomain{T}(domains::Tuple) where {T}
+	DD = typeof(domains)
+	DIM = map(dimension, domains)
+	ProductDomain{T,DIM,DD}(domains)
+end
+
+function ProductDomain{T}(domains::Vector) where {T}
+	DD = typeof(domains)
+	ProductDomain{T,0,DD}(domains)
+end
+
+composition(d::ProductDomain) = Product()
+
+preprocess(d::TupleProductDomain{SVector{N,T},DIM,DD}, x) where {N,T,DIM,DD} =
+	convert_fromcartesian(x, Val{DIM}())
+
+function preprocess(d::VectorProductDomain, x)
+	@assert length(x) == productdimension(d)
+	x
+end
+
+function convert(::Type{EuclideanDomain{N,T}}, d::TupleProductDomain{S,DIM}) where {N,T,S,DIM}
+	@assert sum(DIM) == N
 	ProductDomain(convert.(Domain{T}, d.domains)...)
+end
 
-elements(d::ProductDomain) = d.domains
-
-internal_eltype(::Type{ProductDomain{DD,S,T}}) where {DD,S,T} = S
-internal_eltype(::Type{P}) where {P <: ProductDomain} = S
-internal_eltype(d::ProductDomain) = internal_eltype(typeof(d))
-
+convert(::Type{VectorDomain{T}}, d::VectorProductDomain{S}) where {S,T} =
+	ProductDomain(convert.(Domain{T}, d.domains))
 
 cross(x::Domain...) = cartesianproduct(x...)
 
 # One can use the cartesianproduct routine to create product domains
-cartesianproduct(domains::Domain...) = ProductDomain(domains...)
-
-# We try to avoid creating nested cartesian products
-cartesianproduct(d1::Domain, d2::ProductDomain) = cartesianproduct(d1, elements(d2)...)
-cartesianproduct(d1::ProductDomain, d2::Domain) = cartesianproduct(elements(d1)..., d2)
-cartesianproduct(d1::ProductDomain, d2::ProductDomain) = cartesianproduct(elements(d1)..., elements(d2)...)
-
+cartesianproduct(domains::Domain...) = ProductDomain(expand(ProductDomain, domains...))
 
 ^(d::Domain, n::Int) = cartesianproduct(d, n)
 
-^(d::Domain{T}, ::Type{Val{N}}) where {N,T} = ProductDomain{NTuple{N,typeof(d)},NTuple{N,T},SVector{N,T}}(ntuple(i->d, Val{N}))
+point_in_domain(d::ProductDomain) = topoint(d, map(point_in_domain, elements(d)))
 
-indomain(x, d::ProductDomain) = _indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d))
+topoint(d::ProductDomain, x) = x
+topoint(d::TupleProductDomain{<:SVector,DIM}, x) where {DIM} =
+	convert_tocartesian(x, Val{DIM}())
 
-# The line below allocates a little bit of memory...
-_indomain(x, d::ProductDomain, el) = reduce(&, map(in, x, el))
-
-# ...hence these special cases:
-_indomain(x::Tuple{A,B}, d::ProductDomain, el) where {A,B} = in(x[1], el[1]) &&
-    in(x[2], el[2])
-_indomain(x::Tuple{A,B,C}, d::ProductDomain, el) where {A,B,C} = in(x[1], el[1]) &&
-    in(x[2], el[2]) && in(x[3], el[3])
-_indomain(x::Tuple{A,B,C,D}, d::ProductDomain, el) where {A,B,C,D} = in(x[1], el[1]) &&
-    in(x[2], el[2]) && in(x[3], el[3]) && in(x[4], el[4])
-
-approx_indomain(x, d::ProductDomain, tolerance) =
-    _approx_indomain(convert_space(spacetype(internal_eltype(d)), x), d, elements(d), tolerance)
-
-_approx_indomain(x, d::ProductDomain, el, tolerance) = reduce(&, map((u,v) -> approx_indomain(u,v,tolerance), x, el))
-
-point_in_domain(d::ProductDomain) = convert_space(spaceof(d), map(point_in_domain, elements(d)))
-
-infimum(d::ProductDomain) = convert_space(spaceof(d), map(infimum, elements(d)))
-supremum(d::ProductDomain) = convert_space(spaceof(d), map(supremum, elements(d)))
+infimum(d::ProductDomain) = topoint(d, map(infimum, elements(d)))
+supremum(d::ProductDomain) = topoint(d, map(supremum, elements(d)))
 
 isempty(d::ProductDomain) = any(isempty, d.domains)
 

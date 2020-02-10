@@ -90,19 +90,19 @@ export CartToPolarMap, PolarToCartMap
 ## Generic domains
 
 # from generic/domain.jl
-export Domain, EuclideanDomain
-export dimension
-export approx_in
-export isclosed, iscompact
-export boundary, ∂
-export point_in_domain
+export Domain, EuclideanDomain, VectorDomain,
+    dimension,
+    approx_in,
+    isclosed, iscompact,
+    boundary, ∂,
+    point_in_domain
 
 # from generic/derived_domain.jl
 export DerivedDomain
 export superdomain
 
 # from generic/productdomain.jl
-export ProductDomain
+export ProductDomain, cross, ×
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
@@ -132,7 +132,7 @@ export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     HalfLine, NegativeHalfLine
 # from domains/simple.jl
 export Cube, Simplex, UnitSimplex, Point
-# from domains/circle.jl
+# from domains/ball.jl
 export UnitCircle, UnitSphere, UnitHyperSphere,
     UnitDisk, UnitBall, UnitHyperBall,
     EuclideanUnitBall, VectorUnitBall,
@@ -168,6 +168,6 @@ include("generic/arithmetics.jl")
 include("domains/trivial.jl")
 include("domains/interval.jl")
 include("domains/simple.jl")
-include("domains/circle.jl")
+include("domains/ball.jl")
 
 end # module

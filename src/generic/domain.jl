@@ -60,15 +60,28 @@ point_domain_promote(x, domain::Domain) =
 _point_domain_promote(x, domain::Domain, ::Type{T}) where {T} =
    convert(T, x), convert(Domain{T}, domain)
 # No joined supertype exists: return nothing
+# _point_domain_promote(x, domain::Domain, ::Type{Any}) =
+#    x, nothing
 _point_domain_promote(x, domain::Domain, ::Type{Any}) =
-   x, nothing
+   error("type mismatch")
 
-# As a special case, we allow any vector for Euclidean domains, with conversion
-point_domain_promote(x::AbstractVector, domain::EuclideanDomain) =
+# Special cases:
+# - We allow any vector for Euclidean domains, with conversion to static vector
+point_domain_promote(x::AbstractVector{T}, domain::EuclideanDomain{N,T}) where {N,T} =
    convert(eltype(domain), x), domain
-# and any vector for Vector domains, without conversion
-point_domain_promote(x::AbstractVector, domain::VectorDomain) =
+point_domain_promote(x::AbstractVector{S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
+   convert(SVector{N,promote_type(T,S)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain)
+# - we allow any abstract vector for Vector domains
+point_domain_promote(x::AbstractVector{T}, domain::VectorDomain{T}) where {T} =
    x, domain
+point_domain_promote(x::AbstractVector{S}, domain::VectorDomain{T}) where {S,T} =
+   convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain)
+# - we allow tuples for Euclidean domains if they have the right length
+point_domain_promote(x::NTuple{N,T}, domain::EuclideanDomain{N,T}) where {N,T} =
+   x, domain
+point_domain_promote(x::NTuple{N,S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
+   convert(NTuple{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain)
+
 
 """
 Return a suitable tolerance to use for verifying whether a point is close to
