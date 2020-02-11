@@ -16,6 +16,7 @@ function test_generic_domain(d::Domain)
         catch
         end
     end
+    @test convert(Domain{eltype(d)}, d) == d
 end
 
 

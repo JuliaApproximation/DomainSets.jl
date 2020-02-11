@@ -30,26 +30,26 @@ _in(x::S, domain::Domain{T}, ::Type{S}) where {S,T} = indomain(x, convert(Domain
 _in(x::S, domain::Domain{T}, ::Type{T}) where {S,T} = indomain(convert(T, x), domain)
 
 function _in(x::S, domain::Domain{T}, ::Type{Any}) where {S,T}
-    @warn "in: incompatible types $(S) and $(T). Returning false."
+    @warn "in(x,domain): incompatible types $(S) and $(T). Returning false."
     return false
 end
 
 # Special cases:
-# - We allow any vector for Euclidean and NTuple domains, with conversion to a static vector
+# - We allow any vector for Euclidean domains, with conversion to a static vector
 _in(x::AbstractVector, domain::EuclideanDomain) = in(SVector(x...), domain)
-_in(x::AbstractVector, domain::NTupleDomain) = in(tuple(x...), domain)
 # We do have to catch the SVectors now, because they are also an AbstractVector
 _in(x::SVector{N,T}, domain::EuclideanDomain{N,T}) where {N,T} = indomain(x, domain)
 _in(x::SVector{N,S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
     indomain(convert(SVector{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain))
+function _in(x::SVector{N,T}, domain::EuclideanDomain{M,S}) where {N,M,S,T}
+    @warn "in(x,domain): incompatible dimension $(N) of x and $(M) of the domain. Returning false."
+    false
+end
 
 # - we allow any abstract vector for Vector domains
 _in(x::AbstractVector{T}, domain::VectorDomain{T}) where {T} = indomain(x, domain)
 _in(x::AbstractVector{S}, domain::VectorDomain{T}) where {S,T} =
     in(convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain))
-
-# - we allow tuples for Euclidean domains if they have the right length
-_in(x::NTuple{N}, domain::EuclideanDomain{N}) where {N} = in(SVector(x), domain)
 
 function indomain(x, domain::Domain)
     @warn "Please implement `indomain` for domain $(domain) for points of type $(typeof(x)). Returning false."
@@ -88,20 +88,19 @@ end
 # Special cases analogous to the ones above for `in` follow:
 _approx_in(x::AbstractVector, domain::EuclideanDomain, tolerance) =
     approx_in(SVector(x...), domain, tolerance)
-_approx_in(x::AbstractVector, domain::NTupleDomain, tolerance) =
-    approx_in(tuple(x...), domain, tolerance)
 _approx_in(x::SVector{N,T}, domain::EuclideanDomain{N,T}, tolerance) where {N,T} =
     approx_indomain(x, domain, tolerance)
 _approx_in(x::SVector{N,S}, domain::EuclideanDomain{N,T}, tolerance) where {N,S,T} =
     approx_indomain(convert(SVector{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain), tolerance)
+function _approx_in(x::SVector{N,T}, domain::EuclideanDomain{M,S}, tolerance) where {N,M,S,T}
+    @warn "in(x,domain): incompatible dimension $(N) of x and $(M) of the domain. Returning false."
+    false
+end
 
 _approx_in(x::AbstractVector{T}, domain::VectorDomain{T}, tolerance) where {T} =
     approx_indomain(x, domain, tolerance)
 _approx_in(x::AbstractVector{S}, domain::VectorDomain{T}, tolerance) where {S,T} =
    approx_in(convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain), tolerance)
-
-_approx_in(x::NTuple{N}, domain::EuclideanDomain{N}, tolerance) where {N} =
-    approx_in(SVector(x), domain, tolerance)
 
 function approx_indomain(x, domain::Domain, tolerance)
     @warn "Please consider implementing `approx_in` for domain $(domain) for points of type $(typeof(x))."

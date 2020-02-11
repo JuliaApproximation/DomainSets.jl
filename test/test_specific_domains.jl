@@ -38,7 +38,7 @@ end
     @testset "full space" begin
         d1 = FullSpace{Float64}()
         show(io,d1)
-            @test String(take!(io)) == "{x} (full space)"
+        @test String(take!(io)) == "{x} (full space)"
         @test 0.5 ∈ d1
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1
@@ -489,8 +489,6 @@ end
         @test v[1.,1.] ∉ D
         @test !isempty(D)
         @test isclosed(D)
-        # test a tuple point
-        @test (0.3,0.5) ∈ D
         D2 = convert(Domain{SVector{2,BigFloat}}, D)
         @test eltype(D2) == SVector{2,BigFloat}
 
@@ -743,8 +741,10 @@ end
             @test v[0.5,0.5] ∈ T1
             @test v[-1.1,0.3] ∉ T1
             # Test vectors of wrong length
-            # @test v[0.0,0.0,0.0] ∉ T1
-            # @test v[0.0] ∉ T1
+            @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") v[0.0,0.0,0.0] ∉ T1
+            @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") v[0.0] ∉ T1
+            @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") [0.0,0.0,0.0] ∉ T1
+            @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") [0.0] ∉ T1
 
             T1 = cartesianproduct((-1.0 .. 1.0), 2)
             @test v[0.5,0.5] ∈ T1
@@ -756,10 +756,10 @@ end
 
             # Use the constructor ProductDomain{T} directly
             T3 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
-            @test v[0.2,0.6] ∈ T3
             @test (0.2,0.6) ∈ T3
-            @test [0.2,0.6] ∈ T3
-            @test v[0.2,0.8] ∉ T3
+            @test (0.2,0.8) ∉ T3
+            @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") v[0.2,0.6] ∉ T3
+            @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ T3
         end
         @testset "ProductDomain 2" begin
             T1 = cartesianproduct((-1.0 .. 1.0), 2)
