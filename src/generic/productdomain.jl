@@ -164,6 +164,8 @@ supremum(d::ProductDomain) = topoint(d, map(supremum, elements(d)))
 
 isempty(d::ProductDomain) = any(isempty, d.domains)
 
+==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
+
 function show(io::IO, t::ProductDomain)
     L = numelements(t)
     for i in 1:L-1

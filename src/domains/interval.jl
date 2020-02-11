@@ -56,12 +56,12 @@ and `ChebyshevInterval`.
 abstract type FixedInterval{L,R,T} <: TypedEndpointsInterval{L,R,T} end
 const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
 
+
 """
 Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.
 """# Assume a closed interval by default
 similar_interval(d::ClosedFixedInterval{T}, a, b) where {T} = ClosedInterval{float(T)}(a, b)
-
 
 "The closed unit interval [0,1]."
 struct UnitInterval{T} <: ClosedFixedInterval{T} end
@@ -70,6 +70,7 @@ UnitInterval() = UnitInterval{Float64}()
 
 endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 
+convert(::Type{Domain{T}}, ::UnitInterval{S}) where {S,T} = UnitInterval{T}()
 
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: ClosedFixedInterval{T}
@@ -79,13 +80,16 @@ ChebyshevInterval() = ChebyshevInterval{Float64}()
 
 endpoints(d::ChebyshevInterval{T}) where {T} = (-one(T),one(T))
 
+convert(::Type{Domain{T}}, ::ChebyshevInterval{S}) where {S,T} = ChebyshevInterval{T}()
+
 
 "The half-open positive halfline `[0,∞)`."
 struct HalfLine{T} <: FixedInterval{:closed,:open,T} end
 HalfLine() = HalfLine{Float64}()
 
-
 endpoints(d::HalfLine{T}) where {T} = (zero(T), T(Inf))
+
+convert(::Type{Domain{T}}, ::HalfLine{S}) where {S,T} = HalfLine{T}()
 
 
 indomain(x, d::HalfLine) = x >= 0
@@ -103,6 +107,7 @@ point_in_domain(d::HalfLine) = zero(eltype(d))
 struct NegativeHalfLine{T} <: FixedInterval{:open,:open,T} end
 NegativeHalfLine() = NegativeHalfLine{Float64}()
 
+convert(::Type{Domain{T}}, ::NegativeHalfLine{S}) where {S,T} = NegativeHalfLine{T}()
 
 
 endpoints(d::NegativeHalfLine{T}) where {T} = (-T(Inf), zero(T))

@@ -48,10 +48,12 @@ right_inverse(m::AbstractMap) = inv(m)
 
 
 isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(codomaintype(m))
+# TODO: do we want to define these?
 isreal(::Type{Complex{T}}) where {T<:Real} = false
 isreal(::Type{T}) where {T<:Real} = true
 isreal(::Type{SVector{N,T}}) where {N,T} = isreal(T)
 isreal(::Type{NTuple{N,T}}) where {N,T} = isreal(T)
+isreal(::Type{Vector{T}}) where {T} = isreal(T)
 
 """
 `return_type(map, U)` is a generic function that computes the return type when

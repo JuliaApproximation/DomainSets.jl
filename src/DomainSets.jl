@@ -124,15 +124,17 @@ export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     cardinality,
     HalfLine, NegativeHalfLine
 # from domains/simplex.jl
-export EuclideanUnitSimplex, VectorUnitSimplex,
+export EuclideanUnitSimplex, VectorUnitSimplex, UnitSimplex,
     center, corners
 # from domains/point.jl
 export Point
 # from domains/ball.jl
-export UnitCircle, UnitSphere, UnitHyperSphere,
-    UnitDisk, UnitBall, UnitHyperBall,
-    EuclideanUnitBall, VectorUnitBall,
-    EuclideanUnitSphere, VectorUnitSphere,
+export UnitCircle, VectorUnitCircle,
+    UnitSphere, VectorUnitSphere,
+    UnitDisk, VectorUnitDisk,
+    UnitBall, VectorUnitBall,
+    UnitHyperBall,  UnitHyperSphere,
+    EuclideanUnitBall, EuclideanUnitSphere,
     ellipse, ellipse_shape, cylinder,
     parameterization, gradient
 

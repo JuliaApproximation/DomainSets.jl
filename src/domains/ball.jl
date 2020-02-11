@@ -31,6 +31,8 @@ approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+toleran
 isempty(ball::HyperBall{T,:closed}) where {T} = false
 isempty(ball::HyperBall{T,:open}) where {T} = radius(ball) == 0
 
+==(d1::HyperBall, d2::HyperBall) = isclosed(d1)==isclosed(d2) &&
+    radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
 "The unit ball."
 abstract type UnitHyperBall{T,C} <: HyperBall{T,C} end
@@ -69,6 +71,7 @@ dimension(ball::FlexibleUnitBall) = ball.dimension
 const VectorUnitBall{T,C} = FlexibleUnitBall{Vector{T},C}
 
 VectorUnitBall(dimension::Int = 3) = VectorUnitBall{Float64}(dimension)
+VectorUnitDisk() = VectorUnitBall(2)
 
 indomain(x, ball::FlexibleUnitBall) =
     (length(x) == dimension(ball)) && (norm(x) <= radius(ball))
@@ -87,7 +90,8 @@ show(io::IO, d::UnitHyperBall{T,:open}) where {T} =
     print(io, "the $(dimension(d))-dimensional open unit ball")
 
 # We choose the origin here
-point_in_domain(::HyperBall{T}) where {T} = zero(T)
+point_in_domain(ball::HyperBall{T}) where {T} = zero(T)
+point_in_domain(ball::VectorHyperBall{T}) where {T} = zeros(T, dimension(ball))
 
 
 
@@ -109,6 +113,9 @@ isempty(::HyperSphere) = false
 
 isclosed(::HyperSphere) = true
 isopen(::HyperSphere) = false
+
+==(d1::HyperSphere, d2::HyperSphere) =
+    radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
 const EuclideanHyperSphere{N,T} = HyperSphere{SVector{N,T}}
@@ -150,16 +157,24 @@ dimension(sphere::FlexibleUnitSphere) = sphere.dimension
 const VectorUnitSphere{T} = FlexibleUnitSphere{Vector{T}}
 
 VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
+VectorUnitCircle() = VectorUnitSphere(2)
 
 convert(::Type{Domain{T}}, sphere::FixedUnitSphere{S}) where {S,T} =
     FixedUnitSphere{T}()
 convert(::Type{Domain{T}}, sphere::FlexibleUnitSphere{S}) where {S,T} =
-    FlexibleUnitsphere{T}(sphere.dimension)
+    FlexibleUnitSphere{T}(sphere.dimension)
 
 show(io::IO, d::UnitHyperSphere) =
     dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")
 
+point_in_domain(d::EuclideanHyperSphere{N,T}) where {N,T} =
+    SVector{N,T}(ntuple( i -> i==1, N))
 
+function point_in_domain(d::VectorHyperSphere{T}) where {T}
+    p = zeros(T, dimension(d))
+    p[1] = 1
+    p
+end
 
 boundary(::UnitHyperBall{N,T}) where {N,T} = UnitHyperSphere{N,T}()
 
