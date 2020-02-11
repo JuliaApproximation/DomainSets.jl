@@ -87,7 +87,7 @@ export CartToPolarMap, PolarToCartMap
 # from generic/domain.jl
 export Domain, EuclideanDomain, VectorDomain,
     approx_in,
-    isopen, isclosed, iscompact,
+    isclosed, iscompact,
     boundary, ∂,
     point_in_domain
 
