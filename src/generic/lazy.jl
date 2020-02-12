@@ -87,8 +87,13 @@ struct WrappedDomain{T,D} <: DerivedDomain{T}
     domain  ::  D
 end
 
-WrappedDomain(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
-WrappedDomain(domain::D) where {D} = WrappedDomain{eltype(D),D}(domain)
+WrappedDomain(domain::Domain{T}) where {T} = WrappedDomain{T}(domain)
+WrappedDomain(domain) = WrappedDomain{eltype(domain)}(domain)
+
+function WrappedDomain{T}(domain::D) where {T,D}
+	@assert eltype(domain) <: T
+	WrappedDomain{T,D}(domain)
+end
 
 # Anything can be converted to a domain by wrapping it. An error will be thrown
 # if the object does not support `eltype`.

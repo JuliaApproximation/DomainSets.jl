@@ -36,12 +36,10 @@ combine(d::UnionDomain, results) = reduce(|, results)
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
+convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
 
 convert(::Type{Domain{T}}, d::UnionDomain{S}) where {S,T} =
     UnionDomain(convert_domain.(T, elements(d)))
-
-Domain(v::AbstractVector) = convert(Domain, v)
-Domain(v::AbstractSet) = convert(Domain, v)
 
 elements(d::UnionDomain) = d.domains
 

@@ -1,11 +1,12 @@
 # Definition of the abstract Domain type and its interface
 
-
 eltype(::Type{<:Domain{T}}) where {T} = T
 subeltype(::Type{<:Domain{T}}) where {T} = subeltype(T)
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
+numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
 dimension(::Type{<:Domain{T}}) where {T} = dimension(T)
 
+Domain(d) = convert(Domain, d)
 
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
@@ -16,37 +17,38 @@ the dimension of the domain is not included in its type.
 """
 const VectorDomain{T} = Domain{Vector{T}}
 
-# This is internal.
-const NTupleDomain{N,T} = Domain{NTuple{N,T}}
-
 # At the level of Domain we attempt to promote the arguments to compatible
 # types, then we invoke indomain. Concrete subtypes should implement
 # indomain. They may also implement `in` in order to accept more types.
 in(x, d::Domain) = _in(x, d)
+_in(x, d::Domain{Any}) = indomain(x, d)
 _in(x::S, d::Domain{T}) where {S,T} = _in(x, d, promote_type(S,T))
 _in(x::T, domain::Domain{T}, ::Type{T}) where {T} = indomain(x, domain)
 _in(x::S, domain::Domain{T}, ::Type{U}) where {S,T,U} = indomain(convert(U, x), convert(Domain{U}, domain))
-_in(x::S, domain::Domain{T}, ::Type{S}) where {S,T} = indomain(x, convert(Domain{S}, domain))
-_in(x::S, domain::Domain{T}, ::Type{T}) where {S,T} = indomain(convert(T, x), domain)
+
+_in(x::Tuple, d::Domain{<:Tuple}) = indomain(x, d)
 
 function _in(x::S, domain::Domain{T}, ::Type{Any}) where {S,T}
     @warn "in(x,domain): incompatible types $(S) and $(T). Returning false."
     return false
 end
 
-# Special cases:
-# - We allow any vector for Euclidean domains, with conversion to a static vector
-_in(x::AbstractVector, domain::EuclideanDomain) = in(SVector(x...), domain)
-# We do have to catch the SVectors now, because they are also an AbstractVector
-_in(x::SVector{N,T}, domain::EuclideanDomain{N,T}) where {N,T} = indomain(x, domain)
-_in(x::SVector{N,S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
-    indomain(convert(SVector{N,promote_type(S,T)}, x), convert(EuclideanDomain{N,promote_type(S,T)}, domain))
-function _in(x::SVector{N,T}, domain::EuclideanDomain{M,S}) where {N,M,S,T}
-    @warn "in(x,domain): incompatible dimension $(N) of x and $(M) of the domain. Returning false."
-    false
-end
+# Treatment of abstract vectors for Euclidean domains and vector domains:
 
-# - we allow any abstract vector for Vector domains
+# - We allow any vector for Euclidean domains
+function _in(x::AbstractVector{T}, domain::EuclideanDomain{N,T}) where {N,T}
+    # Avoid an error in an attempt to convert to SVector{N,T}
+    if length(x) != N
+        @warn "in(x,domain): incompatible dimension $(length(x)) of x and $(N) of the domain. Returning false."
+        false
+    else
+        indomain(SVector{N,T}(x), domain)
+    end
+end
+_in(x::AbstractVector{S}, domain::EuclideanDomain{N,T}) where {N,S,T} =
+    _in(convert(AbstractVector{promote_type(S,T)}, x), convert(Domain{SVector{N,promote_type(S,T)}}, domain))
+
+# - We allow any abstract vector for Vector domains
 _in(x::AbstractVector{T}, domain::VectorDomain{T}) where {T} = indomain(x, domain)
 _in(x::AbstractVector{S}, domain::VectorDomain{T}) where {S,T} =
     in(convert(AbstractVector{promote_type(S,T)}, x), convert(VectorDomain{promote_type(S,T)}, domain))
@@ -75,10 +77,8 @@ approx_in(x, d::Domain, tolerance) = _approx_in(x, d, tolerance)
 _approx_in(x::S, d::Domain{T}, tolerance) where {S,T} = _approx_in(x, d, tolerance, promote_type(S,T))
 _approx_in(x::S, domain::Domain{T}, tolerance, ::Type{U}) where {S,T,U} =
     approx_indomain(convert(U, x), convert(Domain{U}, domain), tolerance)
-_approx_in(x::S, domain::Domain{T}, tolerance, ::Type{S}) where {S,T} =
-    approx_indomain(x, convert(Domain{S}, domain), tolerance)
-_approx_in(x::S, domain::Domain{T}, tolerance, ::Type{T}) where {S,T} =
-    approx_indomain(convert(T, x), domain, tolerance)
+_approx_in(x::T, domain::Domain{T}, tolerance, ::Type{T}) where {T} =
+    approx_indomain(x, domain, tolerance)
 
 function _approx_in(x::S, domain::Domain{T}, tolerance, ::Type{Any}) where {S,T}
     @warn "in: incompatible types $(S) and $(T). Returning false."

@@ -738,8 +738,17 @@ end
     @testset "cartesian product" begin
         @testset "ProductDomain 1" begin
             T1 = (-1.0 .. 1.0)^2
+            @test T1 isa VcatDomain
+            @test eltype(T1) == SVector{2,typeof(1.0)}
             @test v[0.5,0.5] ∈ T1
             @test v[-1.1,0.3] ∉ T1
+            # Test promotion
+            @test convert(Domain{SVector{2,BigFloat}}, T1) isa VcatDomain
+            T1w = convert(Domain{SVector{2,BigFloat}}, T1)
+            @test eltype(T1w) == SVector{2,BigFloat}
+            @test eltype(DomainSets.element(T1w, 1)) == BigFloat
+            @test eltype(DomainSets.element(T1w, 2)) == BigFloat
+
             # Test vectors of wrong length
             @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") v[0.0,0.0,0.0] ∉ T1
             @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") v[0.0] ∉ T1
@@ -753,33 +762,31 @@ end
             T2 = (-1.0 .. 1.0) × (-1.5 .. 2.5)
             @test v[0.5,0.5] ∈ T2
             @test v[-1.1,0.3] ∉ T2
-
-            # Use the constructor ProductDomain{T} directly
-            T3 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
-            @test (0.2,0.6) ∈ T3
-            @test (0.2,0.8) ∉ T3
-            @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") v[0.2,0.6] ∉ T3
-            @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ T3
         end
         @testset "ProductDomain 2" begin
             T1 = cartesianproduct((-1.0 .. 1.0), 2)
+            @test T1 isa VcatDomain
 
             T3 = ProductDomain(1.05UnitDisk(), (-1.0 .. 1.0))
+            @test T3 isa VcatDomain
             @test v[0.5,0.5,0.8] ∈ T3
             @test v[-1.1,0.3,0.1] ∉ T3
             @test point_in_domain(T3) ∈ T3
 
             T4 = T1×(-1.0..1.)
+            @test T4 isa VcatDomain
             @test v[0.5,0.5,0.8] ∈ T4
             @test v[-1.1,0.3,0.1] ∉ T4
             @test point_in_domain(T4) ∈ T4
 
             T5 = (-1.0..1.)×T1
+            @test T5 isa VcatDomain
             @test v[0.,0.5,0.5] ∈ T5
             @test v[0.,-1.1,0.3] ∉ T5
             @test point_in_domain(T5) ∈ T5
 
             T6 = T1×T1
+            @test T6 isa VcatDomain
             @test v[0.,0.,0.5,0.5] ∈ T6
             @test v[0.,0.,-1.1,0.3] ∉ T6
             @test point_in_domain(T6) ∈ T6
@@ -792,6 +799,9 @@ end
             d = (0..1) × (0.0..1)
             @test v[0.1,0.2] ∈ d
             @test d isa EuclideanDomain{2}
+            # Make sure promotion of domains happened
+            @test eltype(DomainSets.element(d,1)) == Float64
+            @test eltype(DomainSets.element(d,2)) == Float64
             @test point_in_domain(d) ∈ d
         end
         @testset "vector domains" begin
@@ -804,6 +814,19 @@ end
             d2 = ProductDomain([0..1, 0..2])
             @test [0.1,0.2] ∈ d2
             @test point_in_domain(d) ∈ d
+        end
+        @testset "Tuple product domain" begin
+            # Use the constructor ProductDomain{T} directly
+            T1 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
+            @test (0.2,0.6) ∈ T1
+            @test (0.2,0.8) ∉ T1
+            @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") v[0.2,0.6] ∉ T1
+            @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ T1
+            T2 = ProductDomain([true,false], 0..1)
+            @test T2 isa TupleProductDomain
+            @test eltype(T2) == Tuple{Bool,Int}
+            @test (true,0.4) ∈ T2
+            @test (false,1.5) ∉ T2
         end
     end
 end

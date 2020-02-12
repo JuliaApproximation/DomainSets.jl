@@ -92,7 +92,8 @@ export Domain, EuclideanDomain, VectorDomain,
     point_in_domain
 
 # from generic/productdomain.jl
-export ProductDomain, cross, ×
+export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain,
+    cross, ×
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain

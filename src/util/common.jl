@@ -147,3 +147,15 @@ prectype(::Type{T}) where {T} = prectype(float(T))
 
 prectype(a, b) = promote_type(prectype(a), prectype(b))
 prectype(a, b, c...) = prectype(prectype(a, b), c...)
+
+#################
+# Numeric type
+#################
+
+"The numeric element type used in Euclidean spaces."
+numtype(x) = numtype(typeof(x))
+numtype(::Type{T}) where {T<:Number} = T
+numtype(::Type{T}) where {T} = eltype(T)
+
+numtype(a, b) = promote_type(numtype(a), numtype(b))
+numtype(a, b, c...) = numtype(numtype(a, b), c...)
