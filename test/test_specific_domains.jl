@@ -742,7 +742,7 @@ end
             @test eltype(T1) == SVector{2,typeof(1.0)}
             @test v[0.5,0.5] ∈ T1
             @test v[-1.1,0.3] ∉ T1
-            VERSION > v"1.1" && @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === T1
+            VERSION >= v"1.1" && @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === T1
             # Test promotion
             @test convert(Domain{SVector{2,BigFloat}}, T1) isa VcatDomain
             T1w = convert(Domain{SVector{2,BigFloat}}, T1)
@@ -769,7 +769,7 @@ end
             @test T1 isa VcatDomain
 
             T3 = ProductDomain(1.05UnitDisk(), (-1.0 .. 1.0))
-            VERSION > v"1.1" && @inferred(cross(1.05UnitDisk(), (-1.0 .. 1.0))) === T3
+            VERSION >= v"1.2" && @inferred(cross(1.05UnitDisk(), (-1.0 .. 1.0))) === T3
             @test T3 isa VcatDomain
             @test v[0.5,0.5,0.8] ∈ T3
             @test v[-1.1,0.3,0.1] ∉ T3
