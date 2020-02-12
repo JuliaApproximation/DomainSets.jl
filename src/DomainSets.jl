@@ -91,6 +91,9 @@ export Domain, EuclideanDomain, VectorDomain,
     boundary, ∂,
     point_in_domain
 
+# from generic/lazy.jl
+export DerivedDomain, superdomain
+
 # from generic/productdomain.jl
 export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain,
     cross, ×

@@ -78,6 +78,7 @@ abstract type DerivedDomain{T} <: LazyDomain{T} end
 
 elements(d::DerivedDomain) = (d.domain,)
 
+superdomain(d::DerivedDomain) = d.domain
 
 """
 A `WrappedDomain` is a wrapper around an object that implements the domain

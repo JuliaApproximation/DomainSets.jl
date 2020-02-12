@@ -35,6 +35,7 @@ end
         UnitInterval()^3,
         UnitBall(),
         VectorUnitBall(),
+        VectorUnitBall(8),
         UnitDisk(),
         VectorUnitDisk(),
         UnitCircle(),
