@@ -91,10 +91,6 @@ export Domain, EuclideanDomain, VectorDomain,
     boundary, ∂,
     point_in_domain
 
-# from generic/derived_domain.jl
-export DerivedDomain
-export superdomain
-
 # from generic/productdomain.jl
 export ProductDomain, cross, ×
 
@@ -150,7 +146,6 @@ include("maps/coordinates.jl")
 
 include("generic/domain.jl")
 include("generic/lazy.jl")
-include("generic/derived_domain.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
 include("generic/mapped_domain.jl")

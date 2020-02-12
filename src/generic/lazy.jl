@@ -69,15 +69,23 @@ domain.
 """
 combine
 
+
+"""
+DerivedDomain is an abstract supertype for domains that simply wrap another
+domain.
+"""
+abstract type DerivedDomain{T} <: LazyDomain{T} end
+
+elements(d::DerivedDomain) = (d.domain,)
+
+
 """
 A `WrappedDomain` is a wrapper around an object that implements the domain
 interface, and that is itself a domain.
 """
-struct WrappedDomain{T,D} <: LazyDomain{T}
+struct WrappedDomain{T,D} <: DerivedDomain{T}
     domain  ::  D
 end
-
-elements(d::WrappedDomain) = (d.domain,)
 
 WrappedDomain(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
 WrappedDomain(domain::D) where {D} = WrappedDomain{eltype(D),D}(domain)
@@ -86,3 +94,11 @@ WrappedDomain(domain::D) where {D} = WrappedDomain{eltype(D),D}(domain)
 # if the object does not support `eltype`.
 convert(::Type{Domain}, v::Domain) = v
 convert(::Type{Domain}, v) = WrappedDomain(v)
+
+
+
+"Example of a domain that wraps another domain and thus obtains its own type."
+struct ExampleNamedDomain{T,D} <: DerivedDomain{T}
+	domain	::	D
+end
+ExampleNamedDomain(domain::D) where {T,D<:Domain{T}} = ExampleNamedDomain{T,D}(domain)

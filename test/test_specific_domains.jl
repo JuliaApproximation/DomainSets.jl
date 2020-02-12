@@ -7,10 +7,10 @@ const v = TypeFactory{SVector}()
 const io = IOBuffer()
 
 
-struct DerivedUnitHyperBall<: DerivedDomain{SVector{2,Float64}}
-    superdomain :: Domain
+struct NamedHyperBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
+    domain  ::  Domain{SVector{2,Float64}}
 
-    DerivedUnitHyperBall() = new(2UnitDisk())
+    NamedHyperBall() = new(2UnitDisk())
 end
 
 @testset "Specific domains" begin
@@ -535,14 +535,14 @@ end
     end
 
 
-    @testset "derived unit ball" begin
-        B = DerivedUnitHyperBall()
+    @testset "custom named ball" begin
+        B = NamedHyperBall()
         @test v[1.4, 1.4] ∈ B
         @test v[1.5, 1.5] ∉ B
         @test typeof(1.2*B)==typeof(B*1.2)
         @test v[1.5,1.5] ∈ 1.2*B
         @test v[1.5,1.5] ∈ B*1.2
-        @test DomainSets.supereltype(B) == eltype(2UnitDisk())
+        @test eltype(B) == eltype(2UnitDisk())
     end
 
     @testset "cube" begin
