@@ -23,6 +23,8 @@ end
     E = vcat([[:(x[$i][$j]) for j in 1:DIM[i]] for i in 1:length(DIM)]...)
     quote SVector($(E...)) end
 end
+# An alternative is to use "reduce(vcat, x)" (see Julia issue #21672) but the
+# generated function is more efficient because the compiler knows the dimensions.
 
 
 #######################
@@ -41,9 +43,9 @@ composition(d::ProductDomain) = Product()
 elements(d::ProductDomain) = d.domains
 
 if VERSION >= v"1.2"
-	==(d1::ProductDomain, d2::ProductDomain) = reduce(&, map(==, elements(d1), elements(d2)))
-else
 	==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
+else
+	==(d1::ProductDomain, d2::ProductDomain) = reduce(&, map(==, elements(d1), elements(d2)))
 end
 
 tointernalpoint(d::ProductDomain, x) = x

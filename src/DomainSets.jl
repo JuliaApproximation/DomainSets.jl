@@ -51,9 +51,7 @@ export ..
 ## Utils
 
 # from util/common.jl
-export subeltype,
-    dimension,
-    prectype
+export subeltype, dimension
 # from util/tensorproducts.jl
 export cartesianproduct
 
@@ -93,8 +91,7 @@ export Domain, EuclideanDomain, VectorDomain,
 export DerivedDomain, superdomain
 
 # from generic/productdomain.jl
-export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain,
-    cross, ×
+export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
