@@ -61,23 +61,21 @@ export cartesianproduct
 ## Maps
 
 # from maps/maps.jl
-export AbstractMap, applymap, jacobian, linearize
-export domaintype, codomaintype
-export left_inverse, right_inverse
-export apply_inverse, apply_left_inverse, apply_right_inverse
-export image
+export AbstractMap, applymap, jacobian, linearize,
+    domaintype, codomaintype,
+    left_inverse, right_inverse,
+    apply_inverse, apply_left_inverse, apply_right_inverse,
+    image
 # from maps/composite_map.jl
-export CompositeMap
-export ∘
+export CompositeMap, ∘
 # from maps/productmap.jl
-export ProductMap
-export tensorproduct
+export ProductMap, tensorproduct
 # from maps/basic_maps.jl
 export IdentityMap, ConstantMap
 # from maps/affine_maps.jl
-export AffineMap, Translation, LinearMap
-export islinear
-export linear_map, interval_map, scaling_map, rotation_map, translation_map
+export AffineMap, Translation, LinearMap,
+    islinear,
+    linear_map, interval_map, scaling_map, rotation_map, translation_map
 # from maps/coordinates.jl
 export CartToPolarMap, PolarToCartMap
 

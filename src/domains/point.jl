@@ -26,6 +26,8 @@ approx_indomain(x, d::Point, tolerance) = norm(x-d.x) <= tolerance
 isopen(d::Point) = false
 isclosed(d::Point) = true
 
+boundary(d::Point) = d
+
 point_in_domain(d::Point) = d.x
 
 for op in (:*,:+,:-)

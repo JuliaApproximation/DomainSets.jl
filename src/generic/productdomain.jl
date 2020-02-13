@@ -40,7 +40,7 @@ composition(d::ProductDomain) = Product()
 
 elements(d::ProductDomain) = d.domains
 
-if VERSION < v"1.2"
+if VERSION >= v"1.2"
 	==(d1::ProductDomain, d2::ProductDomain) = reduce(&, map(==, elements(d1), elements(d2)))
 else
 	==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
@@ -55,6 +55,8 @@ point_in_domain(d::ProductDomain) =
 	toexternalpoint(d, map(point_in_domain, elements(d)))
 
 isempty(d::ProductDomain) = any(isempty, elements(d))
+isclosed(d::ProductDomain) = all(isclosed, elements(d))
+isopen(d::ProductDomain) = all(isopen, elements(d))
 
 function show(io::IO, d::ProductDomain)
     L = numelements(d)
@@ -172,8 +174,7 @@ struct TupleProductDomain{T,DD} <: ProductDomain{T}
 end
 
 TupleProductDomain(domains::Domain...) = TupleProductDomain(domains)
-TupleProductDomain(domains...) =
-	TupleProductDomain(map(d->convert(Domain, d), domains)...)
+TupleProductDomain(domains...) = TupleProductDomain(map(Domain, domains)...)
 function TupleProductDomain(domains)
 	T = Tuple{map(eltype, domains)...}
 	TupleProductDomain{T}(domains)

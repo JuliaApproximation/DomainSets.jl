@@ -8,7 +8,7 @@ abstract type Simplex{T,C} <: Domain{T} end
 isclosed(::Simplex{T,:closed}) where {T} = true
 isclosed(::Simplex{T,:open}) where {T} = false
 
-isopen(d::Simplex) = !isopen(d)
+isopen(d::Simplex) = !isclosed(d)
 
 abstract type AbstractUnitSimplex{T,C} <: Simplex{T,C} end
 

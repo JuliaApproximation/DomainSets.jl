@@ -37,6 +37,13 @@ point_in_domain(d::MappedDomain) = forward_map(d) * point_in_domain(source(d))
 
 elements(d::MappedDomain{D,T}) where {D<:ProductDomain,T} = map(x->forward_map(d)*x, elements(source(d)))
 
+# isopen(d::MappedDomain) = isopen(source(d))
+# isclosed(d::MappedDomain) = isclosed(source(d))
+#
+# TODO: we can't really define open and close in general this way.
+# We need more properties of the map to be able to conclude whether the mapped
+# domain is open or closed.
+
 """
 A `ForwardMappedDomain` stores the `source` domain and the forward map `f`, which
 maps `source` to `target`.

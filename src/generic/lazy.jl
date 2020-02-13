@@ -39,10 +39,10 @@ composition(d::LazyDomain) = NoComposition()
 indomain(x, d::LazyDomain) = _indomain(preprocess(d, x), d, composition(d), elements(d))
 _indomain(x, d, ::NoComposition, domains) = in(x, domains[1])
 _indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
-if VERSION < v"1.2"
-	_indomain(x, d, ::Product, domains) = reduce(&, map(in, x, domains))
-else
+if VERSION >= v"1.2"
 	_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
+else
+	_indomain(x, d, ::Product, domains) = reduce(&, map(in, x, domains))
 end
 
 approx_indomain(x, d::LazyDomain, tolerance) =
@@ -52,12 +52,12 @@ _approx_indomain(x, d, tolerance, ::NoComposition, domains) =
     approx_in(x, domains[1], tolerance)
 _approx_indomain(x, d, tolerance, ::Combination, domains) =
     combine(d, map(d -> approx_in(x, d, tolerance), domains))
-if VERSION < v"1.2"
-	_approx_indomain(x, d, tolerance, ::Product, domains) =
-	    reduce(&, map((u,v)->approx_in(u, v, tolerance), x, domains))
-else
+if VERSION >= v"1.2"
 	_approx_indomain(x, d, tolerance, ::Product, domains) =
 	    mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
+else
+	_approx_indomain(x, d, tolerance, ::Product, domains) =
+	    reduce(&, map((u,v)->approx_in(u, v, tolerance), x, domains))
 end
 
 
@@ -91,10 +91,9 @@ end
 WrappedDomain(domain::Domain{T}) where {T} = WrappedDomain{T}(domain)
 WrappedDomain(domain) = WrappedDomain{eltype(domain)}(domain)
 
-function WrappedDomain{T}(domain::D) where {T,D}
-	@assert eltype(domain) <: T
-	WrappedDomain{T,D}(domain)
-end
+WrappedDomain{T}(domain::D) where {T,D} = WrappedDomain{T,D}(domain)
+
+convert(::Type{Domain{T}}, d::WrappedDomain) where {T} = WrappedDomain{T}(d.domain)
 
 # Anything can be converted to a domain by wrapping it. An error will be thrown
 # if the object does not support `eltype`.

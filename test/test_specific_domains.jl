@@ -21,8 +21,13 @@ end
         @test String(take!(io)) == "{} (empty domain)"
         @test eltype(d1) == Float64
         @test 0.5 ∉ d1
+        @test !approx_in(0.5, d1)
         @test d1 ∩ d1 == d1
         @test d1 ∪ d1 == d1
+        @test boundary(d1) == d1
+        @test dimension(d1) == 1
+        @test isclosed(d1)
+        @test DomainSets.isopen(d1)
         d2 = 0..1
         @test d1 ∩ d2 == d1
         @test d1 ∪ d2 == d2
@@ -32,7 +37,11 @@ end
         d2 = EmptySpace(SVector{2,Float64})
         @test isempty(d2)
         @test v[0.1,0.2] ∉ d2
+        @test [0.1,0.2] ∉ d2
+        @test 1:2 ∉ d2
         @test !approx_in(v[0.1,0.2], d2)
+        @test boundary(d2) == d2
+        @test dimension(d2) == 2
     end
 
     @testset "full space" begin
@@ -42,6 +51,11 @@ end
         @test 0.5 ∈ d1
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1
+        @test isempty(d1) == false
+        @test boundary(d1) == EmptySpace{Float64}()
+        @test isclosed(d1)
+        @test DomainSets.isopen(d1)
+        @test dimension(d1) == 1
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
@@ -52,6 +66,7 @@ end
         @test v[0.1,0.2] ∈ d2
         @test approx_in(v[0.1,0.2], d2)
         @test !isempty(d2)
+        @test boundary(d2) == EmptySpace{SVector{2,Float64}}()
 
         @test d2 == Domain(SVector{2,Float64})
         @test d2 == convert(Domain,SVector{2,Float64})
@@ -66,6 +81,10 @@ end
         @test approx_in(1.1, d, 0.2)
         @test !approx_in(1.2, d, 0.1)
         @test !isempty(d)
+        @test boundary(d) == d
+        @test isclosed(d)
+        @test !DomainSets.isopen(d)
+        @test dimension(d) == 1
 
         @test d+1 == Domain(2.0)
         @test 1+d == Domain(2.0)
@@ -93,6 +112,8 @@ end
             @test approx_in(1.1, d, 0.2)
             @test !approx_in(-0.2, d, 0.1)
             @test !approx_in(1.2, d, 0.1)
+            @test isclosed(d)
+            @test !DomainSets.isopen(d)
 
             @test iscompact(d)
             @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
@@ -186,6 +207,7 @@ end
             @test !approx_in(-0.5, d, 0.1)
             @test similar_interval(d, T(0), T(Inf)) == d
 
+            @test boundary(d) == Point(0)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∉ ∂(d)
         end
@@ -224,13 +246,18 @@ end
             @test approx_in(0.5, d, 1.)
             @test !approx_in(0.5, d, 0.4)
             @test similar_interval(d, T(-Inf), T(0)) == d
+
+            @test boundary(d) == Point(0)
+            @test leftendpoint(d) ∉ ∂(d)
+            @test rightendpoint(d) ∈ ∂(d)
         end
 
         @testset "OpenInterval{$T}" begin
             d = OpenInterval(0,1)
+            @test DomainSets.isopen(d)
 
-            @test leftendpoint(d) ∉ ∂(d)
-            @test rightendpoint(d) ∉ ∂(d)
+            @test leftendpoint(d) ∈ ∂(d)
+            @test rightendpoint(d) ∈ ∂(d)
         end
 
         @testset "Integer intervals" begin
@@ -239,12 +266,12 @@ end
             @test rightendpoint(d) ∈ ∂(d)
 
             d = Interval{:open,:closed}(0,1)
-            @test leftendpoint(d) ∉ ∂(d)
+            @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
 
             d = Interval{:closed,:open}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
-            @test rightendpoint(d) ∉ ∂(d)
+            @test rightendpoint(d) ∈ ∂(d)
         end
 
         @test typeof(UnitInterval{Float64}(0.0..1.0)) <: UnitInterval
@@ -434,27 +461,6 @@ end
         @test !issubset(zero(T) .. one(T), OpenInterval(zero(T), one(T)))
         @test issubset(UnitInterval{T}(), ChebyshevInterval{T}())
 
-        ## Disable iteration tests until semantics of iteration over domains are defined
-        # # - iteration over intervals
-        # ## for integers
-        # I = ClosedInterval{Int}(1,1)
-        # @test cardinality(I) == 1
-        # I = ClosedInterval{Int}(1,5)
-        # @test cardinality(I) == 5
-        # I = OpenInterval{Int}(1,1)
-        # @test cardinality(I) == 0
-        # I = OpenInterval{Int}(1,5)
-        # @test cardinality(I) == 3
-        # ## for floats
-        # I = ClosedInterval(1.0,1.0)
-        # @test cardinality(I) == 1
-        # I = OpenInterval(1.0,1.0)
-        # @test cardinality(I) == 0
-        # I = ClosedInterval(0.0,1e-316)
-        # @test cardinality(I) == 20240226
-        # I = OpenInterval(0.0,1e-316)
-        # @test cardinality(I) == 20240224
-
         # - convert
         d = zero(T).. one(T)
         @test d ≡ Interval(zero(T), one(T))
@@ -487,10 +493,21 @@ end
         D = UnitDisk()
         @test v[1.,0.] ∈ D
         @test v[1.,1.] ∉ D
+        @test approx_in(v[1.0,0.0+1e-5], D, 1e-4)
         @test !isempty(D)
         @test isclosed(D)
+        @test !DomainSets.isopen(D)
         D2 = convert(Domain{SVector{2,BigFloat}}, D)
         @test eltype(D2) == SVector{2,BigFloat}
+        @test boundary(D) == UnitCircle()
+        @test dimension(D) == 2
+
+        D = EuclideanUnitBall{2,Float64,:open}()
+        @test approx_in(v[1.0,0.0], D)
+        @test v[0.2,0.2] ∈ D
+        @test !isclosed(D)
+        @test DomainSets.isopen(D)
+        @test boundary(D) == UnitCircle()
 
         D = 2UnitDisk()
         @test v[1.4, 1.4] ∈ D
@@ -499,6 +516,7 @@ end
         @test v[1.5,1.5] ∈ 1.2*D
         @test v[1.5,1.5] ∈ D*1.2
         @test !isempty(D)
+        # TODO: implement and test isclosed and isopen for mapped domains
 
         D = 2UnitDisk() + v[1.0,1.0]
         @test v[2.4, 2.4] ∈ D
@@ -510,6 +528,8 @@ end
         @test v[1.,0.1,0.] ∉ B
         @test !isempty(B)
         @test isclosed(B)
+        @test !DomainSets.isopen(B)
+        @test boundary(B) == UnitSphere()
 
         B = 2UnitBall()
         @test v[1.9,0.0,0.0] ∈ B
@@ -532,6 +552,9 @@ end
         @test [0.0,1.1,0.2,0.1] ∉ C
         @test !isempty(C)
         @test isclosed(C)
+        @test !DomainSets.isopen(C)
+        @test boundary(C) == VectorUnitSphere(4)
+        @test dimension(C) == 4
     end
 
 
@@ -551,6 +574,8 @@ end
         @test v[0.9, 0.9] ∈ D
         @test v[1.1, 1.1] ∉ D
         @test !isempty(D)
+        @test isclosed(D)
+        @test !DomainSets.isopen(D)
 
         @test approx_in(v[-0.1,-0.1], D, 0.1)
         @test !approx_in(v[-0.1,-0.1], D, 0.09)
@@ -568,6 +593,8 @@ end
         @test approx_in(v[1.,0.], C)
         @test !approx_in(v[1.,1.], C)
         @test !isempty(C)
+        @test isclosed(C)
+        @test !DomainSets.isopen(C)
         p = parameterization(C)
         x = applymap(p, 1/2)
         @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
@@ -659,7 +686,7 @@ end
     end
 
     @testset "simplex" begin
-        d = EuclideanUnitSimplex{2}()
+        d = UnitSimplex{2}()
         # We test a point in the interior, a point on each of the boundaries and
         # all corners.
         @test v[0.2,0.2] ∈ d
@@ -678,8 +705,17 @@ end
         @test approx_in(v[-0.1,-0.1], d, 0.1)
         @test !approx_in(v[-0.1,-0.1], d, 0.09)
 
+        @test convert(Domain{SVector{2,BigFloat}}, d) == UnitSimplex{2,BigFloat}()
+
         @test isclosed(d)
+        @test !DomainSets.isopen(d)
         @test point_in_domain(d) ∈ d
+
+        # open/closed
+        d2 = EuclideanUnitSimplex{2,Float64,:open}()
+        @test !isclosed(d2)
+        @test DomainSets.isopen(d2)
+        @test v[0.3,0.1] ∈ d2
 
         d3 = EuclideanUnitSimplex{3,BigFloat}()
         @test point_in_domain(d3) ∈ d3
@@ -699,9 +735,20 @@ end
         @test v[x2,x2,-x2] ∉ d3
         @test v[x1,x1,x1] ∉ d3
 
-        # open/closed
-        d = EuclideanUnitSimplex{2,Float64,:open}()
-        @test !isclosed(d)
+        D = VectorUnitSimplex(2)
+        @test v[0.2,0.2] ∈ D
+        @test v[0.0,0.2] ∈ D
+        @test v[0.2,0.0] ∈ D
+        @test v[0.5,0.5] ∈ D
+        @test v[0.0,0.0] ∈ D
+        @test v[1.0,0.0] ∈ D
+        @test v[0.0,1.0] ∈ D
+        # And then some points outside
+        @test v[0.6,0.5] ∉ D
+        @test v[0.5,0.6] ∉ D
+        @test v[-0.2,0.2] ∉ D
+        @test v[0.2,-0.2] ∉ D
+        @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
     end
 
     @testset "arithmetics" begin
@@ -742,7 +789,7 @@ end
             @test eltype(T1) == SVector{2,typeof(1.0)}
             @test v[0.5,0.5] ∈ T1
             @test v[-1.1,0.3] ∉ T1
-            VERSION >= v"1.1" && @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === T1
+            VERSION >= v"1.2" && @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === T1
             # Test promotion
             @test convert(Domain{SVector{2,BigFloat}}, T1) isa VcatDomain
             T1w = convert(Domain{SVector{2,BigFloat}}, T1)

@@ -176,8 +176,11 @@ function point_in_domain(d::VectorHyperSphere{T}) where {T}
     p
 end
 
-boundary(::UnitHyperBall{N,T}) where {N,T} = UnitHyperSphere{N,T}()
+boundary(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitSphere{N,T}()
+boundary(d::VectorUnitBall{T}) where {T} = VectorUnitSphere{T}(dimension(d))
 
+interior(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitBall{N,T,:open}()
+interior(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:open}(dimension(d))
 
 ################
 # Applications

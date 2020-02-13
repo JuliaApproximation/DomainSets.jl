@@ -21,11 +21,7 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
     isapprox(rightendpoint(d1), rightendpoint(d2); kwds...)
 
 
-boundary(d::TypedEndpointsInterval{:closed,:closed}) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
-boundary(d::TypedEndpointsInterval{:closed,:open}) = Point(leftendpoint(d))
-boundary(d::TypedEndpointsInterval{:open,:closed}) = Point(rightendpoint(d))
-boundary(d::TypedEndpointsInterval{:open,:open,T}) where T = EmptySpace{T}()
-boundary(d::AbstractInterval) = boundary(Interval(d))
+boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 
 
 # We extend some functionality of intervals to mapped intervals
@@ -89,6 +85,8 @@ HalfLine() = HalfLine{Float64}()
 
 endpoints(d::HalfLine{T}) where {T} = (zero(T), T(Inf))
 
+boundary(d::HalfLine) = Point(leftendpoint(d))
+
 convert(::Type{Domain{T}}, ::HalfLine{S}) where {S,T} = HalfLine{T}()
 
 
@@ -109,9 +107,9 @@ NegativeHalfLine() = NegativeHalfLine{Float64}()
 
 convert(::Type{Domain{T}}, ::NegativeHalfLine{S}) where {S,T} = NegativeHalfLine{T}()
 
-
 endpoints(d::NegativeHalfLine{T}) where {T} = (-T(Inf), zero(T))
 
+boundary(d::NegativeHalfLine) = Point(rightendpoint(d))
 
 # Open at both endpoints
 
