@@ -41,7 +41,7 @@ true
 
 ### Disks and Balls
 
-A `EuclideanUnitBall{N,T}`  contains `x::SVector{N,T}` if `norm(x) ≤ one(T)`. `UnitDisk` and `UnitHyperBall` are two important cases:
+A `EuclideanUnitBall{N,T}`  contains `x::SVector{N,T}` if `norm(x) ≤ one(T)`. `UnitDisk` and `UnitBall` are two important cases:
 ```julia
 julia> SVector(0.1,0.2) in UnitDisk()
 true
