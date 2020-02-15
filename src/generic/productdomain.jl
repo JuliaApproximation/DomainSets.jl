@@ -69,6 +69,8 @@ function show(io::IO, d::ProductDomain)
     show(io, element(d, L))
 end
 
+boundary(d::ProductDomain) = _boundary(d, elements(d))
+
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
 
 ProductDomain(domains) = ProductDomain(domains...)
@@ -130,6 +132,8 @@ convert(::Type{EuclideanDomain{N,T}}, d::VcatDomain{N,T}) where {N,T} = d
 convert(::Type{EuclideanDomain{N,T}}, d::VcatDomain{N,S}) where {N,T,S} =
 	VcatDomain{N,T}(elements(d))
 
+_boundary(d::VcatDomain, domains) =
+	UnionDomain(VcatDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
 
 """
 A `VectorProductDomain` is a product domain of arbitrary dimension with element
@@ -166,6 +170,9 @@ convert(::Type{VectorDomain{T}}, d::VectorProductDomain{T}) where {T} = d
 convert(::Type{VectorDomain{T}}, d::VectorProductDomain{S}) where {S,T} =
 	VectorProductDomain{T}(elements(d))
 
+_boundary(d::VectorProductDomain, domains) =
+	UnionDomain([VectorProductDomain([domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...]) for i in 1:length(domains)])
+
 
 """
 A `TupleProductDomain` is a product domain that concatenates the elements of
@@ -184,8 +191,15 @@ end
 
 TupleProductDomain{T}(domains...) where {T} = TupleProductDomain{T}(domains)
 function TupleProductDomain{T}(domains) where {T<:Tuple}
-	Tdomains = map((t,d) -> convert(Domain{t},d), T.parameters, domains)
+	Tdomains = map((t,d) -> convert(Domain{t},d), tuple(T.parameters...), domains)
 	TupleProductDomain{T,typeof(Tdomains)}(Tdomains)
 end
 
 productdimension(d::TupleProductDomain) = sum(map(dimension, elements(d)))
+
+convert(::Type{Domain{T}}, d::TupleProductDomain{T}) where {T} = d
+convert(::Type{Domain{T}}, d::TupleProductDomain{S}) where {S,T} =
+	TupleProductDomain{T}(elements(d))
+
+_boundary(d::TupleProductDomain, domains) =
+	UnionDomain(TupleProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
