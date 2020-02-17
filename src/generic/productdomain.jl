@@ -48,14 +48,6 @@ else
 	==(d1::ProductDomain, d2::ProductDomain) = reduce(&, map(==, elements(d1), elements(d2)))
 end
 
-tointernalpoint(d::ProductDomain, x) = x
-toexternalpoint(d::ProductDomain, y) = y
-
-preprocess(d::ProductDomain, x) = tointernalpoint(d, x)
-
-point_in_domain(d::ProductDomain) =
-	toexternalpoint(d, map(point_in_domain, elements(d)))
-
 isempty(d::ProductDomain) = any(isempty, elements(d))
 isclosed(d::ProductDomain) = all(isclosed, elements(d))
 isopen(d::ProductDomain) = all(isopen, elements(d))

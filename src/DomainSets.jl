@@ -51,7 +51,7 @@ export ..
 ## Utils
 
 # from util/common.jl
-export subeltype, dimension
+export subeltype, dimension, prectype, numtype
 # from util/tensorproducts.jl
 export cartesianproduct
 

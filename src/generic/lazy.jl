@@ -4,12 +4,14 @@ A lazy domain evaluates its membership function on the fly in terms of that of
 other domains.
 
 The `in(x, domain::LazyDomain)` applies three types of transformations:
-1. Preprocess: `y = preprocess(domain, x)`
+1. Point mapping: `y = tointernalpoint(domain, x)`
 2. Distribution of `y` over member domains given by `elements(domain)`
 3. Combination of the outputs into a single boolean result.
 
 The distribution step is determined by the result of `composition(domain)`,
-see `composition`. The combination is performed by `combine`.
+see `composition`. The combination is performed by `combine`. Mapping between
+points of the lazy domain and points of its member domains is described by
+`y = tointernalpoint(domain,x)` and `x = toexternalpoint(domain, y)`.
 """
 abstract type LazyDomain{T} <: Domain{T} end
 
@@ -33,10 +35,12 @@ struct NoComposition <: Composition end
 struct Combination <: Composition end
 struct Product <: Composition end
 
-preprocess(d::LazyDomain, x) = x
+tointernalpoint(d::LazyDomain, x) = x
+toexternalpoint(d::LazyDomain, y) = y
+
 composition(d::LazyDomain) = NoComposition()
 
-indomain(x, d::LazyDomain) = _indomain(preprocess(d, x), d, composition(d), elements(d))
+indomain(x, d::LazyDomain) = _indomain(tointernalpoint(d, x), d, composition(d), elements(d))
 _indomain(x, d, ::NoComposition, domains) = in(x, domains[1])
 _indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
 if VERSION >= v"1.2"
@@ -46,7 +50,7 @@ else
 end
 
 approx_indomain(x, d::LazyDomain, tolerance) =
-	_approx_indomain(preprocess(d, x), d, tolerance, composition(d), elements(d))
+	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), elements(d))
 
 _approx_indomain(x, d, tolerance, ::NoComposition, domains) =
     approx_in(x, domains[1], tolerance)
@@ -60,6 +64,8 @@ else
 	    reduce(&, map((u,v)->approx_in(u, v, tolerance), x, domains))
 end
 
+point_in_domain(d::LazyDomain) =
+	toexternalpoint(d, map(point_in_domain, elements(d)))
 
 ==(a::D, b::D) where {D<:LazyDomain} = elements(a) == elements(b)
 
