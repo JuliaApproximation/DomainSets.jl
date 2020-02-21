@@ -31,6 +31,11 @@ elements(d::MappedDomain) = (source(d),)
 tointernalpoint(d::MappedDomain, x) = inverse_map(d) * x
 toexternalpoint(d::MappedDomain, y) = forward_map(d) * y
 
+const MappedVectorDomain{D,T} = MappedDomain{D,Vector{T}}
+
+# TODO: check whether the map alters the dimension
+dimension(d::MappedVectorDomain) = dimension(source(d))
+
 # isopen(d::MappedDomain) = isopen(source(d))
 # isclosed(d::MappedDomain) = isclosed(source(d))
 #

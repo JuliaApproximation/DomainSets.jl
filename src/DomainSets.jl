@@ -51,7 +51,7 @@ export ..
 ## Utils
 
 # from util/common.jl
-export subeltype, dimension, prectype, numtype
+export prectype, numtype
 # from util/tensorproducts.jl
 export cartesianproduct
 
@@ -82,6 +82,7 @@ export CartToPolarMap, PolarToCartMap
 
 # from generic/domain.jl
 export Domain, EuclideanDomain, VectorDomain,
+    dimension,
     approx_in,
     isclosed, iscompact,
     boundary, ∂,

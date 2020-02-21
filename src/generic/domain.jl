@@ -1,15 +1,18 @@
 # Definition of the abstract Domain type and its interface
 
 eltype(::Type{<:Domain{T}}) where {T} = T
-subeltype(::Type{<:Domain{T}}) where {T} = subeltype(T)
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
 numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
-dimension(::Type{<:Domain{T}}) where {T} = dimension(T)
 
 Domain(d) = convert(Domain, d)
 
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
+
+"What is the Euclidean dimension of the domain?"
+dimension(::Domain{<:Number}) = 1
+dimension(::EuclideanDomain{N}) where {N} = N
+dimension(::Domain{<:NTuple{N,Any}}) where {N} = N
 
 """
 A `VectorDomain` is any domain whose eltype is `Vector{T}`. In this case

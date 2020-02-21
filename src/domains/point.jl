@@ -30,6 +30,8 @@ boundary(d::Point) = d
 
 point_in_domain(d::Point) = d.x
 
+dimension(d::Point{Vector{T}}) where {T} = length(d.x)
+
 for op in (:*,:+,:-)
     @eval begin
         $op(c::Number, d::Point)  = Point($op(c,d.x))

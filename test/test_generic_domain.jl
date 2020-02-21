@@ -8,8 +8,8 @@ widen_eltype(::Type{Vector{T}}) where {T<:Number} = Vector{widen(T)}
 # These tests check whether the given domain correctly implements the
 # interface of a domain.
 function test_generic_domain(d::Domain)
-    @test eltype(eltype(d)) == subeltype(d)
-    @test isreal(d) == isreal(subeltype(d))
+    @test isreal(d) == isreal(eltype(d))
+    @test isreal(d) == isreal(numtype(d))
 
     if !isempty(d)
         x = point_in_domain(d)

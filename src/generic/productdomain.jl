@@ -113,8 +113,6 @@ function VcatDomain{N,T}(domains) where {N,T}
 	VcatDomain{N,T,DIM,typeof(Tdomains)}(Tdomains)
 end
 
-productdimension(d::VcatDomain{N}) where {N} = N
-
 tointernalpoint(d::VcatDomain{N,T,DIM}, x) where {N,T,DIM} =
 	convert_fromcartesian(x, Val{DIM}())
 toexternalpoint(d::VcatDomain{N,T,DIM}, y) where {N,T,DIM} =
@@ -148,12 +146,12 @@ function VectorProductDomain{T}(domains::Vector) where {T}
 	VectorProductDomain{T,eltype(Tdomains)}(Tdomains)
 end
 
-productdimension(d::VectorProductDomain) = numelements(d)
+dimension(d::VectorProductDomain) = numelements(d)
 
 tointernalpoint(d::VectorProductDomain, x) =
-	(@assert length(x) == productdimension(d); x)
+	(@assert length(x) == dimension(d); x)
 toexternalpoint(d::VectorProductDomain, y) =
-	(@assert length(y) == productdimension(d); y)
+	(@assert length(y) == dimension(d); y)
 
 infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
 supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
@@ -186,8 +184,6 @@ function TupleProductDomain{T}(domains) where {T<:Tuple}
 	Tdomains = map((t,d) -> convert(Domain{t},d), tuple(T.parameters...), domains)
 	TupleProductDomain{T,typeof(Tdomains)}(Tdomains)
 end
-
-productdimension(d::TupleProductDomain) = sum(map(dimension, elements(d)))
 
 convert(::Type{Domain{T}}, d::TupleProductDomain{T}) where {T} = d
 convert(::Type{Domain{T}}, d::TupleProductDomain{S}) where {S,T} =

@@ -1,35 +1,10 @@
 
 ##############################
-# Booleans in the type domain
-##############################
-
-# We introduce these types to compute with booleans in a type context.
-# They are not exported, but they are necessary when an external package wishes
-# to extend the embeddings and promotions of spaces in this package.
-const True = Val{true}
-const False = Val{false}
-
-# Simple boolean operations on the new types
-(|)(::Type{True}, ::Type{True}) = True
-(|)(::Type{True}, ::Type{False}) = True
-(|)(::Type{False}, ::Type{True}) = True
-(|)(::Type{False}, ::Type{False}) = False
-
-# Return True if one of the arguments is True
-one_of(::Type{True}) = True
-one_of(::Type{False}) = False
-one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(one_of(a),one_of(b))
-one_of(a::Type{Val{A}}, b::Type{Val{B}}, c::Type{Val{C}}, d...) where {A,B,C} = one_of(a, one_of(b, c, d...))
-
-# Convert the boolean type to a boolean value
-result(::Type{True}) = true
-result(::Type{False}) = false
-
-
-
-##############################
 # Promotion helper functions
 ##############################
+
+const True = Val{true}
+const False = Val{false}
 
 "Return True if S promotes to T, i.e., if promote_type(S,T) == T."
 promotes_to(S, T) = _promotes_to(S, T, promote_type(S,T))
@@ -105,25 +80,6 @@ const v = TypeFactory{SVector}()
 
 
 
-###############
-# Subeltype
-###############
-
-"Return the type of the elements of `x`."
-subeltype(x) = subeltype(typeof(x))
-subeltype(::Type{T}) where {T} = eltype(eltype(T))
-
-###############
-# Dimension
-###############
-
-dimension(x) = dimension(typeof(x))
-dimension(::Type{T}) where {T <: Number} = 1
-dimension(::Type{SVector{N,T}}) where {N,T} = N
-dimension(::Type{<:NTuple{N,Any}}) where {N} = N
-dimension(::Type{CartesianIndex{N}}) where {N} = N
-dimension(::Type{T}) where {T} = 1
-
 #################
 # Precision type
 #################
@@ -136,8 +92,9 @@ prectype(::Type{NTuple{N,T}}) where {N,T} = prectype(T)
 prectype(::Type{Tuple{A}}) where {A} = prectype(A)
 prectype(::Type{Tuple{A,B}}) where {A,B} = prectype(A,B)
 prectype(::Type{Tuple{A,B,C}}) where {A,B,C} = prectype(A,B,C)
-prectype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = prectype(A,B,C,D)
-prectype(T::Type{<:NTuple{N,Any}}) where {N} = prectype(map(prectype, T.parameters)...)
+@generated function prectype(T::Type{<:Tuple{Vararg}})
+    quote $(promote_type(map(prectype, T.parameters[1].parameters)...)) end
+end
 prectype(::Type{T}) where {T<:AbstractFloat} = T
 prectype(::Type{T}) where {T} = prectype(float(T))
 
@@ -148,10 +105,16 @@ prectype(a, b, c...) = prectype(prectype(a, b), c...)
 # Numeric type
 #################
 
-"The numeric element type used in Euclidean spaces."
+"The numeric element type of x in a Euclidean space."
 numtype(x) = numtype(typeof(x))
 numtype(::Type{T}) where {T<:Number} = T
 numtype(::Type{T}) where {T} = eltype(T)
-numtype(T::Type{<:NTuple{N,Any}}) where {N} = promote_type(map(numtype, T.parameters)...)
+numtype(::Type{NTuple{N,T}}) where {N,T} = T
+numtype(::Type{Tuple{A,B}}) where {A,B} = promote_type(numtype(A), numtype(B))
+numtype(::Type{Tuple{A,B,C}}) where {A,B,C} = promote_type(numtype(A), numtype(B), numtype(C))
+numtype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = promote_type(numtype(A), numtype(B), numtype(C), numtype(D))
+@generated function numtype(T::Type{<:Tuple{Vararg}})
+    quote $(promote_type(T.parameters[1].parameters...)) end
+end
 
 numtype(a...) = promote_type(map(numtype, a)...)

@@ -204,7 +204,7 @@ The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 """
 struct UnitCircleMap{S,T} <: AbstractMap{S,T} end
 
-parameterization(d::UnitCircle) = UnitCircleMap{subeltype(d),eltype(d)}()
+parameterization(d::UnitCircle) = UnitCircleMap{numtype(d),eltype(d)}()
 
 domain(d::UnitCircleMap{S}) where {S} = Interval{:closed,:open,S}(0, 1)
 

@@ -69,6 +69,15 @@ point_in_domain(d::LazyDomain) =
 
 ==(a::D, b::D) where {D<:LazyDomain} = elements(a) == elements(b)
 
+
+const LazyVectorDomain{T} = LazyDomain{Vector{T}}
+
+function dimension(d::LazyVectorDomain)
+	dim = dimension(element(d,1))
+	@assert all(isequal(dim), map(dimension, elements(d)))
+	dim
+end
+
 """
 Combine the outputs of `in` of member domains into a single output of the lazy
 domain.

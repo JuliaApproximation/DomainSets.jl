@@ -102,6 +102,8 @@ end
 
         @test convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
         @test Number(Point(1)) ≡ convert(Number, Point(1)) ≡ convert(Int, Point(1)) ≡ 1
+
+        @test dimension(Point([1,2,3]))==3
     end
 
     @testset "intervals" begin
@@ -683,6 +685,9 @@ end
         D = rotate((-1.5.. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0), π, π, π, v[.35, .65, -2.])
         @test v[0.9, 0.6, -2.5] ∈ D
         @test v[0.0, 0.6, 0.0] ∉ D
+
+        B = 2VectorUnitBall(10)
+        @test dimension(B) == 10
     end
 
     @testset "simplex" begin
@@ -872,6 +877,7 @@ end
             d1 = ProductDomain([0..1.0, 0..2.0])
             @test d1 isa VectorDomain{Float64}
             @test d1.domains isa Vector
+            @test dimension(d1) == 2
             @test [0.1,0.2] ∈ d1
             @test v[0.1,0.2] ∈ d1
             @test point_in_domain(d1) ∈ d1
@@ -881,12 +887,14 @@ end
 
             # Test an integer type as well
             d2 = ProductDomain([0..1, 0..2])
+            @test dimension(d2) == 2
             @test [0.1,0.2] ∈ d2
             @test point_in_domain(d2) ∈ d2
 
             bnd = boundary(d1)
             @test bnd isa VectorDomain
             @test bnd isa UnionDomain
+            @test dimension(bnd) == 2
             @test [0.0, 0.5] ∈ bnd
             @test [1.0, 0.5] ∈ bnd
             @test [0.2, 0.0] ∈ bnd
@@ -899,6 +907,7 @@ end
             @test d1 isa TupleProductDomain
             @test d1.domains isa Tuple
             @test eltype(d1) == Tuple{Float64,Float64}
+            @test dimension(d1) == 2
             @test (0.2,0.6) ∈ d1
             @test (0.2,0.8) ∉ d1
             @test (true,0.6) ∉ d1
@@ -913,6 +922,7 @@ end
             d2 = ProductDomain([true,false], 0..1)
             @test d2 isa TupleProductDomain
             @test d2.domains isa Tuple
+            @test dimension(d2) == 2
             @test eltype(d2) == Tuple{Bool,Int}
             @test (true,0.4) ∈ d2
             @test (false,1.5) ∉ d2
@@ -920,6 +930,7 @@ end
             bnd = boundary(d1)
             @test eltype(bnd) == Tuple{Float64,Float64}
             @test bnd isa UnionDomain
+            @test dimension(bnd) == 2
             @test (0.0, 0.5) ∈ bnd
             @test (0.5, 0.5) ∈ bnd
             @test (0.3, 0.2) ∉ bnd
@@ -942,6 +953,8 @@ end
 
         u1 = d1 ∪ d2
         u2 = u1 ∪ d3
+        @test dimension(u1) == 2
+        @test dimension(u2) == 2
 
         u3 = d3 ∪ u1
         u4 = u1 ∪ u2
@@ -997,6 +1010,8 @@ end
         i2 = d1 & d2
         show(io,i2)
         @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.4..0.4 x -0.4..0.4\n"
+        @test dimension(i1) == 2
+        @test dimension(i2) == 2
 
         i3 = d3 & i2
         i4 = i2 & d3
@@ -1027,6 +1042,7 @@ end
         d = d1\d2
         show(io,d)
         @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
+        @test dimension(d) == 2
 
         x = SVector(0.,.74)
         y = SVector(0.,.25)
