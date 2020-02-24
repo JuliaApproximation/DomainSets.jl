@@ -20,7 +20,7 @@ _applymap(m::Map{S}, x::T) where {S,T} = _applymap(m, x, promote_type(S,T))
 _applymap(m::Map{S}, x::T, ::Type{U}) where {S,T,U} =
     applymap(convert(Map{U}, m), convert(U, x))
 
-applymap!(y, m::Map, x) = y[:] .= _applymap(m, x)
+applymap!(y, m::Map, x) = y .= m(x)
 
 # Note that there is a difference between a map being invertible, and the map
 # knowing its inverse explicitly and implementing `inv`.
@@ -51,7 +51,7 @@ at a point `x`.
 jacobian(m::Map) = error("Map ", m, " does not have a known inverse.")
 jacobian(m::Map, x) = jacobian(m)(x)
 
-jacobian!(y, m::Map, x) = y[:] .= jacobian(m, x)
+jacobian!(y, m::Map, x) = y .= jacobian(m, x)
 
 """
     jacdet(m::Map, x)

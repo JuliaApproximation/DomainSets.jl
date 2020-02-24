@@ -6,7 +6,7 @@ suitable_point_to_map(m::Map) = suitable_point_to_map(m, domaintype(m))
 
 suitable_point_to_map(m::Map, ::Type{SVector{N,T}}) where {N,T} = SVector{N,T}(rand(N))
 suitable_point_to_map(m::Map, ::Type{T}) where {T<:Number} = rand(T)
-suitable_point_to_map(m::Map, ::Type{AbstractVector{T}}) where {T} = rand(T, dimension(m))
+suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, dimension(m))
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
     map(suitable_point_to_map, elements(m))
@@ -16,6 +16,7 @@ suitable_point_to_map(::PolarToCartMap{T}) where {T} = randvec(T,2)
 
 widertype(T) = widen(T)
 widertype(::Type{SVector{N,T}}) where {N,T} = SVector{N,widen(T)}
+widertype(::Type{Vector{T}}) where {T} = Vector{widen(T)}
 widertype(::Type{Tuple{A}}) where {A} = Tuple{widen(A)}
 widertype(::Type{Tuple{A,B}}) where {A,B} = Tuple{widen(A),widen(B)}
 widertype(::Type{Tuple{A,B,C}}) where {A,B,C} = Tuple{widen(A),widen(B),widen(C)}
@@ -34,13 +35,16 @@ function test_generic_map(T, m)
     y2 = m(x)
     @test y1 == y2
 
-    mi = inv(m)
-    xi1 = applymap(mi, y1)
-    @test xi1 ≈ x
-    xi2 = mi(y1)
-    @test xi2 ≈ x
-    xi3 = m\y1
-    @test xi3 ≈ x
+    try # try because the inverse may not be defined
+        mi = inv(m)
+        xi1 = applymap(mi, y1)
+        @test xi1 ≈ x
+        xi2 = mi(y1)
+        @test xi2 ≈ x
+        xi3 = m\y1
+        @test xi3 ≈ x
+    catch
+    end
 
     if domaintype(m) == Float64
         @test convert(Map{BigFloat}, m) isa Map{BigFloat}
@@ -50,12 +54,15 @@ function test_generic_map(T, m)
         @test convert(Map{U}, m) isa Map{U}
     end
 
+    # leftinv and rightinv tests currently fail on pinv for BigFloat
     if !(T == BigFloat)
-        # Tests currently fail on pinv for BigFloat
-        mli = leftinv(m)
-        @test mli(m(x)) ≈ x
-        mri = rightinv(m)
-        @test m(mri(x)) ≈ x
+        try # try because the inverse may not be defined
+            mli = leftinv(m)
+            @test mli(m(x)) ≈ x
+            mri = rightinv(m)
+            @test m(mri(x)) ≈ x
+        catch
+        end
     end
 end
 
@@ -66,6 +73,7 @@ function test_maps(T)
     test_affine_maps(T)
     test_composite_map(T)
     test_product_map(T)
+    test_wrapped_maps(T)
     test_scaling_maps(T)
     test_identity_map(T)
     test_rotation_map(T)
@@ -74,6 +82,11 @@ end
 
 function generic_tests(T)
     maps = [
+        IdentityMap{T}(),
+        VectorIdentityMap{T}(10),
+        ConstantMap{T}(one(T)),
+        ZeroMap{T}(),
+        UnityMap{T}(),
         interval_map(T(0), T(1), T(2), T(3)),
         AffineMap(randvec(T, 2, 2), randvec(T, 2)),
         LinearMap(randvec(T, 2, 2)),
@@ -163,50 +176,6 @@ function test_identity_map(T)
     @test islinear(IdentityMap{T}())
 end
 
-function test_rotation_map(T)
-    ϕ = T(pi)/4
-    m = rotation_map(ϕ)
-    x = [one(T), zero(T)]
-    y = m(x)
-    @test y[1] ≈ sqrt(T(2))/2
-    @test y[2] ≈ sqrt(T(2))/2
-
-    ϕ = T(pi)/4
-    m = rotation_map(ϕ, 0, 0)
-    x = [zero(T), one(T), zero(T)]
-    y = m(x)
-    @test y[1] ≈ 0
-    @test y[2] ≈ sqrt(T(2))/2
-    @test y[3] ≈ sqrt(T(2))/2
-
-    # TODO: add more tests for a 3D rotation
-
-    theta = T(rand())
-    phi = T(rand())
-    psi = T(rand())
-    m2 = rotation_map(theta)
-    test_generic_map(T, m2)
-    m3 = rotation_map(phi, theta, psi)
-    test_generic_map(T, m3)
-
-    r = suitable_point_to_map(m2)
-    @test norm(m2(r))≈norm(r)
-
-    r = suitable_point_to_map(m3)
-    @test norm(m3(r))≈norm(r)
-    @test islinear(m3)
-end
-
-function test_cart_polar_map(T)
-    m1 = CartToPolarMap{T}()
-    test_generic_map(T, m1)
-    @test !islinear(m1)
-
-    m2 = PolarToCartMap{T}()
-    test_generic_map(T, m2)
-    @test !islinear(m2)
-end
-
 function test_composite_map(T)
     a = T(0)
     b = T(1)
@@ -257,6 +226,60 @@ function test_product_map(T)
     test_generic_map(T, m)
     @test compare_tuple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
 end
+
+function test_wrapped_maps(T)
+    m1 = WrappedMap{T}(cos)
+    m2 = WrappedMap{T}(sin)
+    @test m1(one(T)) ≈ cos(one(T))
+    @test m2(one(T)) ≈ sin(one(T))
+    m3 = m1 ∘ m2
+    @test m3(one(T)) ≈ cos(sin(one(T)))
+end
+
+function test_rotation_map(T)
+    ϕ = T(pi)/4
+    m = rotation_map(ϕ)
+    x = [one(T), zero(T)]
+    y = m(x)
+    @test y[1] ≈ sqrt(T(2))/2
+    @test y[2] ≈ sqrt(T(2))/2
+
+    ϕ = T(pi)/4
+    m = rotation_map(ϕ, 0, 0)
+    x = [zero(T), one(T), zero(T)]
+    y = m(x)
+    @test y[1] ≈ 0
+    @test y[2] ≈ sqrt(T(2))/2
+    @test y[3] ≈ sqrt(T(2))/2
+
+    # TODO: add more tests for a 3D rotation
+
+    theta = T(rand())
+    phi = T(rand())
+    psi = T(rand())
+    m2 = rotation_map(theta)
+    test_generic_map(T, m2)
+    m3 = rotation_map(phi, theta, psi)
+    test_generic_map(T, m3)
+
+    r = suitable_point_to_map(m2)
+    @test norm(m2(r))≈norm(r)
+
+    r = suitable_point_to_map(m3)
+    @test norm(m3(r))≈norm(r)
+    @test islinear(m3)
+end
+
+function test_cart_polar_map(T)
+    m1 = CartToPolarMap{T}()
+    test_generic_map(T, m1)
+    @test !islinear(m1)
+
+    m2 = PolarToCartMap{T}()
+    test_generic_map(T, m2)
+    @test !islinear(m2)
+end
+
 
 Base.isapprox(a::NTuple{L,SVector{N,T}}, b::NTuple{L,SVector{N,T}}) where {L,N,T} = compare_tuple(a,b)
 Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tuple(a,b)

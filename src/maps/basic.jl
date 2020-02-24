@@ -7,8 +7,9 @@ applymap(map::AbstractIdentityMap, x) = x
 inv(m::AbstractIdentityMap) = m
 
 islinear(::AbstractIdentityMap) = true
-
 isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
+
+jacdet(m::AbstractIdentityMap, x) = 1
 
 "The identity map for variables of type `T`."
 struct IdentityMap{T} <: AbstractIdentityMap{T}
@@ -20,9 +21,11 @@ convert(::Type{Map{T}}, ::IdentityMap) where {T} = IdentityMap{T}()
 struct FlexibleIdentityMap{T} <: AbstractIdentityMap{T}
     dimension   ::  Int
 end
-const VectorIdentityMap{T} = FlexibleIdentityMap{<:AbstractVector{T}}
+const VectorIdentityMap{T} = FlexibleIdentityMap{Vector{T}}
 
 VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
+
+dimension(m::FlexibleIdentityMap) = m.dimension
 
 convert(::Type{Map{T}}, m::FlexibleIdentityMap) where {T} = FlexibleIdentityMap{T}(m.dimension)
 
@@ -31,7 +34,10 @@ identitymatrix(::Type{T}) where {T} = one(T)
 identitymatrix(::Type{Vector{T}}, dimension::Int) where {T} = Matrix{T}(I, dimension, dimension)
 
 jacobian(m::IdentityMap{T}) where {T} = ConstantMap(identitymatrix(T))
-jacobian(m::FlexibleIdentityMap{T}) where {T} = ConstantMap(identitymatrix(T, m.dimension))
+jacobian(m::IdentityMap{T}, x) where {T} = identitymatrix(T)
+
+jacobian(m::FlexibleIdentityMap{T}) where {T} = ConstantMap(identitymatrix(T, dimension(m)))
+jacobian(m::FlexibleIdentityMap{T}, x) where {T} = identitymatrix(T, dimension(m))
 
 
 "The supertype of constant maps from `T` to `U`."
@@ -42,7 +48,11 @@ applymap(m::AbstractConstantMap, x) = constant(m)
 islinear(::AbstractConstantMap) = true
 isreal(m::AbstractConstantMap) = isreal(constant(m))
 
-jacobian(m::AbstractConstantMap{T,U}) where {T,U} = ConstantMap{T}(zero(constant(m)))
+jacobian(m::AbstractConstantMap{T}) where {T} = ConstantMap{T}(zero(constant(m)))
+jacobian(m::AbstractConstantMap, x) = zero(constant(m))
+
+jacdet(::AbstractConstantMap, x) = 0
+
 
 "The zero map `f(x) = 0`."
 struct ZeroMap{T,U} <: AbstractConstantMap{T,U}

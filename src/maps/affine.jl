@@ -37,6 +37,8 @@ end
 isreal(m::AbstractAffineMap{T}) where {T} = isreal(unsafe_matrix(m)) && isreal(unsafe_vector(m))
 
 jacobian(m::AbstractAffineMap{T}) where {T} = ConstantMap{T}(matrix(m))
+jacobian(m::AbstractAffineMap, x) = matrix(m)
+jacdet(m::AbstractAffineMap, x) = det(unsafe_matrix(m))
 
 isaffine(map::Map) = false
 isaffine(map::AbstractAffineMap) = true
@@ -213,7 +215,7 @@ Compute the affine map that represents map2 after map1, that is:
 `y = a2*(a1*x+b1)+b2 = a2*a1*x + a2*b1 + b2`.
 """
 affine_composition(map2::AbstractAffineMap, map1::AbstractAffineMap) =
-    AffineMap(matrix(map2) * matrix(map1), matrix(map2)*vector(map1) + vector(map2))
+    AffineMap(unsafe_matrix(map2) * unsafe_matrix(map1), unsafe_matrix(map2)*unsafe_vector(map1) + unsafe_vector(map2))
 
 affine_composition(map2::LinearMap, map1::LinearMap) =
     LinearMap(unsafe_matrix(map2) * unsafe_matrix(map1))

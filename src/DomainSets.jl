@@ -60,17 +60,17 @@ export cartesianproduct
 
 # from maps/map.jl
 export Map, applymap,
-    linearize,
     domaintype,
     leftinv, rightinv,
-    jacobian, jacdet,
-    image
+    jacobian, jacdet
+# from maps/lazy.jl
+export WrappedMap
 # from maps/composite.jl
 export CompositeMap, ∘
 # from maps/product.jl
 export ProductMap, tensorproduct
 # from maps/basic.jl
-export IdentityMap, ConstantMap
+export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     matrix, vector,
@@ -138,6 +138,7 @@ include("util/common.jl")
 include("util/products.jl")
 
 include("maps/map.jl")
+include("maps/lazy.jl")
 include("maps/composite.jl")
 include("maps/product.jl")
 include("maps/basic.jl")
