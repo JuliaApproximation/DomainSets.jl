@@ -48,7 +48,7 @@ rightinv(m::Map) = inv(m)
 Return the jacobian map. The two-argument version evaluates the jacobian
 at a point `x`.
 """
-jacobian(m::Map) = error("Map ", m, " does not have a known inverse.")
+jacobian(m::Map) = error("Map ", m, " does not have a known Jacobian.")
 jacobian(m::Map, x) = jacobian(m)(x)
 
 jacobian!(y, m::Map, x) = y .= jacobian(m, x)

@@ -1,5 +1,5 @@
 
-abstract type AbstractProductMap{T} <: Map{T} end
+abstract type AbstractProductMap{T} <: CompositeLazyMap{T} end
 
 """
 A product map is diagonal and acts on each of the components of x separately:
@@ -21,11 +21,7 @@ ProductMap{T}(maps...) where {T} = ProductMap{T,typeof(maps)}(maps)
 convert(::Type{Map{T}}, m::ProductMap{T}) where {T} = m
 convert(::Type{Map{T}}, m::ProductMap{S}) where {S,T} = ProductMap{T}(m.maps...)
 
-elements(m::ProductMap) = m.maps
-
 applymap(m::ProductMap, x) = map(applymap, elements(m), x)
-
-isreal(m::ProductMap) = all(map(isreal, elements(m)))
 
 tensorproduct(map1::Map, map2::Map) = ProductMap(map1, map2)
 tensorproduct(map1::ProductMap, map2::Map) = ProductMap(elements(map1)..., map2)

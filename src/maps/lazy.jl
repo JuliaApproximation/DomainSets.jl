@@ -1,9 +1,16 @@
 
 abstract type LazyMap{T} <: Map{T} end
 
-abstract type DerivedMap{T} <: Map{T} end
+abstract type CompositeLazyMap{T} <: LazyMap{T} end
+abstract type SingleLazyMap{T} <: LazyMap{T} end
 
-supermap(m::DerivedMap) = m.map
+supermap(m::SingleLazyMap) = m.map
+elements(m::CompositeLazyMap) = m.maps
+
+isreal(m::SingleLazyMap) = isreal(supermap(m))
+isreal(m::CompositeLazyMap) = all(map(isreal, elements(m)))
+
+abstract type DerivedMap{T} <: SingleLazyMap{T} end
 
 applymap(m::DerivedMap, x) = supermap(m)(x)
 appymap!(y, m::DerivedMap, x) = applymap!(y, supermap(m), x)

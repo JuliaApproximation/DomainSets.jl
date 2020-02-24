@@ -13,7 +13,7 @@ struct NamedHyperBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
     NamedHyperBall() = new(2UnitDisk())
 end
 
-@testset "Specific domains" begin
+@testset "specific domains" begin
     @testset "empty space" begin
         d1 = EmptySpace()
         show(io,d1)

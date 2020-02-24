@@ -47,7 +47,7 @@ end
         WrappedDomain(0..1.0)
     ]
 
-    @testset "$(rpad("Generic domains",80))" begin
+    @testset "$(rpad("generic domains",80))" begin
         for domain in domains
             test_generic_domain(domain)
         end

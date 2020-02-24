@@ -46,6 +46,18 @@ function test_generic_map(T, m)
     catch
     end
 
+    try # try because jacobian may not be implemented
+        jac = jacobian(m)
+        @test jac(x) == jacobian(m, x)
+        # @test jacdet(m, x) == det(jacobian(m, x))
+        δ = sqrt(eps(T))
+        x2 = x .+ δ
+        if !(m isa ProductMap)
+            @test norm(m(x2) .- (m(x)+jac(x)*(x-x2))) < 100δ
+        end
+    catch
+    end
+
     if domaintype(m) == Float64
         @test convert(Map{BigFloat}, m) isa Map{BigFloat}
     end

@@ -66,7 +66,7 @@ export Map, applymap,
 # from maps/lazy.jl
 export WrappedMap
 # from maps/composite.jl
-export CompositeMap, ∘
+export CompositionMap, ∘
 # from maps/product.jl
 export ProductMap, tensorproduct
 # from maps/basic.jl
