@@ -52,30 +52,28 @@ export ..
 
 # from util/common.jl
 export prectype, numtype
-# from util/tensorproducts.jl
+# from util/products.jl
 export cartesianproduct
 
 
 ## Maps
 
-# from maps/maps.jl
-export AbstractMap, applymap, jacobian, linearize,
-    domaintype, codomaintype,
-    left_inverse, right_inverse,
-    apply_inverse, apply_left_inverse, apply_right_inverse,
+# from maps/map.jl
+export Map, applymap, jacobian, linearize,
+    domaintype,
+    leftinv, rightinv,
     image
-# from maps/composite_map.jl
-export CompositeMap, ∘
-# from maps/productmap.jl
+# from maps/composite.jl
+export CompositeMap, ∘, compose
+# from maps/product.jl
 export ProductMap, tensorproduct
-# from maps/basic_maps.jl
+# from maps/basic.jl
 export IdentityMap, ConstantMap
-# from maps/affine_maps.jl
+# from maps/affine.jl
 export AffineMap, Translation, LinearMap,
-    islinear,
-    linear_map, interval_map, scaling_map, rotation_map, translation_map
-# from maps/coordinates.jl
-export CartToPolarMap, PolarToCartMap
+    matrix, vector,
+    islinear, isaffine,
+    linear_map, interval_map, scaling_map
 
 
 ## Generic domains
@@ -89,18 +87,13 @@ export Domain, EuclideanDomain, VectorDomain,
     point_in_domain
 
 # from generic/lazy.jl
-export DerivedDomain, superdomain
+export DerivedDomain, superdomain, WrappedDomain
 
 # from generic/productdomain.jl
 export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
-export TranslatedDomain
-
-# from generic/mapped_domain.jl
-export source, target
-
 
 # from generic/arithmetics.jl
 export rotate
@@ -134,15 +127,19 @@ export UnitCircle, VectorUnitCircle,
     ellipse, ellipse_shape, cylinder,
     parameterization, gradient
 
+## Applications
+# from applications/rotation.jl
+export rotation_map,
+    CartToPolarMap, PolarToCartMap
+
 include("util/common.jl")
 include("util/products.jl")
 
-include("maps/maps.jl")
-include("maps/composite_map.jl")
-include("maps/productmap.jl")
-include("maps/basic_maps.jl")
-include("maps/affine_map.jl")
-include("maps/coordinates.jl")
+include("maps/map.jl")
+include("maps/composite.jl")
+include("maps/product.jl")
+include("maps/basic.jl")
+include("maps/affine.jl")
 
 include("generic/domain.jl")
 include("generic/lazy.jl")
@@ -157,5 +154,7 @@ include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
+
+include("applications/rotation.jl")
 
 end # module

@@ -24,20 +24,16 @@ function test_generic_map(T, m)
     isreal(T(0)) && (@test isreal(m))
     x = suitable_point_to_map(m)
     y1 = applymap(m, x)
-    y2 = m * x
+    y2 = m(x)
     @test y1 == y2
-    y3 = m(x)
-    @test y1 == y3
 
     mi = inv(m)
     xi1 = applymap(mi, y1)
     @test xi1 ≈ x
-    xi2 = mi * y1
+    xi2 = mi(y1)
     @test xi2 ≈ x
     xi3 = m\y1
     @test xi3 ≈ x
-    xi4 = apply_inverse(m, y1)
-    @test xi4 ≈ x
 
     # if is_linear(m)
     #     x = suitable_point_to_map(m, n)
@@ -68,8 +64,8 @@ function test_maps(T)
 
     m3 = LinearMap(randvec(T, 2, 2))
     test_generic_map(T, m3)
-    r = randvec(T,2,1)
-    @test jacobian(m3, r)*r ≈ m3*r
+    r = randvec(T,2)
+    @test jacobian(m3)(r) * r ≈ m3(r)
 
     # Test an affine map with a a scalar and b a vector
     m4 = AffineMap(T(1.2), randvec(T, 2))
@@ -93,7 +89,7 @@ function test_maps(T)
 
     test_rotation_map(T)
 
-    test_translation_map(T)
+    test_translation(T)
 
     test_cart_polar_map(T)
 
@@ -120,14 +116,14 @@ function test_rotation_map(T)
     ϕ = T(pi)/4
     m = rotation_map(ϕ)
     x = [one(T), zero(T)]
-    y = m*x
+    y = m(x)
     @test y[1] ≈ sqrt(T(2))/2
     @test y[2] ≈ sqrt(T(2))/2
 
     ϕ = T(pi)/4
     m = rotation_map(ϕ, 0, 0)
     x = [zero(T), one(T), zero(T)]
-    y = m*x
+    y = m(x)
     @test y[1] ≈ 0
     @test y[2] ≈ sqrt(T(2))/2
     @test y[3] ≈ sqrt(T(2))/2
@@ -143,18 +139,19 @@ function test_rotation_map(T)
     test_generic_map(T, m3)
 
     r = suitable_point_to_map(m2)
-    @test norm(m2*r)≈norm(r)
+    @test norm(m2(r))≈norm(r)
 
     r = suitable_point_to_map(m3)
-    @test norm(m3*r)≈norm(r)
+    @test norm(m3(r))≈norm(r)
     @test islinear(m3)
 end
 
-function test_translation_map(T)
+function test_translation(T)
     v = randvec(T,3)
-    m = translation_map(v)
+    m = Translation(v)
     test_generic_map(T, m)
-    @test islinear(m)
+    @test !islinear(m)
+    @test isaffine(m)
 end
 
 function test_cart_polar_map(T)
@@ -189,7 +186,7 @@ function test_composite_map(T)
     test_generic_map(T, m)
     @test m(r) ≈ m2(m3(r))
 
-    @test !(typeof(CompositeMap(ma)) <: CompositeMap)
+    @test !(DomainSets.compose(ma) isa CompositeMap)
 end
 
 function test_product_map(T)

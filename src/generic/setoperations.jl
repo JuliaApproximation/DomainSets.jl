@@ -9,7 +9,7 @@
 
 A `UnionDomain` represents the union of a set of domains.
 """
-struct UnionDomain{T,DD} <: LazyDomain{T}
+struct UnionDomain{T,DD} <: CompositeLazyDomain{T}
 	domains	::	DD
 end
 
@@ -110,7 +110,7 @@ end
 """
 An `IntersectionDomain` represents the intersection of a set of domains.
 """
-struct IntersectionDomain{T,DD} <: LazyDomain{T}
+struct IntersectionDomain{T,DD} <: CompositeLazyDomain{T}
     domains ::  DD
 end
 
@@ -170,7 +170,7 @@ end
 #########################################
 
 "A `DifferenceDomain` represents the difference between two domains."
-struct DifferenceDomain{T,DD} <: LazyDomain{T}
+struct DifferenceDomain{T,DD} <: CompositeLazyDomain{T}
     domains	::	DD
 	function DifferenceDomain{T,DD}(domains::DD) where {T,DD}
 		@assert length(domains) == 2

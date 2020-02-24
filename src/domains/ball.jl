@@ -202,18 +202,18 @@ ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b) * UnitDisk{T}(
 """
 The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 """
-struct UnitCircleMap{S,T} <: AbstractMap{S,T} end
+struct UnitCircleMap{T} <: Map{T} end
 
-parameterization(d::UnitCircle) = UnitCircleMap{numtype(d),eltype(d)}()
+parameterization(d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
 
-domain(d::UnitCircleMap{S}) where {S} = Interval{:closed,:open,S}(0, 1)
+domain(d::UnitCircleMap{T}) where {T} = Interval{:closed,:open,T}(0, 1)
 
-image(m::UnitCircleMap{S}) where S = UnitCircle{S}()
+image(m::UnitCircleMap{T}) where {T} = UnitCircle{T}()
 
-applymap(m::UnitCircleMap{S}, t) where S = SVector(cos(2*S(pi)*t), sin(2*S(pi)*t))
+applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
 
-function gradient(m::UnitCircleMap{S}, t) where S
-    a = 2*S(pi)
+function gradient(m::UnitCircleMap{T}, t) where {T}
+    a = 2*convert(T, pi)
     SVector(-a*sin(a*t), a*cos(a*t))
 end
 
@@ -223,15 +223,15 @@ end
 the intersection point with the unit circle of the line connecting `x` to the
 origin. The angle of this point, scaled to the interval `[0,1)`, is the result.
 """
-struct AngleMap{S,T} <: AbstractMap{S,T}
+struct AngleMap{T} <: Map{SVector{2,T}}
 end
 
-domain(d::AngleMap{S,T}) where {S,T} = FullSpace{S}()
+domain(d::AngleMap{T}) where {T} = FullSpace{SVector{2,T}}()
 
-range(m::AngleMap{S,T}) where {S,T} = Interval{:closed,:open,T}(0, 1)
+range(m::AngleMap{T}) where {T} = Interval{:closed,:open,T}(0, 1)
 
-function applymap(m::AngleMap, x)
-    twopi = 2*convert(codomaintype(m), pi)
+function applymap(m::AngleMap{T}, x) where {T}
+    twopi = 2*convert(T, pi)
     θ = atan(x[2],x[1])
     if θ < 0
         # atan2 returns an angle in (-π,π], convert to [0,2π) using periodicity.
@@ -241,6 +241,6 @@ function applymap(m::AngleMap, x)
     θ / twopi
 end
 
-left_inverse(m::UnitCircleMap{S,T}) where {S,T} = AngleMap{T,S}()
+leftinv(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
 
-right_inverse(m::AngleMap{S,T}) where {S,T} = UnitCircleMap{T,S}()
+rightinv(m::AngleMap{T}) where {T} = UnitCircleMap{T}()

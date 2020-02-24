@@ -1,16 +1,8 @@
 
-##############################
-# Promotion helper functions
-##############################
 
-const True = Val{true}
-const False = Val{false}
-
-"Return True if S promotes to T, i.e., if promote_type(S,T) == T."
-promotes_to(S, T) = _promotes_to(S, T, promote_type(S,T))
-_promotes_to(::Type{S}, ::Type{T}, ::Type{T}) where {S,T} = True
-_promotes_to(::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = False
-
+isreal(::Type{<:Real}) = true
+isreal(::Type{<:Complex}) = false
+isreal(::Type{T}) where {T} = isreal(eltype(T))
 
 
 #######################

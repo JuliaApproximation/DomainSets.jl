@@ -601,7 +601,7 @@ end
         x = applymap(p, 1/2)
         @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
         @test approx_in(x, C)
-        q = left_inverse(p)
+        q = leftinv(p)
         @test applymap(q, x) ≈ 1/2
 
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
@@ -662,9 +662,9 @@ end
         D = UnitCircle()
         D1 = 2*D
         @test typeof(D1) <: MappedDomain
-        @test typeof(source(D1)) <: UnitHyperSphere
+        @test typeof(superdomain(D1)) <: UnitHyperSphere
         D2 = 2*D1
-        @test typeof(source(D2)) <: UnitHyperSphere
+        @test typeof(superdomain(D2)) <: UnitHyperSphere
 
         D = UnitInterval()^2
         show(io,rotate(D,1.))
@@ -1087,5 +1087,11 @@ end
 
         d = UnitDisk() × (0.0..1)
         @test SVector(0.1, 0.2, 0.3) ∈ d
+    end
+
+    @testset "Wrapped domain" begin
+        d = 0..1.0
+        w = DomainSets.WrappedDomain(d)
+        @test w isa Domain
     end
 end

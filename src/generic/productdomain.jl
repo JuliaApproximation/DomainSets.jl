@@ -36,7 +36,7 @@ end
 
 A `ProductDomain` represents the cartesian product of other domains.
 """
-abstract type ProductDomain{T} <: LazyDomain{T} end
+abstract type ProductDomain{T} <: CompositeLazyDomain{T} end
 
 composition(d::ProductDomain) = Product()
 

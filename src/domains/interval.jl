@@ -24,19 +24,6 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 
 
-# We extend some functionality of intervals to mapped intervals
-const MappedInterval{D <: AbstractInterval,T} = MappedDomain{D,T}
-
-endpoints(d::MappedInterval) = forward_map(d) .* endpoints(source(d))
-for op in (:leftendpoint, :rightendpoint)
-    @eval $op(d::MappedInterval) = forward_map(d) * $op(source(d))
-end
-
-for op in (:isleftopen, :isrightopen, :isleftclosed, :isrightclosed)
-    @eval $op(d::MappedInterval) = $op(source(d))
-end
-
-
 ## Some special intervals follow, e.g.:
 # - the unit interval [0,1]
 # - the 'Chebyshev' interval [-1,1]

@@ -43,7 +43,8 @@ end
         UnitSphere(),
         VectorUnitSphere(),
         UnitSimplex{2}(),
-        VectorUnitSimplex(2)
+        VectorUnitSimplex(2),
+        WrappedDomain(0..1.0)
     ]
 
     @testset "$(rpad("Generic domains",80))" begin
