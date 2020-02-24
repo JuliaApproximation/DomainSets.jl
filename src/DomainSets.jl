@@ -59,12 +59,14 @@ export cartesianproduct
 ## Maps
 
 # from maps/map.jl
-export Map, applymap, jacobian, linearize,
+export Map, applymap,
+    linearize,
     domaintype,
     leftinv, rightinv,
+    jacobian, jacdet,
     image
 # from maps/composite.jl
-export CompositeMap, ∘, compose
+export CompositeMap, ∘
 # from maps/product.jl
 export ProductMap, tensorproduct
 # from maps/basic.jl

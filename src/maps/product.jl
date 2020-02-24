@@ -6,15 +6,20 @@ A product map is diagonal and acts on each of the components of x separately:
 `y = f(x)` becomes `y_i = f_i(x_i)`.
 """
 struct ProductMap{T,MAPS} <: AbstractProductMap{T}
-    # maps has an indexable and iterable type, for example a tuple of maps
     maps    ::  MAPS
 end
 
 function ProductMap(maps...)
     MAPS = typeof(maps)
     T = Tuple{map(domaintype, maps)...}
-    ProductMap{T,MAPS}(maps)
+    ProductMap{T}(maps...)
 end
+
+ProductMap{T}(maps...) where {T} = ProductMap{T,typeof(maps)}(maps)
+
+# TODO: make proper conversion
+convert(::Type{Map{T}}, m::ProductMap{T}) where {T} = m
+convert(::Type{Map{T}}, m::ProductMap{S}) where {S,T} = ProductMap{T}(m.maps...)
 
 elements(m::ProductMap) = m.maps
 

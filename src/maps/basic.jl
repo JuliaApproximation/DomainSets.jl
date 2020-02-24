@@ -14,6 +14,8 @@ isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
 struct IdentityMap{T} <: AbstractIdentityMap{T}
 end
 
+convert(::Type{Map{T}}, ::IdentityMap) where {T} = IdentityMap{T}()
+
 "Identity map with flexible size determined by a dimension field."
 struct FlexibleIdentityMap{T} <: AbstractIdentityMap{T}
     dimension   ::  Int
@@ -21,6 +23,8 @@ end
 const VectorIdentityMap{T} = FlexibleIdentityMap{<:AbstractVector{T}}
 
 VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
+
+convert(::Type{Map{T}}, m::FlexibleIdentityMap) where {T} = FlexibleIdentityMap{T}(m.dimension)
 
 identitymatrix(::Type{SVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
 identitymatrix(::Type{T}) where {T} = one(T)
@@ -48,6 +52,7 @@ ZeroMap{T}() where {T} = ZeroMap{T,T}()
 
 constant(m::ZeroMap{T,U}) where {T,U} = zero(T)
 
+convert(::Type{Map{T}}, ::ZeroMap{S,U}) where {T,S,U} = ZeroMap{T,U}()
 
 "The unity map `f(x) = 1`."
 struct UnityMap{T,U} <: AbstractConstantMap{T,U}
@@ -56,6 +61,8 @@ end
 UnityMap{T}() where {T} = UnityMap{T,T}()
 
 constant(m::UnityMap{T,U}) where {T,U} = one(U)
+
+convert(::Type{Map{T}}, ::UnityMap{S,U}) where {T,S,U} = UnityMap{T,U}()
 
 
 "The constant map `f(x) = c`."
@@ -67,3 +74,5 @@ ConstantMap{T}(c::U) where {T,U} = ConstantMap{T,U}(c)
 ConstantMap(c::T) where {T} = ConstantMap{T}(c)
 
 constant(m::ConstantMap) = m.c
+
+convert(::Type{Map{T}}, m::ConstantMap{S,U}) where {T,S,U} = ConstantMap{T,U}(m.c)

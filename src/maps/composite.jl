@@ -7,11 +7,14 @@ end
 function CompositeMap(maps...)
     MAPS = typeof(maps)
     T = domaintype(maps[end])
-    CompositeMap{T,MAPS}(maps)
+    CompositeMap{T}(maps...)
 end
 
-compose(map::Map) = map
-compose(maps...) = CompositeMap(maps...)
+CompositeMap{T}(maps...) where {T} = CompositeMap{T,typeof(maps)}(maps)
+
+# TODO: make proper conversion
+convert(::Type{Map{T}}, m::CompositeMap{T}) where {T} = m
+convert(::Type{Map{T}}, m::CompositeMap) where {T} = CompositeMap{T}(m.maps...)
 
 elements(map::CompositeMap) = map.maps
 

@@ -1,27 +1,34 @@
 
-function suitable_point_to_map(m)
-    T = domaintype(m)
-    if T <: SVector
-        randvec(eltype(T),length(T))
-    else
-        x = T(rand())
-    end
-end
+randvec(T,n) = SVector{n,T}(rand(n))
+randvec(T,m,n) = SMatrix{m,n,T}(rand(m,n))
 
-function suitable_point_to_map(m::DomainSets.ProductMap)
-    x = ()
-    for map in elements(m)
-        x = (x..., suitable_point_to_map(map))
-    end
-    x
-end
+suitable_point_to_map(m::Map) = suitable_point_to_map(m, domaintype(m))
+
+suitable_point_to_map(m::Map, ::Type{SVector{N,T}}) where {N,T} = SVector{N,T}(rand(N))
+suitable_point_to_map(m::Map, ::Type{T}) where {T<:Number} = rand(T)
+suitable_point_to_map(m::Map, ::Type{AbstractVector{T}}) where {T} = rand(T, dimension(m))
+
+suitable_point_to_map(m::DomainSets.ProductMap) =
+    map(suitable_point_to_map, elements(m))
 
 suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
 suitable_point_to_map(::PolarToCartMap{T}) where {T} = randvec(T,2)
+
+widertype(T) = widen(T)
+widertype(::Type{SVector{N,T}}) where {N,T} = SVector{N,widen(T)}
+widertype(::Type{Tuple{A}}) where {A} = Tuple{widen(A)}
+widertype(::Type{Tuple{A,B}}) where {A,B} = Tuple{widen(A),widen(B)}
+widertype(::Type{Tuple{A,B,C}}) where {A,B,C} = Tuple{widen(A),widen(B),widen(C)}
+widertype(::Type{NTuple{N,T}}) where {N,T} = NTuple{N,widen(T)}
+
+
 # Test a map m with dimensions n
 function test_generic_map(T, m)
     # Try to map a random vector
-    isreal(T(0)) && (@test isreal(m))
+    isreal(zero(T)) && (@test isreal(m))
+
+    @test convert(Map{domaintype(m)}, m) == m
+
     x = suitable_point_to_map(m)
     y1 = applymap(m, x)
     y2 = m(x)
@@ -35,66 +42,110 @@ function test_generic_map(T, m)
     xi3 = m\y1
     @test xi3 ≈ x
 
-    # if is_linear(m)
-    #     x = suitable_point_to_map(m, n)
-    #     y1 = applymap(m, x)
-    #     x0 = @SVector zeros(T,n)
-    #     a,b = linearize(m, x0)
-    #     y2 = a*x+b
-    #     @test y1 ≈ y2
-    # end
+    if domaintype(m) == Float64
+        @test convert(Map{BigFloat}, m) isa Map{BigFloat}
+    end
+    if eltype(T) == Float64
+        U = widertype(domaintype(m))
+        @test convert(Map{U}, m) isa Map{U}
+    end
+
+    if !(T == BigFloat)
+        # Tests currently fail on pinv for BigFloat
+        mli = leftinv(m)
+        @test mli(m(x)) ≈ x
+        mri = rightinv(m)
+        @test m(mri(x)) ≈ x
+    end
 end
 
-randvec(T,n) = SVector{n,T}(rand(n))
-randvec(T,m,n) = SMatrix{m,n,T}(rand(m,n))
-
 function test_maps(T)
-    a = T(0)
-    b = T(1)
-    c = T(2)
-    d = T(3)
-    m = interval_map(a, b, c, d)
-    @test m(a) ≈ c
-    @test m(b) ≈ d
-
-    test_generic_map(T, m)
-
-    m2 = AffineMap(randvec(T, 2, 2), randvec(T, 2))
-    test_generic_map(T, m2)
-
-    m3 = LinearMap(randvec(T, 2, 2))
-    test_generic_map(T, m3)
-    r = randvec(T,2)
-    @test jacobian(m3)(r) * r ≈ m3(r)
-
-    # Test an affine map with a a scalar and b a vector
-    m4 = AffineMap(T(1.2), randvec(T, 2))
-    test_generic_map(T, m4)
-
-    m5 = AffineMap(randvec(T, 3, 3), randvec(T, 3))
-    test_generic_map(T, m5)
-
-    m6 = m3∘m4
-    @test typeof(m6) <: AffineMap
-    test_generic_map(T, m6)
+    generic_tests(T)
 
     # Test special maps
+    test_affine_maps(T)
     test_composite_map(T)
-
     test_product_map(T)
-
     test_scaling_maps(T)
-
     test_identity_map(T)
-
     test_rotation_map(T)
-
-    test_translation(T)
-
     test_cart_polar_map(T)
+end
 
-    # Diagonal maps
+function generic_tests(T)
+    maps = [
+        interval_map(T(0), T(1), T(2), T(3)),
+        AffineMap(randvec(T, 2, 2), randvec(T, 2)),
+        LinearMap(randvec(T, 2, 2)),
+        AffineMap(T(1.2), randvec(T, 2)),
+        AffineMap(randvec(T, 3, 3), randvec(T, 3)),
+        LinearMap(randvec(T, 2, 2)) ∘ AffineMap(T(1.2), randvec(T, 2))
+    ]
+    for map in maps
+        test_generic_map(T, map)
+    end
+end
 
+function test_affine_maps(T)
+    test_linearmap(T)
+    test_translation(T)
+    test_affinemap(T)
+end
+
+function test_linearmap(T)
+    m1 = LinearMap(2one(T))
+    @test m1 isa LinearMap{T}
+    @test domaintype(m1) == T
+    @test islinear(m1)
+    @test isaffine(m1)
+    @test m1(3) == 6
+    @test m1(3one(T)) == 6
+    @test m1(3one(widen(T))) isa widen(T)
+    @test m1(SVector(1,2)) == SVector(2,4)
+    @test m1([1.0,2.0]) == [2.0,4.0]
+    mw1 = convert(Map{widen(T)}, m1)
+    @test mw1 isa Map{widen(T)}
+    @test mw1.A isa widen(T)
+    @test jacobian(m1) isa ConstantMap{T}
+    @test jacobian(m1, 1) == 2
+
+    m2 = LinearMap(2)
+    @test domaintype(m2) == Int
+    @test m2(one(T)) isa T
+    @test jacobian(m2, 1) == 2
+    @test jacobian(m2) isa ConstantMap{Int}
+    @test jacobian(m2, 1) == 2
+
+    m3 = LinearMap(SMatrix{2,2}(one(T), 2one(T), 3one(T), 4one(T)))
+    @test m3 isa LinearMap{SVector{2,T}}
+    @test m3(SVector(1,2)) == SVector(7, 10)
+    @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
+
+    A = rand(T,2,2)
+    m4 = LinearMap(A)
+    @test m4 isa LinearMap{Vector{T}}
+    @test m4([1,2]) ==  A * [1,2]
+    @test jacobian(m4, [1,2]) == A
+end
+
+function test_translation(T)
+    v = randvec(T,3)
+    m = Translation(v)
+    test_generic_map(T, m)
+    @test !islinear(m)
+    @test isaffine(m)
+end
+
+function test_affinemap(T)
+    m1 = AffineMap(T(2), T(3))
+    @test m1 isa AffineMap{T}
+    @test !islinear(m1)
+    @test isaffine(m1)
+    @test m1(2) == 7
+
+    m2 = AffineMap(T(2), SVector{2,T}(1,2))
+    @test m2 isa AffineMap{SVector{2,T}}
+    @test m2(SVector(1,2)) == SVector(3,6)
 end
 
 function test_scaling_maps(T)
@@ -146,14 +197,6 @@ function test_rotation_map(T)
     @test islinear(m3)
 end
 
-function test_translation(T)
-    v = randvec(T,3)
-    m = Translation(v)
-    test_generic_map(T, m)
-    @test !islinear(m)
-    @test isaffine(m)
-end
-
 function test_cart_polar_map(T)
     m1 = CartToPolarMap{T}()
     test_generic_map(T, m1)
@@ -185,8 +228,6 @@ function test_composite_map(T)
     m = m2∘m3
     test_generic_map(T, m)
     @test m(r) ≈ m2(m3(r))
-
-    @test !(DomainSets.compose(ma) isa CompositeMap)
 end
 
 function test_product_map(T)

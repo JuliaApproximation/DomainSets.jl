@@ -1,4 +1,15 @@
 
+import Base: convert
+
+Base.convert(::Type{AbstractArray{T}}, v::SVector{N,S}) where {N,T,S} =
+    convert(SVector{N,T}, v)
+Base.convert(::Type{AbstractVector{T}}, v::SVector{N,S}) where {N,T,S} =
+    convert(SVector{N,T}, v)
+Base.convert(::Type{AbstractArray{T}}, v::SMatrix{M,N,S}) where {M,N,T,S} =
+    convert(SMatrix{M,N,T}, v)
+Base.convert(::Type{AbstractMatrix{T}}, v::SMatrix{M,N,S}) where {M,N,T,S} =
+    convert(SMatrix{M,N,T}, v)
+
 tomatrix(::Type{T}, a::Number) where {T<:Number} = a
 tomatrix(::Type{SVector{N,T}}, a::Number) where {N,T} = a * one(SMatrix{N,N,T})
 tomatrix(::Type{<:AbstractVector{T}}, a::Number) where {T} = a * I
@@ -55,19 +66,19 @@ LinearMap{T}(A::S) where {T,S <: Number} = LinearMap{T,eltype(T)}(A)
 LinearMap{T}(A::AbstractMatrix{S}) where {S,T <: AbstractVector{S}} = LinearMap{T,typeof(A)}(A)
 LinearMap{T}(A::AbstractMatrix) where {T <: AbstractVector} = LinearMap{T}(convert(AbstractArray{eltype(T)}, A))
 
-LinearMap(A::AbstractArray{T}) where {T} = LinearMap{Vector{T}}(A)
-LinearMap(A::SMatrix{M,N,T}) where {M,N,T} = LinearMap{SVector{N,T}}(A)
 LinearMap(A::T) where {T <: Number} = LinearMap{T}(A)
+LinearMap(A::SMatrix{M,N,T}) where {M,N,T} = LinearMap{SVector{N,T}}(A)
+LinearMap(A::AbstractArray{T}) where {T} = LinearMap{Vector{T}}(A)
 
 unsafe_matrix(m::LinearMap) = m.A
-unsafe_matrix(m::ScalarLinearMap{T}) where {T} = tomatrix(T, m.A)
+unsafe_matrix(m::ScalarLinearMap{T}) where {T<:AbstractVector} = tomatrix(T, m.A)
 
 unsafe_vector(m::LinearMap{T}) where {T<:SVector} = zero(T)
 unsafe_vector(m::LinearMap{T}) where {T<:Number} = zero(T)
 unsafe_vector(m::LinearMap{T}) where {T<:AbstractVector} = zeros(size(m.A,1))
 
 convert(::Type{Map{T}}, m::LinearMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::LinearMap{S,AA}) where {S,T,AA} = LinearMap{T}(m.A)
+convert(::Type{Map{T}}, m::LinearMap{S}) where {S,T} = LinearMap{T}(m.A)
 
 convert(::Type{Map{T}}, a::Number) where {T} = LinearMap{T}(a)
 
@@ -95,8 +106,10 @@ Translation{T}(b::AbstractVector{S}) where {S,U,T<:AbstractVector{U}} =
 
 Translation(b::T) where {T} = Translation{T}(b)
 
+unsafe_matrix(m::Translation{T}) where {T<:Number} = one(T)
 unsafe_matrix(m::Translation{T}) where {T} = identitymatrix(T)
 unsafe_matrix(m::Translation{Vector{T}}) where {T} = identitymatrix(T, length(m.b))
+
 unsafe_vector(m::Translation) = m.b
 
 convert(::Type{Map{T}}, m::Translation{T}) where {T} = m
@@ -114,29 +127,48 @@ struct AffineMap{T,AA,B} <: AbstractAffineMap{T}
     b   ::  B
 end
 
+const ScalarAffineMap{T,AA<:Number,B} = AffineMap{T,AA,B}
+const StaticAffineMap{T<:SVector,AA<:SMatrix} = AffineMap{T,AA}
+const ArrayAffineMap{T<:AbstractVector,AA<:AbstractArray} = AffineMap{T,AA}
+
 AffineMap{T}(A, b) where {T} = AffineMap{T,typeof(A),typeof(b)}(A, b)
 
-AffineMap{T}(A::AbstractArray{S}, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
+AffineMap{T}(A::AbstractMatrix{S}, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
     AffineMap{T,typeof(A),typeof(b)}(A, b)
-AffineMap{T}(A::AbstractArray, b::AbstractVector) where {T <: AbstractVector} =
+AffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {T <: AbstractVector} =
     AffineMap{T}(convert(AbstractMatrix{eltype(T)},A), convert(AbstractVector{eltype(T)}, b))
 
 AffineMap{T}(A::Number, b::Number) where {T <: Number} = AffineMap{T,T,T}(A, b)
 AffineMap{T}(A::Number, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
-    AffineMap{T,T,typeof(b)}(convert(S,A), b)
+    AffineMap{T,S,typeof(b)}(A, b)
+AffineMap{T}(A::Number, b::AbstractVector{S}) where {S,T <: AbstractVector} =
+    AffineMap{T}(A, convert(AbstractVector{eltype(T)}, b))
 
-AffineMap(A::T, b::T) where {T} = AffineMap{T}(A, b)
+AffineMap(A::Number, b::Number) = AffineMap(promote(A,b)...)
+AffineMap(A::T, b::T) where {T<:Number} = AffineMap{T}(A, b)
+AffineMap(A::SMatrix{M,N,S}, b::SVector{M,T}) where {M,N,S,T} =
+    AffineMap{SVector{N,promote_type(S,T)}}(A, b)
+AffineMap(A::S, b::SVector{N,T}) where {S<:Number,N,T} =
+    AffineMap{SVector{N,promote_type(S,T)}}(A, b)
+AffineMap(A::AbstractMatrix{S}, b::AbstractVector{T}) where {S,T} =
+    AffineMap{Vector{promote_type(S,T)}}(A, b)
+AffineMap(A::S, b::AbstractVector{T}) where {S<:Number,T} =
+    AffineMap{Vector(promote_type(S,T))}(A, b)
 
-AffineMap(A::SMatrix{M,N,T}, b::SVector{M,T}) where {M,N,T} =
-    AffineMap{SVector{N,T}}(A, b)
-
-AffineMap(a::Number, b::SVector{N,T}) where {N,T} =
-     AffineMap(SMatrix{N,N,T}(1.0I), b)
+convert(::Type{Map{T}}, m::AffineMap{T}) where {T} = m
+convert(::Type{Map{T}}, m::AffineMap{S}) where {S,T} = AffineMap{T}(m.A, m.b)
 
 unsafe_matrix(m::AffineMap) = m.A
+unsafe_matrix(m::ScalarAffineMap{T}) where {T<:AbstractVector} = tomatrix(T, m.A)
+
 unsafe_vector(m::AffineMap) = m.b
 
 applymap(m::AffineMap, x) = m.A * x .+ m.b
+function applymap!(y, m::AffineMap, x)
+    mul!(y, m.A, x)
+    y .+= m.b
+    y
+end
 
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)

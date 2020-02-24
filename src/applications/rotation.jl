@@ -22,6 +22,8 @@ inv(map::CartToPolarMap{T}) where {T} = PolarToCartMap{T}()
 
 isreal(m::CartToPolarMap) = true
 
+convert(::Type{Map{SVector{2,T}}}, ::CartToPolarMap) where {T} = CartToPolarMap{T}()
+
 """
 A Polar to Cartesian map. The angle is mapped to the second dimension, radius to the first.
 A square [-1,1]x[-1,1] is mapped to the unit circle
@@ -34,6 +36,8 @@ applymap(map::PolarToCartMap{T}, x) where {T} = SVector{2,T}((x[1]+1)/2*cos(pi*x
 inv(map::PolarToCartMap{T}) where {T} = CartToPolarMap{T}()
 
 isreal(m::PolarToCartMap) = true
+
+convert(::Type{Map{SVector{2,T}}}, ::PolarToCartMap) where {T} = PolarToCartMap{T}()
 
 
 #############################
