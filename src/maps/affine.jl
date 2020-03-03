@@ -1,6 +1,7 @@
 
 import Base: convert
 
+# These are temporary definitions until StaticArrays updates
 Base.convert(::Type{AbstractArray{T}}, v::SVector{N,S}) where {N,T,S} =
     convert(SVector{N,T}, v)
 Base.convert(::Type{AbstractVector{T}}, v::SVector{N,S}) where {N,T,S} =
@@ -40,14 +41,15 @@ jacobian(m::AbstractAffineMap{T}) where {T} = ConstantMap{T}(matrix(m))
 jacobian(m::AbstractAffineMap, x) = matrix(m)
 jacdet(m::AbstractAffineMap, x) = det(unsafe_matrix(m))
 
-isaffine(map::Map) = false
-isaffine(map::AbstractAffineMap) = true
-
 islinear(map::Map) = false
 islinear(map::AbstractAffineMap) = all(unsafe_vector(map) .== 0)
 
+isaffine(map::Map) = islinear(map)
+isaffine(map::AbstractAffineMap) = true
+
 ==(m1::AbstractAffineMap, m2::AbstractAffineMap) =
     (unsafe_matrix(m1) == unsafe_matrix(m2)) && (unsafe_vector(m1)==unsafe_vector(m2))
+
 
 "A `LinearMap` is an affine map that represents `y = A*x`."
 struct LinearMap{T,AA} <: AbstractAffineMap{T}
@@ -108,11 +110,17 @@ Translation{T}(b::AbstractVector{S}) where {S,U,T<:AbstractVector{U}} =
 
 Translation(b::T) where {T} = Translation{T}(b)
 
-unsafe_matrix(m::Translation{T}) where {T<:Number} = one(T)
-unsafe_matrix(m::Translation{T}) where {T} = identitymatrix(T)
-unsafe_matrix(m::Translation{Vector{T}}) where {T} = identitymatrix(T, length(m.b))
+dimension(m::Translation) = length(m.b)
 
+size(m::Translation{<:Number}) = (dimension(m), 1)
+size(m::Translation) = (dimension(m), dimension(m))
+
+unsafe_matrix(m::Translation) = identitymatrix(m)
 unsafe_vector(m::Translation) = m.b
+
+# jacobian(m::Translation{T}) where {T} = IdentityMap{T}()
+# jacobian(m::Translation{SVector{N,T}}) where {N,T} = IdentityMap{SVector{N,T}}()
+# jacobian(m::Translation{<:AbstractVector{T}}) where {T} = FlexibleIdentityMap{Vector{T}}(length(m.b))
 
 convert(::Type{Map{T}}, m::Translation{T}) where {T} = m
 convert(::Type{Map{T}}, m::Translation{S}) where {S,T} = Translation{T}(m.b)
@@ -175,6 +183,9 @@ end
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
 
+convert(::Type{AbstractAffineMap{T}}, i::IdentityMap) where {T} = LinearMap{T}(1)
+convert(::Type{<:LinearMap{T}}, i::IdentityMap) where {T} = LinearMap{T}(1)
+
 
 ########################
 # Some useful functions
@@ -208,17 +219,17 @@ scaling_map(a, b, c, d) = LinearMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,
 # Arithmetic
 ##############
 
-∘(m2::AbstractAffineMap, m1::AbstractAffineMap) = affine_composition(m2, m1)
+mapcompose(m1::AbstractAffineMap, m2::AbstractAffineMap) = affine_composition(m1, m2)
 
 """
 Compute the affine map that represents map2 after map1, that is:
 `y = a2*(a1*x+b1)+b2 = a2*a1*x + a2*b1 + b2`.
 """
-affine_composition(map2::AbstractAffineMap, map1::AbstractAffineMap) =
+affine_composition(map1::AbstractAffineMap, map2::AbstractAffineMap) =
     AffineMap(unsafe_matrix(map2) * unsafe_matrix(map1), unsafe_matrix(map2)*unsafe_vector(map1) + unsafe_vector(map2))
 
-affine_composition(map2::LinearMap, map1::LinearMap) =
+affine_composition(map1::LinearMap, map2::LinearMap) =
     LinearMap(unsafe_matrix(map2) * unsafe_matrix(map1))
 
-affine_composition(map2::Translation, map1::Translation) =
+affine_composition(map1::Translation, map2::Translation) =
     Translation(unsafe_vector(map2) + unsafe_vector(map1))

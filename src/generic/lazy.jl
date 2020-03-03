@@ -50,11 +50,11 @@ Three compositions implemented in the package are:
 - `Product`: the lazy domain has several members and the components of `x` are
 	passed to the components of the lazy domain
 """
-abstract type Composition end
+abstract type LazyComposition end
 
-struct NoComposition <: Composition end
-struct Combination <: Composition end
-struct Product <: Composition end
+struct NoComposition <: LazyComposition end
+struct Combination <: LazyComposition end
+struct Product <: LazyComposition end
 
 composition(d::CompositeLazyDomain) = NoComposition()
 

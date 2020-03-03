@@ -10,7 +10,6 @@ struct ProductMap{T,MAPS} <: AbstractProductMap{T}
 end
 
 function ProductMap(maps...)
-    MAPS = typeof(maps)
     T = Tuple{map(domaintype, maps)...}
     ProductMap{T}(maps...)
 end
@@ -31,3 +30,5 @@ tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)...
 for op in (:inv, :leftinv, :rightinv, :jacobian)
     @eval $op(m::ProductMap) = ProductMap(map($op, elements(m))...)
 end
+
+==(m1::ProductMap, m2::ProductMap) = all(map(isequal, elements(m1), elements(m2)))

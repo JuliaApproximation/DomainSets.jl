@@ -22,6 +22,8 @@ widertype(::Type{Tuple{A,B}}) where {A,B} = Tuple{widen(A),widen(B)}
 widertype(::Type{Tuple{A,B,C}}) where {A,B,C} = Tuple{widen(A),widen(B),widen(C)}
 widertype(::Type{NTuple{N,T}}) where {N,T} = NTuple{N,widen(T)}
 
+issquarematrix(A) = false
+issquarematrix(A::AbstractArray) = size(A,1)==size(A,2)
 
 # Test a map m with dimensions n
 function test_generic_map(T, m)
@@ -49,7 +51,9 @@ function test_generic_map(T, m)
     try # try because jacobian may not be implemented
         jac = jacobian(m)
         @test jac(x) == jacobian(m, x)
-        # @test jacdet(m, x) == det(jacobian(m, x))
+        if issquarematrix(jac(x))
+            @test jacdet(m, x) == det(jacobian(m, x))
+        end
         δ = sqrt(eps(T))
         x2 = x .+ δ
         if !(m isa ProductMap)
@@ -60,10 +64,18 @@ function test_generic_map(T, m)
 
     if domaintype(m) == Float64
         @test convert(Map{BigFloat}, m) isa Map{BigFloat}
+        @test convert(Map{BigFloat}, m) == m
     end
     if eltype(T) == Float64
         U = widertype(domaintype(m))
         @test convert(Map{U}, m) isa Map{U}
+        @test convert(Map{U}, m) == m
+    end
+
+    if isaffine(m)
+        A = matrix(m)
+        b = vector(m)
+        @test m(x) == A*x+b
     end
 
     # leftinv and rightinv tests currently fail on pinv for BigFloat
@@ -97,6 +109,7 @@ function generic_tests(T)
         IdentityMap{T}(),
         VectorIdentityMap{T}(10),
         ConstantMap{T}(one(T)),
+        ConstantMap{T}(SVector{2,T}(1,2)),
         ZeroMap{T}(),
         UnityMap{T}(),
         interval_map(T(0), T(1), T(2), T(3)),
@@ -171,11 +184,11 @@ function test_affinemap(T)
     m2 = AffineMap(T(2), SVector{2,T}(1,2))
     @test m2 isa AffineMap{SVector{2,T}}
     @test m2(SVector(1,2)) == SVector(3,6)
+
+    @test m1 ∘ m1 isa AffineMap
 end
 
 function test_scaling_maps(T)
-    test_generic_map(T, scaling_map(T(2)))
-
     test_generic_map(T, scaling_map(T(2)))
     test_generic_map(T, scaling_map(T(2), T(3)))
     test_generic_map(T, scaling_map(T(2), T(3), T(4)))
@@ -183,9 +196,28 @@ function test_scaling_maps(T)
 end
 
 function test_identity_map(T)
-    test_generic_map(T, IdentityMap{T}())
-    test_generic_map(T, IdentityMap{SVector{2,T}}())
-    @test islinear(IdentityMap{T}())
+    i1 = IdentityMap{T}()
+    i2 = IdentityMap{SVector{2,T}}()
+    test_generic_map(T, i1)
+    test_generic_map(T, i2)
+    @test i1 == i2
+    @test islinear(i1)
+    @test isaffine(i1)
+    @test convert(IdentityMap{SVector{2,T}}, i1) === i2
+    @test jacobian(i1) isa ConstantMap
+    @test jacobian(i1, 1) == 1
+    @test jacdet(i1, 1) == 1
+    m1 = convert(DomainSets.AbstractAffineMap{T}, i1)
+    @test m1 isa LinearMap{T}
+    @test jacdet(m1, 1) == 1
+    m2 = convert(DomainSets.LinearMap{T}, i1)
+    @test m2 isa LinearMap{T}
+    @test jacdet(m2, 1) == 1
+
+    i3 = VectorIdentityMap{T}(10)
+    test_generic_map(T, i3)
+    r = rand(T, 10)
+    @test i3(r) ≈ r
 end
 
 function test_composite_map(T)

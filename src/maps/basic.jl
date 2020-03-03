@@ -1,4 +1,24 @@
 
+"Return a zero vector of the same size as the output type `U` of the map."
+zerovector(m::Map) = zerovector(m, mapresulttype(m))
+zerovector(m::Map, ::Type{U}) where {U} = zero(U)
+zerovector(m::Map, ::Type{SVector{N,U}}) where {N,U} = zero(SVector{N,U})
+# If the output type is a vector, the map itself should store the size information.
+zerovector(m::Map, ::Type{<:AbstractVector{U}}) where {U} = zeros(U, size(m,1))
+
+"Return an identity matrix with the dimensions of the map."
+identitymatrix(m::Map) = identitymatrix(m, mapresulttype(m))
+identitymatrix(m::Map, ::Type{T}) where {T} = one(T)
+identitymatrix(m::Map, ::Type{SVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
+identitymatrix(m::Map, ::Type{<:AbstractVector{T}}) where {T} = Diagonal{T}(ones(size(m,1)))
+
+"Return a zero matrix of the same size as the map."
+zeromatrix(m::Map) = zeromatrix(m, matrixtype(m))
+zeromatrix(m::Map, ::Type{M}) where {M} = zero(M)
+zeromatrix(m::Map, ::Type{M}) where {M <: StaticArray} = zero(M)
+zeromatrix(m::Map, ::Type{M}) where {M <: AbstractArray} = zeros(M, size(m))
+
+
 "Supertype of identity maps."
 abstract type AbstractIdentityMap{T} <: Map{T} end
 
@@ -9,13 +29,25 @@ inv(m::AbstractIdentityMap) = m
 islinear(::AbstractIdentityMap) = true
 isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
 
+matrix(m::AbstractIdentityMap) = identitymatrix(m)
+vector(m::AbstractIdentityMap) = zerovector(m)
+
+jacobian(m::AbstractIdentityMap) = ConstantMap(matrix(m))
+jacobian(m::AbstractIdentityMap, x) = matrix(m)
+
 jacdet(m::AbstractIdentityMap, x) = 1
 
 "The identity map for variables of type `T`."
 struct IdentityMap{T} <: AbstractIdentityMap{T}
 end
 
+IdentityMap() = IdentityMap{Float64}()
+
 convert(::Type{Map{T}}, ::IdentityMap) where {T} = IdentityMap{T}()
+convert(::Type{IdentityMap{T}}, ::IdentityMap) where {T} = IdentityMap{T}()
+
+==(::IdentityMap, ::IdentityMap) = true
+
 
 "Identity map with flexible size determined by a dimension field."
 struct FlexibleIdentityMap{T} <: AbstractIdentityMap{T}
@@ -27,17 +59,11 @@ VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
 dimension(m::FlexibleIdentityMap) = m.dimension
 
+size(m::FlexibleIdentityMap) = (m.dimension, m.dimension)
+
 convert(::Type{Map{T}}, m::FlexibleIdentityMap) where {T} = FlexibleIdentityMap{T}(m.dimension)
 
-identitymatrix(::Type{SVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
-identitymatrix(::Type{T}) where {T} = one(T)
-identitymatrix(::Type{Vector{T}}, dimension::Int) where {T} = Matrix{T}(I, dimension, dimension)
-
-jacobian(m::IdentityMap{T}) where {T} = ConstantMap(identitymatrix(T))
-jacobian(m::IdentityMap{T}, x) where {T} = identitymatrix(T)
-
-jacobian(m::FlexibleIdentityMap{T}) where {T} = ConstantMap(identitymatrix(T, dimension(m)))
-jacobian(m::FlexibleIdentityMap{T}, x) where {T} = identitymatrix(T, dimension(m))
+==(m1::FlexibleIdentityMap, m2::FlexibleIdentityMap) = m1.dimension == m2.dimension
 
 
 "The supertype of constant maps from `T` to `U`."
@@ -48,11 +74,19 @@ applymap(m::AbstractConstantMap, x) = constant(m)
 islinear(::AbstractConstantMap) = true
 isreal(m::AbstractConstantMap) = isreal(constant(m))
 
-jacobian(m::AbstractConstantMap{T}) where {T} = ConstantMap{T}(zero(constant(m)))
-jacobian(m::AbstractConstantMap, x) = zero(constant(m))
+dimension(m::AbstractConstantMap) = length(constant(m))
+size(m::AbstractConstantMap{<:Number}) = (dimension(m), 1)
+size(m::AbstractConstantMap) = (dimension(m), dimension(m))
+
+matrix(m::AbstractConstantMap) = zeromatrix(m)
+vector(m::AbstractConstantMap) = constant(m)
+
+jacobian(m::AbstractConstantMap{T}) where {T} = ConstantMap{T}(matrix(m))
+jacobian(m::AbstractConstantMap, x) = matrix(m)
 
 jacdet(::AbstractConstantMap, x) = 0
 
+==(m1::AbstractConstantMap, m2::AbstractConstantMap) = constant(m1)==constant(m2)
 
 "The zero map `f(x) = 0`."
 struct ZeroMap{T,U} <: AbstractConstantMap{T,U}

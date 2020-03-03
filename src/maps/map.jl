@@ -59,3 +59,27 @@ jacobian!(y, m::Map, x) = y .= jacobian(m, x)
 The Jacobian determinant of the map at a point `x`.
 """
 jacdet(m::Map, x) = det(jacobian(m, x))
+
+
+
+"Return the expected result type of the map (assumed equal to `T` in the absence of sufficient information)."
+mapresulttype(m::Map{T}) where {T} = T
+mapresulttype(m::TypedMap{T,U}) where {T,U} = U
+
+"Return the expected type of the jacobian matrix of the map"
+matrixtype(m::Map{T}) where {T} = matrixtype(T, mapresulttype(m))
+
+# We check all combinations of scalars, static vector and abstract vectors
+matrixtype(::Type{T}, ::Type{U}) where {T,U} = promote_type(T,U)
+matrixtype(::Type{T}, ::Type{U}) where {T<:Number,U<:Number} = promote_type(T,U)
+matrixtype(::Type{SVector{N,T}}, ::Type{SVector{M,U}}) where {N,M,T,U} = SMatrix{M,N,promote_type(T,U)}
+matrixtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U<:Number} = SMatrix{1,N,promote_type(T,U)}
+matrixtype(::Type{T}, ::Type{SVector{M,U}}) where {T<:Number,M,U} = SVector{M,promote_type(T,U)}
+matrixtype(::Type{<:AbstractVector{T}}, ::Type{<:AbstractVector{U}}) where {T,U} = Array{promote_type{T,U},2}
+matrixtype(::Type{<:AbstractVector{T}}, ::Type{U}) where {T,U<:Number} = Array{promote_type{T,U},2}
+matrixtype(::Type{T}, ::Type{<:AbstractVector{U}}) where {T<:Number,U} = Array{promote_type(T,U),1}
+
+# size is not defined for all maps, because not all maps have a fixed size
+# it is defined for maps that act on vectors, where the size information is not
+# available from the type
+size(m::Map, i) = i == i <= 2 ? size(m)[i] : 1
