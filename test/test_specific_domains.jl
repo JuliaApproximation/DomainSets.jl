@@ -1,6 +1,10 @@
 using StaticArrays, DomainSets, Test
 import DomainSets: MappedDomain, similar_interval, convert_space, spacetype, internal_eltype
 
+struct Basis3Vector <: StaticVector{3,Float64} end
+
+Base.getindex(::Basis3Vector, k::Int) = k == 1 ? 1.0 : 0.0
+
 
 const v = TypeFactory{SVector}()
 
@@ -574,6 +578,8 @@ end
         @test v[1.,0.,1.] ∉ S
         @test approx_in(v[cos(1.),sin(1.),0.], S)
         @test !isempty(S)
+
+        @test Basis3Vector() in S
 
         S = 2UnitSphere() + v[1.,1.,1.]
         @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)

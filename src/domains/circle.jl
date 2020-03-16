@@ -15,6 +15,10 @@ const UnitSphere{T} = UnitHyperSphere{3,T}
 
 convert(::Type{Domain{SVector{N,T}}}, d::UnitHyperSphere{N}) where {N,T} =
     UnitHyperSphere{N,T}()
+convert(::Type{Domain{StaticVector{N,T}}}, d::UnitHyperSphere{N}) where {N,T} =
+    UnitHyperSphere{N,T}()
+
+    
 
 indomain(x, ::UnitHyperSphere) = norm(x) == 1
 

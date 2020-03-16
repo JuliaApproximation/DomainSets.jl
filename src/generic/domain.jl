@@ -33,7 +33,7 @@ _in(x::T, d::Domain{T}) where {T} = indomain(x, d)
 function _in(x, d::Domain)
    T = promote_type(typeof(x), eltype(d))
    T == Any && return false
-   in(convert(T, x), convert(Domain{T}, d))
+   indomain(convert(T, x), convert(Domain{T}, d))
 end
 
 in(x, d::Domain) = _in(x, d)
