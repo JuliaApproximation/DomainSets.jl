@@ -49,8 +49,8 @@ else
 end
 
 isempty(d::ProductDomain) = any(isempty, elements(d))
-isclosed(d::ProductDomain) = all(isclosed, elements(d))
-isopen(d::ProductDomain) = all(isopen, elements(d))
+isclosedset(d::ProductDomain) = all(isclosed, elements(d))
+isopenset(d::ProductDomain) = all(isopen, elements(d))
 
 function show(io::IO, d::ProductDomain)
     L = numelements(d)

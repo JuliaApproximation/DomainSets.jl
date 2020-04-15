@@ -36,8 +36,8 @@ const MappedVectorDomain{D,T} = MappedDomain{D,Vector{T}}
 # TODO: check whether the map alters the dimension
 dimension(d::MappedVectorDomain) = dimension(source(d))
 
-# isopen(d::MappedDomain) = isopen(source(d))
-# isclosed(d::MappedDomain) = isclosed(source(d))
+# isopenset(d::MappedDomain) = isopenset(source(d))
+# isclosedset(d::MappedDomain) = isclosedset(source(d))
 #
 # TODO: we can't really define open and close in general this way.
 # We need more properties of the map to be able to conclude whether the mapped
