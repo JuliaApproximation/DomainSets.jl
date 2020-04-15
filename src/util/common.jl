@@ -1,35 +1,10 @@
 
 ##############################
-# Booleans in the type domain
-##############################
-
-# We introduce these types to compute with booleans in a type context.
-# They are not exported, but they are necessary when an external package wishes
-# to extend the embeddings and promotions of spaces in this package.
-const True = Val{true}
-const False = Val{false}
-
-# Simple boolean operations on the new types
-(|)(::Type{True}, ::Type{True}) = True
-(|)(::Type{True}, ::Type{False}) = True
-(|)(::Type{False}, ::Type{True}) = True
-(|)(::Type{False}, ::Type{False}) = False
-
-# Return True if one of the arguments is True
-one_of(::Type{True}) = True
-one_of(::Type{False}) = False
-one_of(a::Type{Val{A}}, b::Type{Val{B}}) where {A,B} = |(one_of(a),one_of(b))
-one_of(a::Type{Val{A}}, b::Type{Val{B}}, c::Type{Val{C}}, d...) where {A,B,C} = one_of(a, one_of(b, c, d...))
-
-# Convert the boolean type to a boolean value
-result(::Type{True}) = true
-result(::Type{False}) = false
-
-
-
-##############################
 # Promotion helper functions
 ##############################
+
+const True = Val{true}
+const False = Val{false}
 
 "Return True if S promotes to T, i.e., if promote_type(S,T) == T."
 promotes_to(S, T) = _promotes_to(S, T, promote_type(S,T))
@@ -70,9 +45,15 @@ element(t, i) = elements(t)[i]
 Return the number of elements of a composite structure.
 
 See also: `elements`.
-"""# By default, we return length(elements(t))
+"""
 numelements(t) = length(elements(t))
 
+"Expand all arguments of type C into their components."
+expand(::Type{C}) where {C} = ()
+expand(::Type{C}, domain, domains...) where {C} =
+    (domain, expand(C, domains...)...)
+expand(::Type{C}, domain::C, domains...) where {C} =
+    (elements(domain)..., expand(C, domains...)...)
 
 ###############
 # Type factory
@@ -97,7 +78,43 @@ Base.getindex(v::TypeFactory{T}, args...) where {T} = T(args...)
 
 const v = TypeFactory{SVector}()
 
-###############
-# Type conversion
-###############
-Base.convert(::Type{SVector}, ::Type{NTuple{N,T}}) where {N,T} = SVector{N,T}
+
+
+#################
+# Precision type
+#################
+
+"The floating point precision type associated with the argument."
+prectype(x) = prectype(typeof(x))
+prectype(::Type{<:Complex{T}}) where {T} = prectype(T)
+prectype(::Type{<:AbstractArray{T}}) where {T} = prectype(T)
+prectype(::Type{NTuple{N,T}}) where {N,T} = prectype(T)
+prectype(::Type{Tuple{A}}) where {A} = prectype(A)
+prectype(::Type{Tuple{A,B}}) where {A,B} = prectype(A,B)
+prectype(::Type{Tuple{A,B,C}}) where {A,B,C} = prectype(A,B,C)
+@generated function prectype(T::Type{<:Tuple{Vararg}})
+    quote $(promote_type(map(prectype, T.parameters[1].parameters)...)) end
+end
+prectype(::Type{T}) where {T<:AbstractFloat} = T
+prectype(::Type{T}) where {T} = prectype(float(T))
+
+prectype(a, b) = promote_type(prectype(a), prectype(b))
+prectype(a, b, c...) = prectype(prectype(a, b), c...)
+
+#################
+# Numeric type
+#################
+
+"The numeric element type of x in a Euclidean space."
+numtype(x) = numtype(typeof(x))
+numtype(::Type{T}) where {T<:Number} = T
+numtype(::Type{T}) where {T} = eltype(T)
+numtype(::Type{NTuple{N,T}}) where {N,T} = T
+numtype(::Type{Tuple{A,B}}) where {A,B} = promote_type(numtype(A), numtype(B))
+numtype(::Type{Tuple{A,B,C}}) where {A,B,C} = promote_type(numtype(A), numtype(B), numtype(C))
+numtype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = promote_type(numtype(A), numtype(B), numtype(C), numtype(D))
+@generated function numtype(T::Type{<:Tuple{Vararg}})
+    quote $(promote_type(T.parameters[1].parameters...)) end
+end
+
+numtype(a...) = promote_type(map(numtype, a)...)

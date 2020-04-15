@@ -3,8 +3,7 @@
 +(domain::Domain) = domain
 
 function +(domain::Domain{T}, x::S) where {T,S}
-    c = convert_space(spacetype(T), x)
-    c isa S && error("Cannot add $x to $domain")
+    c = convert(T, x)
     (+)(domain, c)
 end
 

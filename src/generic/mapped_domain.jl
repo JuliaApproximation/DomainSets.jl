@@ -1,13 +1,4 @@
 
-################
-# Preliminaries
-################
-
-
-#######################
-# Main type definition
-#######################
-
 """
 There are three objects involved in the mapping of a domain:
 - the original domain (denoted source)
@@ -26,7 +17,7 @@ in(x, target) = in(inv(f)*x, source)
 Concrete mapped domains can be implemented in various ways, e.g. by storing `source`
 and `f`, or by storing `source` and `inv(f)`, ...
 """
-abstract type MappedDomain{D,T} <: Domain{T}
+abstract type MappedDomain{D,T} <: LazyDomain{T}
 end
 
 source(d::MappedDomain) = d.source
@@ -35,7 +26,22 @@ show(io::IO, d::MappedDomain) =  print(io, "A mapped domain based on ", source(d
 
 point_in_domain(d::MappedDomain) = forward_map(d) * point_in_domain(source(d))
 
-elements(d::MappedDomain{D,T}) where {D<:ProductDomain,T} = map(x->forward_map(d)*x, elements(source(d)))
+elements(d::MappedDomain) = (source(d),)
+
+tointernalpoint(d::MappedDomain, x) = inverse_map(d) * x
+toexternalpoint(d::MappedDomain, y) = forward_map(d) * y
+
+const MappedVectorDomain{D,T} = MappedDomain{D,Vector{T}}
+
+# TODO: check whether the map alters the dimension
+dimension(d::MappedVectorDomain) = dimension(source(d))
+
+# isopen(d::MappedDomain) = isopen(source(d))
+# isclosed(d::MappedDomain) = isclosed(source(d))
+#
+# TODO: we can't really define open and close in general this way.
+# We need more properties of the map to be able to conclude whether the mapped
+# domain is open or closed.
 
 """
 A `ForwardMappedDomain` stores the `source` domain and the forward map `f`, which
@@ -52,6 +58,9 @@ ForwardMappedDomain(source::Domain, fwmap::AbstractMap{S,T}) where {S,T} =
 
 forward_map(d::ForwardMappedDomain) = d.fwmap
 inverse_map(d::ForwardMappedDomain) = inv(d.fwmap)
+
+# TODO: rethink maps and mapped domains and avoid using the default_tolerance
+# function below.
 
 # Rationale:
 # The point x that is given can be any point in T. Yet, the map from S to T does
@@ -116,10 +125,6 @@ end
 forward_map(d::InverseMappedDomain) = inv(d.invmap)
 inverse_map(d::InverseMappedDomain) = d.invmap
 
-indomain(x, d::InverseMappedDomain) = in(d.invmap * x, source(d))
-
-approx_indomain(x, d::InverseMappedDomain, tolerance) = approx_indomain(d.invmap * x, source(d), tolerance)
-
 inversemap_domain(invmap, source::Domain) = InverseMappedDomain(source, invmap)
 
 # Avoid nested mapping domains, construct a composite map instead
@@ -148,6 +153,7 @@ inverse_map(d::BidirectionalMappedDomain) = d.invmap
 
 # We proceed as we do for ForwardMappedDomain, except that we can use the stored
 # left inverse. This should be refactored.
+# TODO: remove this special case
 function indomain(x, d::BidirectionalMappedDomain)
     t = d.invmap * x
     if t ∈ source(d)

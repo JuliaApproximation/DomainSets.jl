@@ -1,58 +1,4 @@
 
-# A collection of simple domains.
-
-###########################
-# The unit ball and sphere
-###########################
-
-"""
-The unit ball (of radius 1) in `N` dimensions.
-"""
-struct UnitHyperBall{N,T} <: EuclideanDomain{N,T} end
-
-UnitHyperBall{N}() where N = UnitHyperBall{N,Float64}()
-
-const UnitDisk{T} = UnitHyperBall{2,T}
-const UnitBall{T} = UnitHyperBall{3,T}
-
-indomain(x, ::UnitHyperBall) = norm(x) <= 1
-
-approx_indomain(x, ::UnitHyperBall, tolerance) = norm(x) <= 1+tolerance
-
-isempty(::UnitHyperBall) = false
-
-show(io::IO, d::UnitHyperBall{N}) where {N} = print(io, "the $(N)-dimensional unit ball")
-
-# We choose the origin here
-point_in_domain(d::UnitHyperBall) = zero(eltype(d))
-
-
-###########################
-# An n-dimensional simplex
-###########################
-
-struct UnitSimplex{N,T} <: EuclideanDomain{N,T} end
-UnitSimplex{N}() where N = UnitSimplex{N,Float64}()
-
-indomain(x, ::UnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
-
-approx_indomain(x, ::UnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
-
-isempty(::UnitSimplex) = false
-
-# We pick the origin, because it belongs to the domain regardless of what T is
-point_in_domain(d::UnitSimplex) = zero(eltype(d))
-
-
-
-##############
-# A cylinder
-##############
-
-cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
-
-cylinder(radius::T, length::T) where {T} = radius * UnitDisk{T}() × (0 .. length)
-
 """
     Point(x)
 
@@ -70,8 +16,6 @@ convert(::Type{Domain{T}}, d::Point{T}) where T = d
 convert(::Type{Domain{T}}, d::Point) where T = Point(T(d.x))
 convert(::Type{Domain}, c::Number) = Point(c)
 convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
-convert(::Type{Domain}, s::Set) = UnionDomain(map(Domain,collect(s)))
-Domain(d) = convert(Domain, d)
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x
@@ -82,7 +26,11 @@ approx_indomain(x, d::Point, tolerance) = norm(x-d.x) <= tolerance
 isopen(d::Point) = false
 isclosed(d::Point) = true
 
+boundary(d::Point) = d
+
 point_in_domain(d::Point) = d.x
+
+dimension(d::Point{Vector{T}}) where {T} = length(d.x)
 
 for op in (:*,:+,:-)
     @eval begin

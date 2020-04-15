@@ -18,30 +18,23 @@ using IntervalSets
 import Base: @ncall
 
 # Operator symbols
-import Base: *, +, -, /, \, ^
-import Base: |, &
-import Base: ∪, ∩
-import Base: ==, isapprox
-import Base: ∘
-
-# Set operations
-import Base: intersect, union, setdiff, in, isempty, minimum, maximum,
-    issubset
-
-# Arrays
-import Base: size, length, ndims, getindex, eltype, ndims, hash
-import Base: inv
-import Base: isreal
-import Base: zero
-
-# Types, promotions and conversions
-import Base: convert, widen, promote_rule
-
-# Display
-import Base: show
-
-# Various
-import Base: Bool
+import Base: *, +, -, /, \, ^,
+    |, &,
+    ∪, ∩,
+    ==, isapprox,
+    ∘,
+    # Set operations
+    intersect, union, setdiff, in, isempty, minimum, maximum,
+    issubset,
+    # Arrays
+    size, length, ndims, getindex, eltype, ndims, hash,
+    inv, isreal, zero,
+    # Types, promotions and conversions
+    convert, widen, promote_rule,
+    # Display
+    show,
+    # Various
+    Bool
 
 # IntervalSets
 import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
@@ -57,39 +50,30 @@ export ..
 
 ## Utils
 
+# from util/common.jl
+export prectype, numtype
 # from util/tensorproducts.jl
 export cartesianproduct
-
-
-## Spaces
-
-# from spaces/space.jl
-export spaceof, superspaceof, spacetype, origin, superspace, issubspace, subeltype
-export isomorphic, ≅, embedded, ↪
 
 
 ## Maps
 
 # from maps/maps.jl
-export AbstractMap, applymap, jacobian, linearize
-export domaintype, codomaintype
-export left_inverse, right_inverse
-export apply_inverse, apply_left_inverse, apply_right_inverse
-export image
+export AbstractMap, applymap, jacobian, linearize,
+    domaintype, codomaintype,
+    left_inverse, right_inverse,
+    apply_inverse, apply_left_inverse, apply_right_inverse,
+    image
 # from maps/composite_map.jl
-export CompositeMap
-export ∘
+export CompositeMap, ∘
 # from maps/productmap.jl
-export ProductMap
-export tensorproduct
+export ProductMap, tensorproduct
 # from maps/basic_maps.jl
 export IdentityMap, ConstantMap
-# from maps/embedding_map.jl
-export embedding_map, restriction_map, isomorphism_map
 # from maps/affine_maps.jl
-export AffineMap, Translation, LinearMap
-export islinear
-export linear_map, interval_map, scaling_map, rotation_map, translation_map
+export AffineMap, Translation, LinearMap,
+    islinear,
+    linear_map, interval_map, scaling_map, rotation_map, translation_map
 # from maps/coordinates.jl
 export CartToPolarMap, PolarToCartMap
 
@@ -97,19 +81,18 @@ export CartToPolarMap, PolarToCartMap
 ## Generic domains
 
 # from generic/domain.jl
-export Domain, EuclideanDomain
-export dimension
-export approx_in
-export isclosed, iscompact
-export boundary, ∂
-export point_in_domain
+export Domain, EuclideanDomain, VectorDomain,
+    dimension,
+    approx_in,
+    isclosed, iscompact,
+    boundary, ∂,
+    point_in_domain
 
-# from generic/derived_domain.jl
-export DerivedDomain
-export superdomain
+# from generic/lazy.jl
+export DerivedDomain, superdomain
 
 # from generic/productdomain.jl
-export ProductDomain
+export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
@@ -127,42 +110,42 @@ export infimum, supremum
 
 ## Specific domains
 
-# from domains/simple.jl
-export EmptySpace, FullSpace
 # from domains/trivial.jl
-export ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
+export EmptySpace, FullSpace,
+    ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from domains/interval.jl
-export AbstractInterval, Interval, UnitInterval, ChebyshevInterval, OpenInterval, ClosedInterval
-export leftendpoint, rightendpoint, isleftopen, isrightopen
-export cardinality
-export HalfLine, NegativeHalfLine
-# from domains/simple.jl
-export UnitHyperBall, UnitDisk, UnitBall, Cube, Simplex, UnitSimplex, UnitHyperSphere, Point
-export cylinder
-# from domains/circle.jl
-export UnitCircle, UnitSphere
-export ellipse, ellipse_shape
-export parameterization, gradient
+export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
+    OpenInterval, ClosedInterval,
+    leftendpoint, rightendpoint, isleftopen, isrightopen,
+    cardinality,
+    HalfLine, NegativeHalfLine
+# from domains/simplex.jl
+export EuclideanUnitSimplex, VectorUnitSimplex, UnitSimplex,
+    center, corners
+# from domains/point.jl
+export Point
+# from domains/ball.jl
+export UnitCircle, VectorUnitCircle,
+    UnitSphere, VectorUnitSphere,
+    UnitDisk, VectorUnitDisk,
+    UnitBall, VectorUnitBall,
+    UnitHyperBall,  UnitHyperSphere,
+    EuclideanUnitBall, EuclideanUnitSphere,
+    ellipse, ellipse_shape, cylinder,
+    parameterization, gradient
 
 include("util/common.jl")
 include("util/products.jl")
-
-include("spaces/space.jl")
-include("spaces/space_promotions.jl")
-include("spaces/basic_spaces.jl")
-include("spaces/productspace.jl")
 
 include("maps/maps.jl")
 include("maps/composite_map.jl")
 include("maps/productmap.jl")
 include("maps/basic_maps.jl")
-include("maps/embedding_map.jl")
 include("maps/affine_map.jl")
 include("maps/coordinates.jl")
 
 include("generic/domain.jl")
 include("generic/lazy.jl")
-include("generic/derived_domain.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
 include("generic/mapped_domain.jl")
@@ -170,8 +153,9 @@ include("generic/promotion.jl")
 include("generic/arithmetics.jl")
 
 include("domains/trivial.jl")
+include("domains/point.jl")
 include("domains/interval.jl")
-include("domains/simple.jl")
-include("domains/circle.jl")
+include("domains/simplex.jl")
+include("domains/ball.jl")
 
 end # module

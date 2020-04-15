@@ -16,6 +16,13 @@ approx_indomain(x, d::EmptySpace, tolerance) = in(x, d)
 
 isempty(d::EmptySpace) = true
 
+isopen(d::EmptySpace) = true
+isclosed(d::EmptySpace) = true
+
+boundary(d::EmptySpace) = d
+interior(d::EmptySpace) = d
+closure(d::EmptySpace) = d
+
 # Arithmetic operations
 
 union(d1::EmptySpace, d2::EmptySpace) = d1
@@ -51,14 +58,20 @@ euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
 euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace{SVector{N,T}}()
 
 indomain(x::T, d::FullSpace{T}) where {T} = true
-indomain(x::S, d::FullSpace{T}) where {T,S} = promotes_to(S,T) == Val{true}
 
 approx_indomain(x, d::FullSpace, tolerance) = in(x, d)
 
 # We choose the origin as a point in the full space
 point_in_domain(d::FullSpace) = zero(eltype(d))
 
-isempty(::FullSpace) = false # constains zero
+isempty(::FullSpace) = false
+
+isopen(d::FullSpace) = true
+isclosed(d::FullSpace) = true
+
+boundary(d::FullSpace{T}) where {T} = EmptySpace{T}()
+interior(d::FullSpace) = d
+closure(d::FullSpace) = d
 
 # Arithmetic operations
 
@@ -84,6 +97,7 @@ convert(::Type{Domain{S}}, ::Type{T}) where {T,S} = convert(Domain{S}, convert(D
 
 infimum(d::FullSpace{T}) where {T} = typemin(T)
 supremum(d::FullSpace{T}) where {T} = typemax(T)
+
 
 # Some convenient complete domains
 
