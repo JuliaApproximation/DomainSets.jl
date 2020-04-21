@@ -84,7 +84,7 @@ export CartToPolarMap, PolarToCartMap
 export Domain, EuclideanDomain, VectorDomain,
     dimension,
     approx_in,
-    isopenset, isclosedset, iscompactset,
+    isopenset, isclosedset, iscompact,
     boundary, ∂,
     point_in_domain
 

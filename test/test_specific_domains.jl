@@ -522,7 +522,7 @@ end
         @test v[1.5,1.5] ∈ 1.2*D
         @test v[1.5,1.5] ∈ D*1.2
         @test !isempty(D)
-        # TODO: implement and test isclosed and isopen for mapped domains
+        # TODO: implement and test isclosedset and isopenset for mapped domains
 
         D = 2UnitDisk() + v[1.0,1.0]
         @test v[2.4, 2.4] ∈ D
