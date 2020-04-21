@@ -20,9 +20,9 @@ const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
 "A ball with vector elements of variable length."
 const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
 
-isclosed(::HyperBall{T,:closed}) where {T} = true
-isclosed(::HyperBall{T,:open}) where {T} = false
-isopen(ball::HyperBall) = !isclosed(ball)
+isclosedset(::HyperBall{T,:closed}) where {T} = true
+isclosedset(::HyperBall{T,:open}) where {T} = false
+isopenset(ball::HyperBall) = !isclosedset(ball)
 
 indomain(x, ball::HyperBall) = norm(x) <= radius(ball)
 approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
@@ -31,7 +31,7 @@ approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+toleran
 isempty(ball::HyperBall{T,:closed}) where {T} = false
 isempty(ball::HyperBall{T,:open}) where {T} = radius(ball) == 0
 
-==(d1::HyperBall, d2::HyperBall) = isclosed(d1)==isclosed(d2) &&
+==(d1::HyperBall, d2::HyperBall) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
 "The unit ball."
@@ -111,8 +111,8 @@ approx_indomain(x, sphere::HyperSphere, tolerance) =
 
 isempty(::HyperSphere) = false
 
-isclosed(::HyperSphere) = true
-isopen(::HyperSphere) = false
+isclosedset(::HyperSphere) = true
+isopenset(::HyperSphere) = false
 
 ==(d1::HyperSphere, d2::HyperSphere) =
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
