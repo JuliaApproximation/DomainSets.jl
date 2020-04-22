@@ -23,7 +23,7 @@ for op in (:inv, :leftinv, :rightinv)
     @eval $op(cmap::Composition) = Composition(reverse(map($op, elements(cmap)))...)
 end
 
-mapresulttype(m::Composition) = mapresulttype(m.maps[end])
+codomaintype(m::Composition) = codomaintype(m.maps[end])
 
 mapcompose(m) = m
 mapcompose(maps...) = Composition(maps...)

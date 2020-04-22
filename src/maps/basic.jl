@@ -1,13 +1,13 @@
 
-"Return a zero vector of the same size as the output type `U` of the map."
-zerovector(m::Map) = zerovector(m, mapresulttype(m))
+"Return a zero vector of the same size as the codomain type of the map."
+zerovector(m::Map) = zerovector(m, codomaintype(m))
 zerovector(m::Map, ::Type{U}) where {U} = zero(U)
 zerovector(m::Map, ::Type{SVector{N,U}}) where {N,U} = zero(SVector{N,U})
 # If the output type is a vector, the map itself should store the size information.
 zerovector(m::Map, ::Type{<:AbstractVector{U}}) where {U} = zeros(U, size(m,1))
 
 "Return an identity matrix with the dimensions of the map."
-identitymatrix(m::Map) = identitymatrix(m, mapresulttype(m))
+identitymatrix(m::Map) = identitymatrix(m, codomaintype(m))
 identitymatrix(m::Map, ::Type{T}) where {T} = one(T)
 identitymatrix(m::Map, ::Type{SVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
 identitymatrix(m::Map, ::Type{<:AbstractVector{T}}) where {T} = Diagonal{T}(ones(size(m,1)))

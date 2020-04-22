@@ -37,19 +37,28 @@ function test_generic_map(T, m)
     y2 = m(x)
     @test y1 == y2
 
+    x = suitable_point_to_map(m)
+    S = domaintype(m)
+    U = codomaintype(m)
+    @test x isa S
+    @test m(x) isa U
+
     try # try because the inverse may not be defined
+        x = suitable_point_to_map(m)
+        y = applymap(m, x)
         mi = inv(m)
-        xi1 = applymap(mi, y1)
+        xi1 = applymap(mi, y)
         @test xi1 ≈ x
-        xi2 = mi(y1)
+        xi2 = mi(y)
         @test xi2 ≈ x
-        xi3 = m\y1
+        xi3 = m\y
         @test xi3 ≈ x
     catch
     end
 
     try # try because jacobian may not be implemented
         jac = jacobian(m)
+        x = suitable_point_to_map(m)
         @test jac(x) == jacobian(m, x)
         if issquarematrix(jac(x))
             @test jacdet(m, x) == det(jacobian(m, x))

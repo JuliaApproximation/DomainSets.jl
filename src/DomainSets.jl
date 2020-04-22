@@ -59,8 +59,9 @@ export cartesianproduct
 ## Maps
 
 # from maps/map.jl
-export Map, applymap,
-    domaintype,
+export AbstractMap, Map, TypedMap,
+    applymap,
+    domaintype, codomaintype,
     leftinv, rightinv,
     jacobian, jacdet
 # from maps/lazy.jl
@@ -93,6 +94,12 @@ export DerivedDomain, superdomain, WrappedDomain
 
 # from generic/productdomain.jl
 export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
+
+# from generic/mapped_domain.jl
+export MappedDomain,
+    mapped_domain,
+    forward_map,
+    inverse_map
 
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
