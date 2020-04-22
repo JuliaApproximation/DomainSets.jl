@@ -39,7 +39,7 @@ import Base: *, +, -, /, \, ^,
 # IntervalSets
 import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
                         leftendpoint, rightendpoint, isleftopen, isleftclosed,
-                        isrightopen, isrightclosed, isopen, isclosed,
+                        isrightopen, isrightclosed, isopenset, isclosedset,
                         infimum, supremum
 export ..
 
@@ -84,7 +84,7 @@ export AffineMap, Translation, LinearMap,
 export Domain, EuclideanDomain, VectorDomain,
     dimension,
     approx_in,
-    isclosed, iscompact,
+    isclosedset, iscompact,
     boundary, ∂,
     point_in_domain
 

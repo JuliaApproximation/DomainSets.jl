@@ -24,8 +24,8 @@ dimension(d::MappedVectorDomain) = dimension(superdomain(d))
 
 # TODO: check whether the map affects these properties
 isempty(d::AbstractMappedDomain) = isempty(superdomain(d))
-isopen(d::AbstractMappedDomain) = isopen(superdomain(d))
-isclosed(d::AbstractMappedDomain) = isclosed(superdomain(d))
+isopenset(d::AbstractMappedDomain) = isopenset(superdomain(d))
+isclosedset(d::AbstractMappedDomain) = isclosedset(superdomain(d))
 
 
 "A `MappedDomain` stores the inverse map of a mapped domain."

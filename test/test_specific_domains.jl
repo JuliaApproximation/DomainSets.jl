@@ -26,8 +26,8 @@ end
         @test d1 ∪ d1 == d1
         @test boundary(d1) == d1
         @test dimension(d1) == 1
-        @test isclosed(d1)
-        @test DomainSets.isopen(d1)
+        @test isclosedset(d1)
+        @test DomainSets.isopenset(d1)
         d2 = 0..1
         @test d1 ∩ d2 == d1
         @test d1 ∪ d2 == d2
@@ -53,8 +53,8 @@ end
         @test d1 ∩ d1 == d1
         @test isempty(d1) == false
         @test boundary(d1) == EmptySpace{Float64}()
-        @test isclosed(d1)
-        @test DomainSets.isopen(d1)
+        @test isclosedset(d1)
+        @test DomainSets.isopenset(d1)
         @test dimension(d1) == 1
         d2 = 0..1
         @test d1 ∪ d2 == d1
@@ -82,8 +82,8 @@ end
         @test !approx_in(1.2, d, 0.1)
         @test !isempty(d)
         @test boundary(d) == d
-        @test isclosed(d)
-        @test !DomainSets.isopen(d)
+        @test isclosedset(d)
+        @test !DomainSets.isopenset(d)
         @test dimension(d) == 1
 
         @test d+1 == Domain(2.0)
@@ -114,8 +114,8 @@ end
             @test approx_in(1.1, d, 0.2)
             @test !approx_in(-0.2, d, 0.1)
             @test !approx_in(1.2, d, 0.1)
-            @test isclosed(d)
-            @test !DomainSets.isopen(d)
+            @test isclosedset(d)
+            @test !DomainSets.isopenset(d)
 
             @test iscompact(d)
             @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
@@ -134,8 +134,8 @@ end
             @test d ∪ d === d
             @test d \ d === EmptySpace{T}()
 
-            @test isclosed(d)
-            @test !DomainSets.isopen(d)
+            @test isclosedset(d)
+            @test !DomainSets.isopenset(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -165,8 +165,8 @@ end
             @test unit ∪ d === d
             @test unit \ d === EmptySpace{T}()
 
-            @test isclosed(d)
-            @test !DomainSets.isopen(d)
+            @test isclosedset(d)
+            @test !DomainSets.isopenset(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -200,8 +200,8 @@ end
             @test unit ∪ d === d
             @test unit \ d === EmptySpace{T}()
 
-            @test !isclosed(d)
-            @test !DomainSets.isopen(d)
+            @test !isclosedset(d)
+            @test !DomainSets.isopenset(d)
             @test !iscompact(d)
             @test 1. ∈ d
             @test -1. ∉ d
@@ -240,8 +240,8 @@ end
             @test d \ unit === d
             @test d \ halfline === d
 
-            @test !isclosed(d)
-            @test DomainSets.isopen(d)
+            @test !isclosedset(d)
+            @test DomainSets.isopenset(d)
             @test !iscompact(d)
             @test -1. ∈ d
             @test 1. ∉ d
@@ -256,7 +256,7 @@ end
 
         @testset "OpenInterval{$T}" begin
             d = OpenInterval(0,1)
-            @test DomainSets.isopen(d)
+            @test DomainSets.isopenset(d)
 
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
@@ -497,8 +497,8 @@ end
         @test v[1.,1.] ∉ D
         @test approx_in(v[1.0,0.0+1e-5], D, 1e-4)
         @test !isempty(D)
-        @test isclosed(D)
-        @test !DomainSets.isopen(D)
+        @test isclosedset(D)
+        @test !DomainSets.isopenset(D)
         D2 = convert(Domain{SVector{2,BigFloat}}, D)
         @test eltype(D2) == SVector{2,BigFloat}
         @test boundary(D) == UnitCircle()
@@ -507,8 +507,8 @@ end
         D = EuclideanUnitBall{2,Float64,:open}()
         @test approx_in(v[1.0,0.0], D)
         @test v[0.2,0.2] ∈ D
-        @test !isclosed(D)
-        @test DomainSets.isopen(D)
+        @test !isclosedset(D)
+        @test DomainSets.isopenset(D)
         @test boundary(D) == UnitCircle()
 
         D = 2UnitDisk()
@@ -518,7 +518,7 @@ end
         @test v[1.5,1.5] ∈ 1.2*D
         @test v[1.5,1.5] ∈ D*1.2
         @test !isempty(D)
-        # TODO: implement and test isclosed and isopen for mapped domains
+        # TODO: implement and test isclosedset and isopenset for mapped domains
 
         D = 2UnitDisk() + v[1.0,1.0]
         @test v[2.4, 2.4] ∈ D
@@ -529,8 +529,8 @@ end
         @test v[1.,0.0,0.] ∈ B
         @test v[1.,0.1,0.] ∉ B
         @test !isempty(B)
-        @test isclosed(B)
-        @test !DomainSets.isopen(B)
+        @test isclosedset(B)
+        @test !DomainSets.isopenset(B)
         @test boundary(B) == UnitSphere()
 
         B = 2UnitBall()
@@ -553,8 +553,8 @@ end
         @test [0.0,0.1] ∉ C
         @test [0.0,1.1,0.2,0.1] ∉ C
         @test !isempty(C)
-        @test isclosed(C)
-        @test !DomainSets.isopen(C)
+        @test isclosedset(C)
+        @test !DomainSets.isopenset(C)
         @test boundary(C) == VectorUnitSphere(4)
         @test dimension(C) == 4
     end
@@ -576,8 +576,8 @@ end
         @test v[0.9, 0.9] ∈ D
         @test v[1.1, 1.1] ∉ D
         @test !isempty(D)
-        @test isclosed(D)
-        @test !DomainSets.isopen(D)
+        @test isclosedset(D)
+        @test !DomainSets.isopenset(D)
 
         @test approx_in(v[-0.1,-0.1], D, 0.1)
         @test !approx_in(v[-0.1,-0.1], D, 0.09)
@@ -595,8 +595,8 @@ end
         @test approx_in(v[1.,0.], C)
         @test !approx_in(v[1.,1.], C)
         @test !isempty(C)
-        @test isclosed(C)
-        @test !DomainSets.isopen(C)
+        @test isclosedset(C)
+        @test !DomainSets.isopenset(C)
         p = parameterization(C)
         x = applymap(p, 1/2)
         @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
@@ -712,14 +712,14 @@ end
 
         @test convert(Domain{SVector{2,BigFloat}}, d) == UnitSimplex{2,BigFloat}()
 
-        @test isclosed(d)
-        @test !DomainSets.isopen(d)
+        @test isclosedset(d)
+        @test !DomainSets.isopenset(d)
         @test point_in_domain(d) ∈ d
 
         # open/closed
         d2 = EuclideanUnitSimplex{2,Float64,:open}()
-        @test !isclosed(d2)
-        @test DomainSets.isopen(d2)
+        @test !isclosedset(d2)
+        @test DomainSets.isopenset(d2)
         @test v[0.3,0.1] ∈ d2
 
         d3 = EuclideanUnitSimplex{3,BigFloat}()

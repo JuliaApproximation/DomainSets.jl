@@ -16,8 +16,8 @@ approx_indomain(x, d::EmptySpace, tolerance) = in(x, d)
 
 isempty(d::EmptySpace) = true
 
-isopen(d::EmptySpace) = true
-isclosed(d::EmptySpace) = true
+isopenset(d::EmptySpace) = true
+isclosedset(d::EmptySpace) = true
 
 boundary(d::EmptySpace) = d
 interior(d::EmptySpace) = d
@@ -66,8 +66,8 @@ point_in_domain(d::FullSpace) = zero(eltype(d))
 
 isempty(::FullSpace) = false
 
-isopen(d::FullSpace) = true
-isclosed(d::FullSpace) = true
+isopenset(d::FullSpace) = true
+isclosedset(d::FullSpace) = true
 
 boundary(d::FullSpace{T}) where {T} = EmptySpace{T}()
 interior(d::FullSpace) = d

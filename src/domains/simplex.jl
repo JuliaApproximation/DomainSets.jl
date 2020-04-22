@@ -5,10 +5,10 @@
 
 abstract type Simplex{T,C} <: Domain{T} end
 
-isclosed(::Simplex{T,:closed}) where {T} = true
-isclosed(::Simplex{T,:open}) where {T} = false
+isclosedset(::Simplex{T,:closed}) where {T} = true
+isclosedset(::Simplex{T,:open}) where {T} = false
 
-isopen(d::Simplex) = !isclosed(d)
+isopenset(d::Simplex) = !isclosedset(d)
 
 abstract type AbstractUnitSimplex{T,C} <: Simplex{T,C} end
 
@@ -23,7 +23,7 @@ approx_indomain(x, ::AbstractUnitSimplex, tolerance) = mapreduce( t-> t >= -tole
 isempty(::AbstractUnitSimplex) = false
 
 ==(d1::AbstractUnitSimplex, d2::AbstractUnitSimplex) =
-    isclosed(d1)==isclosed(d2) && dimension(d1)==dimension(d2)
+    isclosedset(d1)==isclosedset(d2) && dimension(d1)==dimension(d2)
 
 struct FixedUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
 end
