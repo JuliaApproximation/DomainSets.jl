@@ -84,11 +84,7 @@ export AffineMap, Translation, LinearMap,
 export Domain, EuclideanDomain, VectorDomain,
     dimension,
     approx_in,
-<<<<<<< HEAD
-    isclosedset, iscompact,
-=======
     isopenset, isclosedset, iscompact,
->>>>>>> master
     boundary, ∂,
     point_in_domain
 
