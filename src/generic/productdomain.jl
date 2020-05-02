@@ -70,9 +70,9 @@ ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
 ProductDomain(domains...) = TupleProductDomain(domains...)
 ProductDomain(domains::Vector) = VectorProductDomain(domains)
 
-ProductDomain{T}(args...) where {T <: SVector} = VcatDomain{T}(args...)
-ProductDomain{T}(args...) where {T <: Tuple} = TupleProductDomain{T}(args...)
-ProductDomain{T}(args...) where {T <: Vector} = VectorProductDomain{T}(args...)
+ProductDomain{T}(domains...) where {N,S,T <: SVector{N,S}} = VcatDomain{N,S}(domains)
+ProductDomain{T}(domains...) where {T <: Tuple} = TupleProductDomain{T}(domains)
+ProductDomain{T}(domains) where {S,T <: Vector{S}} = VectorProductDomain{S}(domains)
 
 cross(x::Domain...) = cartesianproduct(x...)
 

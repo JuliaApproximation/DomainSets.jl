@@ -943,6 +943,13 @@ end
             @test (0.3, 0.0) ∈ bnd
             @test (0.3, 0.7) ∈ bnd
         end
+        @testset "ProductDomain{T}" begin
+            d1 = 0..1.0
+            d2 = 0..2.0
+            @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
+            @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
+            @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
+        end
     end
 end
 
