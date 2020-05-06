@@ -23,7 +23,7 @@ can implement `elements` and provide a generic way to access their components.
 
 `numelements(t)`: return the number of elements of the composite type `t`
 """
-elements() = nothing
+elements(t) = ()
 
 """
 Return the i-th element of a composite structure.
@@ -39,6 +39,13 @@ Return the number of elements of a composite structure.
 See also: `elements`.
 """
 numelements(t) = length(elements(t))
+
+"""
+Is `x` composed of different elements?
+
+See also: `elements`.
+"""
+iscomposite(t) = length(elements(t)) > 0
 
 "Expand all arguments of type C into their components."
 expand(::Type{C}) where {C} = ()

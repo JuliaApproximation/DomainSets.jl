@@ -17,11 +17,18 @@ codomaintype(::Type{<:AbstractMap}) = Any
 codomaintype(M::Type{<:Map{T}}) where {T} = Base.promote_op(applymap, M, T)
 codomaintype(::Type{<:TypedMap{T,U}}) where {T,U} = U
 
+# What is the output type given an argument of type S?
+codomaintype(m::AbstractMap, ::Type{S}) where {S} = codomaintype(typeof(m), S)
+codomaintype(M::Type{<:AbstractMap}, ::Type{S}) where {S} = Base.promote_op(applymap, M, S)
+codomaintype(::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
+
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 
 (m::AbstractMap)(x) = applymap(m, x)
+
+@deprecate (*)(m::AbstractMap, x) m(x)
 
 # For maps of type Map{T}, we convert the point x or the map or both
 (m::Map)(x) = _applymap(m, x)
@@ -51,6 +58,9 @@ but in any case it is such that `(m ∘ mri) * y = y` for each `y` in the range
 of `m`.
 """
 rightinv(m::AbstractMap) = inv(m)
+
+@deprecate apply_left_inverse(m::AbstractMap, x) leftinv(m)(x)
+@deprecate apply_right_inverse(m::AbstractMap, x) rightinv(m)(x)
 
 """
     jacobian(m::AbstractMap[, x])

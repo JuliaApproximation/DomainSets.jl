@@ -273,8 +273,8 @@ end
 setdiff(d1::AbstractInterval, d2::AbstractInterval) = setdiff(promote(d1,d2)...)
 
 function *(map::AffineMap, domain::AbstractInterval)
-    le = map*leftendpoint(domain)
-    re = map*rightendpoint(domain)
+    le = map(leftendpoint(domain))
+    re = map(rightendpoint(domain))
     if le<re
         similar_interval(domain,le,re)
     else
