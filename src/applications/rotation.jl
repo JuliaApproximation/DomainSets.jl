@@ -1,11 +1,11 @@
 # Rotation around the origin
-rotate(d::EuclideanDomain{2}, θ) = rotation_map(θ) * d
+rotate(d::EuclideanDomain{2}, θ) = rotation_map(θ).(d)
 
-rotate(d::EuclideanDomain{3}, phi, theta, psi) = rotation_map(phi,theta,psi) * d
+rotate(d::EuclideanDomain{3}, phi, theta, psi) = rotation_map(phi,theta,psi).(d)
 # Rotation around a fixed center.
-rotate(d::EuclideanDomain{2}, θ, center::SVector{T}) where {T} = Translation(center) * (rotation_map(θ) * (Translation(-center) * d))
+rotate(d::EuclideanDomain{2}, θ, center::SVector{T}) where {T} = (Translation(center) ∘ rotation_map(θ) ∘ Translation(-center)).(d)
 
-rotate(d::EuclideanDomain{3}, phi, theta, psi, center::SVector{T}) where {T} = Translation(center) * (rotation_map(phi,theta,psi) * (Translation(-center) * d))
+rotate(d::EuclideanDomain{3}, phi, theta, psi, center::SVector{T}) where {T} = (Translation(center) ∘ rotation_map(phi,theta,psi) ∘ Translation(-center)).(d)
 
 # Maps having to do with coordinate transforms.
 

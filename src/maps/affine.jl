@@ -128,7 +128,7 @@ convert(::Type{Map{T}}, m::Translation{S}) where {S,T} = Translation{T}(m.b)
 applymap(m::Translation, x) = x + m.b
 applymap!(y, m, x) = y .+= x .+ m.b
 
-inv(m::Translation) = Translation(-m.b)
+inv(m::Translation{T}) where {T} = Translation{T}(-m.b)
 
 
 "`AffineMap` represents `y = A*x + b`."

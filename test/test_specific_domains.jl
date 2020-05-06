@@ -63,7 +63,7 @@ end
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
-        @test typeof(FullSpace(0..1)+1) <: FullSpace
+        @test typeof(FullSpace(0..1) .+ 1) <: FullSpace
         @test typeof(FullSpace(0..1)*3) <: FullSpace
 
         d2 = FullSpace{SVector{2,Float64}}()
@@ -524,7 +524,7 @@ end
         @test !isempty(D)
         # TODO: implement and test isclosedset and isopenset for mapped domains
 
-        D = 2UnitDisk() + v[1.0,1.0]
+        D = 2UnitDisk() .+ v[1.0,1.0]
         @test v[2.4, 2.4] ∈ D
         @test v[3.5, 2.5] ∉ D
         @test !isempty(D)
@@ -544,7 +544,7 @@ end
         @test v[1.9,1.9,0.0] ∉ B
         @test !isempty(B)
 
-        B = 2.0UnitBall() + v[1.0,1.0,1.0]
+        B = 2.0UnitBall() .+ v[1.0,1.0,1.0]
         @test v[2.9,1.0,1.0] ∈ B
         @test v[1.0,-0.9,1.0] ∈ B
         @test v[1.0,1.0,-0.9] ∈ B
@@ -611,10 +611,10 @@ end
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
         @test eltype(C2) == SVector{2,BigFloat}
 
-        C = 2UnitCircle() + v[1.,1.]
+        C = 2UnitCircle() .+ v[1.,1.]
         @test approx_in(v[3.,1.], C)
 
-        C = UnitCircle() + v[1,1]
+        C = UnitCircle() .+ v[1,1]
         @test approx_in(v[2,1], C)
 
         S = UnitSphere()
@@ -627,7 +627,7 @@ end
 
         @test Basis3Vector() in S
 
-        S = 2UnitSphere() + v[1.,1.,1.]
+        S = 2UnitSphere() .+ v[1.,1.,1.]
         @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
         @test !approx_in(v[4.,1.,5.], S)
 
@@ -684,7 +684,7 @@ end
         @test v[-1.5, -1.5] ∈ D
         @test v[-0.5, -0.5] ∉ D
 
-        D = rotate(UnitInterval()^3 + v[-.5,-.5,-.5], pi, pi, pi)
+        D = rotate(UnitInterval()^3 .+ v[-.5,-.5,-.5], pi, pi, pi)
         @test v[0.4, 0.4, 0.4] ∈ D
         @test v[0.6, 0.6, 0.6] ∉ D
 

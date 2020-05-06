@@ -41,13 +41,24 @@ MappedDomain(domain::Domain{S}, invmap::Map{T}) where {S,T} = MappedDomain{T}(do
 MappedDomain{T}(domain::Domain, invmap) where {T} =
     MappedDomain{T,typeof(domain),typeof(invmap)}(domain, invmap)
 
+# If the map is a Map{T}, make sure it matches the T of the MappedDomain
+MappedDomain{T}(domain::Domain, invmap::Map{T}) where {T} =
+    MappedDomain{T,typeof(domain),typeof(invmap)}(domain, invmap)
+MappedDomain{T}(domain::Domain, invmap::Map{S}) where {S,T} =
+    MappedDomain{T}(domain, convert(Map{T}, invmap))
+
+convert(::Type{Domain{T}}, d::MappedDomain) where {T} = MappedDomain{T}(d.domain, d.invmap)
+
 forward_map(d::MappedDomain) = inv(d.invmap)
 forward_map(d::MappedDomain, x) = inv(d.invmap)(x)
 
 inverse_map(d::MappedDomain) = d.invmap
 inverse_map(d::MappedDomain, y) = d.invmap(y)
 
-"Make a domain satisfying "
+"Map a domain with the inverse of the given map"
+map_domain(map::AbstractMap, domain::Domain) = mapped_domain(inv(map), domain)
+
+"Make a mapped domain with the given inverse map"
 mapped_domain(invmap, domain::Domain) = MappedDomain(domain, invmap)
 
 # Avoid nested mapping domains, construct a composite map instead

@@ -188,15 +188,15 @@ interior(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:open}(dimension(d))
 
 "Create a cylinder with given radius and length."
 cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
-cylinder(radius::T, length::T) where {T} = radius * UnitDisk{T}() × (0 .. length)
+cylinder(radius::T, length::T) where {T} = (radius * UnitDisk{T}()) × (0..length)
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)
-ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b) * UnitCircle{T}()
+ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b).(UnitCircle{T}())
 
 "Create an ellipse-shaped domain with semi-axes lengths `a` and `b` respectively."
 ellipse_shape(a::Number, b::Number) = ellipse_shape(promote(a,b)...)
-ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b) * UnitDisk{T}()
+ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b).(UnitDisk{T}())
 
 
 """

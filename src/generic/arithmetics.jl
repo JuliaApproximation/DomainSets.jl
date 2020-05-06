@@ -2,19 +2,19 @@
 
 +(domain::Domain) = domain
 
-function +(domain::Domain{T}, x::S) where {T,S}
-    c = convert(T, x)
-    (+)(domain, c)
-end
+@deprecate *(map::Map, domain::Domain) map.(domain)
 
-*(map::Map, domain::Domain) = mapped_domain(inv(map), domain)
+promote_numtype(::Type{S}, ::Type{T}) where {S<:Number,T<:Number} = promote_type(S,T)
+promote_numtype(::Type{S}, ::Type{SVector{N,T}}) where {N,S<:Number,T<:Number} = SVector{N,promote_type(S,T)}
+promote_numtype(::Type{S}, ::Type{T}) where {S<:Number,T} = T
 
-*(a::Number, domain::Domain{T}) where {T} = convert(Map{T}, a) * domain
+*(a::S, domain::Domain{T}) where {S<:Number,T} =
+    map_domain(convert(Map{promote_numtype(S,T)}, a), domain)
+
 *(domain::Domain, a::Number) = a*domain
 
-/(domain::Domain{T}, a::Number) where {T} = mapped_domain(convert(Map{T}, a), domain)
+/(domain::Domain{T}, a::S) where {S<:Number,T} =
+    mapped_domain(convert(Map{promote_numtype(S,T)}, a), domain)
 
-+(d::Domain, x::SVector{N,T}) where {N,T} = Translation(x) * d
-
-# Assume commutativity
-+(x::AbstractVector, d::Domain) = d+x
+@deprecate +(d::Domain, x::Union{AbstractVector,Number}) d .+ x
+@deprecate +(x::Union{Number,AbstractVector}, d::Domain) x .+ d
