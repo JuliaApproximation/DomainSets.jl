@@ -34,14 +34,22 @@ function test_generic_map(T, m)
 
     x = suitable_point_to_map(m)
     y1 = applymap(m, x)
-    y2 = m(x)
+    if VERSION > v"1.2"
+        y2 = m(x)
+    else
+        y2 = callmap(m, x)
+    end
     @test y1 == y2
 
     x = suitable_point_to_map(m)
     S = domaintype(m)
     U = codomaintype(m)
     @test x isa S
-    @test m(x) isa U
+    if VERSION > v"1.2"
+        @test m(x) isa U
+    else
+        @test callmap(m, x) isa U
+    end
 
     try # try because the inverse may not be defined
         x = suitable_point_to_map(m)
@@ -59,14 +67,22 @@ function test_generic_map(T, m)
     try # try because jacobian may not be implemented
         jac = jacobian(m)
         x = suitable_point_to_map(m)
-        @test jac(x) == jacobian(m, x)
+        if VERSION > v"1.2"
+            @test jac(x) == jacobian(m, x)
+        else
+            @test callmap(jac, x) == jacobian(m, x)
+        end
         if issquarematrix(jac(x))
             @test jacdet(m, x) == det(jacobian(m, x))
         end
         δ = sqrt(eps(T))
         x2 = x .+ δ
         if !(m isa ProductMap)
-            @test norm(m(x2) .- (m(x)+jac(x)*(x-x2))) < 100δ
+            if VERSION > v"1.2"
+                @test norm(m(x2) .- (m(x)+jac(x)*(x-x2))) < 100δ
+            else
+                @test norm(callmap(m, x2) .- (callmap(m, x)+callmap(jac, x)*(x-x2))) < 100δ
+            end
         end
     catch
     end
@@ -84,16 +100,27 @@ function test_generic_map(T, m)
     if isaffine(m)
         A = matrix(m)
         b = vector(m)
-        @test m(x) == A*x+b
+        if VERSION > v"1.2"
+            @test m(x) == A*x+b
+        else
+            @test callmap(m, x) == A*x+b
+        end
     end
 
     # leftinv and rightinv tests currently fail on pinv for BigFloat
     if !(T == BigFloat)
         try # try because the inverse may not be defined
-            mli = leftinv(m)
-            @test mli(m(x)) ≈ x
-            mri = rightinv(m)
-            @test m(mri(x)) ≈ x
+            if VERSION > v"1.2"
+                mli = leftinv(m)
+                @test mli(m(x)) ≈ x
+                mri = rightinv(m)
+                @test m(mri(x)) ≈ x
+            else
+                mli = leftinv(m)
+                @test callmap(mli, callmap(m, x)) ≈ x
+                mri = rightinv(m)
+                @test callmap(m, callmap(mri, x)) ≈ x
+            end
         catch
         end
     end
@@ -145,11 +172,19 @@ function test_linearmap(T)
     @test domaintype(m1) == T
     @test islinear(m1)
     @test isaffine(m1)
-    @test m1(3) == 6
-    @test m1(3one(T)) == 6
-    @test m1(3one(widen(T))) isa widen(T)
-    @test m1(SVector(1,2)) == SVector(2,4)
-    @test m1([1.0,2.0]) == [2.0,4.0]
+    if VERSION > v"1.2"
+        @test m1(3) == 6
+        @test m1(3one(T)) == 6
+        @test m1(3one(widen(T))) isa widen(T)
+        @test m1(SVector(1,2)) == SVector(2,4)
+        @test m1([1.0,2.0]) == [2.0,4.0]
+    else
+        @test callmap(m1, 3) == 6
+        @test callmap(m1, 3one(T)) == 6
+        @test callmap(m1, 3one(widen(T))) isa widen(T)
+        @test callmap(m1, SVector(1,2)) == SVector(2,4)
+        @test callmap(m1, [1.0,2.0]) == [2.0,4.0]
+    end
     mw1 = convert(Map{widen(T)}, m1)
     @test mw1 isa Map{widen(T)}
     @test mw1.A isa widen(T)
@@ -158,20 +193,33 @@ function test_linearmap(T)
 
     m2 = LinearMap(2)
     @test domaintype(m2) == Int
-    @test m2(one(T)) isa T
+    if VERSION > v"1.2"
+        @test m2(one(T)) isa T
+    else
+        @test callmap(m2, one(T)) isa T
+    end
     @test jacobian(m2, 1) == 2
     @test jacobian(m2) isa ConstantMap{Int}
     @test jacobian(m2, 1) == 2
 
     m3 = LinearMap(SMatrix{2,2}(one(T), 2one(T), 3one(T), 4one(T)))
     @test m3 isa LinearMap{SVector{2,T}}
-    @test m3(SVector(1,2)) == SVector(7, 10)
-    @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
+    if VERSION > v"1.2"
+        @test m3(SVector(1,2)) == SVector(7, 10)
+        @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
+    else
+        @test callmap(m3, SVector(1,2)) == SVector(7, 10)
+        @test callmap(m3, SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
+    end
 
     A = rand(T,2,2)
     m4 = LinearMap(A)
     @test m4 isa LinearMap{Vector{T}}
-    @test m4([1,2]) ==  A * [1,2]
+    if VERSION > v"1.2"
+        @test m4([1,2]) ==  A * [1,2]
+    else
+        @test callmap(m4, [1,2]) ==  A * [1,2]
+    end
     @test jacobian(m4, [1,2]) == A
 end
 
@@ -188,11 +236,19 @@ function test_affinemap(T)
     @test m1 isa AffineMap{T}
     @test !islinear(m1)
     @test isaffine(m1)
-    @test m1(2) == 7
+    if VERSION > v"1.2"
+        @test m1(2) == 7
+    else
+        @test callmap(m1, 2) == 7
+    end
 
     m2 = AffineMap(T(2), SVector{2,T}(1,2))
     @test m2 isa AffineMap{SVector{2,T}}
-    @test m2(SVector(1,2)) == SVector(3,6)
+    if VERSION > v"1.2"
+        @test m2(SVector(1,2)) == SVector(3,6)
+    else
+        @test callmap(m2, SVector(1,2)) == SVector(3,6)
+    end
 
     @test m1 ∘ m1 isa AffineMap
 end
@@ -226,7 +282,11 @@ function test_identity_map(T)
     i3 = VectorIdentityMap{T}(10)
     test_generic_map(T, i3)
     r = rand(T, 10)
-    @test i3(r) ≈ r
+    if VERSION > v"1.2"
+        @test i3(r) ≈ r
+    else
+        @test callmap(i3, r) ≈ r
+    end
 end
 
 function test_composite_map(T)
@@ -240,16 +300,32 @@ function test_composite_map(T)
     r = suitable_point_to_map(ma)
     m1 = ma∘mb
     test_generic_map(T, m1)
-    @test m1(r) ≈ ma(mb(r))
+    if VERSION > v"1.2"
+        @test m1(r) ≈ ma(mb(r))
+    else
+        @test callmap(m1, r) ≈ callmap(ma, callmap(mb, r))
+    end
     m2 = m1∘mb
     test_generic_map(T, m2)
-    @test m2(r) ≈ m1(mb(r))
+    if VERSION > v"1.2"
+        @test m2(r) ≈ m1(mb(r))
+    else
+        @test callmap(m2, r) ≈ callmap(m1, callmap(mb, r))
+    end
     m3 = mb∘m2
     test_generic_map(T, m3)
-    @test m3(r) ≈ mb(m2(r))
+    if VERSION > v"1.2"
+        @test m3(r) ≈ mb(m2(r))
+    else
+        @test callmap(m3, r) ≈ callmap(mb, callmap(m2, r))
+    end
     m = m2∘m3
     test_generic_map(T, m)
-    @test m(r) ≈ m2(m3(r))
+    if VERSION > v"1.2"
+        @test m(r) ≈ m2(m3(r))
+    else
+        @test callmap(m, r) ≈ callmap(m2, callmap(m3, r))
+    end
 end
 
 function test_product_map(T)
@@ -266,41 +342,73 @@ function test_product_map(T)
     r4 = suitable_point_to_map(ma)
     r5 = suitable_point_to_map(ma)
 
-    m1 = tensorproduct(ma,mb)
-    test_generic_map(T, m1)
-    @test compare_tuple(m1((r1,r2)), (ma(r1),mb(r2)))
-    m2 = tensorproduct(m1,mb)
-    test_generic_map(T, m2)
-    @test compare_tuple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
-    m3 = tensorproduct(mb,m2)
-    test_generic_map(T, m3)
-    @test compare_tuple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
-    m = tensorproduct(m1,m2)
-    test_generic_map(T, m)
-    @test compare_tuple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
+    if VERSION > v"1.2"
+        m1 = tensorproduct(ma,mb)
+        test_generic_map(T, m1)
+        @test compare_tuple(m1((r1,r2)), (ma(r1),mb(r2)))
+        m2 = tensorproduct(m1,mb)
+        test_generic_map(T, m2)
+        @test compare_tuple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
+        m3 = tensorproduct(mb,m2)
+        test_generic_map(T, m3)
+        @test compare_tuple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
+        m = tensorproduct(m1,m2)
+        test_generic_map(T, m)
+        @test compare_tuple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
+    else
+        m1 = tensorproduct(ma,mb)
+        test_generic_map(T, m1)
+        @test compare_tuple(callmap(m1, (r1,r2)), (callmap(ma, r1),callmap(mb, r2)))
+        m2 = tensorproduct(m1,mb)
+        test_generic_map(T, m2)
+        @test compare_tuple(callmap(m2, (r1,r2,r3)), (callmap(ma, r1),callmap(mb, r2),callmap(mb, r3)) )
+        m3 = tensorproduct(mb,m2)
+        test_generic_map(T, m3)
+        @test compare_tuple(callmap(m3, (r1,r2,r3,r4)),(callmap(mb, r1),callmap(ma, r2),callmap(mb, r3),callmap(mb, r4)))
+        m = tensorproduct(m1,m2)
+        test_generic_map(T, m)
+        @test compare_tuple(callmap(m, (r1,r2,r3,r4,r5)),(callmap(m1, (r1,r2))...,callmap(m2, (r3,r4,r5))...))
+    end
 end
 
 function test_wrapped_maps(T)
     m1 = WrappedMap{T}(cos)
     m2 = WrappedMap{T}(sin)
-    @test m1(one(T)) ≈ cos(one(T))
-    @test m2(one(T)) ≈ sin(one(T))
+    if VERSION > v"1.2"
+        @test m1(one(T)) ≈ cos(one(T))
+        @test m2(one(T)) ≈ sin(one(T))
+    else
+        @test callmap(m1, one(T)) ≈ cos(one(T))
+        @test callmap(m2, one(T)) ≈ sin(one(T))
+    end
     m3 = m1 ∘ m2
-    @test m3(one(T)) ≈ cos(sin(one(T)))
+    if VERSION > v"1.2"
+        @test m3(one(T)) ≈ cos(sin(one(T)))
+    else
+        @test callmap(m3, one(T)) ≈ cos(sin(one(T)))
+    end
 end
 
 function test_rotation_map(T)
     ϕ = T(pi)/4
     m = rotation_map(ϕ)
     x = [one(T), zero(T)]
-    y = m(x)
+    if VERSION > v"1.2"
+        y = m(x)
+    else
+        y = callmap(m, x)
+    end
     @test y[1] ≈ sqrt(T(2))/2
     @test y[2] ≈ sqrt(T(2))/2
 
     ϕ = T(pi)/4
     m = rotation_map(ϕ, 0, 0)
     x = [zero(T), one(T), zero(T)]
-    y = m(x)
+    if VERSION > v"1.2"
+        y = m(x)
+    else
+        y = callmap(m, x)
+    end
     @test y[1] ≈ 0
     @test y[2] ≈ sqrt(T(2))/2
     @test y[3] ≈ sqrt(T(2))/2
@@ -316,10 +424,18 @@ function test_rotation_map(T)
     test_generic_map(T, m3)
 
     r = suitable_point_to_map(m2)
-    @test norm(m2(r))≈norm(r)
+    if VERSION > v"1.2"
+        @test norm(m2(r))≈norm(r)
+    else
+        @test norm(callmap(m2, r))≈norm(r)
+    end
 
     r = suitable_point_to_map(m3)
-    @test norm(m3(r))≈norm(r)
+    if VERSION > v"1.2"
+        @test norm(m3(r))≈norm(r)
+    else
+        @test norm(callmap(m3, r))≈norm(r)
+    end
     @test islinear(m3)
 end
 

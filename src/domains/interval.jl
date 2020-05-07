@@ -240,8 +240,13 @@ switch_open_closed(d::Interval{L,R,T}) where {L,R,T} =
     Interval{R,L,T}(leftendpoint(d),rightendpoint(d))
 
 function map_domain(map::AbstractAffineMap, domain::AbstractInterval)
-    le = map(leftendpoint(domain))
-    re = map(rightendpoint(domain))
+    if VERSION > v"1.2"
+        le = map(leftendpoint(domain))
+        re = map(rightendpoint(domain))
+    else
+        le = callmap(map, leftendpoint(domain))
+        re = callmap(map, rightendpoint(domain))
+    end
     if le<re
         similar_interval(domain,le,re)
     else

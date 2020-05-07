@@ -17,7 +17,11 @@ convert(::Type{Map{T}}, m::Composition) where {T} = Composition{T}(m.maps...)
 
 applymap(m::Composition, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
-applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
+if VERSION > v"1.2"
+    applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
+else
+    applymap_rec(x, map1, maps...) = applymap_rec(callmap(map1, x), maps...)
+end
 
 for op in (:inv, :leftinv, :rightinv)
     @eval $op(cmap::Composition) = Composition(reverse(map($op, elements(cmap)))...)

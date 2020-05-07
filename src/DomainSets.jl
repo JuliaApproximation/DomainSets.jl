@@ -97,6 +97,7 @@ export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
 
 # from generic/mapped_domain.jl
 export MappedDomain,
+    map_domain,
     mapped_domain,
     forward_map,
     inverse_map
@@ -104,7 +105,7 @@ export MappedDomain,
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
 
-# from generic/arithmetics.jl
+# from applications/rotations.jl
 export rotate
 
 export infimum, supremum
