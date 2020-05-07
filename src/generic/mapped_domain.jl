@@ -73,6 +73,8 @@ function _map_domain(map::Map, domain)
     mapped_domain(inv(convert(Map{U}, map)), domain)
 end
 
+==(a::MappedDomain, b::MappedDomain) = (a.invmap == b.invmap) && (superdomain(a) == superdomain(b))
+
 
 "Make a mapped domain with the given inverse map"
 mapped_domain(invmap, domain::Domain) = _mapped_domain(invmap, domain)
