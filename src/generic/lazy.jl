@@ -85,7 +85,6 @@ end
 point_in_domain(d::SingleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
 point_in_domain(d::CompositeLazyDomain) = toexternalpoint(d, map(point_in_domain, elements(d)))
 
-==(a::D, b::D) where {D<:SingleLazyDomain} = superdomain(a) == superdomain(b)
 ==(a::D, b::D) where {D<:CompositeLazyDomain} = elements(a) == elements(b)
 
 

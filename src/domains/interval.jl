@@ -67,6 +67,8 @@ endpoints(d::ChebyshevInterval{T}) where {T} = (-one(T),one(T))
 
 convert(::Type{Domain{T}}, ::ChebyshevInterval{S}) where {S,T} = ChebyshevInterval{T}()
 
+-(d::ChebyshevInterval) = d
+
 
 "The half-open positive halfline `[0,∞)`."
 struct HalfLine{T} <: FixedInterval{:closed,:open,T} end

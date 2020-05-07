@@ -37,9 +37,8 @@ setdiff(d1::EmptySpace, d2::EmptySpace) = d1
 setdiff(d1::EmptySpace, d2::Domain) = d1
 setdiff(d1::Domain, d2::EmptySpace) = d1
 
-# TODO: verify these - should we restrict x?
-(+)(d::EmptySpace, x::Number) = d
-(*)(d::EmptySpace, x::Number) = d
+map_domain(map::Map{T}, d::EmptySpace{T}) where {T} = d
+mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
 
 ==(::EmptySpace, ::EmptySpace) = true
 

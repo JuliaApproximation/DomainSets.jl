@@ -290,7 +290,7 @@ end
         # Translation
         d = zero(T)..one(T)
 
-        @test (-).(Interval{:closed,:open}(2,3)) isa Interval{:open,:closed}
+        @test -Interval{:closed,:open}(2,3) isa Interval{:open,:closed}
 
         d2 = d .+ one(T)
         @test typeof(d2) == typeof(d)
@@ -307,7 +307,7 @@ end
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
 
-        d2 = (-).(d)
+        d2 = -d
         @test typeof(d2) == typeof(d)
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
@@ -333,7 +333,7 @@ end
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
 
-        d2 = (-).(d)
+        d2 = -d
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
@@ -361,7 +361,7 @@ end
         @test leftendpoint(d2) == -2one(T)
         @test rightendpoint(d2) == zero(T)
 
-        @test (-).(d) == d
+        @test -d == d
 
         d2 = one(T) .- d
         @test typeof(d2) <: AbstractInterval
