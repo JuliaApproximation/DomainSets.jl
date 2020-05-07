@@ -188,7 +188,7 @@ interior(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:open}(dimension(d))
 
 "Create a cylinder with given radius and length."
 cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
-cylinder(radius::T, length::T) where {T} = (radius * UnitDisk{T}()) × (0..length)
+cylinder(radius::T, length::T) where {T} = (radius .* UnitDisk{T}()) × (0..length)
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)

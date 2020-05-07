@@ -23,6 +23,7 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 
+similar_interval(d::AbstractInterval, a, b) = similar_interval(d, promote(a, b)...)
 
 ## Some special intervals follow, e.g.:
 # - the unit interval [0,1]
@@ -44,7 +45,8 @@ const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
 Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.
 """# Assume a closed interval by default
-similar_interval(d::ClosedFixedInterval{T}, a, b) where {T} = ClosedInterval{float(T)}(a, b)
+similar_interval(d::ClosedFixedInterval{T}, a::S, b::S) where {S,T} =
+    ClosedInterval{promote_type(float(T),S)}(a, b)
 
 "The closed unit interval [0,1]."
 struct UnitInterval{T} <: ClosedFixedInterval{T} end
@@ -79,10 +81,10 @@ convert(::Type{Domain{T}}, ::HalfLine{S}) where {S,T} = HalfLine{T}()
 
 indomain(x, d::HalfLine) = x >= 0
 
-function similar_interval(d::HalfLine, a, b)
+function similar_interval(d::HalfLine{T}, a::S, b::S) where {T,S}
     @assert a == 0
     @assert isinf(b) && b > 0
-    d
+    HalfLine{promote_type(float(T),S)}()
 end
 
 point_in_domain(d::HalfLine) = zero(eltype(d))
@@ -103,17 +105,16 @@ boundary(d::NegativeHalfLine) = Point(rightendpoint(d))
 
 indomain(x, d::NegativeHalfLine) = x < 0
 
-function similar_interval(d::NegativeHalfLine, a, b)
+function similar_interval(d::NegativeHalfLine{T}, a::S, b::S) where {S,T}
     @assert isinf(a) && a < 0
     @assert b == 0
-    d
+    NegativeHalfLine{promote_type(S,float(T))}()
 end
 
 point_in_domain(d::NegativeHalfLine) = -one(eltype(d))
 
-
-similar_interval(d::Interval{L,R,T}, a, b) where {L,R,T} =
-    Interval{L,R,float(T)}(a, b)
+similar_interval(d::Interval{L,R,T}, a::S, b::S) where {L,R,T,S} =
+    Interval{L,R,promote_type(float(T),S)}(a, b)
 
 
 #########################################
@@ -196,49 +197,6 @@ UnitInterval{T}(d::AbstractInterval) where T = convert(UnitInterval{T}, d)
 ChebyshevInterval{T}(d::AbstractInterval) where T = convert(ChebyshevInterval{T}, d)
 
 
-########################
-# Arithmetic operations
-########################
-
-# Some computations with intervals simplify without having to use a mapped domain.
-# This is only the case for Interval{L,R,T}, and not for any of the FixedIntervals
-# because the endpoints of the latter are, well, fixed.
-
--(d::ChebyshevInterval) = d
--(d::AbstractInterval) = similar_interval(d, -rightendpoint(d), -leftendpoint(d))
-
-for op in (:+, :-), Inter in (:AbstractInterval, :ClosedInterval)
-    @eval $op(d::$Inter, x::Real) = similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
-end
-
-for Inter in (:AbstractInterval, :ClosedInterval)
-    @eval begin
-        +(x::Real, d::$Inter) = similar_interval(d, x+leftendpoint(d), x+rightendpoint(d))
-        -(x::Real, d::$Inter) = similar_interval(d, x-rightendpoint(d), x-leftendpoint(d))
-    end
-end
-
-for op in (:*, :/)
-    @eval function $op(d::AbstractInterval, x::Real)
-        if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
-            similar_interval(d, $op(leftendpoint(d),x), $op(rightendpoint(d),x))
-        else
-            similar_interval(d, $op(rightendpoint(d),x), $op(leftendpoint(d),x))
-        end
-    end
-end
-
-for op in (:*, :\), Inter in (:AbstractInterval, :ClosedInterval)
-    @eval function $op(x::Real, d::$Inter)
-        if x ≥ 0 # -{x : 0 ≤ x ≤ 1} should be {x : -1 ≤ x ≤ 0}, not empty set {x : 0 ≤ x ≤ -1}
-            similar_interval(d, $op(x,leftendpoint(d)), $op(x,rightendpoint(d)))
-        else
-            similar_interval(d, $op(x,rightendpoint(d)), $op(x,leftendpoint(d)))
-        end
-    end
-end
-
-
 function show(io::IO, d::ChebyshevInterval)
     print(io, Interval(d))
     print(io, " (Chebyshev)")
@@ -251,6 +209,11 @@ function show(io::IO, d::HalfLine)
     print(io, Interval(d))
     print(io, " (HalfLine)")
 end
+
+
+########################
+# Arithmetic operations
+########################
 
 function setdiff(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
     a1 = leftendpoint(d1)
@@ -272,12 +235,24 @@ end
 
 setdiff(d1::AbstractInterval, d2::AbstractInterval) = setdiff(promote(d1,d2)...)
 
+switch_open_closed(d::AbstractInterval) = d
+switch_open_closed(d::Interval{L,R,T}) where {L,R,T} =
+    Interval{R,L,T}(leftendpoint(d),rightendpoint(d))
+
 function map_domain(map::AbstractAffineMap, domain::AbstractInterval)
     le = map(leftendpoint(domain))
     re = map(rightendpoint(domain))
     if le<re
         similar_interval(domain,le,re)
     else
-        similar_interval(domain,re,le)
+        similar_interval(switch_open_closed(domain),re,le)
     end
 end
+
+mapped_domain(invmap::AbstractAffineMap, domain::AbstractInterval) =
+    map_domain(inv(invmap), domain)
+
+# Preserve maps when acting on the half line and negative halfline, because
+# the map may not always preserve the domain type
+map_domain(map::AbstractAffineMap, domain::HalfLine) = MappedDomain(domain, inv(map))
+map_domain(map::AbstractAffineMap, domain::NegativeHalfLine) = MappedDomain(domain, inv(map))

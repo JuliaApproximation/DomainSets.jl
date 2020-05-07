@@ -117,3 +117,10 @@ numtype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = promote_type(numtype(A), numty
 end
 
 numtype(a...) = promote_type(map(numtype, a)...)
+
+ensure_numtype(x, ::Type{U}) where {U} = convert(ensure_numtype(typeof(x),U), x)
+
+ensure_numtype(::Type{T}, ::Type{U}) where {T,U} = T
+ensure_numtype(::Type{T}, ::Type{U}) where {T <: Number,U} = promote_type(T,U)
+ensure_numtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,promote_type(T,U)}
+ensure_numtype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{promote_type(T,U)}

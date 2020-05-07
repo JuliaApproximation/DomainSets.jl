@@ -91,7 +91,9 @@ applymap!(y, m::LinearMap, x) = mul!(y, m.A, x)
 
 islinear(map::LinearMap) = true
 
-inv(m::LinearMap{T}) where {T} = LinearMap{T}(inv(m.A))
+inv(m::LinearMap) = LinearMap(inv(m.A))
+# Preserve the action on vectors with a number type
+inv(m::LinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} = LinearMap{T}(inv(m.A))
 
 leftinv(m::LinearMap) =  LinearMap(pinv(m.A))
 rightinv(m::LinearMap) = LinearMap(pinv(m.A))
@@ -183,8 +185,8 @@ end
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
 
-convert(::Type{AbstractAffineMap{T}}, i::IdentityMap) where {T} = LinearMap{T}(1)
-convert(::Type{<:LinearMap{T}}, i::IdentityMap) where {T} = LinearMap{T}(1)
+convert(::Type{AbstractAffineMap{T}}, ::IdentityMap) where {T} = LinearMap{T}(1)
+convert(::Type{<:LinearMap{T}}, ::IdentityMap) where {T} = LinearMap{T}(1)
 
 
 ########################

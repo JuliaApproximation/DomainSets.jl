@@ -15,14 +15,30 @@ Base.BroadcastStyle(::Base.Broadcast.AbstractArrayStyle, ::DomainSetStyle) = Dom
 
 import Base.Broadcast: broadcasted
 
-broadcasted(::DomainSetStyle, ::typeof(+), a::Number, d::Domain{T}) where {T} =
-    map_domain(Translation{promote_type(T,typeof(a))}(a), d)
-broadcasted(::DomainSetStyle, ::typeof(+), d::Domain{T}, a::Number) where {T} =
-    map_domain(Translation{promote_type(T,typeof(a))}(a), d)
+broadcasted(::DomainSetStyle, ::typeof(+), a::Union{Number,AbstractArray}, d::Domain) =
+    map_domain(Translation(a), d)
+broadcasted(::DomainSetStyle, ::typeof(+), d::Domain, a::Union{Number,AbstractArray}) =
+    map_domain(Translation(a), d)
 
-broadcasted(::DomainSetStyle, ::typeof(+), a::AbstractArray{S}, d::EuclideanDomain{N,T}) where {N,S,T} =
-    map_domain(Translation(SVector{N,promote_type(S,T)}(a)), d)
-broadcasted(::DomainSetStyle, ::typeof(+), d::EuclideanDomain{N,T}, a::AbstractArray{S}) where {N,S,T} =
-    map_domain(Translation(SVector{N,promote_type(S,T)}(a)), d)
+broadcasted(::DomainSetStyle, ::typeof(-), a::Union{Number,AbstractArray}, d::Domain) =
+    map_domain(AffineMap(-1, a), d)
+broadcasted(::DomainSetStyle, ::typeof(-), d::Domain, a::Union{Number,AbstractArray}) =
+    map_domain(Translation(-a), d)
+broadcasted(::DomainSetStyle, ::typeof(-), d::Domain) =
+    map_domain(LinearMap(-1), d)
+
+broadcasted(::DomainSetStyle, ::typeof(*), a::Number, d::Domain) =
+    map_domain(LinearMap(a), d)
+broadcasted(::DomainSetStyle, ::typeof(*), d::Domain, a::Number) =
+    map_domain(LinearMap(a), d)
+
+
+broadcasted(::DomainSetStyle, ::typeof(/), d::Domain, a::Number) =
+    mapped_domain(LinearMap(a), d)
+
+broadcasted(::DomainSetStyle, ::typeof(\), a::Number, d::Domain) =
+    mapped_domain(LinearMap(a), d)
 
 broadcasted(::DomainSetStyle, m::AbstractMap, d::Domain) = map_domain(m, d)
+
+broadcasted(::DomainSetStyle, fun::Function, d::Domain{T}) where {T} = GenericFunctionMap{T}(fun).(d)

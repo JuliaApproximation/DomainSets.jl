@@ -64,14 +64,18 @@ end
 
 ## ualgebra
 
-for op in (:+, :-, :*, :/)
-    @eval begin
-        $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, elements(domain), x))
-        $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, elements(domain)))
-    end
-end
+# preserve the uniondomain when mapping
+map_domain(map, domain::UnionDomain) = UnionDomain(map_domain.(Ref(map), elements(domain)))
+mapped_domain(map, domain::UnionDomain) = UnionDomain(mapped_domain.(Ref(map), elements(domain)))
 
-\(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
+# for op in (:+, :-, :*, :/)
+#     @eval begin
+#         $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, elements(domain), x))
+#         $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, elements(domain)))
+#     end
+# end
+#
+# \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
 
 
 for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:supremum, :max))

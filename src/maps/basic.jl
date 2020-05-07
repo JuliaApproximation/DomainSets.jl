@@ -120,3 +120,13 @@ ConstantMap(c::T) where {T} = ConstantMap{T}(c)
 constant(m::ConstantMap) = m.c
 
 convert(::Type{Map{T}}, m::ConstantMap{S,U}) where {T,S,U} = ConstantMap{T,U}(m.c)
+
+
+"A generic map defined by a function object."
+struct GenericFunctionMap{T,F} <: Map{T}
+    fun     ::  F
+end
+
+GenericFunctionMap{T}(fun) where {T} = GenericFunctionMap{T,typeof(fun)}(fun)
+
+convert(::Type{Map{T}}, m::GenericFunctionMap{S,F}) where {S,F,T} = GenericFunctionMap{T}(m.fun)

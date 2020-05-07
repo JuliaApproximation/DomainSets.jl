@@ -32,29 +32,16 @@ point_in_domain(d::Point) = d.x
 
 dimension(d::Point{Vector{T}}) where {T} = length(d.x)
 
-for op in (:*,:+,:-)
-    @eval begin
-        $op(c::Number, d::Point)  = Point($op(c,d.x))
-        $op(d::Point,  c::Number) = Point($op(d.x,c))
-    end
+function map_domain(map, p::Point)
+    x = applymap(map, p.x)
+    Point(x)
 end
 
-
-/(d::Point,  c::Number) = Point(d.x/c)
-\(c::Number, d::Point)  = Point(c\d.x)
+mapped_domain(invmap, p::Point) = map_domain(inv(invmap), p)
 
 for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))
 end
-
-
-for op in (:*,:+)
-    @eval begin
-        $op(a::Point, v::AbstractVector) = map(y->$op(a,y),v)
-        $op(v::AbstractVector, a::Point) = map(y->$op(y,a),v)
-    end
-end
-
 
 function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
     a = leftendpoint(d)

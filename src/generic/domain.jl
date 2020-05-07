@@ -4,6 +4,9 @@ eltype(::Type{<:Domain{T}}) where {T} = T
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
 numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
 
+ensure_numtype(d::Domain{T}, ::Type{N}) where {T,N} = convert(Domain{ensure_numtype(T,N)}, d)
+
+
 Domain(d) = convert(Domain, d)
 
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."

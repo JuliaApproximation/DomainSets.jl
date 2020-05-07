@@ -22,9 +22,14 @@ codomaintype(m::AbstractMap, ::Type{S}) where {S} = codomaintype(typeof(m), S)
 codomaintype(M::Type{<:AbstractMap}, ::Type{S}) where {S} = Base.promote_op(applymap, M, S)
 codomaintype(::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
 
+numtype(::Type{<:Map{T}}) where {T} = numtype(T)
+numtype(::Type{<:TypedMap{T,U}}) where {T,U} = numtype(T,U)
+
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
+
+ensure_numtype(map::Map{T}, ::Type{N}) where {T,N} = convert(Map{ensure_numtype(T,N)}, map)
 
 (m::AbstractMap)(x) = applymap(m, x)
 
