@@ -61,11 +61,7 @@ composition(d::CompositeLazyDomain) = NoComposition()
 indomain(x, d::CompositeLazyDomain) = _indomain(tointernalpoint(d, x), d, composition(d), elements(d))
 _indomain(x, d, ::NoComposition, domains) = in(x, domains[1])
 _indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
-if VERSION >= v"1.2"
-	_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
-else
-	_indomain(x, d, ::Product, domains) = reduce(&, map(in, x, domains))
-end
+_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
 
 approx_indomain(x, d::CompositeLazyDomain, tolerance) =
 	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), elements(d))
@@ -74,13 +70,8 @@ _approx_indomain(x, d, tolerance, ::NoComposition, domains) =
     approx_in(x, domains[1], tolerance)
 _approx_indomain(x, d, tolerance, ::Combination, domains) =
     combine(d, map(d -> approx_in(x, d, tolerance), domains))
-if VERSION >= v"1.2"
-	_approx_indomain(x, d, tolerance, ::Product, domains) =
-	    mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
-else
-	_approx_indomain(x, d, tolerance, ::Product, domains) =
-	    reduce(&, map((u,v)->approx_in(u, v, tolerance), x, domains))
-end
+_approx_indomain(x, d, tolerance, ::Product, domains) =
+    mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
 
 point_in_domain(d::SingleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
 point_in_domain(d::CompositeLazyDomain) = toexternalpoint(d, map(point_in_domain, elements(d)))

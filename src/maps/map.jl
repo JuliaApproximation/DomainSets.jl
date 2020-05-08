@@ -31,38 +31,23 @@ convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 
 ensure_numtype(map::Map{T}, ::Type{N}) where {T,N} = convert(Map{ensure_numtype(T,N)}, map)
 
-if VERSION > v"1.2"
-    (m::AbstractMap)(x) = callmap(m, x)
-    @deprecate (*)(m::AbstractMap, x) m(x)
-else
-    export callmap
-    @deprecate (*)(m::AbstractMap, x) callmap(m, x)
-end
-
-callmap(m::AbstractMap, x) = applymap(m, x)
+(m::AbstractMap)(x) = applymap(m, x)
+@deprecate (*)(m::AbstractMap, x) m(x)
 
 # For maps of type Map{T}, we convert the point x or the map or both
-callmap(m::Map, x) = _applymap(m, x)
+applymap(m::Map, x) = _applymap(m, x)
 _applymap(m::Map{T}, x::T) where {T} = applymap(m, x)
 _applymap(m::Map{S}, x::T) where {S,T} = _applymap(m, x, promote_type(S,T))
 _applymap(m::Map{S}, x::T, ::Type{V}) where {S,T,V} =
     applymap(convert(Map{V}, m), convert(V, x))
 
-if VERSION > v"1.2"
-    applymap!(y, m::AbstractMap, x) = y .= m(x)
-else
-    applymap!(y, m::AbstractMap, x) = y .= callmap(m, x)
-end
+applymap!(y, m::AbstractMap, x) = y .= m(x)
 
 # Note that there is a difference between a map being invertible, and the map
 # knowing its inverse explicitly and implementing `inv`.
 inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse.")
 
-if VERSION > v"1.2"
-    (\)(map::AbstractMap, y) = inv(map)(y)
-else
-    (\)(map::AbstractMap, y) = callmap(inv(map), y)
-end
+(\)(map::AbstractMap, y) = inv(map)(y)
 
 """
 Return a left inverse of the given map. This left inverse `mli` is not unique,
@@ -78,13 +63,9 @@ of `m`.
 """
 rightinv(m::AbstractMap) = inv(m)
 
-if VERSION > v"1.2"
-    @deprecate apply_left_inverse(m::AbstractMap, x) leftinv(m)(x)
-    @deprecate apply_right_inverse(m::AbstractMap, x) rightinv(m)(x)
-else
-    @deprecate apply_left_inverse(m::AbstractMap, x) calllmap(leftinv(m), x)
-    @deprecate apply_right_inverse(m::AbstractMap, x) callmap(rightinv(m), x)
-end
+@deprecate apply_left_inverse(m::AbstractMap, x) leftinv(m)(x)
+@deprecate apply_right_inverse(m::AbstractMap, x) rightinv(m)(x)
+
 
 """
     jacobian(m::AbstractMap[, x])
@@ -93,11 +74,7 @@ Return the jacobian map. The two-argument version evaluates the jacobian
 at a point `x`.
 """
 jacobian(m::AbstractMap) = error("Map ", m, " does not have a known Jacobian.")
-if VERSION > v"1.2"
-    jacobian(m::AbstractMap, x) = jacobian(m)(x)
-else
-    jacobian(m::AbstractMap, x) = callmap(jacobian(m), x)
-end
+jacobian(m::AbstractMap, x) = jacobian(m)(x)
 
 jacobian!(y, m::AbstractMap, x) = y .= jacobian(m, x)
 

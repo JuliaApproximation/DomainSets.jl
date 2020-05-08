@@ -805,7 +805,7 @@ end
             @test eltype(d1) == SVector{2,typeof(1.0)}
             @test v[0.5,0.5] ∈ d1
             @test v[-1.1,0.3] ∉ d1
-            VERSION >= v"1.2" && @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
+            @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
             # Test promotion
             @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
             d1w = convert(Domain{SVector{2,BigFloat}}, d1)
@@ -843,7 +843,7 @@ end
             @test d1.domains isa Tuple
 
             d3 = ProductDomain(1.05 .* UnitDisk(), (-1.0 .. 1.0))
-            VERSION >= v"1.2" && @inferred(cross(1.05 .* UnitDisk(), (-1.0 .. 1.0))) === d3
+            @inferred(cross(1.05 .* UnitDisk(), (-1.0 .. 1.0))) === d3
             @test d3 isa VcatDomain
             @test eltype(d3) == SVector{3,Float64}
             @test v[0.5,0.5,0.8] ∈ d3

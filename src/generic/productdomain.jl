@@ -42,11 +42,7 @@ composition(d::ProductDomain) = Product()
 
 elements(d::ProductDomain) = d.domains
 
-if VERSION >= v"1.2"
-	==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
-else
-	==(d1::ProductDomain, d2::ProductDomain) = reduce(&, map(==, elements(d1), elements(d2)))
-end
+==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
 
 isempty(d::ProductDomain) = any(isempty, elements(d))
 isclosedset(d::ProductDomain) = all(isclosedset, elements(d))
