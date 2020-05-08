@@ -23,7 +23,7 @@ codomaintype(M::Type{<:AbstractMap}, ::Type{S}) where {S} = Base.promote_op(appl
 codomaintype(::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
 
 numtype(::Type{<:Map{T}}) where {T} = numtype(T)
-numtype(::Type{<:TypedMap{T,U}}) where {T,U} = numtype(T,U)
+prectype(::Type{<:Map{T}}) where {T} = prectype(T)
 
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m

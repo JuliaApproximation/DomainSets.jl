@@ -221,6 +221,14 @@ function test_linearmap(T)
         @test callmap(m4, [1,2]) ==  A * [1,2]
     end
     @test jacobian(m4, [1,2]) == A
+
+    # Test conversions
+    @test LinearMap{T}(1) isa LinearMap{T,T}
+    @test LinearMap{Vector{T}}(rand(Int,5,5)) isa LinearMap{Vector{T},Matrix{T}}
+    @test LinearMap{SVector{2,T}}(rand(Int,2,2)) isa LinearMap{SVector{2,T},<:SMatrix{2,2,T}}
+    @test LinearMap{SVector{2,T}}(2) isa LinearMap{SVector{2,T},T}
+
+    @test convert(Map{SVector{2,T}}, m4) isa LinearMap{SVector{2,T},<:SMatrix{2,2,T}}
 end
 
 function test_translation(T)
@@ -229,6 +237,14 @@ function test_translation(T)
     test_generic_map(T, m)
     @test !islinear(m)
     @test isaffine(m)
+    @test inv(inv(m)) == m
+    @test jacobian(m) isa ConstantMap
+    @test vector(jacobian(m)) == [1 0 0; 0 1 0; 0 0 1]
+
+    # Test conversions
+    @test Translation{T}(1) isa Translation{T,T}
+    @test Translation{SVector{2,T}}(rand(Int,2)) isa Translation{SVector{2,T},SVector{2,T}}
+    @test Translation{Vector{T}}(rand(Int,2)) isa Translation{Vector{T},Vector{T}}
 end
 
 function test_affinemap(T)
@@ -251,6 +267,19 @@ function test_affinemap(T)
     end
 
     @test m1 ∘ m1 isa AffineMap
+
+    # Test conversions
+    @test AffineMap(1, 2*one(T)) isa AffineMap{T,T,T}
+    @test AffineMap{BigFloat}(1, 2.0) isa AffineMap{BigFloat,BigFloat,BigFloat}
+    @test AffineMap(rand(T,2,2),rand(T,2)) isa AffineMap{Vector{T},Matrix{T},Vector{T}}
+    @test AffineMap{Vector{T}}(rand(Int,2,2),rand(Int,2)) isa AffineMap{Vector{T},Matrix{T},Vector{T}}
+    @test AffineMap{SVector{2,T}}(rand(T,2,2),rand(T,2)) isa AffineMap{SVector{2,T},<:SMatrix{2,2,T},SVector{2,T}}
+    @test AffineMap{SVector{2,T}}(rand(Int,2,2),rand(T,2)) isa AffineMap{SVector{2,T},<:SMatrix{2,2,T},SVector{2,T}}
+    @test AffineMap{SVector{2,T}}(rand(Int,2,2),rand(Int,2)) isa AffineMap{SVector{2,T},<:SMatrix{2,2,T},SVector{2,T}}
+    @test AffineMap{SVector{2,T}}(1,rand(Int,2)) isa AffineMap{SVector{2,T},T,SVector{2,T}}
+    @test AffineMap{SVector{2,T}}(rand(Int,3,2),SVector(1,2,3)) isa AffineMap{SVector{2,T},<:SMatrix{3,2,T},SVector{3,T}}
+
+    @test convert(Map{SVector{2,T}}, AffineMap(rand(2,2),rand(2))) isa Map{SVector{2,T}}
 end
 
 function test_scaling_maps(T)

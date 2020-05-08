@@ -66,9 +66,14 @@ const StaticLinearMap{T<:SVector,AA<:SMatrix} = LinearMap{T,AA}
 const ArrayLinearMap{T<:AbstractVector,AA<:AbstractArray} = LinearMap{T,AA}
 
 # For scalars and arrays, we make sure the element types match with T
+# - A is a number: convert to eltype(T)
 LinearMap{T}(A::S) where {T,S <: Number} = LinearMap{T,eltype(T)}(A)
-LinearMap{T}(A::AbstractMatrix{S}) where {S,T <: AbstractVector{S}} = LinearMap{T,typeof(A)}(A)
+# - T is an abstract array: convert the eltype of A to eltype(T)
 LinearMap{T}(A::AbstractMatrix) where {T <: AbstractVector} = LinearMap{T}(convert(AbstractArray{eltype(T)}, A))
+LinearMap{T}(A::AbstractMatrix{S}) where {S,T <: AbstractVector{S}} = LinearMap{T,typeof(A)}(A)
+# - T is an SVector: convert A to an SMatrix (fails if A is rectangular)
+LinearMap{T}(A::AbstractMatrix{S}) where {N,S,T <: SVector{N,S}} = LinearMap{T}(convert(SMatrix{N,N,S},A))
+LinearMap{T}(A::SMatrix{M,N,S}) where {M,N,S,T <: SVector{N,S}} = LinearMap{T,typeof(A)}(A)
 
 LinearMap(A::T) where {T <: Number} = LinearMap{T}(A)
 LinearMap(A::SMatrix{M,N,T}) where {M,N,T} = LinearMap{SVector{N,T}}(A)
@@ -89,6 +94,8 @@ convert(::Type{Map{T}}, a::Number) where {T} = LinearMap{T}(a)
 applymap(m::LinearMap, x) = m.A * x
 applymap!(y, m::LinearMap, x) = mul!(y, m.A, x)
 
+==(m1::LinearMap, m2::LinearMap) = unsafe_matrix(m1) == unsafe_matrix(m2)
+
 islinear(map::LinearMap) = true
 
 inv(m::LinearMap) = LinearMap(inv(m.A))
@@ -106,9 +113,15 @@ end
 
 Translation{T}(b) where {T} = Translation{T,typeof(b)}(b)
 
-Translation{T}(b::AbstractVector{S}) where {S,T<:AbstractVector{S}} = Translation{T,typeof(b)}(b)
+Translation{T}(b::Number) where {T<:Number} = Translation{T,T}(b)
+Translation{T}(b::AbstractVector{S}) where {S,T<:AbstractVector{S}} =
+    Translation{T,typeof(b)}(b)
 Translation{T}(b::AbstractVector{S}) where {S,U,T<:AbstractVector{U}} =
     Translation{T}(convert(AbstractVector{U}, b))
+Translation{T}(b::AbstractVector{S}) where {N,S,T<:SVector{N,S}} =
+    Translation{T}(convert(SVector{N,S}, b))
+Translation{T}(b::SVector{N,S}) where {N,S,T<:SVector{N,S}} =
+    Translation{T,typeof(b)}(b)
 
 Translation(b::T) where {T} = Translation{T}(b)
 
@@ -119,10 +132,6 @@ size(m::Translation) = (dimension(m), dimension(m))
 
 unsafe_matrix(m::Translation) = identitymatrix(m)
 unsafe_vector(m::Translation) = m.b
-
-# jacobian(m::Translation{T}) where {T} = IdentityMap{T}()
-# jacobian(m::Translation{SVector{N,T}}) where {N,T} = IdentityMap{SVector{N,T}}()
-# jacobian(m::Translation{<:AbstractVector{T}}) where {T} = FlexibleIdentityMap{Vector{T}}(length(m.b))
 
 convert(::Type{Map{T}}, m::Translation{T}) where {T} = m
 convert(::Type{Map{T}}, m::Translation{S}) where {S,T} = Translation{T}(m.b)
@@ -143,18 +152,40 @@ const ScalarAffineMap{T,AA<:Number,B} = AffineMap{T,AA,B}
 const StaticAffineMap{T<:SVector,AA<:SMatrix} = AffineMap{T,AA}
 const ArrayAffineMap{T<:AbstractVector,AA<:AbstractArray} = AffineMap{T,AA}
 
+# Fallback routine for generic A and b, special cases follow
 AffineMap{T}(A, b) where {T} = AffineMap{T,typeof(A),typeof(b)}(A, b)
 
-AffineMap{T}(A::AbstractMatrix{S}, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
-    AffineMap{T,typeof(A),typeof(b)}(A, b)
+# We distinguish between (1) T is a number, (2) T is an AbstractVector and (3) T is an SVector
+# (1) T is a number: convert A and b to T
+AffineMap{T}(A::Number, b::Number) where {T <: Number} = AffineMap{T,T,T}(A, b)
+# (2) T is an array
+# - A and b are arrays: convert to eltype(T)
 AffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {T <: AbstractVector} =
     AffineMap{T}(convert(AbstractMatrix{eltype(T)},A), convert(AbstractVector{eltype(T)}, b))
-
-AffineMap{T}(A::Number, b::Number) where {T <: Number} = AffineMap{T,T,T}(A, b)
-AffineMap{T}(A::Number, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
-    AffineMap{T,S,typeof(b)}(A, b)
+AffineMap{T}(A::AbstractMatrix{S}, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
+    AffineMap{T,typeof(A),typeof(b)}(A, b)
+# - A is a number, b a vector: convert eltype(b) to eltype(T)
 AffineMap{T}(A::Number, b::AbstractVector{S}) where {S,T <: AbstractVector} =
     AffineMap{T}(A, convert(AbstractVector{eltype(T)}, b))
+#   and then convert A to eltype(T) as well
+AffineMap{T}(A::Number, b::AbstractVector{S}) where {S,T <: AbstractVector{S}} =
+    AffineMap{T,S,typeof(b)}(A, b)
+# (3) T is an SVector: we will attempt to convert A and b to static arrays too
+#     If all are arrays, then the eltypes already match by the rules above
+# - A and b are arrays: convert, assuming A is square (though we don't know for sure)
+AffineMap{T}(A::AbstractMatrix{S}, b::AbstractVector{S}) where {N,S,T <: SVector{N,S}} =
+    AffineMap{T}(convert(SMatrix{N,N,S},A), convert(SVector{N,S}, b))
+# - b is an SVector: convert A to SMatrix with the right size
+AffineMap{T}(A::AbstractMatrix{S}, b::SVector{M,S}) where {M,N,S,T <: SVector{N,S}} =
+    AffineMap{T}(convert(SMatrix{M,N,S},A), b)
+AffineMap{T}(A::SMatrix{M,N,S}, b::SVector{M,S}) where {M,N,S,T <: SVector{N,S}} =
+    AffineMap{T,typeof(A),typeof(b)}(A, b)
+# - A is a number, b is a vector: convert and assume that b has the same length as T (we don't know)
+AffineMap{T}(A::Number, b::AbstractVector{S}) where {N,S,T <: SVector{N,S}} =
+    AffineMap{T}(A, convert(SVector{N,S}, b))
+AffineMap{T}(A::Number, b::SVector{M,S}) where {M,N,S,T <: SVector{N,S}} =
+    AffineMap{T,S,typeof(b)}(A, b)
+
 
 AffineMap(A::Number, b::Number) = AffineMap(promote(A,b)...)
 AffineMap(A::T, b::T) where {T<:Number} = AffineMap{T}(A, b)
@@ -169,6 +200,7 @@ AffineMap(A::S, b::AbstractVector{T}) where {S<:Number,T} =
 
 convert(::Type{Map{T}}, m::AffineMap{T}) where {T} = m
 convert(::Type{Map{T}}, m::AffineMap{S}) where {S,T} = AffineMap{T}(m.A, m.b)
+convert(::Type{AffineMap{T}}, m::AffineMap) where {T} = convert(Map{T}, m)
 
 unsafe_matrix(m::AffineMap) = m.A
 unsafe_matrix(m::ScalarAffineMap{T}) where {T<:AbstractVector} = tomatrix(T, m.A)
