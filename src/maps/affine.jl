@@ -50,6 +50,8 @@ isaffine(map::AbstractAffineMap) = true
 ==(m1::AbstractAffineMap, m2::AbstractAffineMap) =
     (unsafe_matrix(m1) == unsafe_matrix(m2)) && (unsafe_vector(m1)==unsafe_vector(m2))
 
+dimension(m::AbstractAffineMap) = length(unsafe_vector(m))
+
 
 "A `LinearMap` is an affine map that represents `y = A*x`."
 struct LinearMap{T,AA} <: AbstractAffineMap{T}
@@ -102,6 +104,8 @@ inv(m::LinearMap) = LinearMap(inv(m.A))
 # Preserve the action on vectors with a number type
 inv(m::LinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} = LinearMap{T}(inv(m.A))
 
+inverse(m::LinearMap, x) = m.A \ x
+
 leftinverse(m::LinearMap) =  LinearMap(pinv(m.A))
 rightinverse(m::LinearMap) = LinearMap(pinv(m.A))
 
@@ -125,8 +129,6 @@ Translation{T}(b::SVector{N,S}) where {N,S,T<:SVector{N,S}} =
 
 Translation(b::T) where {T} = Translation{T}(b)
 
-dimension(m::Translation) = length(m.b)
-
 size(m::Translation{<:Number}) = (dimension(m), 1)
 size(m::Translation) = (dimension(m), dimension(m))
 
@@ -140,6 +142,8 @@ applymap(m::Translation, x) = x + m.b
 applymap!(y, m, x) = y .+= x .+ m.b
 
 inv(m::Translation{T}) where {T} = Translation{T}(-m.b)
+
+inverse(m::Translation, x) = x - m.b
 
 
 "`AffineMap` represents `y = A*x + b`."
@@ -216,6 +220,8 @@ end
 
 # If y = a*x+b, then x = inv(a)*(y-b).
 inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
+
+inverse(m::AffineMap, x) = m.A \ (x-m.b)
 
 convert(::Type{AbstractAffineMap{T}}, ::IdentityMap) where {T} = LinearMap{T}(1)
 convert(::Type{<:LinearMap{T}}, ::IdentityMap) where {T} = LinearMap{T}(1)

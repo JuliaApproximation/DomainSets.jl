@@ -53,6 +53,7 @@ function test_generic_map(T, m)
         @test xi2 ≈ x
         xi3 = m\y
         @test xi3 ≈ x
+        @test inverse(m, y) ≈ inv(m)(y)
     catch
     end
 
@@ -280,6 +281,9 @@ function test_composite_map(T)
     m = m2∘m3
     test_generic_map(T, m)
     @test m(r) ≈ m2(m3(r))
+
+    m5 = Composition(LinearMap(rand(T,2,2)), AffineMap(rand(T,2,2),rand(T,2)))
+    test_generic_map(T, m5)
 end
 
 function test_product_map(T)

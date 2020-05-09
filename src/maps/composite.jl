@@ -23,7 +23,21 @@ for op in (:inv, :leftinverse, :rightinverse)
     @eval $op(cmap::Composition) = Composition(reverse(map($op, elements(cmap)))...)
 end
 
+inverse(m::Composition, x) = inverse_rec(x, reverse(elements(m))...)
+inverse_rec(x) = x
+inverse_rec(x, map1, maps...) = inverse_rec(leftinverse(map1, x), maps...)
+
+leftinverse(m::Composition, x) = leftinverse_rec(x, reverse(elements(m))...)
+leftinverse_rec(x) = x
+leftinverse_rec(x, map1, maps...) = leftinverse_rec(leftinverse(map1, x), maps...)
+
+rightinverse(m::Composition, x) = rightinverse_rec(x, reverse(elements(m))...)
+rightinverse_rec(x) = x
+rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), maps...)
+
 codomaintype(m::Composition) = codomaintype(m.maps[end])
+
+dimension(m::Composition) = dimension(m.maps[end])
 
 mapcompose(m) = m
 mapcompose(maps...) = Composition(maps...)
