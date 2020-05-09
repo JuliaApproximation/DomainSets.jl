@@ -87,12 +87,12 @@ function test_generic_map(T, m)
         @test m(x) == A*x+b
     end
 
-    # leftinv and rightinv tests currently fail on pinv for BigFloat
+    # leftinverse and rightinverse tests currently fail on pinv for BigFloat
     if !(T == BigFloat)
         try # try because the inverse may not be defined
-            mli = leftinv(m)
+            mli = leftinverse(m)
             @test mli(m(x)) ≈ x
-            mri = rightinv(m)
+            mri = rightinverse(m)
             @test m(mri(x)) ≈ x
         catch
         end
@@ -123,6 +123,7 @@ function generic_tests(T)
         UnityMap{T}(),
         interval_map(T(0), T(1), T(2), T(3)),
         AffineMap(randvec(T, 2, 2), randvec(T, 2)),
+        Translation(randvec(T, 3)),
         LinearMap(randvec(T, 2, 2)),
         AffineMap(T(1.2), randvec(T, 2)),
         AffineMap(randvec(T, 3, 3), randvec(T, 3)),
@@ -167,6 +168,7 @@ function test_linearmap(T)
     @test m3 isa LinearMap{SVector{2,T}}
     @test m3(SVector(1,2)) == SVector(7, 10)
     @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
+    @test m3 ∘ m3 isa LinearMap
 
     A = rand(T,2,2)
     m4 = LinearMap(A)
@@ -186,7 +188,6 @@ end
 function test_translation(T)
     v = randvec(T,3)
     m = Translation(v)
-    test_generic_map(T, m)
     @test !islinear(m)
     @test isaffine(m)
     @test inv(inv(m)) == m

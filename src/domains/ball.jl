@@ -241,6 +241,6 @@ function applymap(m::AngleMap{T}, x) where {T}
     θ / twopi
 end
 
-leftinv(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
+leftinverse(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
 
-rightinv(m::AngleMap{T}) where {T} = UnitCircleMap{T}()
+rightinverse(m::AngleMap{T}) where {T} = UnitCircleMap{T}()

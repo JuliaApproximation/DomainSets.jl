@@ -47,24 +47,45 @@ applymap!(y, m::AbstractMap, x) = y .= m(x)
 # knowing its inverse explicitly and implementing `inv`.
 inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse.")
 
-(\)(map::AbstractMap, y) = inv(map)(y)
+"""
+    inverse(m::AbstractMap[, x])
+
+Return the inverse of `m`. The two-argument function evaluates the inverse
+at the point `x`.
+"""
+inverse(m::AbstractMap) = inv(m)
+inverse(m::AbstractMap, x) = inverse(m)(x)
+
+(\)(map::AbstractMap, y) = inverse(map, y)
 
 """
+    leftinverse(m::AbstractMap[, x])
+
 Return a left inverse of the given map. This left inverse `mli` is not unique,
 but in any case it is such that `(mli ∘ m) * x = x` for each `x` in the domain
 of `m`.
+
+The two-argument function applies the left inverse to the point `x`.
 """
-leftinv(m::AbstractMap) = inv(m)
+leftinverse(m::AbstractMap) = inverse(m)
+leftinverse(m::AbstractMap, x) = leftinverse(m)(x)
 
 """
+    rightinverse(m::AbstractMap[, x])
+
 Return a right inverse of the given map. This right inverse `mri` is not unique,
 but in any case it is such that `(m ∘ mri) * y = y` for each `y` in the range
 of `m`.
-"""
-rightinv(m::AbstractMap) = inv(m)
 
-@deprecate apply_left_inverse(m::AbstractMap, x) leftinv(m)(x)
-@deprecate apply_right_inverse(m::AbstractMap, x) rightinv(m)(x)
+The two-argument function applies the right inverse to the point `x`.
+"""
+rightinverse(m::AbstractMap) = inverse(m)
+rightinverse(m::AbstractMap, x) = rightinverse(m)(x)
+
+@deprecate leftinv(m::AbstractMap) leftinverse(m)
+@deprecate rightinv(m::AbstractMap) rightinverse(m)
+@deprecate apply_left_inverse(m::AbstractMap, x) leftinverse(m, x)
+@deprecate apply_right_inverse(m::AbstractMap, x) rightinverse(m, x)
 
 
 """

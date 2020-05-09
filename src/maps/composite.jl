@@ -19,7 +19,7 @@ applymap(m::Composition, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
 applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
 
-for op in (:inv, :leftinv, :rightinv)
+for op in (:inv, :leftinverse, :rightinverse)
     @eval $op(cmap::Composition) = Composition(reverse(map($op, elements(cmap)))...)
 end
 

@@ -102,8 +102,8 @@ inv(m::LinearMap) = LinearMap(inv(m.A))
 # Preserve the action on vectors with a number type
 inv(m::LinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} = LinearMap{T}(inv(m.A))
 
-leftinv(m::LinearMap) =  LinearMap(pinv(m.A))
-rightinv(m::LinearMap) = LinearMap(pinv(m.A))
+leftinverse(m::LinearMap) =  LinearMap(pinv(m.A))
+rightinverse(m::LinearMap) = LinearMap(pinv(m.A))
 
 
 "Translation represents `y = x + b`."

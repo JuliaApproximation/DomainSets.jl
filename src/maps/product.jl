@@ -27,7 +27,7 @@ tensorproduct(map1::ProductMap, map2::Map) = ProductMap(elements(map1)..., map2)
 tensorproduct(map1::Map, map2::ProductMap) = ProductMap(map1, elements(map2)...)
 tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
 
-for op in (:inv, :leftinv, :rightinv, :jacobian)
+for op in (:inv, :leftinverse, :rightinverse, :jacobian)
     @eval $op(m::ProductMap) = ProductMap(map($op, elements(m))...)
 end
 

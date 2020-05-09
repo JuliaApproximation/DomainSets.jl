@@ -15,8 +15,8 @@ superdomain(d::AbstractMappedDomain) = d.domain
 
 show(io::IO, d::AbstractMappedDomain) =  print(io, "A mapped domain based on ", superdomain(d))
 
-tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d)(x)
-toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d)(y)
+tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
+toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
 
 const MappedVectorDomain{T} = AbstractMappedDomain{Vector{T}}
 

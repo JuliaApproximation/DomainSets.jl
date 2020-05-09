@@ -62,7 +62,7 @@ export cartesianproduct
 export AbstractMap, Map, TypedMap,
     applymap,
     domaintype, codomaintype,
-    leftinv, rightinv,
+    inverse, leftinverse, rightinverse,
     jacobian, jacdet
 # from maps/lazy.jl
 export WrappedMap

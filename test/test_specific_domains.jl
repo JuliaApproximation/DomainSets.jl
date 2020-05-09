@@ -609,7 +609,7 @@ end
         x = applymap(p, 1/2)
         @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
         @test approx_in(x, C)
-        q = leftinv(p)
+        q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
 
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
