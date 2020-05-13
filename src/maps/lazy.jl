@@ -16,9 +16,6 @@ applymap(m::DerivedMap, x) = supermap(m)(x)
 appymap!(y, m::DerivedMap, x) = applymap!(y, supermap(m), x)
 
 jacobian(m::DerivedMap) = jacobian(supermap(m))
-jacobian(m::DerivedMap, x) = jacobian(supermap(m), x)
-jacobian!(y, m::DerivedMap, x) = jacobian!(y, supermap(m), x)
-jacdet(m::DerivedMap, x) = jacdet(supermap(m), x)
 
 struct WrappedMap{T,M} <: DerivedMap{T}
     map ::  M
@@ -31,3 +28,4 @@ convert(::Type{Map{T}}, m::WrappedMap) where {T} = WrappedMap{T}(m.map)
 
 convert(::Type{Map}, m::Map) = m
 convert(::Type{Map}, m) = WrappedMap(m)
+convert(::Type{Map{T}}, m) where {T} = WrappedMap{T}(m)

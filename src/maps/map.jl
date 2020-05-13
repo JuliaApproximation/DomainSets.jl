@@ -31,7 +31,13 @@ convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 
 ensure_numtype(map::Map{T}, ::Type{N}) where {T,N} = convert(Map{ensure_numtype(T,N)}, map)
 
+# Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)
+
+# For Map{T}, we allow invocation with multiple arguments by conversion to T
+(m::Map{T})(x) where {T} = applymap(m, x)
+(m::Map{T})(x...) where {T} = applymap(m, convert(T, x))
+
 @deprecate (*)(m::AbstractMap, x) m(x)
 
 # For maps of type Map{T}, we convert the point x or the map or both

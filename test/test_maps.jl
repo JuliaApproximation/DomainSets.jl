@@ -321,6 +321,8 @@ function test_wrapped_maps(T)
     @test m2(one(T)) ≈ sin(one(T))
     m3 = m1 ∘ m2
     @test m3(one(T)) ≈ cos(sin(one(T)))
+
+    @test convert(Map{T}, cos) isa WrappedMap{T,typeof(cos)}
 end
 
 function test_rotation_map(T)
