@@ -71,12 +71,13 @@ export Composition, ∘
 # from maps/product.jl
 export ProductMap, tensorproduct
 # from maps/basic.jl
-export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap
+export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
+    isconstant
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     matrix, vector,
     islinear, isaffine,
-    linear_map, interval_map, scaling_map
+    interval_map, scaling_map
 
 
 ## Generic domains

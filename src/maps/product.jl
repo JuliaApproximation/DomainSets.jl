@@ -31,4 +31,10 @@ for op in (:inv, :leftinverse, :rightinverse, :jacobian)
     @eval $op(m::ProductMap) = ProductMap(map($op, elements(m))...)
 end
 
+# isconstant(m::ProductMap) = mapreduce(isconstant, &, elements(m))
+# islinear(m::ProductMap) = mapreduce(islinear, &, elements(m))
+# isaffine(m::ProductMap) = mapreduce(isaffine, &, elements(m))
+
+size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,elements(m)))
+
 ==(m1::ProductMap, m2::ProductMap) = all(map(isequal, elements(m1), elements(m2)))

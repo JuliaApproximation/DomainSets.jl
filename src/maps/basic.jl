@@ -29,6 +29,11 @@ inv(m::AbstractIdentityMap) = m
 islinear(::AbstractIdentityMap) = true
 isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
 
+dimension(m::AbstractIdentityMap{T}) where {T<:Number} = 1
+dimension(m::AbstractIdentityMap{T}) where {N,T<:SVector{N}} = N
+
+size(m::AbstractIdentityMap) = (dimension(m), dimension(m))
+
 matrix(m::AbstractIdentityMap) = identitymatrix(m)
 vector(m::AbstractIdentityMap) = zerovector(m)
 
@@ -59,8 +64,6 @@ VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
 dimension(m::FlexibleIdentityMap) = m.dimension
 
-size(m::FlexibleIdentityMap) = (m.dimension, m.dimension)
-
 convert(::Type{Map{T}}, m::FlexibleIdentityMap) where {T} = FlexibleIdentityMap{T}(m.dimension)
 
 ==(m1::FlexibleIdentityMap, m2::FlexibleIdentityMap) = m1.dimension == m2.dimension
@@ -71,7 +74,9 @@ abstract type AbstractConstantMap{T,U} <: TypedMap{T,U} end
 
 applymap(m::AbstractConstantMap, x) = constant(m)
 
-islinear(::AbstractConstantMap) = true
+isconstant(m::AbstractMap) = false
+isconstant(m::AbstractConstantMap) = true
+
 isreal(m::AbstractConstantMap) = isreal(constant(m))
 
 dimension(m::AbstractConstantMap) = length(constant(m))

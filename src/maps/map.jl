@@ -62,7 +62,7 @@ at the point `x`.
 inverse(m::AbstractMap) = inv(m)
 inverse(m::AbstractMap, x) = inverse(m)(x)
 
-(\)(map::AbstractMap, y) = inverse(map, y)
+(\)(m::AbstractMap, y) = inverse(m, y)
 
 """
     leftinverse(m::AbstractMap[, x])
@@ -127,7 +127,5 @@ matrixtype(::Type{<:AbstractVector{T}}, ::Type{<:AbstractVector{U}}) where {T,U}
 matrixtype(::Type{<:AbstractVector{T}}, ::Type{U}) where {T,U<:Number} = Array{promote_type{T,U},2}
 matrixtype(::Type{T}, ::Type{<:AbstractVector{U}}) where {T<:Number,U} = Array{promote_type(T,U),1}
 
-# size is not defined for all maps, because not all maps have a fixed size
-# it is defined for maps that act on vectors, where the size information is not
-# available from the type
-size(m::AbstractMap, i) = i == i <= 2 ? size(m)[i] : 1
+# size may not be defined for all maps, because not all maps have a fixed size
+size(m::AbstractMap, i) = i <= 2 ? size(m)[i] : 1

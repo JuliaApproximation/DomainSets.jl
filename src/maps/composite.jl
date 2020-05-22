@@ -37,7 +37,7 @@ rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), map
 
 codomaintype(m::Composition) = codomaintype(m.maps[end])
 
-dimension(m::Composition) = dimension(m.maps[end])
+size(m::Composition) = (size(m.maps[end])[1], size(m.maps[1])[2])
 
 mapcompose(m) = m
 mapcompose(maps...) = Composition(maps...)
