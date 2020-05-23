@@ -51,7 +51,8 @@ export ..
 ## Utils
 
 # from util/common.jl
-export prectype, numtype
+export prectype, numtype,
+    iscomposite, elements, element, numelements
 # from util/products.jl
 export cartesianproduct
 
@@ -72,7 +73,7 @@ export Composition, ∘
 export ProductMap, tensorproduct
 # from maps/basic.jl
 export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
-    isconstant
+    isconstant, constant
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     matrix, vector,

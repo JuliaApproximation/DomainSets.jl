@@ -323,16 +323,20 @@ jacdet(m::AffineMap, x) = _jacdet(m, x, unsafe_matrix(m))
 inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
 inverse(m::AffineMap, x) = m.A \ (x-m.b)
 
+# we use matrix_pinv rather than pinv to preserve static matrices
+matrix_pinv(A) = pinv(A)
+matrix_pinv(A::SMatrix{M,N}) where {M,N} = SMatrix{N,M}(pinv(A))
+
 function leftinverse(m::AffineMap)
     M, N = size(m)
     M < N && error("No left inverse exists for $(m)")
-    pA = pinv(m.A)
+    pA = matrix_pinv(m.A)
     AffineMap(pA, -pA*m.b)
 end
 function rightinverse(m::AffineMap)
     M, N = size(m)
     M > N && error("No right inverse exists for $(m)")
-    pA = pinv(m.A)
+    pA = matrix_pinv(m.A)
     AffineMap(pA, -pA*m.b)
 end
 function leftinverse(m::AffineMap, x)

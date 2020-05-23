@@ -29,3 +29,12 @@ convert(::Type{Map{T}}, m::WrappedMap) where {T} = WrappedMap{T}(m.map)
 convert(::Type{Map}, m::Map) = m
 convert(::Type{Map}, m) = WrappedMap(m)
 convert(::Type{Map{T}}, m) where {T} = WrappedMap{T}(m)
+
+
+struct LazyJacobian{T,M} <: Map{T}
+	map	::	M
+end
+
+LazyJacobian(m::Map{T}) where {T} = LazyJacobian{T,typeof(m)}(m)
+
+applymap(m::LazyJacobian, x) = jacobian(m.map, x)

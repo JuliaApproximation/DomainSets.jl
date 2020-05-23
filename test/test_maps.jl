@@ -10,6 +10,8 @@ suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, s
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
     map(suitable_point_to_map, elements(m))
+suitable_point_to_map(m::DomainSets.VcatProductMap{T,N}) where {T,N} =
+    SVector{N,T}(rand(T,N))
 
 suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
 suitable_point_to_map(::PolarToCartMap{T}) where {T} = randvec(T,2)
@@ -338,16 +340,21 @@ function test_product_map(T)
 
     m1 = tensorproduct(ma,mb)
     test_generic_map(m1)
-    @test compare_tuple(m1((r1,r2)), (ma(r1),mb(r2)))
+    @test m1(SVector(r1,r2)) ≈ SVector(ma(r1),mb(r2))
     m2 = tensorproduct(m1,mb)
     test_generic_map(m2)
-    @test compare_tuple(m2((r1,r2,r3)), (ma(r1),mb(r2),mb(r3)) )
+    @test m2(SVector(r1,r2,r3)) ≈ SVector(ma(r1),mb(r2),mb(r3))
     m3 = tensorproduct(mb,m2)
     test_generic_map(m3)
-    @test compare_tuple(m3((r1,r2,r3,r4)),(mb(r1),ma(r2),mb(r3),mb(r4)))
-    m = tensorproduct(m1,m2)
-    test_generic_map(m)
-    @test compare_tuple(m((r1,r2,r3,r4,r5)),(m1((r1,r2))...,m2((r3,r4,r5))...))
+    @test m3(SVector(r1,r2,r3,r4)) ≈ SVector(mb(r1),ma(r2),mb(r3),mb(r4))
+    m4 = tensorproduct(m1,m2)
+    test_generic_map(m4)
+    @test m4(SVector(r1,r2,r3,r4,r5)) ≈ SVector(m1(SVector(r1,r2))...,m2(SVector(r3,r4,r5))...)
+
+    m5 = tensorproduct(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
+    test_generic_map(m5)
+    x = SVector{3,T}(rand(T,3))
+    @test m5(x) ≈ SVector(element(m5,1)(SVector(x[1],x[2]))...,element(m5,2)(x[3]))
 end
 
 function test_wrapped_maps(T)
@@ -405,12 +412,6 @@ function test_cart_polar_map(T)
     @test !islinear(m2)
 end
 
-
-Base.isapprox(a::NTuple{L,SVector{N,T}}, b::NTuple{L,SVector{N,T}}) where {L,N,T} = compare_tuple(a,b)
-Base.isapprox(a::NTuple{L,T}, b::NTuple{L,T}) where {L,T} = compare_tuple(a,b)
-
-# Compare two iterable sequences for element-wise equality
-compare_tuple(a, b) = reduce(&, map(isapprox, a, b))
 
 
 @testset "maps" begin
