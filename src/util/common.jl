@@ -1,16 +1,8 @@
 
-##############################
-# Promotion helper functions
-##############################
 
-const True = Val{true}
-const False = Val{false}
-
-"Return True if S promotes to T, i.e., if promote_type(S,T) == T."
-promotes_to(S, T) = _promotes_to(S, T, promote_type(S,T))
-_promotes_to(::Type{S}, ::Type{T}, ::Type{T}) where {S,T} = True
-_promotes_to(::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = False
-
+isreal(::Type{<:Real}) = true
+isreal(::Type{<:Complex}) = false
+isreal(::Type{T}) where {T} = isreal(eltype(T))
 
 
 #######################
@@ -31,7 +23,7 @@ can implement `elements` and provide a generic way to access their components.
 
 `numelements(t)`: return the number of elements of the composite type `t`
 """
-elements() = nothing
+elements(t) = ()
 
 """
 Return the i-th element of a composite structure.
@@ -47,6 +39,13 @@ Return the number of elements of a composite structure.
 See also: `elements`.
 """
 numelements(t) = length(elements(t))
+
+"""
+Is `x` composed of different elements?
+
+See also: `elements`.
+"""
+iscomposite(t) = length(elements(t)) > 0
 
 "Expand all arguments of type C into their components."
 expand(::Type{C}) where {C} = ()
@@ -118,3 +117,10 @@ numtype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = promote_type(numtype(A), numty
 end
 
 numtype(a...) = promote_type(map(numtype, a)...)
+
+ensure_numtype(x, ::Type{U}) where {U} = convert(ensure_numtype(typeof(x),U), x)
+
+ensure_numtype(::Type{T}, ::Type{U}) where {T,U} = T
+ensure_numtype(::Type{T}, ::Type{U}) where {T <: Number,U} = promote_type(T,U)
+ensure_numtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,promote_type(T,U)}
+ensure_numtype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{promote_type(T,U)}

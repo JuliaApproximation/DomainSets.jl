@@ -15,7 +15,28 @@ points of the lazy domain and points of its member domains is described by
 """
 abstract type LazyDomain{T} <: Domain{T} end
 
-elements(d::LazyDomain) = d.domains
+"Translate a point of the lazy domain to a point (or points) of the composing domain."
+tointernalpoint(d::LazyDomain, x) = x
+"Inverse of `tointernalpoint`."
+toexternalpoint(d::LazyDomain, y) = y
+
+
+"""
+A single lazy domain is defined in terms of a single domain.
+
+It has no composition and no combination of its `in` function.
+"""
+abstract type SingleLazyDomain{T} <: LazyDomain{T} end
+
+superdomain(d::SingleLazyDomain) = d.domain
+
+"A composite lazy domain is defined in terms of multiple domains."
+abstract type CompositeLazyDomain{T} <: LazyDomain{T} end
+
+elements(d::CompositeLazyDomain) = d.domains
+
+indomain(x, d::SingleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
+approx_indomain(x, d::SingleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
 
 """
 Supertype of all compositions of a lazy domain. The composition determines how
@@ -29,50 +50,37 @@ Three compositions implemented in the package are:
 - `Product`: the lazy domain has several members and the components of `x` are
 	passed to the components of the lazy domain
 """
-abstract type Composition end
+abstract type LazyComposition end
 
-struct NoComposition <: Composition end
-struct Combination <: Composition end
-struct Product <: Composition end
+struct NoComposition <: LazyComposition end
+struct Combination <: LazyComposition end
+struct Product <: LazyComposition end
 
-tointernalpoint(d::LazyDomain, x) = x
-toexternalpoint(d::LazyDomain, y) = y
+composition(d::CompositeLazyDomain) = NoComposition()
 
-composition(d::LazyDomain) = NoComposition()
-
-indomain(x, d::LazyDomain) = _indomain(tointernalpoint(d, x), d, composition(d), elements(d))
+indomain(x, d::CompositeLazyDomain) = _indomain(tointernalpoint(d, x), d, composition(d), elements(d))
 _indomain(x, d, ::NoComposition, domains) = in(x, domains[1])
 _indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
-if VERSION >= v"1.2"
-	_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
-else
-	_indomain(x, d, ::Product, domains) = reduce(&, map(in, x, domains))
-end
+_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
 
-approx_indomain(x, d::LazyDomain, tolerance) =
+approx_indomain(x, d::CompositeLazyDomain, tolerance) =
 	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), elements(d))
 
 _approx_indomain(x, d, tolerance, ::NoComposition, domains) =
     approx_in(x, domains[1], tolerance)
 _approx_indomain(x, d, tolerance, ::Combination, domains) =
     combine(d, map(d -> approx_in(x, d, tolerance), domains))
-if VERSION >= v"1.2"
-	_approx_indomain(x, d, tolerance, ::Product, domains) =
-	    mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
-else
-	_approx_indomain(x, d, tolerance, ::Product, domains) =
-	    reduce(&, map((u,v)->approx_in(u, v, tolerance), x, domains))
-end
+_approx_indomain(x, d, tolerance, ::Product, domains) =
+    mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
 
-point_in_domain(d::LazyDomain) =
-	toexternalpoint(d, map(point_in_domain, elements(d)))
+point_in_domain(d::SingleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
+point_in_domain(d::CompositeLazyDomain) = toexternalpoint(d, map(point_in_domain, elements(d)))
 
-==(a::D, b::D) where {D<:LazyDomain} = elements(a) == elements(b)
+==(a::D, b::D) where {D<:CompositeLazyDomain} = elements(a) == elements(b)
 
 
-const LazyVectorDomain{T} = LazyDomain{Vector{T}}
-
-function dimension(d::LazyVectorDomain)
+dimension(d::SingleLazyDomain{Vector{T}}) where {T} = dimension(superdomain(d))
+function dimension(d::CompositeLazyDomain{Vector{T}}) where {T}
 	dim = dimension(element(d,1))
 	@assert all(isequal(dim), map(dimension, elements(d)))
 	dim
@@ -85,15 +93,11 @@ domain.
 combine
 
 
-"""
-DerivedDomain is an abstract supertype for domains that simply wrap another
-domain.
-"""
-abstract type DerivedDomain{T} <: LazyDomain{T} end
+"Abstract supertype for domains that wrap another domain."
+abstract type DerivedDomain{T} <: SingleLazyDomain{T} end
 
-elements(d::DerivedDomain) = (d.domain,)
+isempty(d::DerivedDomain) = isempty(superdomain(d))
 
-superdomain(d::DerivedDomain) = d.domain
 
 """
 A `WrappedDomain` is a wrapper around an object that implements the domain
@@ -106,7 +110,9 @@ end
 WrappedDomain(domain::Domain{T}) where {T} = WrappedDomain{T}(domain)
 WrappedDomain(domain) = WrappedDomain{eltype(domain)}(domain)
 
-WrappedDomain{T}(domain::D) where {T,D} = WrappedDomain{T,D}(domain)
+WrappedDomain{T}(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
+WrappedDomain{T}(domain::Domain) where {T} = WrappedDomain{T}(convert(Domain{T}, domain))
+WrappedDomain{T}(domain) where {T} = WrappedDomain{T,typeof(domain)}(domain)
 
 convert(::Type{Domain{T}}, d::WrappedDomain) where {T} = WrappedDomain{T}(d.domain)
 
@@ -115,7 +121,7 @@ convert(::Type{Domain{T}}, d::WrappedDomain) where {T} = WrappedDomain{T}(d.doma
 convert(::Type{Domain}, v::Domain) = v
 convert(::Type{Domain}, v) = WrappedDomain(v)
 
-
+==(d1::WrappedDomain, d2::WrappedDomain) = superdomain(d1)==superdomain(d2)
 
 "Example of a domain that wraps another domain and thus obtains its own type."
 struct ExampleNamedDomain{T,D} <: DerivedDomain{T}

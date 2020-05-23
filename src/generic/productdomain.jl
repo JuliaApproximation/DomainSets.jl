@@ -1,52 +1,16 @@
-# Routines for a cartesian product of domains
-
-###################
-# Helper functions
-###################
-
-"""
-Convert a vector from a cartesian format to a nested tuple according to the
-given dimensions.
-
-For example:
-`convert_fromcartesian([1,2,3,4,5], Val{(2,2,1)}()) -> ([1,2],[3,4],5)`
-"""
-@generated function convert_fromcartesian(x::AbstractVector, ::Val{DIM}) where {DIM}
-	dimsum = [0; cumsum([d for d in DIM])]
-	E = Expr(:tuple, [ (dimsum[i+1]-dimsum[i] > 1 ? Expr(:call, :SVector, [:(x[$j]) for j = dimsum[i]+1:dimsum[i+1]]...) : :(x[$(dimsum[i+1])])) for i in 1:length(DIM)]...)
-	return quote $(E) end
-end
-
-"The inverse function of `convert_fromcartesian`."
-@generated function convert_tocartesian(x, ::Val{DIM}) where {DIM}
-    dimsum = [0; cumsum([d for d in DIM])]
-    E = vcat([[:(x[$i][$j]) for j in 1:DIM[i]] for i in 1:length(DIM)]...)
-    quote SVector($(E...)) end
-end
-# An alternative is to use "reduce(vcat, x)" (see Julia issue #21672) but the
-# generated function is more efficient because the compiler knows the dimensions.
-
-
-#######################
-# Main type definition
-#######################
 
 """
 ```using DomainSets```
 
 A `ProductDomain` represents the cartesian product of other domains.
 """
-abstract type ProductDomain{T} <: LazyDomain{T} end
+abstract type ProductDomain{T} <: CompositeLazyDomain{T} end
 
 composition(d::ProductDomain) = Product()
 
 elements(d::ProductDomain) = d.domains
 
-if VERSION >= v"1.2"
-	==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
-else
-	==(d1::ProductDomain, d2::ProductDomain) = reduce(&, map(==, elements(d1), elements(d2)))
-end
+==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
 
 isempty(d::ProductDomain) = any(isempty, elements(d))
 isclosedset(d::ProductDomain) = all(isclosedset, elements(d))

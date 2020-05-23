@@ -51,31 +51,34 @@ export ..
 ## Utils
 
 # from util/common.jl
-export prectype, numtype
-# from util/tensorproducts.jl
+export prectype, numtype,
+    iscomposite, elements, element, numelements
+# from util/products.jl
 export cartesianproduct
 
 
 ## Maps
 
-# from maps/maps.jl
-export AbstractMap, applymap, jacobian, linearize,
+# from maps/map.jl
+export AbstractMap, Map, TypedMap,
+    applymap,
     domaintype, codomaintype,
-    left_inverse, right_inverse,
-    apply_inverse, apply_left_inverse, apply_right_inverse,
-    image
-# from maps/composite_map.jl
-export CompositeMap, ∘
-# from maps/productmap.jl
+    inverse, leftinverse, rightinverse,
+    jacobian, jacdet
+# from maps/lazy.jl
+export WrappedMap
+# from maps/composite.jl
+export Composition, ∘
+# from maps/product.jl
 export ProductMap, tensorproduct
-# from maps/basic_maps.jl
-export IdentityMap, ConstantMap
-# from maps/affine_maps.jl
+# from maps/basic.jl
+export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
+    isconstant, constant
+# from maps/affine.jl
 export AffineMap, Translation, LinearMap,
-    islinear,
-    linear_map, interval_map, scaling_map, rotation_map, translation_map
-# from maps/coordinates.jl
-export CartToPolarMap, PolarToCartMap
+    matrix, vector,
+    islinear, isaffine,
+    interval_map, scaling_map
 
 
 ## Generic domains
@@ -89,20 +92,22 @@ export Domain, EuclideanDomain, VectorDomain,
     point_in_domain
 
 # from generic/lazy.jl
-export DerivedDomain, superdomain
+export DerivedDomain, superdomain, WrappedDomain
 
 # from generic/productdomain.jl
 export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
 
+# from generic/mapped_domain.jl
+export MappedDomain,
+    map_domain,
+    mapped_domain,
+    forward_map,
+    inverse_map
+
 # from generic/setoperations.jl
 export UnionDomain, IntersectionDomain, DifferenceDomain
-export TranslatedDomain
 
-# from generic/mapped_domain.jl
-export source, target
-
-
-# from generic/arithmetics.jl
+# from applications/rotations.jl
 export rotate
 
 export infimum, supremum
@@ -134,15 +139,20 @@ export UnitCircle, VectorUnitCircle,
     ellipse, ellipse_shape, cylinder,
     parameterization, gradient
 
+## Applications
+# from applications/rotation.jl
+export rotation_map,
+    CartToPolarMap, PolarToCartMap
+
 include("util/common.jl")
 include("util/products.jl")
 
-include("maps/maps.jl")
-include("maps/composite_map.jl")
-include("maps/productmap.jl")
-include("maps/basic_maps.jl")
-include("maps/affine_map.jl")
-include("maps/coordinates.jl")
+include("maps/map.jl")
+include("maps/lazy.jl")
+include("maps/composite.jl")
+include("maps/product.jl")
+include("maps/basic.jl")
+include("maps/affine.jl")
 
 include("generic/domain.jl")
 include("generic/lazy.jl")
@@ -151,11 +161,14 @@ include("generic/setoperations.jl")
 include("generic/mapped_domain.jl")
 include("generic/promotion.jl")
 include("generic/arithmetics.jl")
+include("generic/broadcast.jl")
 
 include("domains/trivial.jl")
 include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
+
+include("applications/rotation.jl")
 
 end # module

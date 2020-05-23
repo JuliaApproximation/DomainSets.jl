@@ -9,7 +9,7 @@
 
 A `UnionDomain` represents the union of a set of domains.
 """
-struct UnionDomain{T,DD} <: LazyDomain{T}
+struct UnionDomain{T,DD} <: CompositeLazyDomain{T}
 	domains	::	DD
 end
 
@@ -64,14 +64,18 @@ end
 
 ## ualgebra
 
-for op in (:+, :-, :*, :/)
-    @eval begin
-        $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, elements(domain), x))
-        $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, elements(domain)))
-    end
-end
+# preserve the uniondomain when mapping
+map_domain(map, domain::UnionDomain) = UnionDomain(map_domain.(Ref(map), elements(domain)))
+mapped_domain(map, domain::UnionDomain) = UnionDomain(mapped_domain.(Ref(map), elements(domain)))
 
-\(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
+# for op in (:+, :-, :*, :/)
+#     @eval begin
+#         $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, elements(domain), x))
+#         $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, elements(domain)))
+#     end
+# end
+#
+# \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
 
 
 for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:supremum, :max))
@@ -110,7 +114,7 @@ end
 """
 An `IntersectionDomain` represents the intersection of a set of domains.
 """
-struct IntersectionDomain{T,DD} <: LazyDomain{T}
+struct IntersectionDomain{T,DD} <: CompositeLazyDomain{T}
     domains ::  DD
 end
 
@@ -170,7 +174,7 @@ end
 #########################################
 
 "A `DifferenceDomain` represents the difference between two domains."
-struct DifferenceDomain{T,DD} <: LazyDomain{T}
+struct DifferenceDomain{T,DD} <: CompositeLazyDomain{T}
     domains	::	DD
 	function DifferenceDomain{T,DD}(domains::DD) where {T,DD}
 		@assert length(domains) == 2

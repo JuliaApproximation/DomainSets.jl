@@ -37,9 +37,8 @@ setdiff(d1::EmptySpace, d2::EmptySpace) = d1
 setdiff(d1::EmptySpace, d2::Domain) = d1
 setdiff(d1::Domain, d2::EmptySpace) = d1
 
-# TODO: verify these - should we restrict x?
-(+)(d::EmptySpace, x::Number) = d
-(*)(d::EmptySpace, x::Number) = d
+map_domain(map::Map{T}, d::EmptySpace{T}) where {T} = d
+mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
 
 ==(::EmptySpace, ::EmptySpace) = true
 
@@ -84,10 +83,7 @@ intersect(d1::Domain, d2::FullSpace) = d1
 intersect(d1::FullSpace, d2::Domain) = d2
 
 
-(+)(d::FullSpace{T}, x::T) where {T} = d
-
-(*)(d::FullSpace, x::Number) = d
-
+map_domain(m::AbstractAffineMap{T}, d::FullSpace{T}) where {T} = d
 
 show(io::IO, d::FullSpace) = print(io, "{x} (full space)")
 

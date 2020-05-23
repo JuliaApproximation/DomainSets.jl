@@ -1,9 +1,7 @@
 
 ## Conversion
 
-"""
-Convert a domain object to a domain object with the given element type `T`.
-"""
+"Convert a domain object to a domain object with the given element type `T`."
 convert_domain(::Type{T}, d::Domain{T}) where {T} = d
 convert_domain(::Type{T}, d::Domain{S}) where {S,T} = convert(Domain{T}, d)
 
@@ -19,15 +17,11 @@ _convert_domain(::Type{T}, d::Set{S}, ::Type{S}) where {S,T} = convert(Set{T}, d
 
 ## Promotion
 
-"""
-Promote the given domains to have a common element type.
-"""
+"Promote the given domains to have a common element type."
 promote_domain() = ()
 promote_domain(domains...) = promote_domains(domains)
 
-"""
-Promote an iterable list of domains to have a common element type.
-"""
+"Promote an iterable list of domains to have a common element type."
 promote_domains(domains) = _promote_domains(mapreduce(eltype, promote_type, domains), domains)
 
 # We simply rely on Julia's promotion system to promote the element types, and

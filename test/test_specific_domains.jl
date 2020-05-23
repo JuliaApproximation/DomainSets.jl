@@ -14,10 +14,10 @@ const io = IOBuffer()
 struct NamedHyperBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
     domain  ::  Domain{SVector{2,Float64}}
 
-    NamedHyperBall() = new(2UnitDisk())
+    NamedHyperBall() = new(2 .* UnitDisk())
 end
 
-@testset "Specific domains" begin
+@testset "specific domains" begin
     @testset "empty space" begin
         d1 = EmptySpace()
         show(io,d1)
@@ -63,8 +63,8 @@ end
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
-        @test typeof(FullSpace(0..1)+1) <: FullSpace
-        @test typeof(FullSpace(0..1)*3) <: FullSpace
+        @test typeof(FullSpace(0..1) .+ 1) <: FullSpace
+        @test typeof(FullSpace(0..1) .* 3) <: FullSpace
 
         d2 = FullSpace{SVector{2,Float64}}()
         @test v[0.1,0.2] ∈ d2
@@ -90,14 +90,14 @@ end
         @test !DomainSets.isopenset(d)
         @test dimension(d) == 1
 
-        @test d+1 == Domain(2.0)
-        @test 1+d == Domain(2.0)
-        @test 1-d == Domain(0.0)
-        @test d-1 == Domain(0.0)
-        @test 2d  == Domain(2.0)
-        @test d*2 == Domain(2.0)
-        @test d/2 == Domain(0.5)
-        @test 2\d == Domain(0.5)
+        @test d .+ 1 == Domain(2.0)
+        @test 1 .+ d == Domain(2.0)
+        @test 1 .- d == Domain(0.0)
+        @test d .- 1 == Domain(0.0)
+        @test 2 .* d  == Domain(2.0)
+        @test d .* 2 == Domain(2.0)
+        @test d ./ 2 == Domain(0.5)
+        @test 2 .\ d == Domain(0.5)
 
         d1 = Domain(Set([1,2,3]))
         d2 = Point(1) ∪ Point(2) ∪ Point(3)
@@ -213,6 +213,9 @@ end
             @test !approx_in(-0.5, d, 0.1)
             @test similar_interval(d, T(0), T(Inf)) == d
 
+            @test 2 .* d isa MappedDomain
+            @test -2 .* d isa MappedDomain
+
             @test boundary(d) == Point(0)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∉ ∂(d)
@@ -286,19 +289,20 @@ end
         ## Some mappings preserve the interval structure
         # Translation
         d = zero(T)..one(T)
-        @test d == +d
 
-        d2 = d + one(T)
+        @test -Interval{:closed,:open}(2,3) isa Interval{:open,:closed}
+
+        d2 = d .+ one(T)
         @test typeof(d2) == typeof(d)
         @test leftendpoint(d2) == one(T)
         @test rightendpoint(d2) == 2*one(T)
 
-        d2 = one(T) + d
+        d2 = one(T) .+ d
         @test typeof(d2) == typeof(d)
         @test leftendpoint(d2) == one(T)
         @test rightendpoint(d2) == 2*one(T)
 
-        d2 = d - one(T)
+        d2 = d .- one(T)
         @test typeof(d2) == typeof(d)
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
@@ -308,23 +312,23 @@ end
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
 
-        d2 = one(T) - d
+        d2 = one(T) .- d
         @test d2 == d
 
         # translation for UnitInterval
         # Does a shifted unit interval return an interval?
         d = UnitInterval{T}()
-        d2 = d + one(T)
+        d2 = d .+ one(T)
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == one(T)
         @test rightendpoint(d2) == 2*one(T)
 
-        d2 = one(T) + d
+        d2 = one(T) .+ d
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == one(T)
         @test rightendpoint(d2) == 2*one(T)
 
-        d2 = d - one(T)
+        d2 = d .- one(T)
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
@@ -334,7 +338,7 @@ end
         @test leftendpoint(d2) == -one(T)
         @test rightendpoint(d2) == zero(T)
 
-        d2 = one(T) - d
+        d2 = one(T) .- d
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == zero(T)
         @test rightendpoint(d2) == one(T)
@@ -342,24 +346,24 @@ end
 
         # translation for ChebyshevInterval
         d = ChebyshevInterval{T}()
-        d2 = d + one(T)
+        d2 = d .+ one(T)
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == zero(T)
         @test rightendpoint(d2) == 2*one(T)
 
-        d2 = one(T) + d
+        d2 = one(T) .+ d
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == zero(T)
         @test rightendpoint(d2) == 2*one(T)
 
-        d2 = d - one(T)
+        d2 = d .- one(T)
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == -2one(T)
         @test rightendpoint(d2) == zero(T)
 
         @test -d == d
 
-        d2 = one(T) - d
+        d2 = one(T) .- d
         @test typeof(d2) <: AbstractInterval
         @test leftendpoint(d2) == zero(T)
         @test rightendpoint(d2) == 2one(T)
@@ -367,23 +371,23 @@ end
 
         # Scaling
         d = zero(T)..one(T)
-        d3 = T(2) * d
+        d3 = T(2) .* d
         @test typeof(d3) == typeof(d)
         @test leftendpoint(d3) == zero(T)
         @test rightendpoint(d3) == T(2)
 
-        d3 = d * T(2)
+        d3 = d .* T(2)
         @test typeof(d3) == typeof(d)
         @test leftendpoint(d3) == zero(T)
         @test rightendpoint(d3) == T(2)
 
         d = zero(T)..one(T)
-        d4 = d / T(2)
+        d4 = d ./ T(2)
         @test typeof(d4) == typeof(d)
         @test leftendpoint(d4) == zero(T)
         @test rightendpoint(d4) == T(1)/T(2)
 
-        d4 = T(2) \ d
+        d4 = T(2) .\ d
         @test typeof(d4) == typeof(d)
         @test leftendpoint(d4) == zero(T)
         @test rightendpoint(d4) == T(1)/T(2)
@@ -515,16 +519,16 @@ end
         @test DomainSets.isopenset(D)
         @test boundary(D) == UnitCircle()
 
-        D = 2UnitDisk()
+        D = 2 .* UnitDisk()
         @test v[1.4, 1.4] ∈ D
         @test v[1.5, 1.5] ∉ D
-        @test typeof(1.2*D)==typeof(D*1.2)
-        @test v[1.5,1.5] ∈ 1.2*D
-        @test v[1.5,1.5] ∈ D*1.2
+        @test typeof(1.2 .* D)==typeof(D .* 1.2)
+        @test v[1.5,1.5] ∈ 1.2 .* D
+        @test v[1.5,1.5] ∈ D .* 1.2
         @test !isempty(D)
         # TODO: implement and test isclosedset and isopenset for mapped domains
 
-        D = 2UnitDisk() + v[1.0,1.0]
+        D = 2 .* UnitDisk() .+ v[1.0,1.0]
         @test v[2.4, 2.4] ∈ D
         @test v[3.5, 2.5] ∉ D
         @test !isempty(D)
@@ -537,14 +541,14 @@ end
         @test !DomainSets.isopenset(B)
         @test boundary(B) == UnitSphere()
 
-        B = 2UnitBall()
+        B = 2 .* UnitBall()
         @test v[1.9,0.0,0.0] ∈ B
         @test v[0,-1.9,0.0] ∈ B
         @test v[0.0,0.0,-1.9] ∈ B
         @test v[1.9,1.9,0.0] ∉ B
         @test !isempty(B)
 
-        B = 2.0UnitBall() + v[1.0,1.0,1.0]
+        B = 2.0 .* UnitBall() .+ v[1.0,1.0,1.0]
         @test v[2.9,1.0,1.0] ∈ B
         @test v[1.0,-0.9,1.0] ∈ B
         @test v[1.0,1.0,-0.9] ∈ B
@@ -568,10 +572,10 @@ end
         B = NamedHyperBall()
         @test v[1.4, 1.4] ∈ B
         @test v[1.5, 1.5] ∉ B
-        @test typeof(1.2*B)==typeof(B*1.2)
-        @test v[1.5,1.5] ∈ 1.2*B
-        @test v[1.5,1.5] ∈ B*1.2
-        @test eltype(B) == eltype(2UnitDisk())
+        @test typeof(1.2 .* B)==typeof(B .* 1.2)
+        @test v[1.5,1.5] ∈ 1.2 .* B
+        @test v[1.5,1.5] ∈ B .* 1.2
+        @test eltype(B) == eltype(2 .* UnitDisk())
     end
 
     @testset "cube" begin
@@ -605,16 +609,16 @@ end
         x = applymap(p, 1/2)
         @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
         @test approx_in(x, C)
-        q = left_inverse(p)
+        q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
 
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
         @test eltype(C2) == SVector{2,BigFloat}
 
-        C = 2UnitCircle() + v[1.,1.]
+        C = 2 .* UnitCircle() .+ v[1.,1.]
         @test approx_in(v[3.,1.], C)
 
-        C = UnitCircle() + v[1,1]
+        C = UnitCircle() .+ v[1,1]
         @test approx_in(v[2,1], C)
 
         S = UnitSphere()
@@ -627,7 +631,7 @@ end
 
         @test Basis3Vector() in S
 
-        S = 2UnitSphere() + v[1.,1.,1.]
+        S = 2 .* UnitSphere() .+ v[1.,1.,1.]
         @test approx_in(v[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
         @test !approx_in(v[4.,1.,5.], S)
 
@@ -666,11 +670,11 @@ end
     @testset "mapped_domain" begin
         # Test chaining of maps
         D = UnitCircle()
-        D1 = 2*D
+        D1 = 2 .* D
         @test typeof(D1) <: MappedDomain
-        @test typeof(source(D1)) <: UnitHyperSphere
-        D2 = 2*D1
-        @test typeof(source(D2)) <: UnitHyperSphere
+        @test typeof(superdomain(D1)) <: UnitHyperSphere
+        D2 = 2 .* D1
+        @test typeof(superdomain(D2)) <: UnitHyperSphere
 
         D = UnitInterval()^2
         show(io,rotate(D,1.))
@@ -684,7 +688,7 @@ end
         @test v[-1.5, -1.5] ∈ D
         @test v[-0.5, -0.5] ∉ D
 
-        D = rotate(UnitInterval()^3 + v[-.5,-.5,-.5], pi, pi, pi)
+        D = rotate(UnitInterval()^3 .+ v[-.5,-.5,-.5], pi, pi, pi)
         @test v[0.4, 0.4, 0.4] ∈ D
         @test v[0.6, 0.6, 0.6] ∉ D
 
@@ -692,7 +696,7 @@ end
         @test v[0.9, 0.6, -2.5] ∈ D
         @test v[0.0, 0.6, 0.0] ∉ D
 
-        B = 2VectorUnitBall(10)
+        B = 2 .* VectorUnitBall(10)
         @test dimension(B) == 10
     end
 
@@ -764,7 +768,7 @@ end
 
     @testset "arithmetics" begin
         D = UnitInterval()^3
-        S = 2UnitBall()
+        S = 2 .* UnitBall()
         @testset "joint domain" begin
             DS = D ∪ S
             @test v[0.0, 0.6, 0.0] ∈ DS
@@ -780,9 +784,9 @@ end
             DS = D\S
             @test v[0.1, 0.1, 0.1] ∉ DS
 
-            D1 = 2*D
-            D2 = D*2
-            D3 = D/2
+            D1 = 2 .* D
+            D2 = D .* 2
+            D3 = D ./ 2
 
             @test v[2., 2., 2.] ∈ D1
             @test v[0.9, 0.6,-2.5] ∉ D1
@@ -801,7 +805,7 @@ end
             @test eltype(d1) == SVector{2,typeof(1.0)}
             @test v[0.5,0.5] ∈ d1
             @test v[-1.1,0.3] ∉ d1
-            VERSION >= v"1.2" && @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
+            @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
             # Test promotion
             @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
             d1w = convert(Domain{SVector{2,BigFloat}}, d1)
@@ -838,8 +842,8 @@ end
             @test d1 isa VcatDomain
             @test d1.domains isa Tuple
 
-            d3 = ProductDomain(1.05UnitDisk(), (-1.0 .. 1.0))
-            VERSION >= v"1.2" && @inferred(cross(1.05UnitDisk(), (-1.0 .. 1.0))) === d3
+            d3 = ProductDomain(1.05 .* UnitDisk(), (-1.0 .. 1.0))
+            @inferred(cross(1.05 .* UnitDisk(), (-1.0 .. 1.0))) === d3
             @test d3 isa VcatDomain
             @test eltype(d3) == SVector{3,Float64}
             @test v[0.5,0.5,0.8] ∈ d3
@@ -1075,12 +1079,12 @@ end
         d2 = (2..3)
         d = UnionDomain(d1) ∪ UnionDomain(d2)
 
-        @test d+1 == UnionDomain(d1+1) ∪ (d2+1)
-        @test d-1 == UnionDomain(d1-1) ∪ (d2-1)
-        @test 2d  == UnionDomain(2d1)  ∪ (2d2)
-        @test d*2 == UnionDomain(d1*2) ∪ (d2*2)
-        @test d/2 == UnionDomain(d1/2) ∪ (d2/2)
-        @test 2\d == UnionDomain(2\d1) ∪ (2\d2)
+        @test d .+ 1 == UnionDomain(d1 .+ 1) ∪ (d2 .+ 1)
+        @test d .- 1 == UnionDomain(d1 .- 1) ∪ (d2 .- 1)
+        @test 2 .* d  == UnionDomain(2 .* d1)  ∪ (2 .* d2)
+        @test d .* 2 == UnionDomain(d1 .* 2) ∪ (d2 .* 2)
+        @test d ./ 2 == UnionDomain(d1 ./ 2) ∪ (d2 ./ 2)
+        @test 2 .\ d == UnionDomain(2 .\ d1) ∪ (2 .\ d2)
 
         @test infimum(d) == minimum(d) == 0
         @test supremum(d) == maximum(d) == 3
@@ -1100,5 +1104,11 @@ end
 
         d = UnitDisk() × (0.0..1)
         @test SVector(0.1, 0.2, 0.3) ∈ d
+    end
+
+    @testset "Wrapped domain" begin
+        d = 0..1.0
+        w = DomainSets.WrappedDomain(d)
+        @test w isa Domain
     end
 end
