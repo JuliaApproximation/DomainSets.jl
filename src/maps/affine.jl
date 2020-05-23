@@ -1,16 +1,6 @@
 
 import Base: convert
 
-# These are temporary definitions until StaticArrays updates
-Base.convert(::Type{AbstractArray{T}}, v::SVector{N,S}) where {N,T,S} =
-    convert(SVector{N,T}, v)
-Base.convert(::Type{AbstractVector{T}}, v::SVector{N,S}) where {N,T,S} =
-    convert(SVector{N,T}, v)
-Base.convert(::Type{AbstractArray{T}}, v::SMatrix{M,N,S}) where {M,N,T,S} =
-    convert(SMatrix{M,N,T}, v)
-Base.convert(::Type{AbstractMatrix{T}}, v::SMatrix{M,N,S}) where {M,N,T,S} =
-    convert(SMatrix{M,N,T}, v)
-
 tomatrix(::Type{T}, a::Number) where {T<:Number} = a
 tomatrix(::Type{SVector{N,T}}, a::Number) where {N,T} = a * one(SMatrix{N,N,T})
 tomatrix(::Type{<:AbstractVector{T}}, a::Number) where {T} = a * I
