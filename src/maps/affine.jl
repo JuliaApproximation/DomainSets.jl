@@ -21,7 +21,7 @@ matrix(m::AbstractAffineMap) = copy(unsafe_matrix(m))
 vector(m::AbstractAffineMap) = copy(unsafe_vector(m))
 
 applymap(m::AbstractAffineMap, x) = _applymap(m, x, matrix(m), vector(m))
-_applymap(m::AbstractAffineMap, x, A, b) = A*x+b
+_applymap(m::AbstractAffineMap, x, A, b) = A*x .+ b
 
 applymap!(y, m::AbstractAffineMap, x) = _applymap!(y, m, x, matrix(m), vector(m))
 function applymap!(y, m::AbstractAffineMap, x, A, b)
