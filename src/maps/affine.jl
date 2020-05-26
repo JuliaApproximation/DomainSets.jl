@@ -21,7 +21,7 @@ matrix(m::AbstractAffineMap) = copy(unsafe_matrix(m))
 vector(m::AbstractAffineMap) = copy(unsafe_vector(m))
 
 applymap(m::AbstractAffineMap, x) = _applymap(m, x, matrix(m), vector(m))
-_applymap(m::AbstractAffineMap, x, A, b) = A*x .+ b
+_applymap(m::AbstractAffineMap, x, A, b) = A*x + b
 
 applymap!(y, m::AbstractAffineMap, x) = _applymap!(y, m, x, matrix(m), vector(m))
 function applymap!(y, m::AbstractAffineMap, x, A, b)
@@ -464,34 +464,3 @@ scaling_map(a, b, c) = LinearMap(SMatrix{3,3}(a, 0, 0,  0, b, 0,  0, 0,c))
 
 "Scale the variables by a, b, c and d."
 scaling_map(a, b, c, d) = LinearMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,0,d))
-
-
-
-
-##############
-# Arithmetic
-##############
-
-mapcompose(m1::AbstractAffineMap, m2::AbstractAffineMap) = affine_composition(m1, m2)
-
-"""
-Compute the affine map that represents map2 after map1, that is:
-`y = a2*(a1*x+b1)+b2 = a2*a1*x + a2*b1 + b2`.
-"""
-affine_composition(map1::AbstractAffineMap, map2::AbstractAffineMap) =
-    AffineMap(matrix(map2) * matrix(map1), matrix(map2)*vector(map1) + vector(map2))
-
-affine_composition(map1::AffineMap, map2::AffineMap) =
-    AffineMap(unsafe_matrix(map2) * unsafe_matrix(map1), unsafe_matrix(map2)*unsafe_vector(map1) + unsafe_vector(map2))
-
-affine_composition(map1::LinearMap, map2::LinearMap) =
-    LinearMap(unsafe_matrix(map2) * unsafe_matrix(map1))
-
-affine_composition(map1::LinearMap, map2::AffineMap) =
-    AffineMap(unsafe_matrix(map2) * unsafe_matrix(map1), unsafe_vector(map2))
-
-affine_composition(map1::AffineMap, map2::LinearMap) =
-    AffineMap(unsafe_matrix(map2) * unsafe_matrix(map1), unsafe_matrix(map2)*unsafe_vector(map1))
-
-affine_composition(map1::Translation, map2::Translation) =
-    Translation(unsafe_vector(map2) + unsafe_vector(map1))

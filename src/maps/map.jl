@@ -35,16 +35,16 @@ ensure_numtype(map::Map{T}, ::Type{N}) where {T,N} = convert(Map{ensure_numtype(
 (m::AbstractMap)(x) = applymap(m, x)
 
 # For Map{T}, we allow invocation with multiple arguments by conversion to T
-(m::Map{T})(x) where {T} = applymap(m, x)
-(m::Map{T})(x...) where {T} = applymap(m, convert(T, x))
+(m::Map{T})(x) where {T} = apply(m, x)
+(m::Map{T})(x...) where {T} = apply(m, convert(T, x))
 
 @deprecate (*)(m::AbstractMap, x) m(x)
 
-# For maps of type Map{T}, we convert the point x or the map or both
-applymap(m::Map, x) = _applymap(m, x)
-_applymap(m::Map{T}, x::T) where {T} = applymap(m, x)
-_applymap(m::Map{S}, x::T) where {S,T} = _applymap(m, x, promote_type(S,T))
-_applymap(m::Map{S}, x::T, ::Type{V}) where {S,T,V} =
+# For maps of type Map{T}, we convert the point x or the map or both, then call applymap
+apply(m::Map, x) = _apply(m, x)
+_apply(m::Map{T}, x::T) where {T} = applymap(m, x)
+_apply(m::Map{S}, x::T) where {S,T} = _apply(m, x, promote_type(S,T))
+_apply(m::Map{S}, x::T, ::Type{V}) where {S,T,V} =
     applymap(convert(Map{V}, m), convert(V, x))
 
 applymap!(y, m::AbstractMap, x) = y .= m(x)

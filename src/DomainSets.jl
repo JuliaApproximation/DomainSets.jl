@@ -153,6 +153,7 @@ include("maps/composite.jl")
 include("maps/product.jl")
 include("maps/basic.jl")
 include("maps/affine.jl")
+include("maps/arithmetics.jl")
 
 include("generic/domain.jl")
 include("generic/lazy.jl")

@@ -15,6 +15,7 @@ Composition{T}(maps...) where {T} = Composition{T,typeof(maps)}(maps)
 convert(::Type{Map{T}}, m::Composition{T}) where {T} = m
 convert(::Type{Map{T}}, m::Composition) where {T} = Composition{T}(m.maps...)
 
+# Maps are applied in the order that they appear in m.maps
 applymap(m::Composition, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
 applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
@@ -42,6 +43,7 @@ size(m::Composition) = (size(m.maps[end])[1], size(m.maps[1])[2])
 mapcompose(m) = m
 mapcompose(maps...) = Composition(maps...)
 
+# Arguments to ∘ should be reversed before passing on to mapcompose
 (∘)(map1::Map, map2::Map) = mapcompose(map2, map1)
 (∘)(map1::Composition, map2::Map) = mapcompose(map2, elements(map1)...)
 (∘)(map1::Map, map2::Composition) = mapcompose(elements(map2)..., map1)
