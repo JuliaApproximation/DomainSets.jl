@@ -14,7 +14,7 @@ by the type `HalfLine{Float64}()`.
 
 ### Intervals
 
-DomainSets.jl uses IntervalSets.jl for closed and open intervals.
+DomainSets.jl uses [IntervalSets.jl](https://github.com/JuliaMath/IntervalSets.jl) for closed and open intervals.
 
 ### Rectangles
 
@@ -22,7 +22,7 @@ Rectangles can be constructed as a product of intervals, where the elements of t
 are `SVector{2}`:
 
 ```julia
-julia> using DomainSets, StaticArrays; import DomainSets: ×
+julia> using DomainSets, StaticArrays; using DomainSets: ×
 
 julia> SVector(1,2) in (-1..1) × (0..3)
 true
@@ -79,7 +79,7 @@ julia> in.([SVector(1,0),SVector(0,2), SVector(1.5,1.5)], Ref(d))
  1
  0
 
-julia> d = UnitCircle() ∩ (2UnitCircle() + SVector(1.0,0.0))
+julia> d = UnitCircle() ∩ (2UnitCircle() .+ SVector(1.0,0.0))
 the intersection of 2 domains:
 	1.	: the unit circle
 	2.	: A mapped domain based on the unit circle
