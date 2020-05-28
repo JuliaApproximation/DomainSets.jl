@@ -5,15 +5,34 @@ A product map is diagonal and acts on each of the components of x separately:
 """
 abstract type ProductMap{T} <: CompositeLazyMap{T} end
 
-VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
-
-ProductMap(maps::VcatMapElement...) = VcatProductMap(maps...)
-ProductMap{T}(maps::VcatMapElement...) where {N,S,T <: SVector{N,S}} = VcatProductMap{S,N}(maps)
-
 elements(m::ProductMap) = m.maps
 
+VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
+
+ProductMap(maps::Tuple) = ProductMap(maps...)
+ProductMap(maps...) = TupleProductMap(maps...)
+ProductMap(maps::VcatMapElement...) = VcatProductMap(maps...)
+ProductMap(maps::Vector) = VectorProductMap(maps)
+
+ProductMap{T}(maps...) where {T<:Tuple} = TupleProductMap(maps...)
+ProductMap{SVector{N,T}}(maps...) where {N,T} = VcatProductMap{N,T}(maps...)
+ProductMap{Vector{T}}(maps) where {T} = VectorProductMap{T}(maps)
+
+
+isconstant(m::ProductMap) = mapreduce(isconstant, &, elements(m))
+islinear(m::ProductMap) = mapreduce(islinear, &, elements(m))
+isaffine(m::ProductMap) = mapreduce(isaffine, &, elements(m))
+
+matrix(m::ProductMap) = toexternalmatrix(m, map(matrix, elements(m)))
+vector(m::ProductMap) = toexternalpoint(m, map(vector, elements(m)))
+constant(m::ProductMap) = toexternalpoint(m, map(constant, elements(m)))
+
+jacobian(m::ProductMap, x) =
+	toexternalmatrix(m, map(jacobian, elements(m), tointernalpoint(m, x)))
+jacobian(m::ProductMap) = LazyJacobian(m)
+
 convert(::Type{Map{T}}, m::ProductMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::ProductMap{S}) where {S,T} = ProductMap{T}(m.maps...)
+convert(::Type{Map{T}}, m::ProductMap{S}) where {S,T} = ProductMap{T}(elements(m))
 
 tointernalpoint(m::ProductMap, x) = x
 toexternalpoint(m::ProductMap, y) = y
@@ -27,7 +46,7 @@ tensorproduct(map1::Map, map2::ProductMap) = ProductMap(map1, elements(map2)...)
 tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
 
 for op in (:inv, :leftinverse, :rightinverse)
-    @eval $op(m::ProductMap) = ProductMap(map($op, elements(m))...)
+    @eval $op(m::ProductMap) = ProductMap(map($op, elements(m)))
 	@eval $op(m::ProductMap, x) = toexternalpoint(m, map($op, elements(m), tointernalpoint(m, x)))
 end
 
@@ -40,49 +59,40 @@ size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,elements(m
 A `VcatProductMap` is a product map with domain and codomain vectors
 concatenated (`vcat`) into a single vector.
 """
-struct VcatProductMap{T,N,DIM,MAPS} <: ProductMap{SVector{N,T}}
+struct VcatProductMap{N,T,DIM,MAPS} <: ProductMap{SVector{N,T}}
     maps    ::  MAPS
 end
 
-VcatProductMap(maps...) = VcatProductMap(maps)
-function VcatProductMap(maps)
-	T = mapreduce(numtype, promote_type, maps)
-	VcatProductMap{T}(maps)
-end
-
-function VcatProductMap{T}(maps) where {T}
+VcatProductMap(maps::Union{Tuple,Vector}) = VcatProductMap(maps...)
+function VcatProductMap(maps...)
+	T = numtype(maps...)
 	M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,maps))
 	@assert M==N
-	VcatProductMap{T,N}(maps)
+	VcatProductMap{N,T}(maps...)
 end
 
 mapdim(map) = size(map,2)
 
-function VcatProductMap{T,N}(maps) where {T,N}
+VcatProductMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatProductMap{N,T}(maps...)
+function VcatProductMap{N,T}(maps...) where {N,T}
 	DIM = map(mapdim,maps)
-	VcatProductMap{T,N,DIM}(maps)
+	VcatProductMap{N,T,DIM}(maps...)
 end
 
-VcatProductMap{T,N,DIM}(maps) where {T,N,DIM} = VcatProductMap{T,N,DIM,typeof(maps)}(maps)
+VcatProductMap{N,T,DIM}(maps...) where {N,T,DIM} = VcatProductMap{N,T,DIM,typeof(maps)}(maps)
 
-size(m::VcatProductMap{T,N}) where {T,N} = (N,N)
+size(m::VcatProductMap{N}) where {N} = (N,N)
 
-tointernalpoint(m::VcatProductMap{T,N,DIM}, x) where {T,N,DIM} =
+tointernalpoint(m::VcatProductMap{N,T,DIM}, x) where {N,T,DIM} =
 	convert_fromcartesian(x, Val{DIM}())
-toexternalpoint(m::VcatProductMap{T,N,DIM}, y) where {T,N,DIM} =
+toexternalpoint(m::VcatProductMap{N,T,DIM}, y) where {N,T,DIM} =
 	convert_tocartesian(y, Val{DIM}())
-
-convert(::Type{Map{SVector{N,T}}}, m::VcatProductMap{T,M,N}) where {M,N,T} = m
-convert(::Type{Map{SVector{N,T}}}, m::VcatProductMap) where {N,T} = VcatProductMap{T,N}(m.maps)
-
-isconstant(m::VcatProductMap) = mapreduce(isconstant, &, elements(m))
-islinear(m::VcatProductMap) = mapreduce(islinear, &, elements(m))
-isaffine(m::VcatProductMap) = mapreduce(isaffine, &, elements(m))
 
 matsize(A::AbstractArray) = size(A)
 matsize(A::Number) = (1,1)
 
-function toexternalmatrix(m::VcatProductMap{T,N}, matrices) where {T,N}
+# The Jacobian is block-diagonal
+function toexternalmatrix(m::VcatProductMap{N,T}, matrices) where {N,T}
 	A = zeros(T, N, N)
 	l = 0
 	for el in matrices
@@ -94,13 +104,53 @@ function toexternalmatrix(m::VcatProductMap{T,N}, matrices) where {T,N}
 	SMatrix{N,N}(A)
 end
 
-matrix(m::VcatProductMap) = toexternalmatrix(m, map(matrix, elements(m)))
 
-vector(m::VcatProductMap) = toexternalpoint(m, map(vector, elements(m)))
+"""
+A `VectorProductMap` is a product map where all components are univariate maps,
+with inputs and outputs collected into a `Vector`.
+"""
+struct VectorProductMap{T,M} <: ProductMap{Vector{T}}
+    maps    ::  Vector{M}
+end
 
-constant(m::VcatProductMap) = toexternalpoint(m, map(constant, elements(m)))
+VectorProductMap(maps::Map...) = VectorProductMap(maps)
+VectorProductMap(maps) = VectorProductMap(collect(maps))
+function VectorProductMap(maps::Vector)
+	T = mapreduce(numtype, promote_type, maps)
+	VectorProductMap{T}(maps)
+end
 
-jacobian(m::VcatProductMap, x) =
-	toexternalmatrix(m, map(jacobian, elements(m), tointernalpoint(m, x)))
+VectorProductMap{T}(maps::Map...) where {T} = VectorProductMap{T}(maps)
+VectorProductMap{T}(maps) where {T} = VectorProductMap{T}(collect(maps))
+function VectorProductMap{T}(maps::Vector) where {T}
+	Tmaps = convert.(Map{T}, maps)
+	VectorProductMap{T,eltype(Tmaps)}(Tmaps)
+end
 
-jacobian(m::VcatProductMap) = LazyJacobian(m)
+# the Jacobian is a diagonal matrix
+toexternalmatrix(m::VectorProductMap, matrices) = Diagonal(matrices)
+
+
+"""
+A `TupleProductMap` is a product map with all components collected in a tuple.
+There is no vector-valued function associated with this map.
+"""
+struct TupleProductMap{T,MM} <: ProductMap{T}
+    maps    ::  MM
+end
+
+TupleProductMap(maps::Vector) = TupleProductMap(maps...)
+TupleProductMap(maps::Map...) = TupleProductMap(maps)
+TupleProductMap(maps...) = TupleProductMap(map(Map, maps)...)
+TupleProductMap(map::Map) = TupleProductMap((map,))
+function TupleProductMap(maps::Tuple)
+	T = Tuple{map(eltype, maps)...}
+	TupleProductMap{T}(maps)
+end
+
+TupleProductMap{T}(maps::Vector) where {T} = TupleProductMap{T}(maps...)
+TupleProductMap{T}(maps...) where {T} = TupleProductMap{T}(maps)
+function TupleProductMap{T}(maps) where {T <: Tuple}
+	Tmaps = map((t,d) -> convert(Map{t},d), tuple(T.parameters...), maps)
+	TupleProductMap{T,typeof(Tmaps)}(Tmaps)
+end

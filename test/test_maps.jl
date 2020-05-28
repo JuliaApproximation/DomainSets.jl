@@ -10,7 +10,7 @@ suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, s
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
     map(suitable_point_to_map, elements(m))
-suitable_point_to_map(m::DomainSets.VcatProductMap{T,N}) where {T,N} =
+suitable_point_to_map(m::DomainSets.VcatProductMap{N,T}) where {N,T} =
     SVector{N,T}(rand(T,N))
 
 suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
@@ -325,12 +325,8 @@ function test_composite_map(T)
 end
 
 function test_product_map(T)
-    a = T(0)
-    b = T(1)
-    c = T(2)
-    d = T(3)
     ma = IdentityMap{T}()
-    mb = interval_map(a, b, c, d)
+    mb = interval_map(T(0), T(1), T(2), T(3))
 
     r1 = suitable_point_to_map(ma)
     r2 = suitable_point_to_map(ma)
@@ -355,6 +351,11 @@ function test_product_map(T)
     test_generic_map(m5)
     x = SVector{3,T}(rand(T,3))
     @test m5(x) ≈ SVector(element(m5,1)(SVector(x[1],x[2]))...,element(m5,2)(x[3]))
+
+    m6 = ProductMap([ma,mb])
+    @test m6 isa DomainSets.VectorProductMap
+    @test convert(Map{SVector{2,T}}, m6) isa DomainSets.VcatProductMap
+    test_generic_map(m6)
 end
 
 function test_wrapped_maps(T)

@@ -31,7 +31,6 @@ Return the i-th element of a composite structure.
 See also: `elements`.
 """
 element(t, i) = elements(t)[i]
-# By default, we index elements(o)
 
 """
 Return the number of elements of a composite structure.
