@@ -818,6 +818,9 @@ end
             @test eltype(DomainSets.element(d1w, 1)) == BigFloat
             @test eltype(DomainSets.element(d1w, 2)) == BigFloat
 
+            # A single domain
+            @test ProductDomain(0..1) isa VcatDomain{1}
+
             # Test vectors of wrong length
             @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") SA[0.0,0.0,0.0] ∉ d1
             @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") SA[0.0] ∉ d1
@@ -958,6 +961,11 @@ end
             @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
             @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
             @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
+
+            # Some conversions
+            @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Float64}
+            @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
+            @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
         end
     end
 end

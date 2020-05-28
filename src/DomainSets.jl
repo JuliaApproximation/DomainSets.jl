@@ -1,10 +1,6 @@
 module DomainSets
 
-# We use static vectors internally
-
 using StaticArrays
-using Base
-
 using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
 
@@ -52,6 +48,8 @@ export ..
 
 # from util/common.jl
 export prectype, numtype,
+    convert_numtype, promote_numtype,
+    convert_prectype, promote_prectype,
     iscomposite, elements, element, numelements
 # from util/products.jl
 export cartesianproduct

@@ -72,10 +72,27 @@ prectype(::Type{Tuple{A,B,C}}) where {A,B,C} = prectype(A,B,C)
     quote $(promote_type(map(prectype, T.parameters[1].parameters)...)) end
 end
 prectype(::Type{T}) where {T<:AbstractFloat} = T
-prectype(::Type{T}) where {T} = prectype(float(T))
+prectype(::Type{T}) where {T<:Number} = prectype(float(T))
 
-prectype(a, b) = promote_type(prectype(a), prectype(b))
-prectype(a, b, c...) = prectype(prectype(a, b), c...)
+prectype(a...) = promote_type(map(prectype, a)...)
+
+"Convert `x` such that its `prectype` equals `U`."
+convert_prectype(x, ::Type{U}) where {U} = convert(convert_prectype(typeof(x),U), x)
+
+convert_prectype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the numtype of $(T) to $(U).")
+convert_prectype(::Type{T}, ::Type{U}) where {T <: Real,U <: Real} = U
+convert_prectype(::Type{Complex{T}}, ::Type{U}) where {T <: Real,U <: Real} = Complex{U}
+convert_prectype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,convert_prectype(T,U)}
+convert_prectype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{convert_prectype(T,U)}
+
+"Promote the precision types of the arguments to a joined supertype."
+promote_prectype(a) = a
+promote_prectype(a, b) = _promote_prectype(prectype(a,b), a, b)
+promote_prectype(a, b, c...) = _promote_prectype(prectype(a,b,c...), a, b, c...)
+_promote_prectype(U, a) = convert_prectype(a, U)
+_promote_prectype(U, a, b) = convert_prectype(a, U), convert_prectype(b, U)
+_promote_prectype(U, a, b, c...) =
+    (convert_prectype(a, U), convert_prectype(b, U), _promote_prectype(U, c...)...)
 
 #################
 # Numeric type
@@ -95,9 +112,19 @@ end
 
 numtype(a...) = promote_type(map(numtype, a)...)
 
-ensure_numtype(x, ::Type{U}) where {U} = convert(ensure_numtype(typeof(x),U), x)
+"Convert `x` such that its `numtype` equals `U`."
+convert_numtype(x, ::Type{U}) where {U} = convert(convert_numtype(typeof(x),U), x)
 
-ensure_numtype(::Type{T}, ::Type{U}) where {T,U} = T
-ensure_numtype(::Type{T}, ::Type{U}) where {T <: Number,U} = promote_type(T,U)
-ensure_numtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,promote_type(T,U)}
-ensure_numtype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{promote_type(T,U)}
+convert_numtype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the numtype of $(T) to $(U).")
+convert_numtype(::Type{T}, ::Type{U}) where {T <: Number,U <: Number} = U
+convert_numtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,convert_numtype(T,U)}
+convert_numtype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{convert_numtype(T,U)}
+
+"Promote the numeric types of the arguments to a joined supertype."
+promote_numtype(a) = a
+promote_numtype(a, b) = _promote_numtype(numtype(a,b), a, b)
+promote_numtype(a, b, c...) = _promote_numtype(numtype(a,b,c...), a, b, c...)
+_promote_numtype(U, a) = convert_numtype(a, U)
+_promote_numtype(U, a, b) = convert_numtype(a, U), convert_numtype(b, U)
+_promote_numtype(U, a, b, c...) =
+    (convert_numtype(a, U), convert_numtype(b, U), _promote_numtype(U, c...)...)
