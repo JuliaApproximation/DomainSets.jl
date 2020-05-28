@@ -1,5 +1,5 @@
 using Test, LinearAlgebra, DomainSets, StaticArrays
-import DomainSets: elements, TypeFactory
+import DomainSets: elements
 
 include("test_common.jl")
 include("test_maps.jl")

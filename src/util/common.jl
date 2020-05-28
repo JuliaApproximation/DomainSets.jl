@@ -54,29 +54,6 @@ expand(::Type{C}, domain, domains...) where {C} =
 expand(::Type{C}, domain::C, domains...) where {C} =
     (elements(domain)..., expand(C, domains...)...)
 
-###############
-# Type factory
-###############
-
-"""
-A `TypeFactory{T}` is a convenience type to simplify construction of a type.
-
-Having `t = TypeFactory{T}` overrides `getindex` such that `t[a]` invokes `T(a)`.
-
-For example:
-```
-v = TypeFactory{SVector}
-v[0.1,0.2]
-```
-makes an `SVector{2,Float64}`.
-"""
-struct TypeFactory{T}
-end
-
-Base.getindex(v::TypeFactory{T}, args...) where {T} = T(args...)
-
-const v = TypeFactory{SVector}()
-
 
 
 #################
