@@ -26,4 +26,4 @@ julia:
 notifications:
   email: false
 after_success:
-    - julia -e 'cd(Pkg.dir("DomainSets")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+    - julia -e 'cd(Pkg.dir("DomainSets")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
