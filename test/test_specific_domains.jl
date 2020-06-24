@@ -919,6 +919,20 @@ end
             @test [0.2, 2.0] ∈ bnd
             @test [0.2, 0.5] ∉ bnd
         end
+        @testset "Generic vector product domain" begin
+            d1 = GenericVectorProductDomain([0..i for i in 1:10])
+            @test d1 isa GenericVectorProductDomain
+            @test eltype(d1) == Vector{Int}
+            @test rand(10) ∈ d1
+            @test 2 .+ rand(10) ∉ d1
+            d2 = GenericVectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
+            @test d2 isa GenericVectorProductDomain
+            @test eltype(d2) == Vector{Float64}
+            @test rand(10) ∈ d2
+            @test 2 .+ rand(10) ∉ d2
+
+            @test ProductDomain(SVector(0..1, 0..2)) isa GenericVectorProductDomain{Vector{Int}}
+        end
         @testset "Tuple product domain" begin
             # Use the constructor ProductDomain{T} directly
             d1 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)

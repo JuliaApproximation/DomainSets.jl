@@ -18,23 +18,41 @@ isopenset(d::ProductDomain) = all(isopenset, elements(d))
 
 function show(io::IO, d::ProductDomain)
     L = numelements(d)
-    for i in 1:L-1
-        show(io, element(d, i))
-        print(io, " x ")
-    end
-    show(io, element(d, L))
+	if L <= 10
+	    for i in 1:L-1
+	        show(io, element(d, i))
+	        print(io, " x ")
+	    end
+	    show(io, element(d, L))
+	else
+		for i in 1:5
+	        show(io, element(d, i))
+	        print(io, " x ")
+	    end
+	    print(io, "...")
+		for i in L-4:L
+			print(io, " x ")
+	        show(io, element(d, i))
+	    end
+	end
 end
 
 boundary(d::ProductDomain) = _boundary(d, elements(d))
+
+infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
+supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
+
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
 
 ProductDomain(domains...) = TupleProductDomain(domains...)
 ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
 ProductDomain(domains::Vector) = VectorProductDomain(domains)
+ProductDomain(domains::AbstractVector) = GenericVectorProductDomain(domains)
 
 ProductDomain{SVector{N,T}}(domains...) where {N,T} = VcatDomain{N,T}(domains...)
 ProductDomain{Vector{T}}(domains...) where {T} = VectorProductDomain{T}(domains...)
+ProductDomain{V}(domains...) where {V <: AbstractVector} = GenericVectorProductDomain{V}(domains...)
 ProductDomain{T}(domains...) where {T <: Tuple} = TupleProductDomain{T}(domains...)
 
 cross(x::Domain...) = cartesianproduct(x...)
@@ -82,11 +100,24 @@ toexternalpoint(d::VcatDomain{N,T,DIM}, y) where {N,T,DIM} =
 _boundary(d::VcatDomain, domains) =
 	UnionDomain(VcatDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
 
+
+"The supertype of vector product domains."
+abstract type AbstractVectorProductDomain{T} <: ProductDomain{T} end
+
+# the dimension equals the number of composite elements
+dimension(d::AbstractVectorProductDomain) = numelements(d)
+
+tointernalpoint(d::AbstractVectorProductDomain, x) =
+	(@assert length(x) == dimension(d); x)
+toexternalpoint(d::AbstractVectorProductDomain, y) =
+	(@assert length(y) == dimension(d); y)
+
+
 """
 A `VectorProductDomain` is a product domain of arbitrary dimension with element
 type `Vector{T}`, with all member domains having element type `T`.
 """
-struct VectorProductDomain{T,D} <: ProductDomain{Vector{T}}
+struct VectorProductDomain{T,D} <: AbstractVectorProductDomain{Vector{T}}
 	domains	::	Vector{D}
 end
 
@@ -104,18 +135,30 @@ function VectorProductDomain{T}(domains::Vector) where {T}
 	VectorProductDomain{T,eltype(Tdomains)}(Tdomains)
 end
 
-dimension(d::VectorProductDomain) = numelements(d)
-
-tointernalpoint(d::VectorProductDomain, x) =
-	(@assert length(x) == dimension(d); x)
-toexternalpoint(d::VectorProductDomain, y) =
-	(@assert length(y) == dimension(d); y)
-
-infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
-supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
-
 _boundary(d::VectorProductDomain, domains) =
 	UnionDomain([VectorProductDomain([domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...]) for i in 1:length(domains)])
+
+
+export GenericVectorProductDomain
+"""
+A `GenericVectorProductDomain` is a generalization of a `VectorProductDomain`,
+in which both the list of domains and the domain element type are type parameters,
+rather than `Vector{D}` and `Vector{T}`.
+"""
+struct GenericVectorProductDomain{V<:AbstractVector,DD} <: AbstractVectorProductDomain{V}
+	domains	::	DD
+
+	function GenericVectorProductDomain{V,DD}(domains::DD) where {V,DD}
+		@assert eltype(eltype(domains)) == eltype(V)
+		new(domains)
+	end
+end
+
+GenericVectorProductDomain(domains) = GenericVectorProductDomain{Vector{eltype(eltype(domains))}}(domains)
+
+GenericVectorProductDomain{V}(domains::AbstractVector{<:Domain{T}}) where {T,V<:AbstractVector{T}} = GenericVectorProductDomain{V,typeof(domains)}(domains)
+GenericVectorProductDomain{V}(domains) where {T,V<:AbstractVector{T}} =
+	GenericVectorProductDomain{V}(convert.(Domain{T}, domains))
 
 
 """

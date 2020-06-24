@@ -7,6 +7,9 @@ iscompact(d::TypedEndpointsInterval) = false
 ### An interval
 ##################
 
+# IntervalSets defines in, but not indomain
+indomain(x, d::AbstractInterval) = in(x, d)
+
 approx_indomain(x, d::AbstractInterval, tolerance) =
     (x <= rightendpoint(d)+tolerance) && (x >= leftendpoint(d)-tolerance)
 
