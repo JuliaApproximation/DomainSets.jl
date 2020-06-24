@@ -17,6 +17,8 @@ appymap!(y, m::DerivedMap, x) = applymap!(y, supermap(m), x)
 
 jacobian(m::DerivedMap) = jacobian(supermap(m))
 
+
+"A `WrappedMap{T}` takes any object and turns it into a `Map{T}`."
 struct WrappedMap{T,M} <: DerivedMap{T}
     map ::  M
 end
@@ -31,6 +33,10 @@ convert(::Type{Map}, m) = WrappedMap(m)
 convert(::Type{Map{T}}, m) where {T} = WrappedMap{T}(m)
 
 
+"""
+A lazy Jacobian `l` stores a map and implements `jacobian(l)` by invoking `jacobian(m, x)`
+on the stored map.
+"""
 struct LazyJacobian{T,M} <: Map{T}
 	map	::	M
 end
