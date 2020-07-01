@@ -47,12 +47,10 @@ VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
 
 ProductDomain(domains...) = TupleProductDomain(domains...)
 ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
-ProductDomain(domains::Vector) = VectorProductDomain(domains)
-ProductDomain(domains::AbstractVector) = GenericVectorProductDomain(domains)
+ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
 
 ProductDomain{SVector{N,T}}(domains...) where {N,T} = VcatDomain{N,T}(domains...)
-ProductDomain{Vector{T}}(domains...) where {T} = VectorProductDomain{T}(domains...)
-ProductDomain{V}(domains...) where {V <: AbstractVector} = GenericVectorProductDomain{V}(domains...)
+ProductDomain{V}(domains...) where {V <: AbstractVector} = VectorProductDomain{V}(domains...)
 ProductDomain{T}(domains...) where {T <: Tuple} = TupleProductDomain{T}(domains...)
 
 cross(x::Domain...) = cartesianproduct(x...)
@@ -101,64 +99,49 @@ _boundary(d::VcatDomain, domains) =
 	UnionDomain(VcatDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
 
 
-"The supertype of vector product domains."
-abstract type AbstractVectorProductDomain{T} <: ProductDomain{T} end
-
-# the dimension equals the number of composite elements
-dimension(d::AbstractVectorProductDomain) = numelements(d)
-
-tointernalpoint(d::AbstractVectorProductDomain, x) =
-	(@assert length(x) == dimension(d); x)
-toexternalpoint(d::AbstractVectorProductDomain, y) =
-	(@assert length(y) == dimension(d); y)
-
 
 """
-A `VectorProductDomain` is a product domain of arbitrary dimension with element
-type `Vector{T}`, with all member domains having element type `T`.
+A `VectorProductDomain` is a product domain of arbitrary dimension where the
+element type is a vector, and all member domains have the same element type.
 """
-struct VectorProductDomain{T,D} <: AbstractVectorProductDomain{Vector{T}}
-	domains	::	Vector{D}
-end
-
-VectorProductDomain(domains::Domain...) = VectorProductDomain(domains)
-VectorProductDomain(domains) = VectorProductDomain(collect(domains))
-function VectorProductDomain(domains::Vector)
-	T = mapreduce(numtype, promote_type, domains)
-	VectorProductDomain{T}(domains)
-end
-
-VectorProductDomain{T}(domains::Domain...) where {T} = VectorProductDomain{T}(domains)
-VectorProductDomain{T}(domains) where {T} = VectorProductDomain{T}(collect(domains))
-function VectorProductDomain{T}(domains::Vector) where {T}
-	Tdomains = convert.(Domain{T}, domains)
-	VectorProductDomain{T,eltype(Tdomains)}(Tdomains)
-end
-
-_boundary(d::VectorProductDomain, domains) =
-	UnionDomain([VectorProductDomain([domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...]) for i in 1:length(domains)])
-
-
-export GenericVectorProductDomain
-"""
-A `GenericVectorProductDomain` is a generalization of a `VectorProductDomain`,
-in which both the list of domains and the domain element type are type parameters,
-rather than `Vector{D}` and `Vector{T}`.
-"""
-struct GenericVectorProductDomain{V<:AbstractVector,DD} <: AbstractVectorProductDomain{V}
+struct VectorProductDomain{V<:AbstractVector,DD<:AbstractVector} <: ProductDomain{V}
 	domains	::	DD
 
-	function GenericVectorProductDomain{V,DD}(domains::DD) where {V,DD}
+	function VectorProductDomain{V,DD}(domains::DD) where {V,DD}
 		@assert eltype(eltype(domains)) == eltype(V)
 		new(domains)
 	end
 end
 
-GenericVectorProductDomain(domains) = GenericVectorProductDomain{Vector{eltype(eltype(domains))}}(domains)
+VectorProductDomain(domains::AbstractVector) =
+	VectorProductDomain{Vector{eltype(eltype(domains))}}(domains)
 
-GenericVectorProductDomain{V}(domains::AbstractVector{<:Domain{T}}) where {T,V<:AbstractVector{T}} = GenericVectorProductDomain{V,typeof(domains)}(domains)
-GenericVectorProductDomain{V}(domains) where {T,V<:AbstractVector{T}} =
-	GenericVectorProductDomain{V}(convert.(Domain{T}, domains))
+VectorProductDomain{V}(domains::AbstractVector{<:Domain{T}}) where {T,V<:AbstractVector{T}} =
+	VectorProductDomain{V,typeof(domains)}(domains)
+function VectorProductDomain{V}(domains::AbstractVector) where {T,V<:AbstractVector{T}}
+	Tdomains = convert.(Domain{T}, domains)
+	VectorProductDomain{V}(Tdomains)
+end
+
+# Convenience: allow constructor to be called with multiple arguments, or with
+# a container that is not a vector
+VectorProductDomain(domains::Domain...) = VectorProductDomain(domains)
+VectorProductDomain(domains) = VectorProductDomain(collect(domains))
+VectorProductDomain{V}(domains::Domain...) where {V} = VectorProductDomain{V}(domains)
+VectorProductDomain{V}(domains) where {V} = VectorProductDomain{V}(collect(domains))
+
+# the dimension equals the number of composite elements
+dimension(d::VectorProductDomain) = numelements(d)
+
+tointernalpoint(d::VectorProductDomain, x) =
+	(@assert length(x) == dimension(d); x)
+toexternalpoint(d::VectorProductDomain, y) =
+	(@assert length(y) == dimension(d); y)
+
+
+_boundary(d::VectorProductDomain, domains) =
+	UnionDomain([VectorProductDomain([domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...]) for i in 1:length(domains)])
+
 
 
 """

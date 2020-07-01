@@ -918,20 +918,20 @@ end
             @test [0.2, 0.0] ∈ bnd
             @test [0.2, 2.0] ∈ bnd
             @test [0.2, 0.5] ∉ bnd
-        end
-        @testset "Generic vector product domain" begin
-            d1 = GenericVectorProductDomain([0..i for i in 1:10])
-            @test d1 isa GenericVectorProductDomain
-            @test eltype(d1) == Vector{Int}
-            @test rand(10) ∈ d1
-            @test 2 .+ rand(10) ∉ d1
-            d2 = GenericVectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
-            @test d2 isa GenericVectorProductDomain
-            @test eltype(d2) == Vector{Float64}
-            @test rand(10) ∈ d2
-            @test 2 .+ rand(10) ∉ d2
 
-            @test ProductDomain(SVector(0..1, 0..2)) isa GenericVectorProductDomain{Vector{Int}}
+            d3 = VectorProductDomain([0..i for i in 1:10])
+            @test d3 isa VectorProductDomain
+            @test eltype(d3) == Vector{Int}
+            @test rand(10) ∈ d3
+            @test 2 .+ rand(10) ∉ d3
+            d4 = VectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
+            @test d4 isa VectorProductDomain
+            @test eltype(d4) == Vector{Float64}
+            @test rand(10) ∈ d4
+            @test 2 .+ rand(10) ∉ d4
+
+            @test ProductDomain(SVector(0..1, 0..2)) isa VectorProductDomain{Vector{Int}}
+            @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
         end
         @testset "Tuple product domain" begin
             # Use the constructor ProductDomain{T} directly
@@ -977,7 +977,7 @@ end
             @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
 
             # Some conversions
-            @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Float64}
+            @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
             @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
             @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
         end
