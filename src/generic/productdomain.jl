@@ -56,7 +56,7 @@ ProductDomain{T}(domains...) where {T <: Tuple} = TupleProductDomain{T}(domains.
 cross(x::Domain...) = cartesianproduct(x...)
 
 # One can use the cartesianproduct routine to create product domains
-cartesianproduct(domains::Domain...) = ProductDomain(expand(ProductDomain, domains...)...)
+cartesianproduct(domains...) = ProductDomain(expand(ProductDomain, domains...)...)
 
 ^(d::Domain, n::Int) = cartesianproduct(d, n)
 
