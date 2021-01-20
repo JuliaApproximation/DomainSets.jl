@@ -15,10 +15,10 @@ or `norm(x) < radius(ball)` (closed ball).
 abstract type HyperBall{T,C} <: Domain{T} end
 
 "A ball in a fixed N-dimensional Euclidean space."
-const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
+const EuclideanHyperBall{N,T,C} = HyperBall{<:SVector{N,T},C}
 
 "A ball with vector elements of variable length."
-const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
+const VectorHyperBall{T,C} = HyperBall{<:Vector{T},C}
 
 isclosedset(::HyperBall{T,:closed}) where {T} = true
 isclosedset(::HyperBall{T,:open}) where {T} = false
