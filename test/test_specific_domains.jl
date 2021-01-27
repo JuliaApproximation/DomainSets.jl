@@ -951,13 +951,14 @@ end
             @test eltype(DomainSets.element(d1big,1)) == BigFloat
             @test eltype(DomainSets.element(d1big,2)) == BigFloat
 
-            d2 = ProductDomain([true,false], 0..1)
+            d2 = ProductDomain(['a','b'], 0..1)
             @test d2 isa TupleProductDomain
             @test d2.domains isa Tuple
             @test dimension(d2) == 2
-            @test eltype(d2) == Tuple{Bool,Int}
-            @test (true,0.4) ∈ d2
-            @test (false,1.5) ∉ d2
+            @test eltype(d2) == Tuple{Char,Int}
+            @test ('a',0.4) ∈ d2
+            @test ('b',1.5) ∉ d2
+            @test ('c',0.5) ∉ d2
 
             bnd = boundary(d1)
             @test eltype(bnd) == Tuple{Float64,Float64}

@@ -45,8 +45,9 @@ supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
 
-ProductDomain(domains...) = TupleProductDomain(domains...)
-ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
+ProductDomain(domains...) = _ProductDomain(map(Domain, domains)...)
+_ProductDomain(domains...) = TupleProductDomain(domains...)
+_ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
 ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
 
 ProductDomain{SVector{N,T}}(domains...) where {N,T} = VcatDomain{N,T}(domains...)
