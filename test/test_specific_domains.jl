@@ -943,8 +943,13 @@ end
             @test (0.2,0.6) ∈ d1
             @test (0.2,0.8) ∉ d1
             @test (true,0.6) ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
+            if VERSION < v"1.6-"
+                @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+                @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
+            else
+                @test_logs (:warn, "in(x,domain): incompatible types SVector{2, Float64} and Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+                @test_logs (:warn, "in(x,domain): incompatible types Vector{Float64} and Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
+            end
             @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
             d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
             @test eltype(d1big) == Tuple{BigFloat,BigFloat}
