@@ -10,7 +10,7 @@
 
 """
 Supertype of balls for which elements satisfy `norm(x) < radius(ball)` (open ball)
-or `norm(x) < radius(ball)` (closed ball).
+or `norm(x) <= radius(ball)` (closed ball).
 """
 abstract type HyperBall{T,C} <: Domain{T} end
 
@@ -20,16 +20,20 @@ const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
 "A ball with vector elements of variable length."
 const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
 
-isclosedset(::HyperBall{T,:closed}) where {T} = true
-isclosedset(::HyperBall{T,:open}) where {T} = false
+const ClosedHyperBall{T} = HyperBall{T,:closed}
+const OpenHyperBall{T} = HyperBall{T,:open}
+
+isclosedset(::ClosedHyperBall) = true
+isclosedset(::OpenHyperBall) = false
 isopenset(ball::HyperBall) = !isclosedset(ball)
 
-indomain(x, ball::HyperBall) = norm(x) <= radius(ball)
+indomain(x, ball::OpenHyperBall) = norm(x) < radius(ball)
+indomain(x, ball::ClosedHyperBall) = norm(x) <= radius(ball)
 approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
 
 # A closed ball always contains at least the origin.
-isempty(ball::HyperBall{T,:closed}) where {T} = false
-isempty(ball::HyperBall{T,:open}) where {T} = radius(ball) == 0
+isempty(ball::ClosedHyperBall) = false
+isempty(ball::OpenHyperBall) = radius(ball) == 0
 
 ==(d1::HyperBall, d2::HyperBall) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
@@ -73,8 +77,10 @@ const VectorUnitBall{T,C} = FlexibleUnitBall{Vector{T},C}
 VectorUnitBall(dimension::Int = 3) = VectorUnitBall{Float64}(dimension)
 VectorUnitDisk() = VectorUnitBall(2)
 
-indomain(x, ball::FlexibleUnitBall) =
+indomain(x, ball::FlexibleUnitBall{T,:closed}) where {T} =
     (length(x) == dimension(ball)) && (norm(x) <= radius(ball))
+indomain(x, ball::FlexibleUnitBall{T,:open}) where {T} =
+    (length(x) == dimension(ball)) && (norm(x) < radius(ball))
 approx_indomain(x, ball::FlexibleUnitBall, tolerance) =
     (length(x) == dimension(ball)) && (norm(x) <= radius(ball)+tolerance)
 

@@ -510,6 +510,8 @@ end
         @test dimension(D) == 2
 
         D = EuclideanUnitBall{2,Float64,:open}()
+        @test !in(SA[1.0,0.0], D)
+        @test in(SA[1.0-eps(Float64),0.0], D)
         @test approx_in(SA[1.0,0.0], D)
         @test SA[0.2,0.2] ∈ D
         @test !isclosedset(D)
@@ -553,6 +555,7 @@ end
         @test !isempty(B)
 
         C = VectorUnitBall(4)
+        @test [1, 0, 0, 0] ∈ C
         @test [0.0,0.1,0.2,0.1] ∈ C
         @test SA[0.0,0.1,0.2,0.1] ∈ C
         @test [0.0,0.1] ∉ C
@@ -562,6 +565,10 @@ end
         @test !DomainSets.isopenset(C)
         @test boundary(C) == VectorUnitSphere(4)
         @test dimension(C) == 4
+
+        D = VectorUnitBall{Float64,:open}(4)
+        @test !in([1, 0, 0, 0], D)
+        @test in([1-eps(Float64), 0, 0, 0], D)
     end
 
 
