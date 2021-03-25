@@ -607,6 +607,14 @@ end
         @test isopenset(D2)
         @test 1im ∉ D2
         @test 0.999 ∈ D2
+
+        io = IOBuffer()
+        show(io,C)
+        @test String(take!(io)) == "the complex unit circle (T=Complex{Float64})"
+        show(io,D)
+        @test String(take!(io)) == "the complex unit disk (T=Complex{Float64})"
+        show(io,D2)
+        @test String(take!(io)) == "the complex open unit disk (T=Complex{BigFloat})"
     end
 
 

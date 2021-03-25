@@ -260,5 +260,7 @@ ComplexUnitDisk{Float64}() = ComplexUnitDisk{Float64,:closed}()
 
 show(io::IO, d::ComplexUnitCircle{T}) where {T} =
     print(io, "the complex unit circle (T=Complex{$T})")
-show(io::IO, d::ComplexUnitDisk{T}) where {T} =
+show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} =
     print(io, "the complex unit disk (T=Complex{$T})")
+show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} =
+    print(io, "the complex open unit disk (T=Complex{$T})")
