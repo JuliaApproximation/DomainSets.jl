@@ -150,8 +150,6 @@ const UnitCircle{T} = EuclideanUnitSphere{2,T}
 "The unit sphere in 3D."
 const UnitSphere{T} = EuclideanUnitSphere{3,T}
 
-
-
 "The unit sphere with variable dimension."
 struct FlexibleUnitSphere{T} <: UnitHyperSphere{T}
     dimension   ::  Int
@@ -250,3 +248,19 @@ end
 leftinverse(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
 
 rightinverse(m::AngleMap{T}) where {T} = UnitCircleMap{T}()
+
+## The complex plane
+
+const ComplexUnitCircle{T} = FixedUnitSphere{Complex{T}}
+const ComplexUnitDisk{T,C} = FixedUnitBall{Complex{T},C}
+
+ComplexUnitCircle() = ComplexUnitCircle{Float64}()
+ComplexUnitDisk() = ComplexUnitDisk{Float64}()
+ComplexUnitDisk{Float64}() = ComplexUnitDisk{Float64,:closed}()
+
+show(io::IO, d::ComplexUnitCircle{T}) where {T} =
+    print(io, "the complex unit circle (T=Complex{$T})")
+show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} =
+    print(io, "the complex unit disk (T=Complex{$T})")
+show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} =
+    print(io, "the complex open unit disk (T=Complex{$T})")

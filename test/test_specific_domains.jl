@@ -571,7 +571,6 @@ end
         @test in([1-eps(Float64), 0, 0, 0], D)
     end
 
-
     @testset "custom named ball" begin
         B = NamedHyperBall()
         @test SA[1.4, 1.4] ∈ B
@@ -581,6 +580,43 @@ end
         @test SA[1.5,1.5] ∈ B * 1.2
         @test eltype(B) == eltype(2UnitDisk())
     end
+
+    @testset "complex unit circle/disk" begin
+        C = ComplexUnitCircle()
+        @test eltype(C) == Complex{Float64}
+        @test isclosedset(C)
+        @test !isopenset(C)
+        @test 1 ∈ C
+        @test 1im ∈ C
+        @test 1.1im ∉ C
+        @test 0.2+0.5im ∉ C
+        @test 1.2+0.5im ∉ C
+
+        D = ComplexUnitDisk()
+        @test eltype(D) == Complex{Float64}
+        @test isclosedset(D)
+        @test !isopenset(D)
+        @test 1 ∈ D
+        @test 1im ∈ D
+        @test 1.1im ∉ D
+        @test 0.2+0.5im ∈ D
+        @test 1.2+0.5im ∉ D
+
+        D2 = ComplexUnitDisk{BigFloat,:open}()
+        @test eltype(D2) == Complex{BigFloat}
+        @test isopenset(D2)
+        @test 1im ∉ D2
+        @test 0.999 ∈ D2
+
+        io = IOBuffer()
+        show(io,C)
+        @test String(take!(io)) == "the complex unit circle (T=Complex{Float64})"
+        show(io,D)
+        @test String(take!(io)) == "the complex unit disk (T=Complex{Float64})"
+        show(io,D2)
+        @test String(take!(io)) == "the complex open unit disk (T=Complex{BigFloat})"
+    end
+
 
     @testset "cube" begin
         #Square
