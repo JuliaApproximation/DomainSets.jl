@@ -134,6 +134,7 @@ export UnitCircle, VectorUnitCircle,
     UnitBall, VectorUnitBall,
     UnitHyperBall,  UnitHyperSphere,
     EuclideanUnitBall, EuclideanUnitSphere,
+    ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder,
     parameterization, gradient
 
