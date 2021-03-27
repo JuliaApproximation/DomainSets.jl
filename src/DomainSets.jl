@@ -168,12 +168,12 @@ include("generic/arithmetics.jl")
 include("generic/broadcast.jl")
 
 include("domains/trivial.jl")
+include("domains/indicator.jl")
+include("domains/levelset.jl")
 include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
-include("domains/indicator.jl")
-include("domains/levelset.jl")
 
 include("applications/rotation.jl")
 

@@ -12,10 +12,6 @@ _pseudolevel(d::AbstractLevelSet{T}, epsilon, fun, C) where {T} =
 show(io::IO, d::AbstractLevelSet) =
     print(io, "level set f(x) = $(level(d)) with f = $(levelfun(d))")
 
-convert(::Type{Domain{T}}, d::AbstractLevelSet{T}) where {T} = d
-convert(::Type{Domain{T}}, d::AbstractLevelSet{S}) where {S,T} =
-    similar_levelset(d, T)
-
 
 "The domain defined by `f(x)=0` for a given function `f`."
 struct ZeroSet{T,F} <: AbstractLevelSet{T}
@@ -28,7 +24,7 @@ ZeroSet{T}(f::F) where {T,F} = ZeroSet{T,F}(f)
 levelfun(d::ZeroSet) = d.f
 level(d::ZeroSet) = 0
 
-similar_levelset(d::ZeroSet, ::Type{T}) where {T} = ZeroSet{T}(d.f)
+similardomain(d::ZeroSet, ::Type{T}) where {T} = ZeroSet{T}(d.f)
 
 
 "The domain defined by `f(x)=C` for a given function `f` and constant `C`."
@@ -43,4 +39,4 @@ LevelSet{T}(f::F, C::S) where {T,F,S} = LevelSet{T,F,S}(f, C)
 levelfun(d::LevelSet) = d.f
 level(d::LevelSet) = d.C
 
-similar_levelset(d::LevelSet, ::Type{T}) where {T} = LevelSet{T}(d.f, d.C)
+similardomain(d::LevelSet, ::Type{T}) where {T} = LevelSet{T}(d.f, d.C)

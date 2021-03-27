@@ -65,8 +65,7 @@ cartesianproduct(domains...) = ProductDomain(expand(ProductDomain, domains...)..
 # Convert from any product domain to any other product domain. This means that the
 # constructors should work for elements(d) of any product domain, i.e., for a tuple
 # or a vector of domains.
-convert(::Type{Domain{T}}, d::ProductDomain{T}) where {T} = d
-convert(::Type{Domain{T}}, d::ProductDomain) where {T} = ProductDomain{T}(elements(d))
+similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(elements(d))
 
 """
 A `VcatDomain` concatenates the element types of its member domains in a single

@@ -8,14 +8,14 @@ struct Point{T} <: Domain{T}
     x::T
 end
 
+similardomain(d::Point, ::Type{T}) where {T} = Point{T}(d.x)
+
 convert(::Type{Number}, d::Point{<:Number}) = d.x
 convert(::Type{N}, d::Point{<:Number}) where N<:Number = convert(N, convert(Number, d.x))
 Number(d::Point) = convert(Number, d)
 
-convert(::Type{Domain{T}}, d::Point{T}) where T = d
-convert(::Type{Domain{T}}, d::Point) where T = Point(T(d.x))
 convert(::Type{Domain}, c::Number) = Point(c)
-convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
+convert(::Type{Domain{T}}, c::Number) where T = Point{T}(c)
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x

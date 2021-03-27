@@ -9,6 +9,9 @@ convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{convert_p
 
 Domain(d) = convert(Domain, d)
 
+convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
+convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
+
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}
 

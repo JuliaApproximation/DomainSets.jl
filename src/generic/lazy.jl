@@ -115,7 +115,7 @@ WrappedDomain{T}(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
 WrappedDomain{T}(domain::Domain) where {T} = WrappedDomain{T}(convert(Domain{T}, domain))
 WrappedDomain{T}(domain) where {T} = WrappedDomain{T,typeof(domain)}(domain)
 
-convert(::Type{Domain{T}}, d::WrappedDomain) where {T} = WrappedDomain{T}(d.domain)
+similardomain(d::WrappedDomain, ::Type{T}) where {T} = WrappedDomain{T}(d.domain)
 
 # Anything can be converted to a domain by wrapping it. An error will be thrown
 # if the object does not support `eltype`.

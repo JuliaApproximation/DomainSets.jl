@@ -18,10 +18,6 @@ indicatorfunction(d::Domain) = x -> x ∈ d
 indomain(x, d::AbstractIndicatorFunction) = _indomain(x, d, indicatorfunction(d))
 _indomain(x, d::AbstractIndicatorFunction, f) = f(x)
 
-convert(::Type{Domain{T}}, d::AbstractIndicatorFunction{T}) where {T} = d
-convert(::Type{Domain{T}}, d::AbstractIndicatorFunction{S}) where {S,T} =
-    similar_indicatorfunction(d, T)
-
 show(io::IO, d::AbstractIndicatorFunction) =
     print(io, "indicator domain defined by function f = $(indicatorfunction(d))")
 
@@ -36,5 +32,19 @@ IndicatorFunction{T}(f::F) where {T,F} = IndicatorFunction{T,F}(f)
 
 indicatorfunction(d::IndicatorFunction) = d.f
 
-similar_indicatorfunction(d::IndicatorFunction, ::Type{T}) where {T} =
-    IndicatorFunction{T}(d.f)
+similardomain(d::IndicatorFunction, ::Type{T}) where {T} = IndicatorFunction{T}(d.f)
+
+convert(::Type{IndicatorFunction}, d::AbstractIndicatorFunction) = d
+convert(::Type{IndicatorFunction}, d::Domain{T}) where {T} =
+    IndicatorFunction{T}(indicatorfunction(d))
+
+
+"Like `IndicatorFunction` but without the type of the function as type parameter."
+struct UntypedIndicatorFunction{T} <: AbstractIndicatorFunction{T}
+    f
+end
+
+indicatorfunction(d::UntypedIndicatorFunction) = d.f
+
+similardomain(d::UntypedIndicatorFunction, ::Type{T}) where {T} =
+    UntypedIndicatorFunction{T}(d.f)

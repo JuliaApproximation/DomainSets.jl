@@ -49,7 +49,8 @@ MappedDomain{T}(domain::Domain, invmap::Map{T}) where {T} =
 MappedDomain{T}(domain::Domain, invmap::Map{S}) where {S,T} =
     MappedDomain{T}(domain, convert(Map{T}, invmap))
 
-convert(::Type{Domain{T}}, d::MappedDomain) where {T} = MappedDomain{T}(d.domain, d.invmap)
+similardomain(d::MappedDomain, ::Type{T}) where {T} =
+    MappedDomain{T}(d.domain, d.invmap)
 
 forward_map(d::MappedDomain) = inv(d.invmap)
 forward_map(d::MappedDomain, x) = inverse(d.invmap, x)

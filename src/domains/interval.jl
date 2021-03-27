@@ -58,7 +58,7 @@ UnitInterval() = UnitInterval{Float64}()
 
 endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 
-convert(::Type{Domain{T}}, ::UnitInterval{S}) where {S,T} = UnitInterval{T}()
+similardomain(::UnitInterval, ::Type{T}) where {T} = UnitInterval{T}()
 
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: ClosedFixedInterval{T}
@@ -68,7 +68,7 @@ ChebyshevInterval() = ChebyshevInterval{Float64}()
 
 endpoints(d::ChebyshevInterval{T}) where {T} = (-one(T),one(T))
 
-convert(::Type{Domain{T}}, ::ChebyshevInterval{S}) where {S,T} = ChebyshevInterval{T}()
+similardomain(::ChebyshevInterval, ::Type{T}) where {T} = ChebyshevInterval{T}()
 
 -(d::ChebyshevInterval) = d
 
@@ -81,7 +81,7 @@ endpoints(d::HalfLine{T}) where {T} = (zero(T), T(Inf))
 
 boundary(d::HalfLine) = Point(leftendpoint(d))
 
-convert(::Type{Domain{T}}, ::HalfLine{S}) where {S,T} = HalfLine{T}()
+similardomain(::HalfLine, ::Type{T}) where {T} = HalfLine{T}()
 
 
 indomain(x, d::HalfLine) = x >= 0
@@ -99,7 +99,7 @@ point_in_domain(d::HalfLine) = zero(eltype(d))
 struct NegativeHalfLine{T} <: FixedInterval{:open,:open,T} end
 NegativeHalfLine() = NegativeHalfLine{Float64}()
 
-convert(::Type{Domain{T}}, ::NegativeHalfLine{S}) where {S,T} = NegativeHalfLine{T}()
+similardomain(::NegativeHalfLine, ::Type{T}) where {T} = NegativeHalfLine{T}()
 
 endpoints(d::NegativeHalfLine{T}) where {T} = (-T(Inf), zero(T))
 

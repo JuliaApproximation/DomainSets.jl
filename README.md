@@ -72,7 +72,7 @@ Domains can be unioned and intersected together:
 ```julia
 julia> d = UnitCircle() ∪ 2UnitCircle();
 
-julia> in.([SVector(1,0),SVector(0,2), SVector(1.5,1.5)], Ref(d))
+julia> in.([SVector(1,0),SVector(0,2), SVector(1.5,1.5)], d)
 3-element BitArray{1}:
  1
  1

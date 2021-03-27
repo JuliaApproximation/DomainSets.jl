@@ -84,9 +84,10 @@ indomain(x, ball::FlexibleUnitBall{T,:open}) where {T} =
 approx_indomain(x, ball::FlexibleUnitBall, tolerance) =
     (length(x) == dimension(ball)) && (norm(x) <= radius(ball)+tolerance)
 
-convert(::Type{Domain{T}}, ball::FixedUnitBall{S,C}) where {S,T,C} =
+
+similardomain(ball::FixedUnitBall{S,C}, ::Type{T}) where {S,T,C} =
     FixedUnitBall{T,C}()
-convert(::Type{Domain{T}}, ball::FlexibleUnitBall{S,C}) where {S,T,C} =
+similardomain(ball::FlexibleUnitBall{S,C}, ::Type{T}) where {S,T,C} =
     FlexibleUnitBall{T,C}(ball.dimension)
 
 
@@ -122,6 +123,11 @@ isopenset(::HyperSphere) = false
 
 ==(d1::HyperSphere, d2::HyperSphere) =
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
+
+convert(::Type{LevelSet}, d::HyperSphere{T}) where {T} =
+    LevelSet{T}(norm, radius(d))
+convert(::Type{LevelSet{T}}, d::HyperSphere) where {T} =
+    LevelSet{T}(norm, radius(d))
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
 const EuclideanHyperSphere{N,T} = HyperSphere{SVector{N,T}}
@@ -163,10 +169,8 @@ const VectorUnitSphere{T} = FlexibleUnitSphere{Vector{T}}
 VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
 VectorUnitCircle() = VectorUnitSphere(2)
 
-convert(::Type{Domain{T}}, sphere::FixedUnitSphere{S}) where {S,T} =
-    FixedUnitSphere{T}()
-convert(::Type{Domain{T}}, sphere::FlexibleUnitSphere{S}) where {S,T} =
-    FlexibleUnitSphere{T}(sphere.dimension)
+similardomain(sphere::FixedUnitSphere, ::Type{T}) where {T} = FixedUnitSphere{T}()
+similardomain(sphere::FlexibleUnitSphere, ::Type{T}) where {T} = FlexibleUnitSphere{T}(sphere.dimension)
 
 show(io::IO, d::UnitHyperSphere) =
     dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")

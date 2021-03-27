@@ -38,7 +38,7 @@ convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, s::Set) = UnionDomain(map(Point,collect(s)))
 
-convert(::Type{Domain{T}}, d::UnionDomain{S}) where {S,T} =
+similardomain(d::UnionDomain, ::Type{T}) where {T} =
     UnionDomain(convert_domain.(T, elements(d)))
 
 elements(d::UnionDomain) = d.domains
@@ -165,7 +165,7 @@ function intersect(d1::ProductDomain, d2::ProductDomain)
     end
 end
 
-convert(::Type{Domain{T}}, d::IntersectionDomain{S}) where {S,T} =
+similardomain(d::IntersectionDomain, ::Type{T}) where {T} =
     IntersectionDomain(convert_domain.(T, elements(d)))
 
 ==(a::IntersectionDomain, b::IntersectionDomain) = Set(elements(a)) == Set(elements(b))
@@ -204,7 +204,7 @@ combine(d::DifferenceDomain, results) = results[1] & !results[2]
 _approx_indomain(x, d::DifferenceDomain, comp::Combination, domains, tolerance) =
     approx_in(x, domains[1], tolerance) & !in(x, domains[2])
 
-convert(::Type{Domain{T}}, d::DifferenceDomain{S}) where {S,T} =
+similardomain(d::DifferenceDomain, ::Type{T}) where {T} =
     DifferenceDomain(convert_domain(T, d.domains[1]), convert_domain(T, d.domains[2]))
 
 function setdiff(d1::Domain, d2::Domain)

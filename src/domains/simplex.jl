@@ -58,7 +58,7 @@ corners(d::VectorUnitSimplex{T}) where {T} =
 # whether it is open or closed.
 point_in_domain(d::AbstractUnitSimplex) = center(d)
 
-convert(::Type{Domain{T}}, d::FixedUnitSimplex{S,C}) where {S,T,C} =
+similardomain(d::FixedUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
     FixedUnitSimplex{T,C}()
-convert(::Type{Domain{T}}, d::FlexibleUnitSimplex{S,C}) where {S,T,C} =
+similardomain(d::FlexibleUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
     FlexibleUnitSimplex{T,C}(d.dimension)

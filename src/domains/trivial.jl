@@ -8,6 +8,8 @@ const AnyEmptySpace = EmptySpace{Any}
 EmptySpace() = EmptySpace{Float64}()
 EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 
+similardomain(::EmptySpace, ::Type{T}) where {T} = EmptySpace{T}()
+
 emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
@@ -52,6 +54,8 @@ const AnyFullSpace = FullSpace{Any}
 
 FullSpace() = FullSpace{Float64}()
 FullSpace(d) = FullSpace{eltype(d)}()
+
+similardomain(::FullSpace, ::Type{T}) where {T} = FullSpace{T}()
 
 euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
 euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace{SVector{N,T}}()
