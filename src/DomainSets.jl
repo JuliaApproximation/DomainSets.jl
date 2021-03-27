@@ -138,7 +138,10 @@ export UnitCircle, VectorUnitCircle,
     ellipse, ellipse_shape, cylinder,
     parameterization, gradient
 # from domain/levelset.jl
-export LevelSet, ZeroSet
+export LevelSet, ZeroSet,
+    SubLevelSet, SubZeroSet,
+    SuperLevelSet, SuperZeroSet,
+    pseudolevel
 # from domain/indicator.jl
 export IndicatorFunction
 

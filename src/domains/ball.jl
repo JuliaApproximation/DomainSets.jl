@@ -38,6 +38,11 @@ isempty(ball::OpenHyperBall) = radius(ball) == 0
 ==(d1::HyperBall, d2::HyperBall) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
+convert(::Type{SubLevelSet}, d::HyperBall{T,C}) where {T,C} =
+    SubLevelSet{T,C}(norm, radius(d))
+convert(::Type{SubLevelSet{T}}, d::HyperBall{S,C}) where {T,S,C} =
+    SubLevelSet{T,C}(norm, radius(d))
+
 "The unit ball."
 abstract type UnitHyperBall{T,C} <: HyperBall{T,C} end
 

@@ -511,6 +511,9 @@ end
         @test boundary(D) == UnitCircle()
         @test dimension(D) == 2
 
+        @test convert(SubLevelSet, UnitDisk()) isa SubLevelSet{SVector{2,Float64},:closed}
+        @test convert(SubLevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SubLevelSet{SVector{2,Float64},:open}
+
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
         @test in(SA[1.0-eps(Float64),0.0], D)
@@ -616,6 +619,13 @@ end
         @test String(take!(io)) == "the complex unit disk (T=Complex{Float64})"
         show(io,D2)
         @test String(take!(io)) == "the complex open unit disk (T=Complex{BigFloat})"
+
+        @test pseudolevel(ComplexUnitCircle(), 0.1) isa SubLevelSet{Complex{Float64},:open}
+        p = pseudolevel(ComplexUnitCircle(), 0.1)
+        @test 0.8 ∉ p
+        @test 0.95 ∈ p
+        @test 1+0.1im ∈ p
+        @test 1.1+0.2im ∉ p
     end
 
 
@@ -655,6 +665,9 @@ end
 
         @test convert(LevelSet, UnitCircle()) isa LevelSet{SVector{2,Float64}}
         @test convert(LevelSet{SVector{2,BigFloat}}, UnitCircle()) isa LevelSet{SVector{2,BigFloat}}
+        @test pseudolevel(UnitCircle(), 0.1) isa SubLevelSet
+        @test SA[1.05,0] ∈ pseudolevel(UnitCircle(), 0.1)
+        @test SA[1.15,0] ∉ pseudolevel(UnitCircle(), 0.1)
 
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
         @test eltype(C2) == SVector{2,BigFloat}
@@ -819,15 +832,46 @@ end
     end
 
     @testset "level sets" begin
-        d = LevelSet(cos, 1.0)
-        @test d isa LevelSet{Float64}
-        @test convert(Domain{ComplexF64}, d) isa LevelSet{ComplexF64}
-        show(io,d)
+        d1 = LevelSet(cos, 1.0)
+        @test d1 isa LevelSet{Float64}
+        @test convert(Domain{ComplexF64}, d1) isa LevelSet{ComplexF64}
+        show(io,d1)
         @test String(take!(io)) == "level set f(x) = 1.0 with f = cos"
-        @test 0.0 ∈ d
-        @test 0im ∈ d
-        @test 0.1 ∉ d
-        @test 0.1+1im ∉ d
+        @test 0.0 ∈ d1
+        @test 0im ∈ d1
+        @test 0.1 ∉ d1
+        @test 0.1+1im ∉ d1
+
+        # prod yields the function (x,y) -> x*y
+        d2 = ZeroSet{SVector{2,Float64}}(prod)
+        @test d2 isa ZeroSet{SVector{2,Float64}}
+        @test SA[0.1,0.3] ∉ d2
+        @test SA[0.0,0.3] ∈ d2
+        @test SA[0.1,0.0] ∈ d2
+
+        d3 = SubLevelSet(cos, 0.5)
+        @test d3 isa SubLevelSet{Float64,:closed}
+        show(io,d3)
+        @test String(take!(io)) == "sublevel set f(x) <= 0.5 with f = cos"
+        @test 3.0 ∈ d3
+        @test 0.0 ∉ d3
+
+        d4 = SubZeroSet{SVector{2,Float64}}(prod)
+        @test d4 isa SubZeroSet{SVector{2,Float64},:closed}
+        @test SA[0.1,0.3] ∉ d4
+        @test SA[-0.1,0.3] ∈ d4
+        @test SA[-0.1,-0.3] ∉ d4
+
+        d5 = SuperLevelSet(cos, 0.5)
+        @test d5 isa SuperLevelSet{Float64,:closed}
+        @test 3.0 ∉ d5
+        @test 0.0 ∈ d5
+
+        d6 = SuperZeroSet{SVector{2,Float64}}(prod)
+        @test d6 isa SuperZeroSet{SVector{2,Float64},:closed}
+        @test SA[0.1,0.3] ∈ d6
+        @test SA[-0.1,0.3] ∉ d6
+        @test SA[-0.1,-0.3] ∈ d6
     end
 
     @testset "indicator functions" begin
