@@ -113,8 +113,6 @@ function approx_indomain(x, domain::Domain, tolerance)
     return in(x, domain)
 end
 
-
-
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 
 isreal(d::Domain) = isreal(eltype(d))

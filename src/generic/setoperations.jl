@@ -50,6 +50,12 @@ union(domains::Domain...) = UnionDomain(domains...)
 # Catch one specific case
 union(d1::Domain, d2::Domain)  = d1 == d2 ? d1 : UnionDomain(d1, d2)
 
+# one layer of indirection here to allow for safe dispatch
+union(d1::Domain, d2) = _union1(d1, d2)
+_union1(d1, d2) = UnionDomain(d1, d2)
+union(d1, d2::Domain) = _union2(d1, d2)
+_union2(d1, d2) = UnionDomain(d1, d2)
+
 point_in_domain(d::UnionDomain) = convert(eltype(d), point_in_domain(element(d,1)))
 
 isempty(d::UnionDomain) = all(isempty, d.domains)
@@ -102,10 +108,6 @@ function setdiff(d1::Domain, d2::UnionDomain)
     ret
 end
 
-# use \ as a synomym for setdiff, in the context of domains (though, generically,
-# \ means left division in Julia)
-\(d1::Domain, d2::Domain) = setdiff(d1, d2)
-
 
 ##############################
 # The intersection of domains
@@ -139,6 +141,13 @@ composition(d::IntersectionDomain) = Combination()
 combine(d::IntersectionDomain, results) = reduce(&, results)
 
 intersect(d1::Domain, d2::Domain) = d1 == d2 ? d1 : IntersectionDomain(d1, d2)
+
+# one layer of indirection here to allow for safe dispatch
+intersect(d1::Domain, d2) = _intersect1(d1, d2)
+_intersect1(d1, d2) = IntersectionDomain(d1, d2)
+intersect(d1, d2::Domain) = _intersect2(d1, d2)
+_intersect2(d1, d2) = IntersectionDomain(d1, d2)
+
 function intersect(d1::UnionDomain, d2::UnionDomain)
     d1 == d2 && return d1
     union(intersect.(Ref(d1), elements(d2))...)
@@ -150,7 +159,7 @@ intersect(d1::Domain, d2::UnionDomain) = union(intersect.(Ref(d1), d2.domains)..
 
 function intersect(d1::ProductDomain, d2::ProductDomain)
     if numelements(d1) == numelements(d2)
-        ProductDomain([intersect(element(d1,i), element(d2,i)) for i in 1:numelements(d1)]...)
+        ProductDomain(map(intersect, elements(d1), elements(d2)))
     else
         IntersectionDomain(d1, d2)
     end
@@ -198,16 +207,26 @@ _approx_indomain(x, d::DifferenceDomain, comp::Combination, domains, tolerance) 
 convert(::Type{Domain{T}}, d::DifferenceDomain{S}) where {S,T} =
     DifferenceDomain(convert_domain(T, d.domains[1]), convert_domain(T, d.domains[2]))
 
-function setdiff(d1::Domain{T}, d2::Domain) where T
-    d1 == d2 && return EmptySpace{T}()
-    DifferenceDomain(d1, d2)
+function setdiff(d1::Domain, d2::Domain)
+    if d1 == d2
+		T = promote_type(eltype(d1),eltype(d2))
+		EmptySpace{T}()
+	else
+    	DifferenceDomain(d1, d2)
+	end
 end
 
-setdiff(d1::Domain, d2) = DifferenceDomain(d1, d2)
-setdiff(d1, d2::Domain) = DifferenceDomain(d1, d2)
+# one layer of indirection here to allow for safe dispatch
+setdiff(d1::Domain, d2) = _setdiff1(d1, d2)
+_setdiff1(d1, d2) = DifferenceDomain(d1, d2)
+setdiff(d1, d2::Domain) = _setdiff2(d1, d2)
+_setdiff2(d1, d2) = DifferenceDomain(d1, d2)
 
+# use \ as a synomym for setdiff, in the context of domains (though, generically,
+# \ means left division in Julia)
+\(d1::Domain, d2::Domain) = setdiff(d1, d2)
 \(d1::Domain, d2) = setdiff(d1, d2)
-
+\(d1, d2::Domain) = setdiff(d1, d2)
 
 
 function show(io::IO, d::DifferenceDomain)

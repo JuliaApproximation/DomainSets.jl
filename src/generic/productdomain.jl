@@ -49,6 +49,7 @@ ProductDomain(domains...) = _ProductDomain(map(Domain, domains)...)
 _ProductDomain(domains...) = TupleProductDomain(domains...)
 _ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
 ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
+ProductDomain(domains::Tuple) = ProductDomain(domains...)
 
 ProductDomain{SVector{N,T}}(domains...) where {N,T} = VcatDomain{N,T}(domains...)
 ProductDomain{V}(domains...) where {V <: AbstractVector} = VectorProductDomain{V}(domains...)

@@ -137,6 +137,10 @@ export UnitCircle, VectorUnitCircle,
     ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder,
     parameterization, gradient
+# from domain/levelset.jl
+export LevelSet, ZeroSet
+# from domain/indicator.jl
+export IndicatorFunction
 
 ## Applications
 # from applications/rotation.jl
@@ -168,6 +172,8 @@ include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
+include("domains/indicator.jl")
+include("domains/levelset.jl")
 
 include("applications/rotation.jl")
 

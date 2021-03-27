@@ -837,37 +837,6 @@ end
     end
 end
 
-@testset "arithmetics" begin
-    D = UnitInterval()^3
-    S = 2 * UnitBall()
-    @testset "joint domain" begin
-        DS = D ∪ S
-        @test SA[0.0, 0.6, 0.0] ∈ DS
-        @test SA[0.9, 0.6,-2.5] ∉ DS
-    end
-
-    @testset "domain intersection" begin
-        DS = D ∩ S
-        @test SA[0.1, 0.1, 0.1] ∈ DS
-        @test SA[0.1, -0.1, 0.1] ∉ DS
-    end
-    @testset "domain difference" begin
-        DS = D\S
-        @test SA[0.1, 0.1, 0.1] ∉ DS
-
-        D1 = 2 * D
-        D2 = D * 2
-        D3 = D / 2
-
-        @test SA[2., 2., 2.] ∈ D1
-        @test SA[0.9, 0.6,-2.5] ∉ D1
-        @test SA[2., 2., 2.] ∈ D2
-        @test SA[0.9, 0.6,-2.5] ∉ D2
-        @test SA[.5, .4, .45] ∈ D3
-        @test SA[.3, 0.6,-.2] ∉ D3
-    end
-end
-
 @testset "cartesian product" begin
     @testset "ProductDomain 1" begin
         d1 = (-1.0 .. 1.0)^2
@@ -970,7 +939,7 @@ end
         @test eltype(d1big) == Vector{BigFloat}
 
         # Test an integer type as well
-        d2 = ProductDomain([0..1, 0..2])
+        d2 = ProductDomain([0..1, 0..3])
         @test dimension(d2) == 2
         @test [0.1,0.2] ∈ d2
         @test point_in_domain(d2) ∈ d2
@@ -1052,6 +1021,10 @@ end
         @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
         @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
         @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
+
+        # intersection of product domains
+        @test ProductDomain([0..1.0, 0..2.0]) ∩ ProductDomain([0..1, 0..3]) isa VectorProductDomain{Vector{Float64}}
+        @test ProductDomain(0..1.0, 0..2.0) ∩ ProductDomain(0..1, 0..3) isa VcatDomain{2,Float64}
     end
 end
 
@@ -1093,10 +1066,14 @@ end
         @test (d1 ∪ d1) isa typeof(d1)
 
         # union with non-Domain type that implements domain interface
-        u45 = UnionDomain(d4, d5)
+        u45 = d4 ∪ d5
         @test u45 isa Domain{Float64}
+        @test u45 isa UnionDomain
+        @test eltype(element(u45,1)) == Float64
+        @test eltype(element(u45,2)) == Float64
         @test 0.2 ∈ u45
         @test 1.2 ∈ u45
+        @test 3 ∈ u45
         @test -1.2 ∉ u45
         @test convert(Domain{BigFloat}, u45) isa Domain{BigFloat}
 
@@ -1106,7 +1083,6 @@ end
         @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
 
         @test !isempty(u1)
-
         show(io,u1)
         @test String(take!(io)) == "the union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
     end
@@ -1145,31 +1121,36 @@ end
         @test 1.0 ∈ d45
         @test 1.1 ∉ d45
         @test convert(Domain{BigFloat}, d45) isa Domain{BigFloat}
+
+        @test (0..1) ∩ [1.5] isa IntersectionDomain{Float64}
+        @test [0.5] ∩ (1..2) isa IntersectionDomain{Float64}
     end
 
     @testset "difference" begin
         d1 = UnitDisk()
         d2 = (-.5..0.5) × (-.1..0.1)
-        d3 = 0.0..3.0
-        d4 = [1.0, 2.5]
 
-        # intersection of productdomains
         d = d1\d2
         show(io,d)
         @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
         @test dimension(d) == 2
+        @test SVector(0.,.74) ∈ d
+        @test SVector(0.,.25) ∈ d
 
-        x = SVector(0.,.74)
-        y = SVector(0.,.25)
-        @test x∈d
-        @test x∈d
-
+        d3 = 0.0..3.0
+        d4 = [1.0, 2.5]
         d34 = DifferenceDomain(d3, d4)
         @test d34 isa Domain{Float64}
         @test d34 isa DifferenceDomain
         @test 0.99 ∈ d34
         @test 1.0 ∉ d34
         @test convert(Domain{BigFloat}, d34) isa Domain{BigFloat}
+
+        @test (0..1) \ [0.5] isa DifferenceDomain{Float64}
+        dd = [0,5] \ (0..3)
+        @test dd isa DifferenceDomain{Int}
+        @test 0 ∉ dd
+        @test 5 ∈ dd
     end
 
     @testset "arithmetic" begin
@@ -1209,4 +1190,36 @@ end
         w = DomainSets.WrappedDomain(d)
         @test w isa Domain
     end
+
+    @testset "more set operations" begin
+        D = UnitInterval()^3
+        S = 2 * UnitBall()
+        @testset "joint domain" begin
+            DS = D ∪ S
+            @test SA[0.0, 0.6, 0.0] ∈ DS
+            @test SA[0.9, 0.6,-2.5] ∉ DS
+        end
+
+        @testset "domain intersection" begin
+            DS = D ∩ S
+            @test SA[0.1, 0.1, 0.1] ∈ DS
+            @test SA[0.1, -0.1, 0.1] ∉ DS
+        end
+        @testset "domain difference" begin
+            DS = D\S
+            @test SA[0.1, 0.1, 0.1] ∉ DS
+
+            D1 = 2 * D
+            D2 = D * 2
+            D3 = D / 2
+
+            @test SA[2., 2., 2.] ∈ D1
+            @test SA[0.9, 0.6,-2.5] ∉ D1
+            @test SA[2., 2., 2.] ∈ D2
+            @test SA[0.9, 0.6,-2.5] ∉ D2
+            @test SA[.5, .4, .45] ∈ D3
+            @test SA[.3, 0.6,-.2] ∉ D3
+        end
+    end
+
 end

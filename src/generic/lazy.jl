@@ -11,7 +11,7 @@ The `in(x, domain::LazyDomain)` applies three types of transformations:
 The distribution step is determined by the result of `composition(domain)`,
 see `composition`. The combination is performed by `combine`. Mapping between
 points of the lazy domain and points of its member domains is described by
-`y = tointernalpoint(domain,x)` and `x = toexternalpoint(domain, y)`.
+`y = tointernalpoint(domain, x)` and `x = toexternalpoint(domain, y)`.
 """
 abstract type LazyDomain{T} <: Domain{T} end
 
@@ -30,13 +30,14 @@ abstract type SingleLazyDomain{T} <: LazyDomain{T} end
 
 superdomain(d::SingleLazyDomain) = d.domain
 
+indomain(x, d::SingleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
+approx_indomain(x, d::SingleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
+
+
 "A composite lazy domain is defined in terms of multiple domains."
 abstract type CompositeLazyDomain{T} <: LazyDomain{T} end
 
 elements(d::CompositeLazyDomain) = d.domains
-
-indomain(x, d::SingleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
-approx_indomain(x, d::SingleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
 
 """
 Supertype of all compositions of a lazy domain. The composition determines how
