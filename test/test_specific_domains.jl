@@ -608,7 +608,6 @@ end
         @test 1im ∉ D2
         @test 0.999 ∈ D2
 
-        io = IOBuffer()
         show(io,C)
         @test String(take!(io)) == "the complex unit circle (T=Complex{Float64})"
         show(io,D)
@@ -814,222 +813,245 @@ end
         @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
     end
 
-    @testset "arithmetics" begin
-        D = UnitInterval()^3
-        S = 2 * UnitBall()
-        @testset "joint domain" begin
-            DS = D ∪ S
-            @test SA[0.0, 0.6, 0.0] ∈ DS
-            @test SA[0.9, 0.6,-2.5] ∉ DS
-        end
-
-        @testset "domain intersection" begin
-            DS = D ∩ S
-            @test SA[0.1, 0.1, 0.1] ∈ DS
-            @test SA[0.1, -0.1, 0.1] ∉ DS
-        end
-        @testset "domain difference" begin
-            DS = D\S
-            @test SA[0.1, 0.1, 0.1] ∉ DS
-
-            D1 = 2 * D
-            D2 = D * 2
-            D3 = D / 2
-
-            @test SA[2., 2., 2.] ∈ D1
-            @test SA[0.9, 0.6,-2.5] ∉ D1
-            @test SA[2., 2., 2.] ∈ D2
-            @test SA[0.9, 0.6,-2.5] ∉ D2
-            @test SA[.5, .4, .45] ∈ D3
-            @test SA[.3, 0.6,-.2] ∉ D3
-        end
+    @testset "level sets" begin
+        d = LevelSet(cos, 1.0)
+        @test d isa LevelSet{Float64}
+        @test convert(Domain{ComplexF64}, d) isa LevelSet{ComplexF64}
+        show(io,d)
+        @test String(take!(io)) == "level set f(x) = 1.0 with f = cos"
+        @test 0.0 ∈ d
+        @test 0im ∈ d
+        @test 0.1 ∉ d
+        @test 0.1+1im ∉ d
     end
 
-    @testset "cartesian product" begin
-        @testset "ProductDomain 1" begin
-            d1 = (-1.0 .. 1.0)^2
-            @test d1 isa VcatDomain
-            @test d1.domains isa Tuple
-            @test eltype(d1) == SVector{2,typeof(1.0)}
-            @test SA[0.5,0.5] ∈ d1
-            @test SA[-1.1,0.3] ∉ d1
-            @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
-            # Test promotion
-            @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
-            d1w = convert(Domain{SVector{2,BigFloat}}, d1)
-            @test eltype(d1w) == SVector{2,BigFloat}
-            @test eltype(DomainSets.element(d1w, 1)) == BigFloat
-            @test eltype(DomainSets.element(d1w, 2)) == BigFloat
+    @testset "indicator functions" begin
+        ispositive(x) = x >= 0
+        d = IndicatorFunction(ispositive)
+        @test d isa IndicatorFunction{Float64}
+        show(io,d)
+        @test String(take!(io)) == "indicator domain defined by function f = ispositive"
+        @test 0 ∈ d
+        @test big(0) ∈ d
+        @test -1 ∉ d
+    end
+end
 
-            # A single domain
-            @test ProductDomain(0..1) isa VcatDomain{1}
+@testset "arithmetics" begin
+    D = UnitInterval()^3
+    S = 2 * UnitBall()
+    @testset "joint domain" begin
+        DS = D ∪ S
+        @test SA[0.0, 0.6, 0.0] ∈ DS
+        @test SA[0.9, 0.6,-2.5] ∉ DS
+    end
 
-            # Test vectors of wrong length
-            @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") SA[0.0,0.0,0.0] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") SA[0.0] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") [0.0,0.0,0.0] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") [0.0] ∉ d1
+    @testset "domain intersection" begin
+        DS = D ∩ S
+        @test SA[0.1, 0.1, 0.1] ∈ DS
+        @test SA[0.1, -0.1, 0.1] ∉ DS
+    end
+    @testset "domain difference" begin
+        DS = D\S
+        @test SA[0.1, 0.1, 0.1] ∉ DS
 
-            d2 = cartesianproduct((-1.0 .. 1.0), 2)
-            @test SA[0.5,0.5] ∈ d2
-            @test SA[-1.1,0.3] ∉ d2
+        D1 = 2 * D
+        D2 = D * 2
+        D3 = D / 2
 
-            d3 = (-1.0 .. 1.0) × (-1.5 .. 2.5)
-            @test SA[0.5,0.5] ∈ d3
-            @test SA[-1.1,0.3] ∉ d3
+        @test SA[2., 2., 2.] ∈ D1
+        @test SA[0.9, 0.6,-2.5] ∉ D1
+        @test SA[2., 2., 2.] ∈ D2
+        @test SA[0.9, 0.6,-2.5] ∉ D2
+        @test SA[.5, .4, .45] ∈ D3
+        @test SA[.3, 0.6,-.2] ∉ D3
+    end
+end
 
-            d4 = cartesianproduct((-1.0 .. 1.0), 2)
-            bnd = boundary(d4)
-            @test bnd isa EuclideanDomain
-            @test bnd isa UnionDomain
-            @test [-1.0, 0.5] ∈ bnd
-            @test [1.0, 0.5] ∈ bnd
-            @test [0.5, -1.0] ∈ bnd
-            @test [0.5, 1.0] ∈ bnd
-            @test [0.5, 0.2] ∉ bnd
+@testset "cartesian product" begin
+    @testset "ProductDomain 1" begin
+        d1 = (-1.0 .. 1.0)^2
+        @test d1 isa VcatDomain
+        @test d1.domains isa Tuple
+        @test eltype(d1) == SVector{2,typeof(1.0)}
+        @test SA[0.5,0.5] ∈ d1
+        @test SA[-1.1,0.3] ∉ d1
+        @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
+        # Test promotion
+        @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
+        d1w = convert(Domain{SVector{2,BigFloat}}, d1)
+        @test eltype(d1w) == SVector{2,BigFloat}
+        @test eltype(DomainSets.element(d1w, 1)) == BigFloat
+        @test eltype(DomainSets.element(d1w, 2)) == BigFloat
+
+        # A single domain
+        @test ProductDomain(0..1) isa VcatDomain{1}
+
+        # Test vectors of wrong length
+        @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") SA[0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") SA[0.0] ∉ d1
+        @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") [0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") [0.0] ∉ d1
+
+        d2 = cartesianproduct((-1.0 .. 1.0), 2)
+        @test SA[0.5,0.5] ∈ d2
+        @test SA[-1.1,0.3] ∉ d2
+
+        d3 = (-1.0 .. 1.0) × (-1.5 .. 2.5)
+        @test SA[0.5,0.5] ∈ d3
+        @test SA[-1.1,0.3] ∉ d3
+
+        d4 = cartesianproduct((-1.0 .. 1.0), 2)
+        bnd = boundary(d4)
+        @test bnd isa EuclideanDomain
+        @test bnd isa UnionDomain
+        @test [-1.0, 0.5] ∈ bnd
+        @test [1.0, 0.5] ∈ bnd
+        @test [0.5, -1.0] ∈ bnd
+        @test [0.5, 1.0] ∈ bnd
+        @test [0.5, 0.2] ∉ bnd
+    end
+    @testset "ProductDomain 2" begin
+        d1 = cartesianproduct((-1.0 .. 1.0), 2)
+        @test d1 isa VcatDomain
+        @test d1.domains isa Tuple
+
+        d3 = ProductDomain(1.05 * UnitDisk(), (-1.0 .. 1.0))
+        @inferred(cross(1.05 * UnitDisk(), (-1.0 .. 1.0))) === d3
+        @test d3 isa VcatDomain
+        @test eltype(d3) == SVector{3,Float64}
+        @test SA[0.5,0.5,0.8] ∈ d3
+        @test SA[-1.1,0.3,0.1] ∉ d3
+        @test point_in_domain(d3) ∈ d3
+
+        d4 = d1×(-1.0..1.)
+        @test d4 isa VcatDomain
+        @test SA[0.5,0.5,0.8] ∈ d4
+        @test SA[-1.1,0.3,0.1] ∉ d4
+        @test point_in_domain(d4) ∈ d4
+
+        d5 = (-1.0..1.)×d1
+        @test d5 isa VcatDomain
+        @test SA[0.,0.5,0.5] ∈ d5
+        @test SA[0.,-1.1,0.3] ∉ d5
+        @test point_in_domain(d5) ∈ d5
+
+        d6 = d1×d1
+        @test d6 isa VcatDomain
+        @test SA[0.,0.,0.5,0.5] ∈ d6
+        @test SA[0.,0.,-1.1,0.3] ∉ d6
+        @test point_in_domain(d6) ∈ d6
+
+        io = IOBuffer()
+        show(io,d1)
+        @test String(take!(io)) == "-1.0..1.0 x -1.0..1.0"
+    end
+    @testset "mixed intervals" begin
+        d = (0..1) × (0.0..1)
+        @test SA[0.1,0.2] ∈ d
+        @test SA[0.1,1.2] ∉ d
+        @test SA[1.1,1.3] ∉ d
+        @test d isa EuclideanDomain{2}
+        # Make sure promotion of domains happened
+        @test eltype(DomainSets.element(d,1)) == Float64
+        @test eltype(DomainSets.element(d,2)) == Float64
+        @test point_in_domain(d) ∈ d
+    end
+    @testset "vector domains" begin
+        d1 = ProductDomain([0..1.0, 0..2.0])
+        @test d1 isa VectorDomain{Float64}
+        @test d1.domains isa Vector
+        @test dimension(d1) == 2
+        @test [0.1,0.2] ∈ d1
+        @test SA[0.1,0.2] ∈ d1
+        @test point_in_domain(d1) ∈ d1
+        @test convert(Domain{Vector{BigFloat}}, d1) == d1
+        d1big = convert(Domain{Vector{BigFloat}}, d1)
+        @test eltype(d1big) == Vector{BigFloat}
+
+        # Test an integer type as well
+        d2 = ProductDomain([0..1, 0..2])
+        @test dimension(d2) == 2
+        @test [0.1,0.2] ∈ d2
+        @test point_in_domain(d2) ∈ d2
+
+        bnd = boundary(d1)
+        @test bnd isa VectorDomain
+        @test bnd isa UnionDomain
+        @test dimension(bnd) == 2
+        @test [0.0, 0.5] ∈ bnd
+        @test [1.0, 0.5] ∈ bnd
+        @test [0.2, 0.0] ∈ bnd
+        @test [0.2, 2.0] ∈ bnd
+        @test [0.2, 0.5] ∉ bnd
+
+        d3 = VectorProductDomain([0..i for i in 1:10])
+        @test d3 isa VectorProductDomain
+        @test eltype(d3) == Vector{Int}
+        @test rand(10) ∈ d3
+        @test 2 .+ rand(10) ∉ d3
+        d4 = VectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
+        @test d4 isa VectorProductDomain
+        @test eltype(d4) == Vector{Float64}
+        @test rand(10) ∈ d4
+        @test 2 .+ rand(10) ∉ d4
+
+        @test ProductDomain(SVector(0..1, 0..2)) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
+    end
+    @testset "Tuple product domain" begin
+        # Use the constructor ProductDomain{T} directly
+        d1 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
+        @test d1 isa TupleProductDomain
+        @test d1.domains isa Tuple
+        @test eltype(d1) == Tuple{Float64,Float64}
+        @test dimension(d1) == 2
+        @test (0.2,0.6) ∈ d1
+        @test (0.2,0.8) ∉ d1
+        @test (true,0.6) ∉ d1
+        if VERSION < v"1.6-"
+            @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+            @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
+        else
+            @test_logs (:warn, "in(x,domain): incompatible types SVector{2, Float64} and Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+            @test_logs (:warn, "in(x,domain): incompatible types Vector{Float64} and Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
         end
-        @testset "ProductDomain 2" begin
-            d1 = cartesianproduct((-1.0 .. 1.0), 2)
-            @test d1 isa VcatDomain
-            @test d1.domains isa Tuple
+        @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
+        d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
+        @test eltype(d1big) == Tuple{BigFloat,BigFloat}
+        @test eltype(DomainSets.element(d1big,1)) == BigFloat
+        @test eltype(DomainSets.element(d1big,2)) == BigFloat
 
-            d3 = ProductDomain(1.05 * UnitDisk(), (-1.0 .. 1.0))
-            @inferred(cross(1.05 * UnitDisk(), (-1.0 .. 1.0))) === d3
-            @test d3 isa VcatDomain
-            @test eltype(d3) == SVector{3,Float64}
-            @test SA[0.5,0.5,0.8] ∈ d3
-            @test SA[-1.1,0.3,0.1] ∉ d3
-            @test point_in_domain(d3) ∈ d3
+        d2 = ProductDomain(['a','b'], 0..1)
+        @test d2 isa TupleProductDomain
+        @test d2.domains isa Tuple
+        @test dimension(d2) == 2
+        @test eltype(d2) == Tuple{Char,Int}
+        @test ('a',0.4) ∈ d2
+        @test ('b',1.5) ∉ d2
+        @test ('c',0.5) ∉ d2
 
-            d4 = d1×(-1.0..1.)
-            @test d4 isa VcatDomain
-            @test SA[0.5,0.5,0.8] ∈ d4
-            @test SA[-1.1,0.3,0.1] ∉ d4
-            @test point_in_domain(d4) ∈ d4
+        bnd = boundary(d1)
+        @test eltype(bnd) == Tuple{Float64,Float64}
+        @test bnd isa UnionDomain
+        @test dimension(bnd) == 2
+        @test (0.0, 0.5) ∈ bnd
+        @test (0.5, 0.5) ∈ bnd
+        @test (0.3, 0.2) ∉ bnd
+        @test (0.3, 0.0) ∈ bnd
+        @test (0.3, 0.7) ∈ bnd
+    end
+    @testset "ProductDomain{T}" begin
+        d1 = 0..1.0
+        d2 = 0..2.0
+        @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
+        @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
+        @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
 
-            d5 = (-1.0..1.)×d1
-            @test d5 isa VcatDomain
-            @test SA[0.,0.5,0.5] ∈ d5
-            @test SA[0.,-1.1,0.3] ∉ d5
-            @test point_in_domain(d5) ∈ d5
-
-            d6 = d1×d1
-            @test d6 isa VcatDomain
-            @test SA[0.,0.,0.5,0.5] ∈ d6
-            @test SA[0.,0.,-1.1,0.3] ∉ d6
-            @test point_in_domain(d6) ∈ d6
-
-            io = IOBuffer()
-            show(io,d1)
-            @test String(take!(io)) == "-1.0..1.0 x -1.0..1.0"
-        end
-        @testset "mixed intervals" begin
-            d = (0..1) × (0.0..1)
-            @test SA[0.1,0.2] ∈ d
-            @test SA[0.1,1.2] ∉ d
-            @test SA[1.1,1.3] ∉ d
-            @test d isa EuclideanDomain{2}
-            # Make sure promotion of domains happened
-            @test eltype(DomainSets.element(d,1)) == Float64
-            @test eltype(DomainSets.element(d,2)) == Float64
-            @test point_in_domain(d) ∈ d
-        end
-        @testset "vector domains" begin
-            d1 = ProductDomain([0..1.0, 0..2.0])
-            @test d1 isa VectorDomain{Float64}
-            @test d1.domains isa Vector
-            @test dimension(d1) == 2
-            @test [0.1,0.2] ∈ d1
-            @test SA[0.1,0.2] ∈ d1
-            @test point_in_domain(d1) ∈ d1
-            @test convert(Domain{Vector{BigFloat}}, d1) == d1
-            d1big = convert(Domain{Vector{BigFloat}}, d1)
-            @test eltype(d1big) == Vector{BigFloat}
-
-            # Test an integer type as well
-            d2 = ProductDomain([0..1, 0..2])
-            @test dimension(d2) == 2
-            @test [0.1,0.2] ∈ d2
-            @test point_in_domain(d2) ∈ d2
-
-            bnd = boundary(d1)
-            @test bnd isa VectorDomain
-            @test bnd isa UnionDomain
-            @test dimension(bnd) == 2
-            @test [0.0, 0.5] ∈ bnd
-            @test [1.0, 0.5] ∈ bnd
-            @test [0.2, 0.0] ∈ bnd
-            @test [0.2, 2.0] ∈ bnd
-            @test [0.2, 0.5] ∉ bnd
-
-            d3 = VectorProductDomain([0..i for i in 1:10])
-            @test d3 isa VectorProductDomain
-            @test eltype(d3) == Vector{Int}
-            @test rand(10) ∈ d3
-            @test 2 .+ rand(10) ∉ d3
-            d4 = VectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
-            @test d4 isa VectorProductDomain
-            @test eltype(d4) == Vector{Float64}
-            @test rand(10) ∈ d4
-            @test 2 .+ rand(10) ∉ d4
-
-            @test ProductDomain(SVector(0..1, 0..2)) isa VectorProductDomain{Vector{Int}}
-            @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
-        end
-        @testset "Tuple product domain" begin
-            # Use the constructor ProductDomain{T} directly
-            d1 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
-            @test d1 isa TupleProductDomain
-            @test d1.domains isa Tuple
-            @test eltype(d1) == Tuple{Float64,Float64}
-            @test dimension(d1) == 2
-            @test (0.2,0.6) ∈ d1
-            @test (0.2,0.8) ∉ d1
-            @test (true,0.6) ∉ d1
-            if VERSION < v"1.6-"
-                @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-                @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
-            else
-                @test_logs (:warn, "in(x,domain): incompatible types SVector{2, Float64} and Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-                @test_logs (:warn, "in(x,domain): incompatible types Vector{Float64} and Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
-            end
-            @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
-            d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
-            @test eltype(d1big) == Tuple{BigFloat,BigFloat}
-            @test eltype(DomainSets.element(d1big,1)) == BigFloat
-            @test eltype(DomainSets.element(d1big,2)) == BigFloat
-
-            d2 = ProductDomain(['a','b'], 0..1)
-            @test d2 isa TupleProductDomain
-            @test d2.domains isa Tuple
-            @test dimension(d2) == 2
-            @test eltype(d2) == Tuple{Char,Int}
-            @test ('a',0.4) ∈ d2
-            @test ('b',1.5) ∉ d2
-            @test ('c',0.5) ∉ d2
-
-            bnd = boundary(d1)
-            @test eltype(bnd) == Tuple{Float64,Float64}
-            @test bnd isa UnionDomain
-            @test dimension(bnd) == 2
-            @test (0.0, 0.5) ∈ bnd
-            @test (0.5, 0.5) ∈ bnd
-            @test (0.3, 0.2) ∉ bnd
-            @test (0.3, 0.0) ∈ bnd
-            @test (0.3, 0.7) ∈ bnd
-        end
-        @testset "ProductDomain{T}" begin
-            d1 = 0..1.0
-            d2 = 0..2.0
-            @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
-            @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
-            @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
-
-            # Some conversions
-            @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
-            @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
-            @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
-        end
+        # Some conversions
+        @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
+        @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
+        @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
     end
 end
 
