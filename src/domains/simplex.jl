@@ -15,11 +15,15 @@ abstract type AbstractUnitSimplex{T,C} <: Simplex{T,C} end
 const ClosedUnitSimplex{T} = AbstractUnitSimplex{T,:closed}
 const OpenUnitSimplex{T} = AbstractUnitSimplex{T,:open}
 
-indomain(x, ::ClosedUnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
-indomain(x, ::OpenUnitSimplex) = mapreduce( t-> t > 0, &, x) && norm(x,1) < 1
+insimplex_closed(x) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
+insimplex_open(x) = mapreduce( t-> t > 0, &, x) && norm(x,1) < 1
+insimplex_closed(x, tol) = mapreduce( t-> t >= -tol, &, x) && norm(x,1) <= 1+tol
+insimplex_open(x, tol) = mapreduce( t-> t > -tol, &, x) && norm(x,1) < 1+tol
 
-approx_indomain(x, ::ClosedUnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
-approx_indomain(x, ::OpenUnitSimplex, tolerance) = mapreduce( t-> t > -tolerance, &, x) && norm(x,1) < 1+tolerance
+indomain(x, ::ClosedUnitSimplex) = insimplex_closed(x)
+indomain(x, ::OpenUnitSimplex) = insimplex_open(x)
+approx_indomain(x, ::ClosedUnitSimplex, tolerance) = insimplex_closed(x, tolerance)
+approx_indomain(x, ::OpenUnitSimplex, tolerance) = insimplex_open(x, tolerance)
 
 isempty(::AbstractUnitSimplex) = false
 
@@ -38,6 +42,7 @@ end
 FlexibleUnitSimplex{T}(dimension) where {T} = FlexibleUnitSimplex{T,:closed}(dimension)
 
 dimension(d::FlexibleUnitSimplex) = d.dimension
+
 
 const EuclideanUnitSimplex{N,T,C} = FixedUnitSimplex{SVector{N,T},C}
 const VectorUnitSimplex{T,C} = FlexibleUnitSimplex{Vector{T},C}

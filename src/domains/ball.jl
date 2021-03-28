@@ -20,6 +20,8 @@ const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
 "A ball with vector elements of variable length."
 const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
 
+iscompatible(x::AbstractVector, d::VectorHyperBall) = length(x) == dimension(d)
+
 const ClosedHyperBall{T} = HyperBall{T,:closed}
 const OpenHyperBall{T} = HyperBall{T,:open}
 
@@ -82,16 +84,6 @@ const VectorUnitBall{T,C} = FlexibleUnitBall{Vector{T},C}
 
 VectorUnitBall(dimension::Int = 3) = VectorUnitBall{Float64}(dimension)
 VectorUnitDisk() = VectorUnitBall(2)
-
-indomain(x, ball::FlexibleUnitBall{T,:closed}) where {T} =
-    (length(x) == dimension(ball)) && (norm(x) <= radius(ball))
-indomain(x, ball::FlexibleUnitBall{T,:open}) where {T} =
-    (length(x) == dimension(ball)) && (norm(x) < radius(ball))
-approx_indomain(x, ball::FlexibleUnitBall{T,:closed}, tolerance) where {T} =
-    (length(x) == dimension(ball)) && (norm(x) <= radius(ball)+tolerance)
-approx_indomain(x, ball::FlexibleUnitBall{T,:open}, tolerance) where {T} =
-    (length(x) == dimension(ball)) && (norm(x) < radius(ball)+tolerance)
-
 
 similardomain(ball::FixedUnitBall{S,C}, ::Type{T}) where {S,T,C} =
     FixedUnitBall{T,C}()

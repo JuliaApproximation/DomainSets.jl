@@ -15,6 +15,7 @@ function test_generic_domain(d::Domain)
         x = point_in_domain(d)
         @test x ∈ d
         @test_throws ErrorException approx_in(x, d, -1)
+        @test in.([x,x], d) == in.([x,x], Ref(d))
     else
         try
             x = point_in_domain(d)
@@ -24,6 +25,7 @@ function test_generic_domain(d::Domain)
     end
     @test convert(Domain{eltype(d)}, d) == d
     @test convert(Domain{widen_eltype(eltype(d))}, d) == d
+    @test prectype(convert_prectype(d, BigFloat)) == BigFloat
 end
 
 @testset "generic domains" begin
@@ -48,9 +50,24 @@ end
         WrappedDomain(0..1.0)
     ]
 
-    @testset "$(rpad("generic domains",80))" begin
+    @testset "generic domains" begin
         for domain in domains
             test_generic_domain(domain)
+        end
+    end
+
+    @testset "generic functionality" begin
+        struct SomeDomain <: Domain{Float64}
+        end
+        @test_throws MethodError 0.5 ∈ SomeDomain()
+        @test_throws MethodError approx_in(0.5, SomeDomain())
+
+        if VERSION < v"1.6-"
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64,Float64} and domain eltype: SArray{Tuple{2},Float64,1,2}. Returning false.") (0.5,0.2) ∈ UnitCircle()
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64,Float64} and domain eltype: SArray{Tuple{2},Float64,1,2}. Returning false.") approx_in((0.5,0.2), UnitCircle())
+        else
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") (0.5,0.2) ∈ UnitCircle()
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") approx_in((0.5,0.2), UnitCircle())
         end
     end
 end

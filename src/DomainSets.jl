@@ -168,7 +168,6 @@ include("generic/productdomain.jl")
 include("generic/setoperations.jl")
 include("generic/mapped_domain.jl")
 include("generic/promotion.jl")
-include("generic/arithmetics.jl")
 include("generic/broadcast.jl")
 
 include("domains/trivial.jl")

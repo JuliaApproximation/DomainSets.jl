@@ -57,3 +57,15 @@ broadcast_in(A, d::Domain) = in.(A, Ref(d))
 
 "Vectorized version of `approx_in`: apply `x ∈ d` to all elements of `A`."
 broadcast_approx_in(A, d::Domain) = approx_in.(A, Ref(d))
+
+
+## Some arithmetics
+
+# Allow unary minus, but use broadcast for the implementation
+-(d::Domain) = (-).(d)
+
+# Allow multiplication and division by numbers, like for vectors
+*(a::Number, domain::Domain) = a .* domain
+*(domain::Domain, a::Number) = domain .* a
+/(domain::Domain, a::Number) = domain ./ a
+\(a::Number, domain::Domain) = a .\ domain

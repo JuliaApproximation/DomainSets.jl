@@ -619,7 +619,7 @@ end
         @test [1, 0, 0, 0] ∈ C
         @test [0.0,0.1,0.2,0.1] ∈ C
         @test SA[0.0,0.1,0.2,0.1] ∈ C
-        @test [0.0,0.1] ∉ C
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 2 and domain 'the 4-dimensional closed unit ball' with dimension 4. Returning false.") [0.0,0.1] ∉ C
         @test [0.0,1.1,0.2,0.1] ∉ C
         @test !isempty(C)
         @test isclosedset(C)
@@ -998,10 +998,10 @@ end
         @test ProductDomain(0..1) isa VcatDomain{1}
 
         # Test vectors of wrong length
-        @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") SA[0.0,0.0,0.0] ∉ d1
-        @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") SA[0.0] ∉ d1
-        @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") [0.0,0.0,0.0] ∉ d1
-        @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") [0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") SA[0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") SA[0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") [0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") [0.0] ∉ d1
 
         d2 = cartesianproduct((-1.0 .. 1.0), 2)
         @test SA[0.5,0.5] ∈ d2
@@ -1120,11 +1120,11 @@ end
         @test (0.2,0.8) ∉ d1
         @test (true,0.6) ∉ d1
         if VERSION < v"1.6-"
-            @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
+            @test_logs (:warn, "`in`: incompatible combination of point: SArray{Tuple{2},Float64,1,2} and domain eltype: Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+            @test_logs (:warn, "`in`: incompatible combination of point: Array{Float64,1} and domain eltype: Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
         else
-            @test_logs (:warn, "in(x,domain): incompatible types SVector{2, Float64} and Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible types Vector{Float64} and Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
+            @test_logs (:warn, "`in`: incompatible combination of point: SVector{2, Float64} and domain eltype: Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+            @test_logs (:warn, "`in`: incompatible combination of point: Vector{Float64} and domain eltype: Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
         end
         @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
         d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
@@ -1169,7 +1169,7 @@ end
     end
 end
 
-@testset "Set operations" begin
+@testset "set operations" begin
     @testset "union" begin
         d1 = UnitDisk()
         d2 = (-.9..0.9)^2
@@ -1330,6 +1330,11 @@ end
         d = 0..1.0
         w = DomainSets.WrappedDomain(d)
         @test w isa Domain
+        @test 0.5 ∈ w
+
+        d1 = WrappedDomain{Any}([0,5])
+        @test 0 ∈ d1
+        @test 1 ∉ d1
     end
 
     @testset "more set operations" begin
