@@ -14,6 +14,7 @@ function test_generic_domain(d::Domain)
     if !isempty(d)
         x = point_in_domain(d)
         @test x ∈ d
+        @test_throws ErrorException approx_in(x, d, -1)
     else
         try
             x = point_in_domain(d)

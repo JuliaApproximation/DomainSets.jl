@@ -10,7 +10,8 @@ EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 
 similardomain(::EmptySpace, ::Type{T}) where {T} = EmptySpace{T}()
 
-emptyspace(d::Domain{T}) where {T} = EmptySpace{T}()
+emptyspace(d) = emptyspace(eltype(d))
+emptyspace(::Type{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
 
@@ -54,6 +55,10 @@ const AnyFullSpace = FullSpace{Any}
 
 FullSpace() = FullSpace{Float64}()
 FullSpace(d) = FullSpace{eltype(d)}()
+
+fullspace(d) = fullspace(eltype(d))
+fullspace(::Type{T}) where {T} = FullSpace{T}()
+
 
 similardomain(::FullSpace, ::Type{T}) where {T} = FullSpace{T}()
 

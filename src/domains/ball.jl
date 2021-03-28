@@ -29,7 +29,8 @@ isopenset(ball::HyperBall) = !isclosedset(ball)
 
 indomain(x, ball::OpenHyperBall) = norm(x) < radius(ball)
 indomain(x, ball::ClosedHyperBall) = norm(x) <= radius(ball)
-approx_indomain(x, ball::HyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
+approx_indomain(x, ball::OpenHyperBall, tolerance) = norm(x) < radius(ball)+tolerance
+approx_indomain(x, ball::ClosedHyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
 
 # A closed ball always contains at least the origin.
 isempty(ball::ClosedHyperBall) = false
@@ -86,8 +87,10 @@ indomain(x, ball::FlexibleUnitBall{T,:closed}) where {T} =
     (length(x) == dimension(ball)) && (norm(x) <= radius(ball))
 indomain(x, ball::FlexibleUnitBall{T,:open}) where {T} =
     (length(x) == dimension(ball)) && (norm(x) < radius(ball))
-approx_indomain(x, ball::FlexibleUnitBall, tolerance) =
+approx_indomain(x, ball::FlexibleUnitBall{T,:closed}, tolerance) where {T} =
     (length(x) == dimension(ball)) && (norm(x) <= radius(ball)+tolerance)
+approx_indomain(x, ball::FlexibleUnitBall{T,:open}, tolerance) where {T} =
+    (length(x) == dimension(ball)) && (norm(x) < radius(ball)+tolerance)
 
 
 similardomain(ball::FixedUnitBall{S,C}, ::Type{T}) where {S,T,C} =
@@ -201,6 +204,7 @@ interior(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:open}(dimension(d))
 
 "Create a cylinder with given radius and length."
 cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
+cylinder(radius, length) = cylinder(promote(radius, length)...)
 cylinder(radius::T, length::T) where {T} = (radius .* UnitDisk{T}()) × (0..length)
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
@@ -241,7 +245,7 @@ end
 
 domain(d::AngleMap{T}) where {T} = FullSpace{SVector{2,T}}()
 
-range(m::AngleMap{T}) where {T} = Interval{:closed,:open,T}(0, 1)
+image(m::AngleMap{T}) where {T} = Interval{:closed,:open,T}(0, 1)
 
 function applymap(m::AngleMap{T}, x) where {T}
     twopi = 2*convert(T, pi)

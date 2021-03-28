@@ -7,11 +7,17 @@ iscompact(d::TypedEndpointsInterval) = false
 ### An interval
 ##################
 
-# IntervalSets defines in, but not indomain
-indomain(x, d::AbstractInterval) = in(x, d)
-
 approx_indomain(x, d::AbstractInterval, tolerance) =
-    (x <= rightendpoint(d)+tolerance) && (x >= leftendpoint(d)-tolerance)
+    (x >= leftendpoint(d)-tolerance) && (x <= rightendpoint(d)+tolerance)
+
+approx_indomain(x, d::TypedEndpointsInterval{:closed,:closed}, tolerance) =
+    (x >= leftendpoint(d)-tolerance) && (x <= rightendpoint(d)+tolerance)
+approx_indomain(x, d::TypedEndpointsInterval{:open,:closed}, tolerance) =
+    (x > leftendpoint(d)-tolerance) && (x <= rightendpoint(d)+tolerance)
+approx_indomain(x, d::TypedEndpointsInterval{:closed,:open}, tolerance) =
+    (x >= leftendpoint(d)-tolerance) && (x < rightendpoint(d)+tolerance)
+approx_indomain(x, d::TypedEndpointsInterval{:open,:open}, tolerance) =
+    (x > leftendpoint(d)-tolerance) && (x < rightendpoint(d)+tolerance)
 
 
 function point_in_domain(d::AbstractInterval)
@@ -83,8 +89,10 @@ boundary(d::HalfLine) = Point(leftendpoint(d))
 
 similardomain(::HalfLine, ::Type{T}) where {T} = HalfLine{T}()
 
+# intercept and simplify the definition of IntervalSets
+in(x, d::HalfLine) = x >= 0
 
-indomain(x, d::HalfLine) = x >= 0
+approx_indomain(x, d::HalfLine, tolerance) = x >= -tolerance
 
 function similar_interval(d::HalfLine{T}, a::S, b::S) where {T,S}
     @assert a == 0
@@ -105,10 +113,10 @@ endpoints(d::NegativeHalfLine{T}) where {T} = (-T(Inf), zero(T))
 
 boundary(d::NegativeHalfLine) = Point(rightendpoint(d))
 
-# Open at both endpoints
+# intercept and simplify the definition of IntervalSets
+in(x, d::NegativeHalfLine) = x < 0
 
-
-indomain(x, d::NegativeHalfLine) = x < 0
+approx_indomain(x, d::NegativeHalfLine, tolerance) = x < tolerance
 
 function similar_interval(d::NegativeHalfLine{T}, a::S, b::S) where {S,T}
     @assert isinf(a) && a < 0

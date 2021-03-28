@@ -16,9 +16,10 @@ const ClosedUnitSimplex{T} = AbstractUnitSimplex{T,:closed}
 const OpenUnitSimplex{T} = AbstractUnitSimplex{T,:open}
 
 indomain(x, ::ClosedUnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
-indomain(x, ::OpenUnitSimplex) = mapreduce( t-> t >= 0, &, x) && norm(x,1) < 1
+indomain(x, ::OpenUnitSimplex) = mapreduce( t-> t > 0, &, x) && norm(x,1) < 1
 
-approx_indomain(x, ::AbstractUnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
+approx_indomain(x, ::ClosedUnitSimplex, tolerance) = mapreduce( t-> t >= -tolerance, &, x) && norm(x,1) <= 1+tolerance
+approx_indomain(x, ::OpenUnitSimplex, tolerance) = mapreduce( t-> t > -tolerance, &, x) && norm(x,1) < 1+tolerance
 
 isempty(::AbstractUnitSimplex) = false
 
@@ -49,9 +50,9 @@ center(d::EuclideanUnitSimplex{N,T}) where {N,T} = ones(SVector{N,T})/N
 center(d::VectorUnitSimplex{T}) where {T} = ones(T, dimension(d))/dimension(d)
 
 corners(::EuclideanUnitSimplex{N,T}) where {N,T} =
-    [ SVector{N,T}(ntuple( i -> i==j, N)) for j in 1:N]
+    vcat([zero(SVector{N,T})], [ SVector{N,T}(ntuple( i -> i==j, N)) for j in 1:N])
 corners(d::VectorUnitSimplex{T}) where {T} =
-    [ (z = zeros(T, dimension(d)); z[j]=1; z) for j in 1:dimension(d)]
+    vcat([zeros(T,dimension(d))], [ (z = zeros(T, dimension(d)); z[j]=1; z) for j in 1:dimension(d)])
 
 
 # We pick the center point, because it belongs to the domain regardless of

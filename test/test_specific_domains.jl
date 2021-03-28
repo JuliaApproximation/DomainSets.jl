@@ -1,5 +1,7 @@
 using StaticArrays, DomainSets, Test
-import DomainSets: MappedDomain, similar_interval
+
+import DomainSets: MappedDomain, similar_interval,
+    interior, closure
 
 struct Basis3Vector <: StaticVector{3,Float64} end
 
@@ -26,13 +28,19 @@ end
         @test !approx_in(0.5, d1)
         @test d1 ∩ d1 == d1
         @test d1 ∪ d1 == d1
+        @test d1 \ d1 == d1
         @test boundary(d1) == d1
         @test dimension(d1) == 1
         @test isclosedset(d1)
         @test isopenset(d1)
+        @test interior(d1) == d1
+        @test closure(d1) == d1
         d2 = 0..1
         @test d1 ∩ d2 == d1
+        @test d2 ∩ d1 == d1
         @test d1 ∪ d2 == d2
+        @test d2 ∪ d1 == d2
+        @test d1 \ d2 == d1
         @test d2 \ d1 == d2
         @test d2 \ d2 == d1
 
@@ -44,26 +52,41 @@ end
         @test !approx_in(SA[0.1,0.2], d2)
         @test boundary(d2) == d2
         @test dimension(d2) == 2
+
+        @test emptyspace(0..1) == EmptySpace{Int}()
+        @test emptyspace([1,2]) == EmptySpace{Int}()
+
+        m = LinearMap(2)
+        @test map_domain(m, emptyspace(Int)) == EmptySpace{Int}()
+        @test mapped_domain(m, emptyspace(Int)) == EmptySpace{Int}()
     end
 
     @testset "full space" begin
-        d1 = FullSpace{Float64}()
+        d1 = FullSpace()
+        @test d1 == FullSpace{Float64}()
         show(io,d1)
         @test String(take!(io)) == "{x} (full space)"
         @test convert(Domain{BigFloat}, d1) === FullSpace{BigFloat}()
+        @test DomainSets.euclideanspace(Val{2}()) == FullSpace{SVector{2,Float64}}()
         @test 0.5 ∈ d1
+        @test point_in_domain(d1) == 0
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1
         @test isempty(d1) == false
         @test boundary(d1) == EmptySpace{Float64}()
         @test isclosedset(d1)
         @test isopenset(d1)
+        @test interior(d1) == d1
+        @test closure(d1) == d1
         @test dimension(d1) == 1
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
+        @test d2 ∩ d1 == d2
         @test typeof(FullSpace(0..1) .+ 1) <: FullSpace
         @test typeof(FullSpace(0..1) * 3) <: FullSpace
+        @test infimum(d1) == typemin(Float64)
+        @test supremum(d1) == typemax(Float64)
 
         d2 = FullSpace{SVector{2,Float64}}()
         @test SA[0.1,0.2] ∈ d2
@@ -74,6 +97,9 @@ end
         @test d2 == Domain(SVector{2,Float64})
         @test d2 == convert(Domain,SVector{2,Float64})
         @test d2 == convert(Domain{SVector{2,Float64}}, SVector{2,Float64})
+
+        @test fullspace(0..1) == FullSpace{Int}()
+        @test fullspace([1,2]) == FullSpace{Int}()
     end
 
     @testset "points" begin
@@ -105,6 +131,18 @@ end
 
         @test convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
         @test Number(Point(1)) ≡ convert(Number, Point(1)) ≡ convert(Int, Point(1)) ≡ 1
+        @test convert(Domain{Float64}, 1) isa Point{Float64}
+
+        @test point_in_domain(Point(1)) == 1
+
+        @test Point(1) + Point(2) == Point(3)
+        @test Point(1) - Point(2) == Point(-1)
+
+        @test 0.5 ∉ (0..1)\Point(0.5)
+        @test (0..1) \ Point(0.5) isa  UnionDomain{Float64}
+        @test (0..1) \ Point(0.0) == Interval{:open,:closed,Float64}(0,1)
+        @test (0..1) \ Point(1.0) == Interval{:closed,:open,Float64}(0,1)
+        @test issubset(Point(1), (0..2))
 
         @test dimension(Point([1,2,3]))==3
     end
@@ -119,6 +157,7 @@ end
             @test !approx_in(1.2, d, 0.1)
             @test isclosedset(d)
             @test !isopenset(d)
+            @test similar_interval(d, big(0), big(1)) == Interval{:closed,:closed,BigInt}(0,1)
 
             @test iscompact(d)
             @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
@@ -181,6 +220,9 @@ end
             @test convert(Domain{Float64}, d) ≡ ChebyshevInterval()
             @test convert(AbstractInterval{Float64}, d) ≡ ChebyshevInterval()
             @test convert(ChebyshevInterval{Float64}, d) ≡ ChebyshevInterval()
+
+            show(io, ChebyshevInterval())
+            @test String(take!(io)) == "-1.0..1.0 (Chebyshev)"
         end
         @testset "HalfLine{$T}" begin
             d = HalfLine{T}()
@@ -280,6 +322,15 @@ end
             d = Interval{:closed,:open}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+        end
+
+        @testset "approximate in for open and closed intervals" begin
+            @test !approx_in(1.0, Interval{:open,:open}(0,1), 0)
+            @test !approx_in(1.0, Interval{:closed,:open}(0,1), 0)
+            @test !approx_in(0.0, Interval{:open,:open}(0,1), 0)
+            @test !approx_in(0.0, Interval{:open,:closed}(0,1), 0)
+            @test approx_in(0.0, Interval{:closed,:closed}(0,1), 0)
+            @test approx_in(1.0, Interval{:closed,:closed}(0,1), 0)
         end
 
         @test typeof(UnitInterval{Float64}(0.0..1.0)) <: UnitInterval
@@ -442,6 +493,9 @@ end
         @test d1 \ (-4one(T) .. -3one(T)) == d1
         @test d1 \ (-4one(T) .. 4one(T)) == EmptySpace{T}()
 
+        # mixed types
+        @test (0..1) \ (0.0..0.5) == 0.5..1
+
         d1 \ (-3one(T)) == d1
         d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))
         d1 \ (2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
@@ -517,7 +571,8 @@ end
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
         @test in(SA[1.0-eps(Float64),0.0], D)
-        @test approx_in(SA[1.0,0.0], D)
+        @test approx_in(SA[1.1,0.0], D, 0.2)
+        @test !approx_in(SA[1.1,0.0], D, 0.01)
         @test SA[0.2,0.2] ∈ D
         @test !isclosedset(D)
         @test isopenset(D)
@@ -544,6 +599,7 @@ end
         @test isclosedset(B)
         @test !isopenset(B)
         @test boundary(B) == UnitSphere()
+        @test isopenset(interior(B))
 
         B = 2UnitBall()
         @test SA[1.9,0.0,0.0] ∈ B
@@ -570,10 +626,23 @@ end
         @test !isopenset(C)
         @test boundary(C) == VectorUnitSphere(4)
         @test dimension(C) == 4
+        @test isopenset(interior(C))
 
         D = VectorUnitBall{Float64,:open}(4)
         @test !in([1, 0, 0, 0], D)
         @test in([1-eps(Float64), 0, 0, 0], D)
+        @test approx_in([1.1, 0, 0, 0], D, 0.2)
+        @test !approx_in([1.1, 0, 0, 0], D, 0.01)
+        @test !isempty(D)
+        @test approx_in(SA[1.01,0.0,0.0,0.0], D, 0.05)
+
+        @test isclosedset(DomainSets.FixedUnitBall{SVector{2,Float64}}())
+        @test EuclideanUnitBall{2}() isa EuclideanUnitBall{2,Float64}
+
+        show(io, EuclideanUnitBall{2,Float64,:open}())
+        @test String(take!(io)) == "the 2-dimensional open unit ball"
+        show(io, UnitCircle())
+        @test String(take!(io)) == "the unit circle"
     end
 
     @testset "custom named ball" begin
@@ -659,9 +728,15 @@ end
         p = parameterization(C)
         x = applymap(p, 1/2)
         @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
+        @test DomainSets.image(p) == UnitCircle()
+        @test gradient(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
         @test approx_in(x, C)
         q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
+        @test applymap(q, -x) ≈ 1
+        @test DomainSets.domain(q) == FullSpace{SVector{2,Float64}}()
+        @test DomainSets.image(q) == Interval{:closed,:open,Float64}(0, 1)
+        @test rightinverse(q) == p
 
         @test convert(LevelSet, UnitCircle()) isa LevelSet{SVector{2,Float64}}
         @test convert(LevelSet{SVector{2,BigFloat}}, UnitCircle()) isa LevelSet{SVector{2,BigFloat}}
@@ -692,6 +767,18 @@ end
         @test approx_in(SA[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
         @test !approx_in(SA[4.,1.,5.], S)
 
+        D = UnitCircle()
+        @test convert(Domain{SVector{2,BigFloat}}, D) ≡ UnitCircle{BigFloat}()
+        @test SVector(1,0) in D
+        @test SVector(nextfloat(1.0),0) ∉ D
+
+        D = UnitSphere()
+        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{BigFloat}()
+        @test SVector(1,0,0) in D
+        @test SVector(nextfloat(1.0),0,0) ∉ D
+    end
+
+    @testset "derived types" begin
         # Create an ellipse, the curve
         E = ellipse(2.0, 4.0)
         @test SA[2.0,0.0] ∈ E
@@ -712,17 +799,11 @@ end
         E2 = ellipse_shape(1, 2.0)
         @test eltype(E) == SVector{2,Float64}
 
-        D = UnitCircle()
-        @test convert(Domain{SVector{2,BigFloat}}, D) ≡ UnitCircle{BigFloat}()
-        @test SVector(1,0) in D
-        @test SVector(nextfloat(1.0),0) ∉ D
-
-        D = UnitSphere()
-        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{BigFloat}()
-        @test SVector(1,0,0) in D
-        @test SVector(nextfloat(1.0),0,0) ∉ D
+        C = DomainSets.cylinder()
+        @test eltype(C) == SVector{3,Float64}
+        C2 = DomainSets.cylinder(1.0, 2)
+        @test SA[0.5,0.2,1.5] ∈ C2
     end
-
 
     @testset "mapped_domain" begin
         # Test chaining of maps
@@ -785,6 +866,8 @@ end
         @test approx_in(SA[-0.1,-0.1], d, 0.1)
         @test !approx_in(SA[-0.1,-0.1], d, 0.09)
 
+        @test corners(d) == [ SA[0.0,0.0], SA[1.0,0.0], SA[0.0,1.0]]
+
         @test convert(Domain{SVector{2,BigFloat}}, d) == UnitSimplex{2,BigFloat}()
 
         @test isclosedset(d)
@@ -796,6 +879,10 @@ end
         @test !isclosedset(d2)
         @test isopenset(d2)
         @test SA[0.3,0.1] ∈ d2
+        @test SA[0.0,0.1] ∉ d2
+        @test SA[0.3,0.0] ∉ d2
+        @test approx_in(SA[-0.01,0.0], d2, 0.1)
+        @test !approx_in(SA[-0.01,0.0], d2, 0.001)
 
         d3 = EuclideanUnitSimplex{3,BigFloat}()
         @test point_in_domain(d3) ∈ d3
@@ -829,6 +916,8 @@ end
         @test SA[-0.2,0.2] ∉ D
         @test SA[0.2,-0.2] ∉ D
         @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
+
+        @test corners(D) == [ [0.0,0.0], [1.0,0.0], [0.0,1.0]]
     end
 
     @testset "level sets" begin
@@ -902,8 +991,8 @@ end
         @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
         d1w = convert(Domain{SVector{2,BigFloat}}, d1)
         @test eltype(d1w) == SVector{2,BigFloat}
-        @test eltype(DomainSets.element(d1w, 1)) == BigFloat
-        @test eltype(DomainSets.element(d1w, 2)) == BigFloat
+        @test eltype(element(d1w, 1)) == BigFloat
+        @test eltype(element(d1w, 2)) == BigFloat
 
         # A single domain
         @test ProductDomain(0..1) isa VcatDomain{1}
@@ -974,8 +1063,8 @@ end
         @test SA[1.1,1.3] ∉ d
         @test d isa EuclideanDomain{2}
         # Make sure promotion of domains happened
-        @test eltype(DomainSets.element(d,1)) == Float64
-        @test eltype(DomainSets.element(d,2)) == Float64
+        @test eltype(element(d,1)) == Float64
+        @test eltype(element(d,2)) == Float64
         @test point_in_domain(d) ∈ d
     end
     @testset "vector domains" begin
@@ -1040,8 +1129,8 @@ end
         @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
         d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
         @test eltype(d1big) == Tuple{BigFloat,BigFloat}
-        @test eltype(DomainSets.element(d1big,1)) == BigFloat
-        @test eltype(DomainSets.element(d1big,2)) == BigFloat
+        @test eltype(element(d1big,1)) == BigFloat
+        @test eltype(element(d1big,2)) == BigFloat
 
         d2 = ProductDomain(['a','b'], 0..1)
         @test d2 isa TupleProductDomain

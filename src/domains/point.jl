@@ -43,13 +43,14 @@ for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))
 end
 
-function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
+function setdiff(d::Interval{L,R,T}, p::Point{S}) where {L,R,T,S<:Number}
     a = leftendpoint(d)
     b = rightendpoint(d)
+    U = promote_type(S,T)
 
-    a == p.x && return Interval{:open,R}(a,b)
-    a < p.x < b && return UnionDomain(Interval{L,:open}(a,p.x)) ∪ UnionDomain(Interval{:open,R}(p.x,b))
-    b == p.x && return Interval{L,:open}(a,b)
+    a == p.x && return Interval{:open,R,U}(a,b)
+    a < p.x < b && return UnionDomain(Interval{L,:open,U}(a,p.x), Interval{:open,R,U}(p.x,b))
+    b == p.x && return Interval{L,:open,U}(a,b)
 
     return d
 end

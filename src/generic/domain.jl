@@ -79,15 +79,36 @@ default_tolerance(d::Domain) = default_tolerance(prectype(d))
 default_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
 
 
+"""
+`approx_in(x, domain[, tolerance])`
+
+Verify whether a point lies in the given domain with a certain tolerance.
+
+The tolerance has to be positive. The meaning of the tolerance, in relation
+to the possible distance of the point to the domain, is domain-dependent.
+Usually, if the outcome is true, it means that the distance of the point to
+the domain is smaller than a constant times the tolerance. That constant may
+depend on the domain.
+
+Up to inexact computations due to floating point numbers, it should also be
+the case that `approx_in(x, d, 0) == in(x,d)`. This implies that `approx_in`
+reflects whether a domain is open or closed.
+"""
 approx_in(x, domain::Domain) = approx_in(x, domain, default_tolerance(domain))
 
 # We mimick the promotion rules of `in` above.
-approx_in(x, d::Domain, tolerance) = _approx_in(x, d, tolerance)
-_approx_in(x::S, d::Domain{T}, tolerance) where {S,T} = _approx_in(x, d, tolerance, promote_type(S,T))
+function approx_in(x, d::Domain, tolerance)
+    tolerance >= 0 || error("Tolerance has to be positive in `approx_in`.")
+    _approx_in(x, d, tolerance)
+end
+_approx_in(x::S, d::Domain{T}, tolerance) where {S,T} =
+    _approx_in(x, d, tolerance, promote_type(S,T))
 _approx_in(x::S, domain::Domain{T}, tolerance, ::Type{U}) where {S,T,U} =
     approx_indomain(convert(U, x), convert(Domain{U}, domain), tolerance)
 _approx_in(x::T, domain::Domain{T}, tolerance, ::Type{T}) where {T} =
     approx_indomain(x, domain, tolerance)
+
+_approx_in(x::Tuple, d::Domain{<:Tuple}, tolerance) = approx_indomain(x, d)
 
 function _approx_in(x::S, domain::Domain{T}, tolerance, ::Type{Any}) where {S,T}
     @warn "in: incompatible types $(S) and $(T). Returning false."
