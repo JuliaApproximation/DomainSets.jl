@@ -87,7 +87,9 @@ export Domain, EuclideanDomain, VectorDomain,
     approx_in,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
-    point_in_domain
+    point_in_domain,
+    canonicaldomain, tocanonical, fromcanonical,
+    bijection, parameterization
 
 # from generic/lazy.jl
 export DerivedDomain, superdomain, WrappedDomain
@@ -137,7 +139,7 @@ export UnitCircle, VectorUnitCircle,
     EuclideanUnitBall, EuclideanUnitSphere,
     ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder,
-    parameterization, gradient
+    gradient
 # from domain/levelset.jl
 export LevelSet, ZeroSet,
     SubLevelSet, SubZeroSet,

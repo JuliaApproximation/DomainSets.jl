@@ -51,6 +51,11 @@ isaffine(m::AbstractAffineMap) = true
 ==(m1::AbstractAffineMap, m2::AbstractAffineMap) =
     (unsafe_matrix(m1) == unsafe_matrix(m2)) && (unsafe_vector(m1)==unsafe_vector(m2))
 
+==(m1::AbstractAffineMap, m2::AbstractIdentityMap) =
+    islinear(m1) && (unsafe_matrix(m1) == matrix(m2))
+
+==(m1::AbstractIdentityMap, m2::AbstractAffineMap) = m2==m1
+
 size(m::AbstractAffineMap) = _size(m, matrix(m), vector(m))
 _size(m, A, b) = size(A)
 _size(m, A::Number, b::Number) = (1,1)
@@ -301,9 +306,6 @@ convert(::Type{Map{T}}, m::AffineMap{S}) where {S,T} = AffineMap{T}(m.A, m.b)
 
 isreal(m::AffineMap) = _isreal(m, unsafe_matrix(m), unsafe_vector(m))
 islinear(m::AffineMap) = _islinear(m, unsafe_vector(m))
-
-==(m1::AffineMap, m2::AffineMap) =
-    (unsafe_matrix(m1) == unsafe_matrix(m2)) && (unsafe_vector(m1)==unsafe_vector(m2))
 
 size(m::AffineMap) = _size(m, unsafe_matrix(m), unsafe_vector(m))
 

@@ -42,6 +42,10 @@ jacobian(m::AbstractIdentityMap, x) = matrix(m)
 
 jacdet(m::AbstractIdentityMap, x) = 1
 
+mapcompose(m1::AbstractIdentityMap) = m1
+mapcompose(m1::AbstractIdentityMap, maps...) = mapcompose(maps...)
+mapcompose2(m1, m2::AbstractIdentityMap, maps...) = mapcompose(m1, maps...)
+
 "The identity map for variables of type `T`."
 struct IdentityMap{T} <: AbstractIdentityMap{T}
 end

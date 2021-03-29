@@ -158,6 +158,7 @@ end
             @test isclosedset(d)
             @test !isopenset(d)
             @test similar_interval(d, big(0), big(1)) == Interval{:closed,:closed,BigInt}(0,1)
+            @test closure(d) == d
 
             @test iscompact(d)
             @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
@@ -305,6 +306,7 @@ end
         @testset "OpenInterval{$T}" begin
             d = OpenInterval(0,1)
             @test isopenset(d)
+            @test closure(d) == UnitInterval()
 
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
@@ -318,10 +320,12 @@ end
             d = Interval{:open,:closed}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+            @test closure(d) == 0..1
 
             d = Interval{:closed,:open}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+            @test closure(d) == 0..1
         end
 
         @testset "approximate in for open and closed intervals" begin
@@ -331,6 +335,18 @@ end
             @test !approx_in(0.0, Interval{:open,:closed}(0,1), 0)
             @test approx_in(0.0, Interval{:closed,:closed}(0,1), 0)
             @test approx_in(1.0, Interval{:closed,:closed}(0,1), 0)
+        end
+
+        @testset "mapping between intervals" begin
+            @test canonicaldomain(UnitInterval()) == UnitInterval()
+            m = bijection(2..3, ChebyshevInterval())
+            @test isaffine(m)
+            @test m(2) ≈ -1
+            @test m(3) ≈ 1
+            m2 = bijection(4.0..6, 2..3)
+            @test isaffine(m2)
+            @test m2(4) ≈ 2
+            @test m2(6) ≈ 3
         end
 
         @test typeof(UnitInterval{Float64}(0.0..1.0)) <: UnitInterval
@@ -727,15 +743,11 @@ end
         @test !isopenset(C)
         p = parameterization(C)
         x = applymap(p, 1/2)
-        @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
-        @test DomainSets.image(p) == UnitCircle()
         @test gradient(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
         @test approx_in(x, C)
         q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
         @test applymap(q, -x) ≈ 1
-        @test DomainSets.domain(q) == FullSpace{SVector{2,Float64}}()
-        @test DomainSets.image(q) == Interval{:closed,:open,Float64}(0, 1)
         @test rightinverse(q) == p
 
         @test convert(LevelSet, UnitCircle()) isa LevelSet{SVector{2,Float64}}

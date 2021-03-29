@@ -41,7 +41,10 @@ codomaintype(m::Composition) = codomaintype(m.maps[end])
 size(m::Composition) = (size(m.maps[end])[1], size(m.maps[1])[2])
 
 mapcompose(m) = m
-mapcompose(maps...) = Composition(maps...)
+mapcompose(map1, maps...) = mapcompose2(map1, maps...)
+# mapcompose2 enables dispatch on the second map, or on the combination of the
+# first two maps
+mapcompose2(map1, map2, maps...) = Composition(map1, map2, maps...)
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
 (∘)(map1::Map, map2::Map) = mapcompose(map2, map1)

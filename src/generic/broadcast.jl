@@ -50,13 +50,13 @@ broadcasted(::DomainSetStyle, fun::Function, d::Domain{T}) where {T} = GenericFu
 # for plotting purposes.
 # This call can be avoided by typing in.(A, Ref(d)) instead.
 broadcasted(::DomainSetStyle, ::typeof(in), A, d::Domain) = broadcast_in(A, d)
-broadcasted(::DomainSetStyle, ::typeof(approx_in), A, d::Domain) = broadcast_approx_in(A, d)
+broadcasted(::DomainSetStyle, ::typeof(approx_in), A, d::Domain, tol) = broadcast_approx_in(A, d, tol)
 
 "Vectorized version of `in`: apply `x ∈ d` to all elements of `A`."
 broadcast_in(A, d::Domain) = in.(A, Ref(d))
 
 "Vectorized version of `approx_in`: apply `x ∈ d` to all elements of `A`."
-broadcast_approx_in(A, d::Domain) = approx_in.(A, Ref(d))
+broadcast_approx_in(A, d::Domain, tol) = approx_in.(A, Ref(d), tol)
 
 
 ## Some arithmetics

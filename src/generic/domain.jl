@@ -123,3 +123,46 @@ supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the s
 # override minimum and maximum for closed sets
 function boundary end
 const ∂ = boundary
+
+## Mappings to and from a canonical domain
+
+"""
+Return an associated canonical domain, if any, of the given domain.
+
+Optionally, additional arguments can be used to specify one of several
+canonical domains.
+"""
+canonicaldomain(d::Domain, args...) = d
+
+"Return a map from the domain to its canonical domain."
+tocanonical(d, args...) = IdentityMap{eltype(d)}()
+
+"Return a map to a domain from its canonical domain."
+fromcanonical(d, args...) = IdentityMap{eltype(d)}()
+
+"Return a bijective map between domains `d1` and `d2`."
+bijection(d1, d2) = bijection1(d1, d2)
+
+# simplify the first argument
+bijection1(d1, d2) = _bijection1(d1, d2, canonicaldomain(d1))
+function _bijection1(d1, d2, cd)
+    if d1 == cd
+        bijection2(d1, d2)
+    else
+        bijection(cd, d2) ∘ tocanonical(d1)
+    end
+end
+# simplify the second argument
+bijection2(d1, d2) = _bijection2(d1, d2, canonicaldomain(d2))
+function _bijection2(d1, d2, cd)
+    if d2 == cd
+        no_known_bijection(d1, d2)
+    else
+        fromcanonical(d2) ∘ bijection(d1, cd)
+    end
+end
+
+no_known_bijection(d1, d2) = d1 == d2 ? IdentityMap{eltype(d1)}() : error("No bijection known between $(d1) and $(d2).")
+
+"Return a parameterization of the given domain."
+parameterization(d::Domain) = fromcanonical(d)

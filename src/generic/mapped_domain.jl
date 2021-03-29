@@ -18,6 +18,7 @@ show(io::IO, d::AbstractMappedDomain) =  print(io, "A mapped domain based on ", 
 tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
 toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
 
+
 const MappedVectorDomain{T} = AbstractMappedDomain{Vector{T}}
 
 # TODO: check whether the map alters the dimension
@@ -104,3 +105,12 @@ _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
 # Avoid nested mapping domains, construct a composite map instead
 # This assumes that the map types can be combined using \circ
 mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
+
+canonicaldomain(d::MappedDomain) = superdomain(d)
+fromcanonical(d::MappedDomain) = forward_map(d)
+tocanonical(d::MappedDomain) = inverse_map(d)
+
+# bijection1(d1::MappedDomain, d2) =
+#     bijection(superdomain(d1), d2) ∘ inverse_map(d1)
+# bijection2(d1, d2::MappedDomain) =
+#     forward_map(d2) ∘ bijection(d1, superdomain(d2))

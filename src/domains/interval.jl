@@ -49,11 +49,13 @@ and `ChebyshevInterval`.
 abstract type FixedInterval{L,R,T} <: TypedEndpointsInterval{L,R,T} end
 const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
 
+closure(d::TypedEndpointsInterval) = ClosedInterval(endpoints(d)...)
+closure(d::ClosedFixedInterval) = d
 
 """
 Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.
-"""# Assume a closed interval by default
+"""
 similar_interval(d::ClosedFixedInterval{T}, a::S, b::S) where {S,T} =
     ClosedInterval{promote_type(float(T),S)}(a, b)
 
@@ -65,6 +67,17 @@ UnitInterval() = UnitInterval{Float64}()
 endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 
 similardomain(::UnitInterval, ::Type{T}) where {T} = UnitInterval{T}()
+
+canonicaldomain(d::AbstractInterval) = isinf(width(d)) ? d : UnitInterval{eltype(d)}()
+
+tocanonical(d::UnitInterval{T}) where {T} = IdentityMap{T}()
+fromcanonical(d::UnitInterval{T}) where {T} = IdentityMap{T}()
+
+tocanonical(d::AbstractInterval{T}) where {T} =
+    isinf(width(d)) ? IdentityMap{T}() : interval_map(endpoints(d)..., 0, 1)
+fromcanonical(d::AbstractInterval{T}) where {T} =
+    isinf(width(d)) ? IdentityMap{T}() : interval_map(0, 1, endpoints(d)...)
+
 
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: ClosedFixedInterval{T}

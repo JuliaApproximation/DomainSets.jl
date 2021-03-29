@@ -213,12 +213,6 @@ The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
 """
 struct UnitCircleMap{T} <: Map{T} end
 
-parameterization(d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
-
-domain(d::UnitCircleMap{T}) where {T} = Interval{:closed,:open,T}(0, 1)
-
-image(m::UnitCircleMap{T}) where {T} = UnitCircle{T}()
-
 applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
 
 function gradient(m::UnitCircleMap{T}, t) where {T}
@@ -235,10 +229,6 @@ origin. The angle of this point, scaled to the interval `[0,1)`, is the result.
 struct AngleMap{T} <: Map{SVector{2,T}}
 end
 
-domain(d::AngleMap{T}) where {T} = FullSpace{SVector{2,T}}()
-
-image(m::AngleMap{T}) where {T} = Interval{:closed,:open,T}(0, 1)
-
 function applymap(m::AngleMap{T}, x) where {T}
     twopi = 2*convert(T, pi)
     θ = atan(x[2],x[1])
@@ -251,8 +241,13 @@ function applymap(m::AngleMap{T}, x) where {T}
 end
 
 leftinverse(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
-
 rightinverse(m::AngleMap{T}) where {T} = UnitCircleMap{T}()
+
+canonicaldomain(d::UnitCircle{T}) where {T} = UnitInterval{T}()
+
+fromcanonical(d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
+tocanonical(d::UnitCircle{T}) where {T} = AngleMap{T}()
+
 
 ## The complex plane
 
