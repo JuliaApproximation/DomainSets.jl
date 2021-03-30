@@ -42,6 +42,7 @@ LevelSet{T}(f::F, level::S) where {T,F,S} = LevelSet{T,F,S}(f, level)
 similardomain(d::LevelSet, ::Type{T}) where {T} = LevelSet{T}(levelfun(d), level(d))
 
 convert(::Type{LevelSet}, d::ZeroSet{T}) where {T} = LevelSet{T}(levelfun(d), level(d))
+convert(::Type{LevelSet{T}}, d::ZeroSet) where {T} = LevelSet{T}(levelfun(d), level(d))
 
 
 "Supertype of sublevel set domains."
@@ -66,6 +67,10 @@ SubZeroSet{T,C}(f::F) where {T,C,F} = SubZeroSet{T,C,F}(f)
 
 level(d::SubZeroSet) = 0
 
+similardomain(d::SubZeroSet{S,C}, ::Type{T}) where {S,C,T} =
+    SubZeroSet{T,C}(levelfun(d))
+
+
 "The domain defined by `f(x) <= C` (or `f(x) < C`) for a given function `f` and constant `C`."
 struct SubLevelSet{T,C,F,S} <: AbstractSubLevelSet{T,C}
     f       ::  F
@@ -76,6 +81,9 @@ SubLevelSet(f, level) = SubLevelSet{typeof(level)}(f, level)
 SubLevelSet{T}(f, level) where {T} = SubLevelSet{T,:closed}(f, level)
 SubLevelSet{T,C}(f::F, level::S) where {T,C,F,S} = SubLevelSet{T,C,F,S}(f, level)
 
+similardomain(d::SubLevelSet{S,C}, ::Type{T}) where {S,C,T} =
+    SubLevelSet{T,C}(levelfun(d), level(d))
+
 
 "Supertype of superlevel set domains."
 abstract type AbstractSuperLevelSet{T,C} <: FunctionLevelSet{T} end
@@ -84,9 +92,9 @@ indomain(x, d::AbstractSuperLevelSet{T,:closed}) where {T} = levelfun(d, x) >= l
 indomain(x, d::AbstractSuperLevelSet{T,:open}) where {T} = levelfun(d, x) > level(d)
 
 show(io::IO, d::AbstractSuperLevelSet{T,:closed}) where {T} =
-    print(io, "sublevel set f(x) >= $(level(d)) with f = $(levelfun(d))")
+    print(io, "superlevel set f(x) >= $(level(d)) with f = $(levelfun(d))")
 show(io::IO, d::AbstractSuperLevelSet{T,:open}) where {T} =
-    print(io, "sublevel set f(x) > $(level(d)) with f = $(levelfun(d))")
+    print(io, "superlevel set f(x) > $(level(d)) with f = $(levelfun(d))")
 
 "The domain where `f(x) >= 0` (or `f(x) > 0`)."
 struct SuperZeroSet{T,C,F} <: AbstractSuperLevelSet{T,C}
@@ -99,6 +107,9 @@ SuperZeroSet{T,C}(f::F) where {T,C,F} = SuperZeroSet{T,C,F}(f)
 
 level(d::SuperZeroSet) = 0
 
+similardomain(d::SuperZeroSet{S,C}, ::Type{T}) where {S,C,T} =
+    SuperZeroSet{T,C}(levelfun(d))
+
 "The domain defined by `f(x) >= C` (or `f(x) > C`) for a given function `f` and constant `C`."
 struct SuperLevelSet{T,C,F,S} <: AbstractSuperLevelSet{T,C}
     f       ::  F
@@ -109,6 +120,8 @@ SuperLevelSet(f, level) = SuperLevelSet{typeof(level)}(f, level)
 SuperLevelSet{T}(f, level) where {T} = SuperLevelSet{T,:closed}(f, level)
 SuperLevelSet{T,C}(f::F, level::S) where {T,C,F,S} = SuperLevelSet{T,C,F,S}(f, level)
 
+similardomain(d::SuperLevelSet{S,C}, ::Type{T}) where {S,C,T} =
+    SuperLevelSet{T,C}(levelfun(d), level(d))
 
 ## Additional functionality
 

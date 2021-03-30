@@ -49,6 +49,8 @@ ProductDomain(domains...) = _ProductDomain(map(Domain, domains)...)
 _ProductDomain(domains...) = TupleProductDomain(domains...)
 _ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
 ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
+# To create a tuple product domain, invoke ProductDomain{T}. Here, we splat
+# and this may end up creating a VcatDomain instead.
 ProductDomain(domains::Tuple) = ProductDomain(domains...)
 
 ProductDomain{SVector{N,T}}(domains...) where {N,T} = VcatDomain{N,T}(domains...)
@@ -62,10 +64,13 @@ cartesianproduct(domains...) = ProductDomain(expand(ProductDomain, domains...)..
 
 ^(d::Domain, n::Int) = cartesianproduct(d, n)
 
-# Convert from any product domain to any other product domain. This means that the
-# constructors should work for elements(d) of any product domain, i.e., for a tuple
-# or a vector of domains.
 similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(elements(d))
+
+canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain, elements(d)))
+
+tocanonical(d::ProductDomain) = ProductMap(map(tocanonical, elements(d)))
+fromcanonical(d::ProductDomain) = ProductMap(map(fromcanonical, elements(d)))
+
 
 """
 A `VcatDomain` concatenates the element types of its member domains in a single

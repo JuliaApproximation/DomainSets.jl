@@ -54,7 +54,6 @@ size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,elements(m
 
 ==(m1::ProductMap, m2::ProductMap) = all(map(isequal, elements(m1), elements(m2)))
 
-
 """
 A `VcatProductMap` is a product map with domain and codomain vectors
 concatenated (`vcat`) into a single vector.

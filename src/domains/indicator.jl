@@ -44,6 +44,8 @@ struct UntypedIndicatorFunction{T} <: AbstractIndicatorFunction{T}
     f
 end
 
+UntypedIndicatorFunction(f) = UntypedIndicatorFunction{Float64}(f)
+
 indicatorfunction(d::UntypedIndicatorFunction) = d.f
 
 similardomain(d::UntypedIndicatorFunction, ::Type{T}) where {T} =

@@ -29,6 +29,9 @@ inv(m::AbstractIdentityMap) = m
 islinear(::AbstractIdentityMap) = true
 isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
 
+isidentity(::AbstractIdentityMap) = true
+isidentity(m::Map{T}) where {T} = m == IdentityMap{T}()
+
 dimension(m::AbstractIdentityMap{T}) where {T<:Number} = 1
 dimension(m::AbstractIdentityMap{T}) where {N,T<:SVector{N}} = N
 

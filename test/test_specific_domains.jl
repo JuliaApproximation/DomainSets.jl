@@ -142,6 +142,7 @@ end
         @test (0..1) \ Point(0.5) isa  UnionDomain{Float64}
         @test (0..1) \ Point(0.0) == Interval{:open,:closed,Float64}(0,1)
         @test (0..1) \ Point(1.0) == Interval{:closed,:open,Float64}(0,1)
+        @test (0..1) \ Point(2.0) == Interval{:closed,:closed,Float64}(0,1)
         @test issubset(Point(1), (0..2))
 
         @test dimension(Point([1,2,3]))==3
@@ -165,6 +166,8 @@ end
 
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+
+            @test similar_interval(0..1, 0, big(1.0)) isa ClosedInterval{BigFloat}
         end
         @testset "UnitInterval{$T}" begin
             d = UnitInterval{T}()
@@ -949,36 +952,64 @@ end
         @test SA[0.1,0.3] ∉ d2
         @test SA[0.0,0.3] ∈ d2
         @test SA[0.1,0.0] ∈ d2
+        @test ZeroSet(cos) isa ZeroSet{Float64}
+        @test convert(Domain{BigFloat}, ZeroSet(cos)) isa ZeroSet{BigFloat}
+        @test convert(LevelSet, ZeroSet{BigFloat}(cos)) isa LevelSet{BigFloat}
+        @test convert(LevelSet{BigFloat}, ZeroSet{Float64}(cos)) isa LevelSet{BigFloat}
 
         d3 = SubLevelSet(cos, 0.5)
+        d3_open = SubLevelSet{Float64,:open}(cos,0.5)
         @test d3 isa SubLevelSet{Float64,:closed}
-        show(io,d3)
-        @test String(take!(io)) == "sublevel set f(x) <= 0.5 with f = cos"
         @test 3.0 ∈ d3
         @test 0.0 ∉ d3
+        @test 0.0 ∉ d3_open
+        show(io, d3)
+        @test String(take!(io)) == "sublevel set f(x) <= 0.5 with f = cos"
+        show(io, d3_open)
+        @test String(take!(io)) == "sublevel set f(x) < 0.5 with f = cos"
+        @test convert(Domain{BigFloat}, d3) isa SubLevelSet{BigFloat,:closed}
+        @test convert(Domain{BigFloat}, d3_open) isa SubLevelSet{BigFloat,:open}
+
 
         d4 = SubZeroSet{SVector{2,Float64}}(prod)
+        d4_open = SubZeroSet{SVector{2,Float64},:open}(prod)
         @test d4 isa SubZeroSet{SVector{2,Float64},:closed}
         @test SA[0.1,0.3] ∉ d4
         @test SA[-0.1,0.3] ∈ d4
         @test SA[-0.1,-0.3] ∉ d4
+        @test SA[-0.1,0.3] ∈ d4_open
+        convert(Domain{SVector{2,BigFloat}}, d4) isa SubZeroSet{SVector{2,BigFloat},:closed}
+        convert(Domain{SVector{2,BigFloat}}, d4_open) isa SubZeroSet{SVector{2,BigFloat},:open}
 
         d5 = SuperLevelSet(cos, 0.5)
+        d5_open = SuperLevelSet{Float64,:open}(cos, 0.5)
         @test d5 isa SuperLevelSet{Float64,:closed}
         @test 3.0 ∉ d5
         @test 0.0 ∈ d5
+        @test 0.0 ∈ d5
+        show(io, d5)
+        @test String(take!(io)) == "superlevel set f(x) >= 0.5 with f = cos"
+        show(io, d5_open)
+        @test String(take!(io)) == "superlevel set f(x) > 0.5 with f = cos"
+        @test convert(Domain{BigFloat}, d5) isa SuperLevelSet{BigFloat}
+        @test convert(Domain{BigFloat}, d5_open) isa SuperLevelSet{BigFloat,:open}
 
         d6 = SuperZeroSet{SVector{2,Float64}}(prod)
+        d6_open = SuperZeroSet{SVector{2,Float64},:open}(prod)
         @test d6 isa SuperZeroSet{SVector{2,Float64},:closed}
         @test SA[0.1,0.3] ∈ d6
         @test SA[-0.1,0.3] ∉ d6
         @test SA[-0.1,-0.3] ∈ d6
+        @test SuperZeroSet(cos) isa SuperZeroSet{Float64}
+        @test convert(Domain{SVector{2,BigFloat}}, d6) isa SuperZeroSet{SVector{2,BigFloat},:closed}
+        @test convert(Domain{SVector{2,BigFloat}}, d6_open) isa SuperZeroSet{SVector{2,BigFloat},:open}
     end
 
     @testset "indicator functions" begin
         ispositive(x) = x >= 0
         d = IndicatorFunction(ispositive)
         @test d isa IndicatorFunction{Float64}
+        @test DomainSets.indicatorfunction(d) == ispositive
         show(io,d)
         @test String(take!(io)) == "indicator domain defined by function f = ispositive"
         @test 0 ∈ d
@@ -986,7 +1017,14 @@ end
         @test -1 ∉ d
 
         @test convert(IndicatorFunction, 0..1) isa IndicatorFunction
+        @test convert(IndicatorFunction, d) == d
+        @test convert(Domain{BigFloat}, d) isa IndicatorFunction{BigFloat}
         @test 0.5 ∈ convert(IndicatorFunction, 0..1)
+
+        d2 = DomainSets.UntypedIndicatorFunction(ispositive)
+        @test d2 isa DomainSets.UntypedIndicatorFunction{Float64}
+        @test DomainSets.indicatorfunction(d2) == ispositive
+        @test convert(Domain{BigFloat}, d2) isa DomainSets.UntypedIndicatorFunction{BigFloat}
     end
 end
 

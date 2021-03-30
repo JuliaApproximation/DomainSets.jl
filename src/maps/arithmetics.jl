@@ -32,3 +32,7 @@ affine_composition(map1::Translation, map2::Translation) =
 # The sum of two affine maps is again an affine map
 mapsum(map1::AbstractAffineMap, map2::AbstractAffineMap) =
     AffineMap(matrix(map1)+matrix(map2), vector(map1)+vector(map2))
+
+
+==(m1::ProductMap, m2::IdentityMap) = all(map(isidentity, elements(m1)))
+==(m1::IdentityMap, m2::ProductMap) = m2 == m1

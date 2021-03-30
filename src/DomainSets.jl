@@ -168,7 +168,7 @@ include("generic/domain.jl")
 include("generic/lazy.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
-include("generic/mapped_domain.jl")
+include("generic/mapped.jl")
 include("generic/promotion.jl")
 include("generic/broadcast.jl")
 
