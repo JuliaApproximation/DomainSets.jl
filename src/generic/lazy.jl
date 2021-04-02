@@ -123,6 +123,7 @@ similardomain(d::WrappedDomain, ::Type{T}) where {T} = WrappedDomain{T}(d.domain
 # if the object does not support `eltype`.
 convert(::Type{Domain}, v::Domain) = v
 convert(::Type{Domain}, v) = WrappedDomain(v)
+convert(::Type{Domain{T}}, v) where {T} = WrappedDomain{T}(v)
 
 ==(d1::WrappedDomain, d2::WrappedDomain) = superdomain(d1)==superdomain(d2)
 

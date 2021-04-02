@@ -98,7 +98,7 @@ end
 VcatDomain{N,T}(domains::Union{AbstractVector,Tuple}) where {N,T} = VcatDomain{N,T}(domains...)
 function VcatDomain{N,T}(domains...) where {N,T}
 	DIM = map(dimension,domains)
-	VcatDomain{N,T,DIM}(map(d->convert_numtype(d, T), domains)...)
+	VcatDomain{N,T,DIM}(convert_numtype.(domains, T)...)
 end
 
 VcatDomain{N,T,DIM}(domains...) where {N,T,DIM} =
@@ -169,7 +169,6 @@ end
 TupleProductDomain(domains::Vector) = TupleProductDomain(domains...)
 TupleProductDomain(domains::Domain...) = TupleProductDomain(domains)
 TupleProductDomain(domains...) = TupleProductDomain(map(Domain, domains)...)
-TupleProductDomain(domain::Domain) = TupleProductDomain((domain,))
 function TupleProductDomain(domains::Tuple)
 	T = Tuple{map(eltype, domains)...}
 	TupleProductDomain{T}(domains)
@@ -177,7 +176,7 @@ end
 
 TupleProductDomain{T}(domains::Vector) where {T} = TupleProductDomain{T}(domains...)
 TupleProductDomain{T}(domains...) where {T} = TupleProductDomain{T}(domains)
-function TupleProductDomain{T}(domains) where {T <: Tuple}
+function TupleProductDomain{T}(domains::Tuple) where {T <: Tuple}
 	Tdomains = map((t,d) -> convert(Domain{t},d), tuple(T.parameters...), domains)
 	TupleProductDomain{T,typeof(Tdomains)}(Tdomains)
 end

@@ -53,6 +53,8 @@ const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
 closure(d::TypedEndpointsInterval) = ClosedInterval(endpoints(d)...)
 closure(d::ClosedFixedInterval) = d
 
+interior(d::AbstractInterval) = OpenInterval(endpoints(d)...)
+
 """
 Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.

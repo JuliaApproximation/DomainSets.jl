@@ -27,7 +27,7 @@ const UnitCube{T} = EuclideanUnitCube{3,T}
 
 EuclideanUnitCube{N}() where {N} = EuclideanUnitCube{N,Float64}()
 UnitSquare() = UnitSquare{Float64}()
-
+UnitCube() = UnitCube{Float64}()
 
 "A unit cube whose dimension is specified by a field."
 struct DynamicUnitCube{T} <: UnitHyperCube{T}

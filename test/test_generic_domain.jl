@@ -86,5 +86,8 @@ end
         @test (1..2) * 2 == (1..2) .* 2
         @test (1..2) / 2 ≈ (0.5..1)
         @test 2 \ (1..2) ≈ (0.5..1)
+
+        # promotion
+        @test DomainSets.promote_domains() == ()
     end
 end

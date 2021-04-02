@@ -11,8 +11,23 @@ convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{convert_p
 
 Domain(d) = convert(Domain, d)
 
+# Concrete types can implement similardomain(d, ::Type{T}) where {T}
+# to support convert(Domain{T}, d) functionality.
 convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
 convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
+
+"Promote the given domains to have a common element type."
+promote_domains() = ()
+promote_domains(domains) = convert_eltype.(mapreduce(eltype, promote_type, domains), domains)
+
+convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
+convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, eltype(d))
+_convert_eltype(::Type{T}, d, ::Type{T}) where {T} = d
+_convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
+    error("Don't know how to convert the `eltype` of $(d).")
+# Some standard cases
+convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
+convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 
 
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."

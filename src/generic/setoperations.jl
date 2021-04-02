@@ -39,7 +39,7 @@ convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, s::Set) = UnionDomain(map(Point,collect(s)))
 
 similardomain(d::UnionDomain, ::Type{T}) where {T} =
-    UnionDomain(convert_domain.(T, elements(d)))
+    UnionDomain(convert.(Domain{T}, elements(d)))
 
 elements(d::UnionDomain) = d.domains
 
@@ -166,7 +166,7 @@ function intersect(d1::ProductDomain, d2::ProductDomain)
 end
 
 similardomain(d::IntersectionDomain, ::Type{T}) where {T} =
-    IntersectionDomain(convert_domain.(T, elements(d)))
+    IntersectionDomain(convert.(Domain{T}, elements(d)))
 
 ==(a::IntersectionDomain, b::IntersectionDomain) = Set(elements(a)) == Set(elements(b))
 
@@ -191,7 +191,7 @@ struct DifferenceDomain{T,DD} <: CompositeLazyDomain{T}
 	end
 end
 
-DifferenceDomain(d1, d2) = _DifferenceDomain(promote_domain(d1, d2)...)
+DifferenceDomain(d1, d2) = _DifferenceDomain(promote_domains((d1, d2))...)
 _DifferenceDomain(d1, d2) = DifferenceDomain{eltype(d1)}((d1,d2))
 DifferenceDomain{T}(domains) where {T} = DifferenceDomain{T,typeof(domains)}(domains)
 
@@ -205,7 +205,7 @@ _approx_indomain(x, d::DifferenceDomain, comp::Combination, domains, tolerance) 
     approx_in(x, domains[1], tolerance) & !in(x, domains[2])
 
 similardomain(d::DifferenceDomain, ::Type{T}) where {T} =
-    DifferenceDomain(convert_domain(T, d.domains[1]), convert_domain(T, d.domains[2]))
+    DifferenceDomain(convert(Domain{T}, d.domains[1]), convert(Domain{T}, d.domains[2]))
 
 function setdiff(d1::Domain, d2::Domain)
     if d1 == d2

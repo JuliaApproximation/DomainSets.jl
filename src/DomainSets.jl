@@ -140,6 +140,8 @@ export UnitCircle, VectorUnitCircle,
     ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder,
     gradient
+# from domains/cube.jl
+export UnitCube, HyperRectangle
 # from domain/levelset.jl
 export LevelSet, ZeroSet,
     SubLevelSet, SubZeroSet,
@@ -169,7 +171,6 @@ include("generic/lazy.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
 include("generic/mapped.jl")
-include("generic/promotion.jl")
 include("generic/broadcast.jl")
 
 include("domains/trivial.jl")

@@ -1,8 +1,7 @@
 using StaticArrays, DomainSets, Test
 
 import DomainSets: MappedDomain, similar_interval,
-    interior, closure,
-    HyperRectangle
+    interior, closure, volume
 
 struct Basis3Vector <: StaticVector{3,Float64} end
 
@@ -161,6 +160,7 @@ end
             @test !isopenset(d)
             @test similar_interval(d, big(0), big(1)) == Interval{:closed,:closed,BigInt}(0,1)
             @test closure(d) == d
+            @test isopenset(interior(d))
 
             @test iscompact(d)
             @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
@@ -1044,7 +1044,9 @@ end
         @test eltype(d1w) == SVector{2,BigFloat}
         @test eltype(element(d1w, 1)) == BigFloat
         @test eltype(element(d1w, 2)) == BigFloat
-        io = IOBuffer()
+
+        @test VcatDomain( (-1..1, -2..2)) isa VcatDomain{2,Int,(1,1),Tuple{ClosedInterval{Int64}, ClosedInterval{Int64}}}
+
         show(io,d1)
         @test String(take!(io)) == "-1.0..1.0 x -1.0..1.0"
 
@@ -1107,6 +1109,12 @@ end
         @test [0.1,0.2] ∈ d2
         @test point_in_domain(d2) ∈ d2
 
+        # other constructor calls
+        @test VectorProductDomain(0..1, 1..2) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain((0..1, 1..2)) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain{Vector{Int}}(0..1, 1..2) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain{Vector{Int}}((0..1, 1..2)) isa VectorProductDomain{Vector{Int}}
+
         bnd = boundary(d1)
         @test bnd isa VectorDomain
         @test bnd isa UnionDomain
@@ -1161,6 +1169,13 @@ end
         @test ('b',1.5) ∉ d2
         @test ('c',0.5) ∉ d2
 
+        # other constructor calls
+        @test TupleProductDomain(0..1, 1..2.0) isa TupleProductDomain{Tuple{Int,Float64}}
+        @test TupleProductDomain([0..1, 1..2.0]) isa TupleProductDomain{Tuple{Float64,Float64}}
+        @test TupleProductDomain{Tuple{Int,Float64}}(0..1, 1..2.0) isa TupleProductDomain{Tuple{Int,Float64}}
+        @test TupleProductDomain{Tuple{Float64,Float64}}(0..1, 1..2.0) isa TupleProductDomain{Tuple{Float64,Float64}}
+        @test TupleProductDomain{Tuple{Float64,Float64}}([0..1, 1..2.0]) isa TupleProductDomain{Tuple{Float64,Float64}}
+
         bnd = boundary(d1)
         @test eltype(bnd) == Tuple{Float64,Float64}
         @test bnd isa UnionDomain
@@ -1195,9 +1210,15 @@ end
     @testset "ProductDomain" begin
         d1 = 0..1.0
         d2 = 0..2.0
+        d3 = UnitCircle()
         @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
         @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
         @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
+
+        @test ProductDomain((d1,d3)) isa VcatDomain
+        @test ProductDomain((d1,d2)) isa HyperRectangle
+
+        @test volume(ProductDomain(d1,d2)) == 2
 
         @test ProductDomain(SVector(0..1, 0..2)) isa HyperRectangle{SVector{2,Int}}
         @test ProductDomain(1.05 * UnitDisk(), -1.0 .. 1.0) isa VcatDomain{3,Float64}
@@ -1212,6 +1233,13 @@ end
         # intersection of product domains
         @test ProductDomain([0..1.0, 0..2.0]) ∩ ProductDomain([0..1, 0..3]) isa HyperRectangle{Vector{Float64}}
         @test ProductDomain(0..1.0, 0..2.0) ∩ ProductDomain(0..1, 0..3) isa HyperRectangle{SVector{2,Float64}}
+
+        # Generic functionality
+        long_domain = ProductDomain([0..i for i in 1:20])
+        show(io, long_domain)
+        @test String(take!(io)) == "0..1 x 0..2 x 0..3 x 0..4 x 0..5 x ... x 0..16 x 0..17 x 0..18 x 0..19 x 0..20"
+        @test isopenset(interior(UnitCube()))
+        @test isclosedset(closure(interior(UnitCube())))
     end
 end
 
@@ -1219,7 +1247,7 @@ end
     @testset "union" begin
         d1 = UnitDisk()
         d2 = (-.9..0.9)^2
-        d3 = (-.5 .. -.1) × ChebyshevInterval()
+        d3 = ProductDomain(-.5 .. -.1, ChebyshevInterval())
         d4 = (0.0..1.5)
         d5 = [1.0,3.0]
 
@@ -1252,7 +1280,7 @@ end
         @test (d1 ∪ d1) isa typeof(d1)
 
         # union with non-Domain type that implements domain interface
-        u45 = d4 ∪ d5
+        u45 = (0.0..1.5) ∪ [1.0,3.0]
         @test u45 isa Domain{Float64}
         @test u45 isa UnionDomain
         @test eltype(element(u45,1)) == Float64
@@ -1262,6 +1290,10 @@ end
         @test 3 ∈ u45
         @test -1.2 ∉ u45
         @test convert(Domain{BigFloat}, u45) isa Domain{BigFloat}
+
+        u45b = (0.0..1.5) ∪ [1,3]
+        @test u45b isa Domain{Float64}
+        @test element(u45b,2) isa AbstractArray{Float64}
 
         # ordering doesn't matter
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
@@ -1380,6 +1412,8 @@ end
         d1 = WrappedDomain{Any}([0,5])
         @test 0 ∈ d1
         @test 1 ∉ d1
+
+        @test convert(Domain{Float64}, [0.4,0.5]) isa Domain{Float64}
     end
 
     @testset "more set operations" begin
