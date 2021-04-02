@@ -2,11 +2,11 @@
 # The type hierarchy is as follows:
 # abstract HyperBall
 # |-> abstract UnitHyperBall: radius is 1
-#     |-> FixedUnitBall: dimension is part of type
-#     |-> FlexibleUnitBall: dimension is specified by int field
+#     |-> StaticUnitBall: dimension is part of type
+#     |-> DynamicUnitBall: dimension is specified by int field
 # There are aliases for SVector{N,T} and Vector{T}:
 #   EuclideanHyperBall, VectorHyperBall,
-#   EuclideanUnitBall (FixedUnitBall), VectorUnitBall (FlexibleUnitBall).
+#   EuclideanUnitBall (StaticUnitBall), VectorUnitBall (DynamicUnitBall).
 
 """
 Supertype of balls for which elements satisfy `norm(x) < radius(ball)` (open ball)
@@ -52,13 +52,13 @@ abstract type UnitHyperBall{T,C} <: HyperBall{T,C} end
 radius(::UnitHyperBall) = 1
 
 "The unit ball with fixed dimension(s) specified by the element type."
-struct FixedUnitBall{T,C} <: UnitHyperBall{T,C}
+struct StaticUnitBall{T,C} <: UnitHyperBall{T,C}
 end
 
-FixedUnitBall{T}() where {T} = FixedUnitBall{T,:closed}()
+StaticUnitBall{T}() where {T} = StaticUnitBall{T,:closed}()
 
 "The unit ball in a fixed N-dimensional space."
-const EuclideanUnitBall{N,T,C} = FixedUnitBall{SVector{N,T},C}
+const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
 
 EuclideanUnitBall{N}() where {N} = EuclideanUnitBall{N,Float64}()
 
@@ -69,26 +69,26 @@ UnitDisk() = UnitDisk{Float64}()
 UnitBall() = UnitBall{Float64}()
 
 
-"The unit ball with variable dimension."
-struct FlexibleUnitBall{T,C} <: UnitHyperBall{T,C}
+"The unit ball with variable dimension stored in a data field."
+struct DynamicUnitBall{T,C} <: UnitHyperBall{T,C}
     dimension   ::  Int
 end
 
-FlexibleUnitBall{T}(dimension::Int) where {T} =
-    FlexibleUnitBall{T,:closed}(dimension)
+DynamicUnitBall{T}(dimension::Int) where {T} =
+    DynamicUnitBall{T,:closed}(dimension)
 
-dimension(ball::FlexibleUnitBall) = ball.dimension
+dimension(ball::DynamicUnitBall) = ball.dimension
 
 "The unit ball with vector elements of a given dimension."
-const VectorUnitBall{T,C} = FlexibleUnitBall{Vector{T},C}
+const VectorUnitBall{T,C} = DynamicUnitBall{Vector{T},C}
 
 VectorUnitBall(dimension::Int = 3) = VectorUnitBall{Float64}(dimension)
 VectorUnitDisk() = VectorUnitBall(2)
 
-similardomain(ball::FixedUnitBall{S,C}, ::Type{T}) where {S,T,C} =
-    FixedUnitBall{T,C}()
-similardomain(ball::FlexibleUnitBall{S,C}, ::Type{T}) where {S,T,C} =
-    FlexibleUnitBall{T,C}(ball.dimension)
+similardomain(ball::StaticUnitBall{S,C}, ::Type{T}) where {S,T,C} =
+    StaticUnitBall{T,C}()
+similardomain(ball::DynamicUnitBall{S,C}, ::Type{T}) where {S,T,C} =
+    DynamicUnitBall{T,C}(ball.dimension)
 
 
 show(io::IO, d::UnitHyperBall{T,:closed}) where {T} =
@@ -252,7 +252,7 @@ tocanonical(d::UnitCircle{T}) where {T} = AngleMap{T}()
 ## The complex plane
 
 const ComplexUnitCircle{T} = FixedUnitSphere{Complex{T}}
-const ComplexUnitDisk{T,C} = FixedUnitBall{Complex{T},C}
+const ComplexUnitDisk{T,C} = StaticUnitBall{Complex{T},C}
 
 ComplexUnitCircle() = ComplexUnitCircle{Float64}()
 ComplexUnitDisk() = ComplexUnitDisk{Float64}()

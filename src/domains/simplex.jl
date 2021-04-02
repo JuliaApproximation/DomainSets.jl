@@ -30,22 +30,22 @@ isempty(::AbstractUnitSimplex) = false
 ==(d1::AbstractUnitSimplex, d2::AbstractUnitSimplex) =
     isclosedset(d1)==isclosedset(d2) && dimension(d1)==dimension(d2)
 
-struct FixedUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
+struct StaticUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
 end
 
-FixedUnitSimplex{T}() where {T} = FixedUnitSimplex{T,:closed}()
+StaticUnitSimplex{T}() where {T} = StaticUnitSimplex{T,:closed}()
 
-struct FlexibleUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
+struct DynamicUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
     dimension   ::  Int
 end
 
-FlexibleUnitSimplex{T}(dimension) where {T} = FlexibleUnitSimplex{T,:closed}(dimension)
+DynamicUnitSimplex{T}(dimension) where {T} = DynamicUnitSimplex{T,:closed}(dimension)
 
-dimension(d::FlexibleUnitSimplex) = d.dimension
+dimension(d::DynamicUnitSimplex) = d.dimension
 
 
-const EuclideanUnitSimplex{N,T,C} = FixedUnitSimplex{SVector{N,T},C}
-const VectorUnitSimplex{T,C} = FlexibleUnitSimplex{Vector{T},C}
+const EuclideanUnitSimplex{N,T,C} = StaticUnitSimplex{SVector{N,T},C}
+const VectorUnitSimplex{T,C} = DynamicUnitSimplex{Vector{T},C}
 const UnitSimplex{N,T,C} = EuclideanUnitSimplex{N,T,C}
 
 EuclideanUnitSimplex{N}() where {N} = EuclideanUnitSimplex{N,Float64}()
@@ -64,7 +64,7 @@ corners(d::VectorUnitSimplex{T}) where {T} =
 # whether it is open or closed.
 point_in_domain(d::AbstractUnitSimplex) = center(d)
 
-similardomain(d::FixedUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
-    FixedUnitSimplex{T,C}()
-similardomain(d::FlexibleUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
-    FlexibleUnitSimplex{T,C}(d.dimension)
+similardomain(d::StaticUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
+    StaticUnitSimplex{T,C}()
+similardomain(d::DynamicUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
+    DynamicUnitSimplex{T,C}(d.dimension)

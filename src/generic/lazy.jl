@@ -18,7 +18,7 @@ abstract type LazyDomain{T} <: Domain{T} end
 "Translate a point of the lazy domain to a point (or points) of the composing domain."
 tointernalpoint(d::LazyDomain, x) = x
 "Inverse of `tointernalpoint`."
-toexternalpoint(d::LazyDomain, y) = y
+toexternalpoint(d::LazyDomain{T}, y) where {T} = T(y)
 
 
 """

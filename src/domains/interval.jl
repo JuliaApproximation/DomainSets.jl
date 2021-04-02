@@ -2,7 +2,6 @@
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
 
-
 ##################
 ### An interval
 ##################
@@ -31,6 +30,8 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
 
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
+
+volume(d::AbstractInterval) = width(d)
 
 similar_interval(d::AbstractInterval, a, b) = similar_interval(d, promote(a, b)...)
 

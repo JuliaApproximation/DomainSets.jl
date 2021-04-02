@@ -179,6 +179,7 @@ include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
+include("domains/cube.jl")
 
 include("applications/rotation.jl")
 

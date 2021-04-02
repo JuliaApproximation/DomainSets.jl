@@ -16,6 +16,8 @@ isempty(d::ProductDomain) = any(isempty, elements(d))
 isclosedset(d::ProductDomain) = all(isclosedset, elements(d))
 isopenset(d::ProductDomain) = all(isopenset, elements(d))
 
+volume(d::ProductDomain) = prod(map(volume, elements(d)))
+
 function show(io::IO, d::ProductDomain)
     L = numelements(d)
 	if L <= 10
@@ -38,9 +40,14 @@ function show(io::IO, d::ProductDomain)
 end
 
 boundary(d::ProductDomain) = _boundary(d, elements(d))
+_boundary(d::ProductDomain, domains) =
+	UnionDomain(ProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
 
 infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
 supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
+
+interior(d::ProductDomain) = ProductDomain(map(interior, elements(d)))
+closure(d::ProductDomain) = ProductDomain(map(closure, elements(d)))
 
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
@@ -53,9 +60,10 @@ ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
 # and this may end up creating a VcatDomain instead.
 ProductDomain(domains::Tuple) = ProductDomain(domains...)
 
-ProductDomain{SVector{N,T}}(domains...) where {N,T} = VcatDomain{N,T}(domains...)
-ProductDomain{V}(domains...) where {V <: AbstractVector} = VectorProductDomain{V}(domains...)
-ProductDomain{T}(domains...) where {T <: Tuple} = TupleProductDomain{T}(domains...)
+ProductDomain{T}(domains...) where {T} = _TypedProductDomain(T, domains...)
+_TypedProductDomain(::Type{SVector{N,T}}, domains...) where {N,T} = VcatDomain{N,T}(domains...)
+_TypedProductDomain(::Type{T}, domains...) where {T<:Vector} = VectorProductDomain{T}(domains...)
+_TypedProductDomain(::Type{T}, domains...) where {T<:Tuple} = TupleProductDomain{T}(domains...)
 
 cross(x::Domain...) = cartesianproduct(x...)
 
@@ -87,7 +95,7 @@ function VcatDomain(domains...)
 	VcatDomain{N,T}(domains...)
 end
 
-VcatDomain{N,T}(domains::Union{Vector,Tuple}) where {N,T} = VcatDomain{N,T}(domains...)
+VcatDomain{N,T}(domains::Union{AbstractVector,Tuple}) where {N,T} = VcatDomain{N,T}(domains...)
 function VcatDomain{N,T}(domains...) where {N,T}
 	DIM = map(dimension,domains)
 	VcatDomain{N,T,DIM}(map(d->convert_numtype(d, T), domains)...)
@@ -102,7 +110,7 @@ toexternalpoint(d::VcatDomain{N,T,DIM}, y) where {N,T,DIM} =
 	convert_tocartesian(y, Val{DIM}())
 
 _boundary(d::VcatDomain, domains) =
-	UnionDomain(VcatDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
+	UnionDomain(ProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
 
 
 

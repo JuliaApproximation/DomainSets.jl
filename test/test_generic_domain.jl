@@ -46,6 +46,7 @@ end
         HalfLine(),
         NegativeHalfLine(),
         UnitInterval()^3,
+        (0..1) × (2.0..3) × (3..4),
         UnitBall(),
         VectorUnitBall(),
         VectorUnitBall(8),

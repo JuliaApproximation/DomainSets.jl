@@ -127,8 +127,7 @@ function rightinverse(m::LinearMap, x)
     m.A \ x
 end
 
-convert(::Type{Map{T}}, m::LinearMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::LinearMap{S}) where {S,T} = LinearMap{T}(m.A)
+similarmap(m::LinearMap, ::Type{T}) where {T} = LinearMap{T}(m.A)
 
 convert(::Type{Map{T}}, a::Number) where {T} = LinearMap{T}(a)
 

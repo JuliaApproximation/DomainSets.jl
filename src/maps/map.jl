@@ -27,6 +27,7 @@ prectype(::Type{<:Map{T}}) where {T} = prectype(T)
 
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m
+convert(::Type{Map{T}}, m::Map{S}) where {S,T} = similarmap(m, T)
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 
 convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{convert_numtype(T,U)}, map)
