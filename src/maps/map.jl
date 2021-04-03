@@ -30,8 +30,8 @@ convert(::Type{Map{T}}, m::Map{T}) where {T} = m
 convert(::Type{Map{T}}, m::Map{S}) where {S,T} = similarmap(m, T)
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 
-convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{convert_numtype(T,U)}, map)
-convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{convert_prectype(T,U)}, map)
+convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
+convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
 
 # Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)

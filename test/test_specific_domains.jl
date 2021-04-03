@@ -99,9 +99,11 @@ end
 
         @test fullspace(0..1) == FullSpace{Int}()
         @test fullspace([1,2]) == FullSpace{Int}()
+
+        @test uniondomain(UnitDisk(), FullSpace{SVector{2,Float64}}()) == FullSpace{SVector{2,Float64}}()
     end
 
-    @testset "points" begin
+    @testset "point" begin
         d = Domain(1.0)
         @test d isa Point
         @test 1 ∈ d
@@ -113,6 +115,8 @@ end
         @test isclosedset(d)
         @test !isopenset(d)
         @test dimension(d) == 1
+        @test isempty(interior(d))
+        @test closure(d) == d
 
         @test d .+ 1 == Domain(2.0)
         @test 1 .+ d == Domain(2.0)
@@ -479,6 +483,7 @@ end
         @test typeof(du1) <: AbstractInterval
         @test leftendpoint(du1) == leftendpoint(i1)
         @test rightendpoint(du1) == rightendpoint(i1)
+        @test uniondomain(0..1, 0.1..1.5) isa AbstractInterval{Float64}
 
         # - intersection of completely overlapping intervals
         du2 = intersectdomain(i1, i2)
@@ -491,6 +496,13 @@ end
         @test typeof(du3) <: AbstractInterval
         @test leftendpoint(du3) == leftendpoint(i1)
         @test rightendpoint(du3) == rightendpoint(i3)
+
+        @test uniondomain(OpenInterval(0,1), 0..2) == 0..2
+        @test uniondomain(OpenInterval(0,1), OpenInterval(0,2)) == OpenInterval(0,2)
+        @test uniondomain(1..2, 0..1.5) == 0..2.0
+        @test uniondomain(1..2.5, 0.8..1.5) == 0.8..2.5
+        @test uniondomain(1..2.5, 0.8..2.5) == 0.8..2.5
+        @test uniondomain(OpenInterval(1,2.5), OpenInterval(0.8,2.5)) == OpenInterval(0.8,2.5)
 
         # - intersection of partially overlapping intervals
         du4 = intersectdomain(i1, i3)
@@ -723,25 +735,6 @@ end
         @test 0.95 ∈ p
         @test 1+0.1im ∈ p
         @test 1.1+0.2im ∉ p
-    end
-
-
-    @testset "cube" begin
-        #Square
-        D = UnitInterval()^2
-        @test SA[0.9, 0.9] ∈ D
-        @test SA[1.1, 1.1] ∉ D
-        @test !isempty(D)
-        @test isclosedset(D)
-        @test !isopenset(D)
-
-        @test approx_in(SA[-0.1,-0.1], D, 0.1)
-        @test !approx_in(SA[-0.1,-0.1], D, 0.09)
-
-        #Cube
-        D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
-        @test SA[0.9, 0.6, -2.5] ∈ D
-        @test SA[0.0, 0.6, 0.0] ∉ D
     end
 
     @testset "sphere" begin
@@ -1058,6 +1051,9 @@ end
 end
 
 @testset "cartesian product" begin
+    @test productdomain() == ()
+    @test productdomain(2) == 2
+
     @testset "VcatDomain" begin
         d1 = VcatDomain(-1.0..1.0, -1.0..1.0)
         @test d1 isa DomainSets.VcatDomain
@@ -1214,6 +1210,43 @@ end
         @test (0.3, 0.0) ∈ bnd
         @test (0.3, 0.7) ∈ bnd
     end
+    @testset "cube" begin
+        @test volume(UnitCube()) == 1
+        @test EuclideanUnitCube{2}() == EuclideanUnitCube{2,Float64}()
+        @test UnitSquare() == UnitSquare{Float64}()
+        @test UnitHyperCube(Val(2)) isa EuclideanUnitCube{2,Float64}
+        @test UnitHyperCube{BigFloat}(Val(2)) isa EuclideanUnitCube{2,BigFloat}
+
+        d1 = VectorUnitCube{Float64}(4)
+        @test VectorUnitCube(4) == d1
+        @test UnitHyperCube(4) == d1
+        @test UnitHyperCube{Float64}(4) == d1
+        @test dimension(d1) == 4
+        @test element(d1, 1) == 0..1
+        @test SA[0.9,0.9,0.4,0.2] ∈ d1
+        @test [1.2,0.3,0.4,0.6] ∉ d1
+
+        @test ProductDomain([UnitInterval(),UnitInterval()]) isa DomainSets.DynamicUnitCube{Float64}
+        @test ProductDomain{Vector{BigFloat}}([UnitInterval(),UnitInterval()]) isa VectorProductDomain{Vector{BigFloat},Vector{UnitInterval{BigFloat}}}
+        @test ProductDomain{SVector{2,BigFloat}}(UnitInterval(),UnitInterval()) isa EuclideanUnitCube{2,BigFloat}
+        @test ProductDomain{SVector{2,BigFloat}}(SVector(UnitInterval(),UnitInterval())) isa EuclideanUnitCube{2,BigFloat}
+
+        D = UnitInterval()^2
+        @test D isa EuclideanUnitCube{2,Float64}
+        @test SA[0.9, 0.9] ∈ D
+        @test SA[1.1, 1.1] ∉ D
+        @test !isempty(D)
+        @test isclosedset(D)
+        @test !isopenset(D)
+
+        @test approx_in(SA[-0.1,-0.1], D, 0.1)
+        @test !approx_in(SA[-0.1,-0.1], D, 0.09)
+
+        #Cube
+        D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
+        @test SA[0.9, 0.6, -2.5] ∈ D
+        @test SA[0.0, 0.6, 0.0] ∉ D
+    end
     @testset "HyperRectangle" begin
         d1 = (-1.0..1.0) × (-1.0..1.0)
 
@@ -1234,6 +1267,18 @@ end
         @test SA[0.,0.,0.5,0.5] ∈ d6
         @test SA[0.,0.,-1.1,0.3] ∉ d6
         @test point_in_domain(d6) ∈ d6
+
+        @test HyperRectangle( SA[1,2], SA[2.0,3.0]) isa HyperRectangle{SVector{2,Float64}}
+        @test HyperRectangle([0..1, 2..3]) isa HyperRectangle{Vector{Int}}
+
+        @test_throws ErrorException HyperRectangle(UnitCircle(), UnitDisk())
+        @test_throws ErrorException HyperRectangle(OpenInterval(1,2), 3..4)
+
+        bnd = boundary(HyperRectangle([1,2],[3,4]))
+        @test [1,3] ∈ bnd
+        @test [1,2.5] ∈ bnd
+        @test [1.5,4] ∈ bnd
+        @test [1.5,3.5] ∉ bnd
     end
     @testset "ProductDomain" begin
         d1 = 0..1.0

@@ -51,9 +51,6 @@ export prectype, numtype,
     convert_numtype, promote_numtype,
     convert_prectype, promote_prectype,
     iscomposite, elements, element, numelements
-# from util/products.jl
-export cartesianproduct
-
 
 ## Maps
 
@@ -97,7 +94,8 @@ export Domain, EuclideanDomain, VectorDomain,
 export DerivedDomain, superdomain, WrappedDomain
 
 # from generic/productdomain.jl
-export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
+export ProductDomain, productdomain,
+    VcatDomain, VectorProductDomain, TupleProductDomain
 
 # from generic/mapped_domain.jl
 export MappedDomain,
@@ -145,7 +143,9 @@ export UnitCircle, VectorUnitCircle,
     ellipse, ellipse_shape, cylinder,
     gradient
 # from domains/cube.jl
-export UnitSquare, UnitCube,
+export UnitHyperCube,
+    UnitSquare, UnitCube,
+    EuclideanUnitCube, VectorUnitCube,
     HyperRectangle
 # from domain/levelset.jl
 export LevelSet, ZeroSet,
@@ -161,7 +161,7 @@ export rotation_map,
     CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
-include("util/products.jl")
+# include("util/products.jl")
 
 include("maps/map.jl")
 include("maps/lazy.jl")

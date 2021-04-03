@@ -50,8 +50,8 @@ and `ChebyshevInterval`.
 abstract type FixedInterval{L,R,T} <: TypedEndpointsInterval{L,R,T} end
 const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
 
-closure(d::TypedEndpointsInterval) = ClosedInterval(endpoints(d)...)
-closure(d::ClosedFixedInterval) = d
+closure(d::AbstractInterval) = ClosedInterval(endpoints(d)...)
+closure(d::ClosedInterval) = d
 
 interior(d::AbstractInterval) = OpenInterval(endpoints(d)...)
 

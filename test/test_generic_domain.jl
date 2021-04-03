@@ -11,6 +11,10 @@ function test_generic_domain(d::Domain)
     @test isreal(d) == isreal(eltype(d))
     @test isreal(d) == isreal(numtype(d))
 
+    @test convert(Domain{eltype(d)}, d) == d
+    @test convert(Domain{widen_eltype(eltype(d))}, d) == d
+    @test prectype(convert_prectype(d, BigFloat)) == BigFloat
+
     if !isempty(d)
         x = point_in_domain(d)
         @test x ∈ d
@@ -33,9 +37,11 @@ function test_generic_domain(d::Domain)
         @test fromcanonical(d) == bijection(cd, d)
         @test tocanonical(d) == bijection(d, cd)
     end
-    @test convert(Domain{eltype(d)}, d) == d
-    @test convert(Domain{widen_eltype(eltype(d))}, d) == d
-    @test prectype(convert_prectype(d, BigFloat)) == BigFloat
+    if iscomposite(d)
+        @test numelements(d) == length(elements(d))
+        els = elements(d)
+        @test all([element(d,i) == els[i] for i in 1:numelements(d)])
+    end
 end
 
 @testset "generic domains" begin
@@ -89,5 +95,9 @@ end
 
         # promotion
         @test DomainSets.promote_domains() == ()
+
+        @test DomainSets.convert_eltype(Float64, Set([1,2])) isa Set{Float64}
+        @test_throws ErrorException DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
+        @test DomainSets.convert_eltype(Int, (1,2)) == (1,2)
     end
 end

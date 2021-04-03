@@ -6,8 +6,8 @@ eltype(::Type{<:Domain{T}}) where {T} = T
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
 numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
 
-convert_numtype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{convert_numtype(T,U)}, d)
-convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{convert_prectype(T,U)}, d)
+convert_numtype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_numtype(T,U)}, d)
+convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_prectype(T,U)}, d)
 
 Domain(d) = convert(Domain, d)
 

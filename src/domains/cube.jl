@@ -36,18 +36,24 @@ end
 
 dimension(d::DynamicUnitCube) = d.dimension
 
+elements(d::DynamicUnitCube) = map(x->UnitInterval{numtype(d)}(), 1:dimension(d))
+
 "The unit cube with vector elements of a given dimension."
 const VectorUnitCube{T} = DynamicUnitCube{Vector{T}}
 
-elements(d::DynamicUnitCube) = map(x->UnitInterval{numtype(d)}(), 1:dimension(d))
+VectorUnitCube(n::Int) = VectorUnitCube{Float64}(n)
 
-UnitHyperCube(n::Int) = UnitHyperCube{Vector{T}}(n)
+UnitHyperCube(n::Int) = UnitHyperCube{Vector{Float64}}(n)
+UnitHyperCube(::Val{N}) where {N} = EuclideanUnitCube{N}()
 UnitHyperCube(domains::UnitInterval...) = UnitHyperCube(domains)
 UnitHyperCube(domains::NTuple{N,UnitInterval{T}}) where {N,T} =
     UnitHyperCube{SVector{N,T}}(domains)
 UnitHyperCube(domains::SVector{N,UnitInterval{T}}) where {N,T} =
     UnitHyperCube{SVector{N,T}}(domains)
+
 UnitHyperCube{T}(n::Int) where {T} = DynamicUnitCube{T}(n)
+UnitHyperCube{T}(::Val{N}) where {N,T} = EuclideanUnitCube{N,T}()
+UnitHyperCube{T}(domains::UnitInterval...) where {T} = UnitHyperCube{T}(domains)
 UnitHyperCube{T}(domain::NTuple{N,<:UnitInterval}) where {N,T<:SVector{N}} =
     StaticUnitCube{T}()
 UnitHyperCube{T}(domain::SVector{N,<:UnitInterval}) where {N,T<:SVector{N}} =

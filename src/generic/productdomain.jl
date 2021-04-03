@@ -71,12 +71,27 @@ _TypedProductDomain(::Type{SVector{N,T}}, domains...) where {N,T} = VcatDomain{N
 _TypedProductDomain(::Type{T}, domains...) where {T<:Vector} = VectorProductDomain{T}(domains...)
 _TypedProductDomain(::Type{T}, domains...) where {T<:Tuple} = TupleProductDomain{T}(domains...)
 
-cross(x::Domain...) = cartesianproduct(x...)
+productdomain() = ()
+productdomain(d) = d
+productdomain(d1, d2, d3...) = productdomain(productdomain(d1, d2), d3...)
 
-# One can use the cartesianproduct routine to create product domains
-cartesianproduct(domains...) = ProductDomain(expand(ProductDomain, domains...)...)
+productdomain(d1, d2) = productdomain1(d1, d2)
+productdomain1(d1, d2) = productdomain2(d1, d2)
+productdomain2(d1, d2) = ProductDomain(d1, d2)
 
-^(d::Domain, n::Int) = cartesianproduct(d, n)
+productdomain(d1::ProductDomain, d2::ProductDomain) =
+	ProductDomain(elements(d1)..., elements(d2)...)
+productdomain1(d1::ProductDomain, d2) = ProductDomain(elements(d1)..., d2)
+productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, elements(d2)...)
+
+# Only override cross for variables of type Domain, it may have a different
+# meaning for other variables (like the vector cross product)
+cross(x::Domain...) = productdomain(x...)
+
+@deprecate cartesianproduct productdomain
+
+
+^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
 
 similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(elements(d))
 
