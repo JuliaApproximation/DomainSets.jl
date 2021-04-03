@@ -1,7 +1,6 @@
 using StaticArrays, DomainSets, Test
 
-import DomainSets: MappedDomain, similar_interval,
-    interior, closure, volume
+import DomainSets: MappedDomain, similar_interval
 
 struct Basis3Vector <: StaticVector{3,Float64} end
 
@@ -143,7 +142,10 @@ end
         @test (0..1) \ Point(0.0) == Interval{:open,:closed,Float64}(0,1)
         @test (0..1) \ Point(1.0) == Interval{:closed,:open,Float64}(0,1)
         @test (0..1) \ Point(2.0) == Interval{:closed,:closed,Float64}(0,1)
+        @test (0..1) \ 2.0 == (0..1) \ Point(2.0)
         @test issubset(Point(1), (0..2))
+        @test Point(0.5) \ (0..1) == EmptySpace{Float64}()
+        @test Point(0.5) \ (1..2) == Point(0.5)
 
         @test dimension(Point([1,2,3]))==3
     end
@@ -473,25 +475,25 @@ end
         i3 = one(T)/2 .. 2*one(T)
         i4 = T(2) .. T(3)
         # - union of completely overlapping intervals
-        du1 = i1 ∪ i2
+        du1 = uniondomain(i1, i2)
         @test typeof(du1) <: AbstractInterval
         @test leftendpoint(du1) == leftendpoint(i1)
         @test rightendpoint(du1) == rightendpoint(i1)
 
         # - intersection of completely overlapping intervals
-        du2 = i1 ∩ i2
+        du2 = intersectdomain(i1, i2)
         @test typeof(du2) <: AbstractInterval
         @test leftendpoint(du2) == leftendpoint(i2)
         @test rightendpoint(du2) == rightendpoint(i2)
 
         # - union of partially overlapping intervals
-        du3 = i1 ∪ i3
+        du3 = uniondomain(i1, i3)
         @test typeof(du3) <: AbstractInterval
         @test leftendpoint(du3) == leftendpoint(i1)
         @test rightendpoint(du3) == rightendpoint(i3)
 
         # - intersection of partially overlapping intervals
-        du4 = i1 ∩ i3
+        du4 = intersectdomain(i1, i3)
         @test typeof(du4) <: AbstractInterval
         @test leftendpoint(du4) == leftendpoint(i3)
         @test rightendpoint(du4) == rightendpoint(i1)
@@ -501,7 +503,7 @@ end
         @test typeof(du5) <: UnionDomain
 
         # - intersection of non-overlapping intervals
-        du6 = i1 ∩ i4
+        du6 = intersectdomain(i1, i4)
         @test isempty(du6)
 
         # - setdiff of intervals
@@ -512,14 +514,20 @@ end
         @test d1 \ (-3one(T) .. zero(T)) == (zero(T) .. 2one(T))
         @test d1 \ (-4one(T) .. -3one(T)) == d1
         @test d1 \ (-4one(T) .. 4one(T)) == EmptySpace{T}()
+        @test setdiffdomain(d1, (3one(T) .. 4one(T))) == d1
+        @test setdiffdomain(d1, (zero(T) .. one(T))) == UnionDomain((-2one(T)..zero(T))) ∪ UnionDomain((one(T).. 2one(T)))
+        @test setdiffdomain(d1, (zero(T) .. 3one(T))) == (-2one(T) .. zero(T))
+        @test setdiffdomain(d1, (-3one(T) .. zero(T))) == (zero(T) .. 2one(T))
+        @test setdiffdomain(d1, (-4one(T) .. -3one(T))) == d1
+        @test setdiffdomain(d1, (-4one(T) .. 4one(T))) == EmptySpace{T}()
 
         # mixed types
-        @test (0..1) \ (0.0..0.5) == 0.5..1
+        @test setdiffdomain(0..1, 0.0..0.5) == 0.5..1
 
-        d1 \ (-3one(T)) == d1
-        d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))
-        d1 \ (2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
-        d1 \ zero(T) == UnionDomain(Interval{:closed,:open}(-2one(T),zero(T))) ∪ UnionDomain(Interval{:open,:closed}(zero(T),2one(T)))
+        @test setdiffdomain(d1, -3) == d1
+        @test setdiffdomain(d1, -2) == Interval{:open,:closed}(-2one(T),2one(T))
+        @test setdiffdomain(d1, 2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
+        @test setdiffdomain(d1, zero(T)) == UnionDomain(Interval{:closed,:open}(-2one(T),zero(T))) ∪ UnionDomain(Interval{:open,:closed}(zero(T),2one(T)))
 
         # - empty interval
         @test isempty(one(T)..zero(T))
@@ -585,8 +593,8 @@ end
         @test boundary(D) == UnitCircle()
         @test dimension(D) == 2
 
-        @test convert(SubLevelSet, UnitDisk()) isa SubLevelSet{SVector{2,Float64},:closed}
-        @test convert(SubLevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SubLevelSet{SVector{2,Float64},:open}
+        @test convert(SublevelSet, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
+        @test convert(SublevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SublevelSet{SVector{2,Float64},:open}
 
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
@@ -709,7 +717,7 @@ end
         show(io,D2)
         @test String(take!(io)) == "the complex open unit disk (T=Complex{BigFloat})"
 
-        @test pseudolevel(ComplexUnitCircle(), 0.1) isa SubLevelSet{Complex{Float64},:open}
+        @test pseudolevel(ComplexUnitCircle(), 0.1) isa SublevelSet{Complex{Float64},:open}
         p = pseudolevel(ComplexUnitCircle(), 0.1)
         @test 0.8 ∉ p
         @test 0.95 ∈ p
@@ -756,7 +764,7 @@ end
 
         @test convert(LevelSet, UnitCircle()) isa LevelSet{SVector{2,Float64}}
         @test convert(LevelSet{SVector{2,BigFloat}}, UnitCircle()) isa LevelSet{SVector{2,BigFloat}}
-        @test pseudolevel(UnitCircle(), 0.1) isa SubLevelSet
+        @test pseudolevel(UnitCircle(), 0.1) isa SublevelSet
         @test SA[1.05,0] ∈ pseudolevel(UnitCircle(), 0.1)
         @test SA[1.15,0] ∉ pseudolevel(UnitCircle(), 0.1)
 
@@ -888,6 +896,8 @@ end
 
         @test isclosedset(d)
         @test !isopenset(d)
+        @test isopenset(interior(d))
+        @test closure(d) == d
         @test point_in_domain(d) ∈ d
 
         # open/closed
@@ -919,6 +929,8 @@ end
         @test SA[x1,x1,x1] ∉ d3
 
         D = VectorUnitSimplex(2)
+        @test isopenset(interior(D))
+        @test closure(D) == D
         @test SA[0.2,0.2] ∈ D
         @test SA[0.0,0.2] ∈ D
         @test SA[0.2,0.0] ∈ D
@@ -958,9 +970,13 @@ end
         @test convert(LevelSet, ZeroSet{BigFloat}(cos)) isa LevelSet{BigFloat}
         @test convert(LevelSet{BigFloat}, ZeroSet{Float64}(cos)) isa LevelSet{BigFloat}
 
-        d3 = SubLevelSet(cos, 0.5)
-        d3_open = SubLevelSet{Float64,:open}(cos,0.5)
-        @test d3 isa SubLevelSet{Float64,:closed}
+        d3 = SublevelSet(cos, 0.5)
+        d3_open = SublevelSet{Float64,:open}(cos,0.5)
+        @test d3 isa SublevelSet{Float64,:closed}
+        @test interior(d3) == d3_open
+        @test closure(d3_open) == d3
+        @test closure(d3) == d3
+        @test interior(d3_open) == d3_open
         @test 3.0 ∈ d3
         @test 0.0 ∉ d3
         @test 0.0 ∉ d3_open
@@ -968,23 +984,31 @@ end
         @test String(take!(io)) == "sublevel set f(x) <= 0.5 with f = cos"
         show(io, d3_open)
         @test String(take!(io)) == "sublevel set f(x) < 0.5 with f = cos"
-        @test convert(Domain{BigFloat}, d3) isa SubLevelSet{BigFloat,:closed}
-        @test convert(Domain{BigFloat}, d3_open) isa SubLevelSet{BigFloat,:open}
+        @test convert(Domain{BigFloat}, d3) isa SublevelSet{BigFloat,:closed}
+        @test convert(Domain{BigFloat}, d3_open) isa SublevelSet{BigFloat,:open}
 
 
-        d4 = SubZeroSet{SVector{2,Float64}}(prod)
-        d4_open = SubZeroSet{SVector{2,Float64},:open}(prod)
-        @test d4 isa SubZeroSet{SVector{2,Float64},:closed}
+        d4 = SubzeroSet{SVector{2,Float64}}(prod)
+        d4_open = SubzeroSet{SVector{2,Float64},:open}(prod)
+        @test d4 isa SubzeroSet{SVector{2,Float64},:closed}
+        @test interior(d4) == d4_open
+        @test closure(d4_open) == d4
+        @test closure(d4) == d4
+        @test interior(d4_open) == d4_open
         @test SA[0.1,0.3] ∉ d4
         @test SA[-0.1,0.3] ∈ d4
         @test SA[-0.1,-0.3] ∉ d4
         @test SA[-0.1,0.3] ∈ d4_open
-        convert(Domain{SVector{2,BigFloat}}, d4) isa SubZeroSet{SVector{2,BigFloat},:closed}
-        convert(Domain{SVector{2,BigFloat}}, d4_open) isa SubZeroSet{SVector{2,BigFloat},:open}
+        convert(Domain{SVector{2,BigFloat}}, d4) isa SubzeroSet{SVector{2,BigFloat},:closed}
+        convert(Domain{SVector{2,BigFloat}}, d4_open) isa SubzeroSet{SVector{2,BigFloat},:open}
 
-        d5 = SuperLevelSet(cos, 0.5)
-        d5_open = SuperLevelSet{Float64,:open}(cos, 0.5)
-        @test d5 isa SuperLevelSet{Float64,:closed}
+        d5 = SuperlevelSet(cos, 0.5)
+        d5_open = SuperlevelSet{Float64,:open}(cos, 0.5)
+        @test d5 isa SuperlevelSet{Float64,:closed}
+        @test interior(d5) == d5_open
+        @test closure(d5_open) == d5
+        @test closure(d5) == d5
+        @test interior(d5_open) == d5_open
         @test 3.0 ∉ d5
         @test 0.0 ∈ d5
         @test 0.0 ∈ d5
@@ -992,18 +1016,22 @@ end
         @test String(take!(io)) == "superlevel set f(x) >= 0.5 with f = cos"
         show(io, d5_open)
         @test String(take!(io)) == "superlevel set f(x) > 0.5 with f = cos"
-        @test convert(Domain{BigFloat}, d5) isa SuperLevelSet{BigFloat}
-        @test convert(Domain{BigFloat}, d5_open) isa SuperLevelSet{BigFloat,:open}
+        @test convert(Domain{BigFloat}, d5) isa SuperlevelSet{BigFloat}
+        @test convert(Domain{BigFloat}, d5_open) isa SuperlevelSet{BigFloat,:open}
 
-        d6 = SuperZeroSet{SVector{2,Float64}}(prod)
-        d6_open = SuperZeroSet{SVector{2,Float64},:open}(prod)
-        @test d6 isa SuperZeroSet{SVector{2,Float64},:closed}
+        d6 = SuperzeroSet{SVector{2,Float64}}(prod)
+        d6_open = SuperzeroSet{SVector{2,Float64},:open}(prod)
+        @test d6 isa SuperzeroSet{SVector{2,Float64},:closed}
+        @test interior(d6) == d6_open
+        @test closure(d6_open) == d6
+        @test closure(d6) == d6
+        @test interior(d6_open) == d6_open
         @test SA[0.1,0.3] ∈ d6
         @test SA[-0.1,0.3] ∉ d6
         @test SA[-0.1,-0.3] ∈ d6
-        @test SuperZeroSet(cos) isa SuperZeroSet{Float64}
-        @test convert(Domain{SVector{2,BigFloat}}, d6) isa SuperZeroSet{SVector{2,BigFloat},:closed}
-        @test convert(Domain{SVector{2,BigFloat}}, d6_open) isa SuperZeroSet{SVector{2,BigFloat},:open}
+        @test SuperzeroSet(cos) isa SuperzeroSet{Float64}
+        @test convert(Domain{SVector{2,BigFloat}}, d6) isa SuperzeroSet{SVector{2,BigFloat},:closed}
+        @test convert(Domain{SVector{2,BigFloat}}, d6_open) isa SuperzeroSet{SVector{2,BigFloat},:open}
     end
 
     @testset "indicator functions" begin
@@ -1277,7 +1305,7 @@ end
         @test u1 == ũ2
 
         # Don't create a union with two identical elements
-        @test (d1 ∪ d1) isa typeof(d1)
+        @test UnitDisk() ∪ UnitDisk() isa UnitDisk
 
         # union with non-Domain type that implements domain interface
         u45 = (0.0..1.5) ∪ [1.0,3.0]
@@ -1305,7 +1333,7 @@ end
         @test String(take!(io)) == "the union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
     end
 
-    @testset "intersection" begin
+    @testset "intersect" begin
         d1 = UnitDisk()
         d2 = (-.4..0.4)^2
         d3 = (-.5 .. 0.5) × (-.1.. 0.1)
@@ -1334,17 +1362,17 @@ end
         @test y∉i3
         @test y∉i4
 
-        d45 = IntersectionDomain(d4, d5)
+        d45 = IntersectDomain(d4, d5)
         @test d45 isa Domain{Float64}
         @test 1.0 ∈ d45
         @test 1.1 ∉ d45
         @test convert(Domain{BigFloat}, d45) isa Domain{BigFloat}
 
-        @test (0..1) ∩ [1.5] isa IntersectionDomain{Float64}
-        @test [0.5] ∩ (1..2) isa IntersectionDomain{Float64}
+        @test (0..1) ∩ [1.5] isa IntersectDomain{Float64}
+        @test [0.5] ∩ (1..2) isa IntersectDomain{Float64}
     end
 
-    @testset "difference" begin
+    @testset "setdiff" begin
         d1 = UnitDisk()
         d2 = (-.5..0.5) × (-.1..0.1)
 
@@ -1357,18 +1385,20 @@ end
 
         d3 = 0.0..3.0
         d4 = [1.0, 2.5]
-        d34 = DifferenceDomain(d3, d4)
+        d34 = SetdiffDomain(d3, d4)
         @test d34 isa Domain{Float64}
-        @test d34 isa DifferenceDomain
+        @test d34 isa SetdiffDomain
         @test 0.99 ∈ d34
         @test 1.0 ∉ d34
         @test convert(Domain{BigFloat}, d34) isa Domain{BigFloat}
 
-        @test (0..1) \ [0.5] isa DifferenceDomain{Float64}
+        @test (0..1) \ [0.5] isa SetdiffDomain{Float64}
         dd = [0,5] \ (0..3)
-        @test dd isa DifferenceDomain{Int}
+        @test dd isa SetdiffDomain{Int}
         @test 0 ∉ dd
         @test 5 ∈ dd
+
+        @test (0..1)^2 \ UnitCircle() == UnitInterval()^2 \ UnitCircle()
     end
 
     @testset "arithmetic" begin

@@ -28,6 +28,9 @@ isclosedset(d::Point) = true
 
 boundary(d::Point) = d
 
+interior(d::Point{T}) where {T} = EmptySpace{T}()
+closure(d::Point) = d
+
 point_in_domain(d::Point) = d.x
 
 dimension(d::Point{Vector{T}}) where {T} = length(d.x)
@@ -43,16 +46,20 @@ for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))
 end
 
-function setdiff(d::Interval{L,R,T}, p::Point{S}) where {L,R,T,S<:Number}
+# Interval minus a point:
+setdiffdomain(d::Interval, x::Number) = setdiffdomain(d, Point(x))
+setdiffdomain(d::Interval, p::Point) = setdiffdomain(promote_domains((d,p))...)
+function setdiffdomain(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
     a = leftendpoint(d)
     b = rightendpoint(d)
-    U = promote_type(S,T)
+    x = p.x
 
-    a == p.x && return Interval{:open,R,U}(a,b)
-    a < p.x < b && return UnionDomain(Interval{L,:open,U}(a,p.x), Interval{:open,R,U}(p.x,b))
-    b == p.x && return Interval{L,:open,U}(a,b)
-
+    a == x && return Interval{:open,R,T}(a,b)
+    a < x < b && return UnionDomain(Interval{L,:open,T}(a,p.x), Interval{:open,R,T}(p.x,b))
+    b == x && return Interval{L,:open,T}(a,b)
     return d
 end
 
 issubset(p::Point, d::Domain) = p.x ∈ d
+
+setdiffdomain1(p::Point, d2) = issubset(p, d2) ? EmptySpace{eltype(p)}() : p

@@ -41,10 +41,10 @@ isempty(ball::OpenHyperBall) = radius(ball) == 0
 ==(d1::HyperBall, d2::HyperBall) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
-convert(::Type{SubLevelSet}, d::HyperBall{T,C}) where {T,C} =
-    SubLevelSet{T,C}(norm, radius(d))
-convert(::Type{SubLevelSet{T}}, d::HyperBall{S,C}) where {T,S,C} =
-    SubLevelSet{T,C}(norm, radius(d))
+convert(::Type{SublevelSet}, d::HyperBall{T,C}) where {T,C} =
+    SublevelSet{T,C}(norm, radius(d))
+convert(::Type{SublevelSet{T}}, d::HyperBall{S,C}) where {T,S,C} =
+    SublevelSet{T,C}(norm, radius(d))
 
 "The unit ball."
 abstract type UnitHyperBall{T,C} <: HyperBall{T,C} end
@@ -189,6 +189,8 @@ boundary(d::VectorUnitBall{T}) where {T} = VectorUnitSphere{T}(dimension(d))
 
 interior(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitBall{N,T,:open}()
 interior(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:open}(dimension(d))
+closure(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitBall{N,T,:closed}()
+closure(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:closed}(dimension(d))
 
 ################
 # Applications

@@ -29,6 +29,9 @@ _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
 convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 
+compatible_eltype(d1, d2) = isconcretetype(promote_type(eltype(d1),eltype(d2)))
+
+
 
 "A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{SVector{N,T}}

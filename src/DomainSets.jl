@@ -87,6 +87,8 @@ export Domain, EuclideanDomain, VectorDomain,
     approx_in,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
+    interior, closure,
+    volume,
     point_in_domain,
     canonicaldomain, tocanonical, fromcanonical,
     bijection, parameterization
@@ -105,7 +107,9 @@ export MappedDomain,
     inverse_map
 
 # from generic/setoperations.jl
-export UnionDomain, IntersectionDomain, DifferenceDomain
+export UnionDomain, uniondomain,
+    IntersectDomain, intersectdomain,
+    SetdiffDomain, setdiffdomain
 
 # from applications/rotations.jl
 export rotate
@@ -141,11 +145,12 @@ export UnitCircle, VectorUnitCircle,
     ellipse, ellipse_shape, cylinder,
     gradient
 # from domains/cube.jl
-export UnitCube, HyperRectangle
+export UnitSquare, UnitCube,
+    HyperRectangle
 # from domain/levelset.jl
 export LevelSet, ZeroSet,
-    SubLevelSet, SubZeroSet,
-    SuperLevelSet, SuperZeroSet,
+    SublevelSet, SubzeroSet,
+    SuperlevelSet, SuperzeroSet,
     pseudolevel
 # from domain/indicator.jl
 export IndicatorFunction

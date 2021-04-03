@@ -59,6 +59,11 @@ corners(::EuclideanUnitSimplex{N,T}) where {N,T} =
 corners(d::VectorUnitSimplex{T}) where {T} =
     vcat([zeros(T,dimension(d))], [ (z = zeros(T, dimension(d)); z[j]=1; z) for j in 1:dimension(d)])
 
+interior(d::EuclideanUnitSimplex{N,T}) where {N,T} = EuclideanUnitSimplex{N,T,:open}()
+closure(d::EuclideanUnitSimplex{N,T}) where {N,T} = EuclideanUnitSimplex{N,T,:closed}()
+interior(d::VectorUnitSimplex{T}) where {T} = VectorUnitSimplex{T,:open}(dimension(d))
+closure(d::VectorUnitSimplex{T}) where {T} = VectorUnitSimplex{T,:closed}(dimension(d))
+
 
 # We pick the center point, because it belongs to the domain regardless of
 # whether it is open or closed.

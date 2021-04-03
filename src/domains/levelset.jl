@@ -46,88 +46,101 @@ convert(::Type{LevelSet{T}}, d::ZeroSet) where {T} = LevelSet{T}(levelfun(d), le
 
 
 "Supertype of sublevel set domains."
-abstract type AbstractSubLevelSet{T,C} <: FunctionLevelSet{T} end
+abstract type AbstractSublevelSet{T,C} <: FunctionLevelSet{T} end
 
-indomain(x, d::AbstractSubLevelSet{T,:closed}) where {T} = levelfun(d, x) <= level(d)
-indomain(x, d::AbstractSubLevelSet{T,:open}) where {T} = levelfun(d, x) < level(d)
+indomain(x, d::AbstractSublevelSet{T,:closed}) where {T} = levelfun(d, x) <= level(d)
+indomain(x, d::AbstractSublevelSet{T,:open}) where {T} = levelfun(d, x) < level(d)
 
-show(io::IO, d::AbstractSubLevelSet{T,:closed}) where {T} =
+show(io::IO, d::AbstractSublevelSet{T,:closed}) where {T} =
     print(io, "sublevel set f(x) <= $(level(d)) with f = $(levelfun(d))")
-show(io::IO, d::AbstractSubLevelSet{T,:open}) where {T} =
+show(io::IO, d::AbstractSublevelSet{T,:open}) where {T} =
     print(io, "sublevel set f(x) < $(level(d)) with f = $(levelfun(d))")
 
 "The domain where `f(x) <= 0` (or `f(x) < 0`)."
-struct SubZeroSet{T,C,F} <: AbstractSubLevelSet{T,C}
+struct SubzeroSet{T,C,F} <: AbstractSublevelSet{T,C}
     f   ::  F
 end
 
-SubZeroSet(f) = SubZeroSet{Float64}(f)
-SubZeroSet{T}(f) where {T} = SubZeroSet{T,:closed}(f)
-SubZeroSet{T,C}(f::F) where {T,C,F} = SubZeroSet{T,C,F}(f)
+SubzeroSet(f) = SubzeroSet{Float64}(f)
+SubzeroSet{T}(f) where {T} = SubzeroSet{T,:closed}(f)
+SubzeroSet{T,C}(f::F) where {T,C,F} = SubzeroSet{T,C,F}(f)
 
-level(d::SubZeroSet) = 0
+level(d::SubzeroSet) = 0
 
-similardomain(d::SubZeroSet{S,C}, ::Type{T}) where {S,C,T} =
-    SubZeroSet{T,C}(levelfun(d))
+similardomain(d::SubzeroSet{S,C}, ::Type{T}) where {S,C,T} =
+    SubzeroSet{T,C}(levelfun(d))
+
+interior(d::SubzeroSet{T}) where {T} = SubzeroSet{T,:open}(d.f)
+closure(d::SubzeroSet{T}) where {T} = SubzeroSet{T,:closed}(d.f)
 
 
 "The domain defined by `f(x) <= C` (or `f(x) < C`) for a given function `f` and constant `C`."
-struct SubLevelSet{T,C,F,S} <: AbstractSubLevelSet{T,C}
+struct SublevelSet{T,C,F,S} <: AbstractSublevelSet{T,C}
     f       ::  F
     level   ::  S
 end
 
-SubLevelSet(f, level) = SubLevelSet{typeof(level)}(f, level)
-SubLevelSet{T}(f, level) where {T} = SubLevelSet{T,:closed}(f, level)
-SubLevelSet{T,C}(f::F, level::S) where {T,C,F,S} = SubLevelSet{T,C,F,S}(f, level)
+SublevelSet(f, level) = SublevelSet{typeof(level)}(f, level)
+SublevelSet{T}(f, level) where {T} = SublevelSet{T,:closed}(f, level)
+SublevelSet{T,C}(f::F, level::S) where {T,C,F,S} = SublevelSet{T,C,F,S}(f, level)
 
-similardomain(d::SubLevelSet{S,C}, ::Type{T}) where {S,C,T} =
-    SubLevelSet{T,C}(levelfun(d), level(d))
+similardomain(d::SublevelSet{S,C}, ::Type{T}) where {S,C,T} =
+    SublevelSet{T,C}(levelfun(d), level(d))
+
+interior(d::SublevelSet{T}) where {T} = SublevelSet{T,:open}(d.f, d.level)
+closure(d::SublevelSet{T}) where {T} = SublevelSet{T,:closed}(d.f, d.level)
 
 
 "Supertype of superlevel set domains."
-abstract type AbstractSuperLevelSet{T,C} <: FunctionLevelSet{T} end
+abstract type AbstractSuperlevelSet{T,C} <: FunctionLevelSet{T} end
 
-indomain(x, d::AbstractSuperLevelSet{T,:closed}) where {T} = levelfun(d, x) >= level(d)
-indomain(x, d::AbstractSuperLevelSet{T,:open}) where {T} = levelfun(d, x) > level(d)
+indomain(x, d::AbstractSuperlevelSet{T,:closed}) where {T} = levelfun(d, x) >= level(d)
+indomain(x, d::AbstractSuperlevelSet{T,:open}) where {T} = levelfun(d, x) > level(d)
 
-show(io::IO, d::AbstractSuperLevelSet{T,:closed}) where {T} =
+show(io::IO, d::AbstractSuperlevelSet{T,:closed}) where {T} =
     print(io, "superlevel set f(x) >= $(level(d)) with f = $(levelfun(d))")
-show(io::IO, d::AbstractSuperLevelSet{T,:open}) where {T} =
+show(io::IO, d::AbstractSuperlevelSet{T,:open}) where {T} =
     print(io, "superlevel set f(x) > $(level(d)) with f = $(levelfun(d))")
 
 "The domain where `f(x) >= 0` (or `f(x) > 0`)."
-struct SuperZeroSet{T,C,F} <: AbstractSuperLevelSet{T,C}
+struct SuperzeroSet{T,C,F} <: AbstractSuperlevelSet{T,C}
     f   ::  F
 end
 
-SuperZeroSet(f) = SuperZeroSet{Float64}(f)
-SuperZeroSet{T}(f) where {T} = SuperZeroSet{T,:closed}(f)
-SuperZeroSet{T,C}(f::F) where {T,C,F} = SuperZeroSet{T,C,F}(f)
+SuperzeroSet(f) = SuperzeroSet{Float64}(f)
+SuperzeroSet{T}(f) where {T} = SuperzeroSet{T,:closed}(f)
+SuperzeroSet{T,C}(f::F) where {T,C,F} = SuperzeroSet{T,C,F}(f)
 
-level(d::SuperZeroSet) = 0
+level(d::SuperzeroSet) = 0
 
-similardomain(d::SuperZeroSet{S,C}, ::Type{T}) where {S,C,T} =
-    SuperZeroSet{T,C}(levelfun(d))
+similardomain(d::SuperzeroSet{S,C}, ::Type{T}) where {S,C,T} =
+    SuperzeroSet{T,C}(levelfun(d))
+
+interior(d::SuperzeroSet{T}) where {T} = SuperzeroSet{T,:open}(d.f)
+closure(d::SuperzeroSet{T}) where {T} = SuperzeroSet{T,:closed}(d.f)
+
 
 "The domain defined by `f(x) >= C` (or `f(x) > C`) for a given function `f` and constant `C`."
-struct SuperLevelSet{T,C,F,S} <: AbstractSuperLevelSet{T,C}
+struct SuperlevelSet{T,C,F,S} <: AbstractSuperlevelSet{T,C}
     f       ::  F
     level   ::  S
 end
 
-SuperLevelSet(f, level) = SuperLevelSet{typeof(level)}(f, level)
-SuperLevelSet{T}(f, level) where {T} = SuperLevelSet{T,:closed}(f, level)
-SuperLevelSet{T,C}(f::F, level::S) where {T,C,F,S} = SuperLevelSet{T,C,F,S}(f, level)
+SuperlevelSet(f, level) = SuperlevelSet{typeof(level)}(f, level)
+SuperlevelSet{T}(f, level) where {T} = SuperlevelSet{T,:closed}(f, level)
+SuperlevelSet{T,C}(f::F, level::S) where {T,C,F,S} = SuperlevelSet{T,C,F,S}(f, level)
 
-similardomain(d::SuperLevelSet{S,C}, ::Type{T}) where {S,C,T} =
-    SuperLevelSet{T,C}(levelfun(d), level(d))
+similardomain(d::SuperlevelSet{S,C}, ::Type{T}) where {S,C,T} =
+    SuperlevelSet{T,C}(levelfun(d), level(d))
+
+interior(d::SuperlevelSet{T}) where {T} = SuperlevelSet{T,:open}(d.f, d.level)
+closure(d::SuperlevelSet{T}) where {T} = SuperlevelSet{T,:closed}(d.f, d.level)
 
 ## Additional functionality
 
 pseudolevel(d::AbstractLevelSet, epsilon) =
     _pseudolevel(d, epsilon, levelfun(d), level(d))
 _pseudolevel(d::AbstractLevelSet{T}, epsilon, fun, C) where {T} =
-    SubLevelSet{T,:open}(x -> norm(fun(x)-C), epsilon)
+    SublevelSet{T,:open}(x -> norm(fun(x)-C), epsilon)
 
 pseudolevel(d::Domain, epsilon) = pseudolevel(convert(LevelSet, d), epsilon)

@@ -18,6 +18,12 @@ isopenset(d::ProductDomain) = all(isopenset, elements(d))
 
 volume(d::ProductDomain) = prod(map(volume, elements(d)))
 
+compatibleproductdims(d1::ProductDomain, d2::ProductDomain) =
+	all(map(==, map(dimension, elements(d1)), map(dimension, elements(d2))))
+
+compatibleproduct(d1::ProductDomain, d2::ProductDomain) =
+	compatibleproductdims(d1, d2) && compatible_eltype(d1, d2)
+
 function show(io::IO, d::ProductDomain)
     L = numelements(d)
 	if L <= 10

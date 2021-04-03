@@ -28,17 +28,17 @@ closure(d::EmptySpace) = d
 
 # Arithmetic operations
 
-union(d1::EmptySpace, d2::EmptySpace) = d1
-union(d1::Domain, d2::EmptySpace) = d1
-union(d1::EmptySpace, d2::Domain) = d2
+uniondomain(d1::EmptySpace, d2::EmptySpace) = d1
+uniondomain(d1::Domain, d2::EmptySpace) = d1
+uniondomain(d1::EmptySpace, d2::Domain) = d2
 
-intersect(d1::EmptySpace, d2::EmptySpace) = d1
-intersect(d1::Domain, d2::EmptySpace) = d2
-intersect(d1::EmptySpace, d2::Domain) = d1
+intersectdomain(d1::EmptySpace, d2::EmptySpace) = d1
+intersectdomain(d1::Domain, d2::EmptySpace) = d2
+intersectdomain(d1::EmptySpace, d2::Domain) = d1
 
-setdiff(d1::EmptySpace, d2::EmptySpace) = d1
-setdiff(d1::EmptySpace, d2::Domain) = d1
-setdiff(d1::Domain, d2::EmptySpace) = d1
+setdiffdomain(d1::EmptySpace, d2::EmptySpace) = d1
+setdiffdomain(d1::EmptySpace, d2::Domain) = d1
+setdiffdomain(d1::Domain, d2::EmptySpace) = d1
 
 map_domain(map::Map{T}, d::EmptySpace{T}) where {T} = d
 mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
@@ -83,13 +83,13 @@ closure(d::FullSpace) = d
 
 # Arithmetic operations
 
-union(d1::FullSpace, d2::FullSpace) = d1
-union(d1::Domain, d2::FullSpace) = d2
-union(d1::FullSpace, d2::Domain) = d1
+uniondomain(d1::FullSpace, d2::FullSpace) = d1
+uniondomain(d1::Domain, d2::FullSpace) = d2
+uniondomain(d1::FullSpace, d2::Domain) = d1
 
-intersect(d1::FullSpace, d2::FullSpace) = d1
-intersect(d1::Domain, d2::FullSpace) = d1
-intersect(d1::FullSpace, d2::Domain) = d2
+intersectdomain(d1::FullSpace, d2::FullSpace) = d1
+intersectdomain(d1::Domain, d2::FullSpace) = d1
+intersectdomain(d1::FullSpace, d2::Domain) = d2
 
 
 map_domain(m::AbstractAffineMap{T}, d::FullSpace{T}) where {T} = d
