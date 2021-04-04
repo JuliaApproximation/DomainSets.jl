@@ -45,9 +45,15 @@ function show(io::IO, d::ProductDomain)
 	end
 end
 
+boundary_part(d::ProductDomain{T}, domains, i) where {T} =
+	ProductDomain{T}(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...)
+
 boundary(d::ProductDomain) = _boundary(d, elements(d))
 _boundary(d::ProductDomain, domains) =
-	UnionDomain(ProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
+	UnionDomain(boundary_part(d, domains, i) for i in 1:length(domains))
+_boundary(d::ProductDomain, domains::Tuple) =
+	UnionDomain(tuple((boundary_part(d, domains, i) for i in 1:length(domains))...))
+
 
 infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
 supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
@@ -130,8 +136,6 @@ tointernalpoint(d::VcatDomain{N,T,DIM}, x) where {N,T,DIM} =
 toexternalpoint(d::VcatDomain{N,T,DIM}, y) where {N,T,DIM} =
 	convert_tocartesian(y, Val{DIM}())
 
-_boundary(d::VcatDomain, domains) =
-	UnionDomain(ProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
 
 
 
@@ -174,8 +178,6 @@ toexternalpoint(d::VectorProductDomain, y) =
 	(@assert length(y) == dimension(d); y)
 
 
-_boundary(d::VectorProductDomain, domains) =
-	UnionDomain([VectorProductDomain([domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...]) for i in 1:length(domains)])
 
 
 
@@ -201,6 +203,3 @@ function TupleProductDomain{T}(domains::Tuple) where {T <: Tuple}
 	Tdomains = map((t,d) -> convert(Domain{t},d), tuple(T.parameters...), domains)
 	TupleProductDomain{T,typeof(Tdomains)}(Tdomains)
 end
-
-_boundary(d::TupleProductDomain, domains) =
-	UnionDomain(TupleProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))

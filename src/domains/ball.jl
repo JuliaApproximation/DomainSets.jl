@@ -20,7 +20,7 @@ const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
 "A ball with vector elements of variable length."
 const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
 
-iscompatible(x::AbstractVector, d::VectorHyperBall) = length(x) == dimension(d)
+iscompatiblepair(x::AbstractVector, d::VectorHyperBall) = length(x) == dimension(d)
 
 const ClosedHyperBall{T} = HyperBall{T,:closed}
 const OpenHyperBall{T} = HyperBall{T,:open}

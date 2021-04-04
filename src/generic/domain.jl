@@ -20,6 +20,9 @@ convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
 promote_domains() = ()
 promote_domains(domains) = convert_eltype.(mapreduce(eltype, promote_type, domains), domains)
 
+promote_domains(domains::AbstractSet{<:Domain{T}}) where {T} = domains
+promote_domains(domains::AbstractSet{<:Domain}) = Set(promote_domains(collect(domains)))
+
 convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
 convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, eltype(d))
 _convert_eltype(::Type{T}, d, ::Type{T}) where {T} = d
@@ -49,21 +52,23 @@ dimension(::Domain{<:NTuple{N,Any}}) where {N} = N
 
 
 "Is the given combination of point and domain compatible?"
-iscompatible(x, d::Domain) = _iscompatible(x, d, promote_type(typeof(x),eltype(d)))
-_iscompatible(x, d, ::Type{T}) where {T} = true
-_iscompatible(x, d, ::Type{Any}) = false
-_iscompatible(x, d::Domain{Any}, ::Type{Any}) = true
+iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
+_iscompatiblepair(x, d, ::Type{S}, ::Type{T}) where {S,T} =
+    _iscompatiblepair(x, d, S, T, promote_type(S,T))
+_iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = true
+_iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{Any}) where {S,T} = false
+_iscompatiblepair(x, d, ::Type{S}, ::Type{Any}, ::Type{Any}) where {S} = true
 
 # Some generic cases where we can be sure:
-iscompatible(x::SVector{N}, ::EuclideanDomain{N}) where {N} = true
-iscompatible(x::SVector{N}, ::EuclideanDomain{M}) where {N,M} = false
-iscompatible(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)==N
+iscompatiblepair(x::SVector{N}, ::EuclideanDomain{N}) where {N} = true
+iscompatiblepair(x::SVector{N}, ::EuclideanDomain{M}) where {N,M} = false
+iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)==N
 
 compatible_or_false(x, domain) =
-    iscompatible(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(eltype(domain)). Returning false."; false)
+    iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(eltype(domain)). Returning false."; false)
 
 compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
-    iscompatible(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
+    iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
 
 
 "Promote point and domain to compatible types."
@@ -103,7 +108,7 @@ default_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
 
 
 """
-`approx_in(x, domain[, tolerance])`
+`approx_in(x, domain::Domain [, tolerance])`
 
 Verify whether a point lies in the given domain with a certain tolerance.
 
@@ -124,10 +129,11 @@ function compatible_or_false(x, d, tol)
     compatible_or_false(x, d)
 end
 
-approx_in(x, d, tol) = compatible_or_false(x, d, tol) && approx_indomain(promote_pair(x, d)..., tol)
+approx_in(x, d::Domain, tol) =
+    compatible_or_false(x, d, tol) && approx_indomain(promote_pair(x, d)..., tol)
 
 # Fallback to `in`
-approx_indomain(x, d, tol) = in(x, d)
+approx_indomain(x, d::Domain, tol) = in(x, d)
 
 
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2

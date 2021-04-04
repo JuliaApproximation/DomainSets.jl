@@ -22,7 +22,7 @@ The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways
 UnionDomain(domains...) = UnionDomain(domains)
 UnionDomain(d::Domain) = UnionDomain((d,))
 UnionDomain(domains) = _UnionDomain(promote_domains(domains))
-_UnionDomain(domains) = UnionDomain{eltype(first(domains))}(domains)
+_UnionDomain(domains) = _UnionDomain(eltype(first(domains)), domains)
 
 UnionDomain{T}(domains...) where {T} = UnionDomain{T}(domains)
 UnionDomain{T}(d::Domain) where {T} = UnionDomain{T}((d,))
@@ -52,10 +52,10 @@ uniondomain2(d1, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
 convert(::Type{Domain}, v::AbstractSet{<:Domain}) = UnionDomain(v)
-convert(::Type{Domain}, s::Set) = UnionDomain(map(Point,collect(s)))
+convert(::Type{Domain}, s::AbstractSet) = UnionDomain(map(Point,collect(s)))
 convert(::Type{Domain{T}}, v::AbstractVector{<:Domain}) where {T} = UnionDomain{T}(v)
 convert(::Type{Domain{T}}, v::AbstractSet{<:Domain}) where {T} = UnionDomain{T}(v)
-convert(::Type{Domain{T}}, s::Set) where {T} = UnionDomain{T}(map(Point,collect(s)))
+convert(::Type{Domain{T}}, s::AbstractSet) where {T} = UnionDomain{T}(map(Point,collect(s)))
 
 similardomain(d::UnionDomain, ::Type{T}) where {T} =
     UnionDomain(convert.(Domain{T}, elements(d)))
@@ -99,23 +99,23 @@ for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:suprem
 end
 
 
-setdiffdomain(d1::UnionDomain, d2::UnionDomain) = UnionDomain(setdiffdomain.(elements(d1), Ref(d2)))
+setdiffdomain(d1::UnionDomain, d2::UnionDomain) =
+	UnionDomain(setdiffdomain.(elements(d1), Ref(d2)))
 
 function setdiffdomain(d1::UnionDomain, d2::Domain)
     s = Set(elements(d1))
     # check if any element is in d1 and just remove
-    s2 = Set(setdiffdomain(s, tuple(d2)))
+    s2 = Set(setdiff(s, tuple(d2)))
     s2 ≠ s && return UnionDomain(s2)
-
     UnionDomain(setdiffdomain.(elements(d1), Ref(d2)))
 end
 
 function setdiffdomain(d1::Domain, d2::UnionDomain)
-    ret = d1
+    result = d1
     for d in elements(d2)
-        ret = setdiffdomain(ret, d)
+        result = setdiffdomain(result, d)
     end
-    ret
+    result
 end
 
 
@@ -248,7 +248,7 @@ setdiffdomain1(d1, d2) = setdiffdomain2(d1, d2)
 setdiffdomain2(d1, d2) = d1 == d2 ? EmptySpace{eltype(d1)}() : SetdiffDomain(d1, d2)
 
 # avoid nested difference domains
-setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], d2 ∪ d1.domains[2])
+setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], uniondomain(d2, d1.domains[2]))
 
 ==(a::SetdiffDomain, b::SetdiffDomain) = a.domains == b.domains
 

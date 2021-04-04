@@ -59,15 +59,17 @@ UnitHyperCube{T}(domain::NTuple{N,<:UnitInterval}) where {N,T<:SVector{N}} =
 UnitHyperCube{T}(domain::SVector{N,<:UnitInterval}) where {N,T<:SVector{N}} =
     StaticUnitCube{T}()
 
+# Constructor: careful about ambiguities with FixedInterval arguments below
 ProductDomain(domains::UnitInterval...) = UnitHyperCube(domains...)
 ProductDomain(domains::NTuple{N,<:UnitInterval}) where {N} = UnitHyperCube(domains)
 ProductDomain(domains::SVector{N,<:UnitInterval}) where {N} = UnitHyperCube(domains)
 ProductDomain(domains::AbstractVector{<:UnitInterval{T}}) where {T} =
     UnitHyperCube{T}(length(domains))
-ProductDomain{T}(domains::UnitInterval...) where {T} = UnitHyperCube{T}(domains...)
-ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,T} = UnitHyperCube{T}(domains)
-ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,T} = UnitHyperCube{T}(domains)
+ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:SVector{N,S}} = UnitHyperCube{T}(domains...)
+ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitHyperCube{T}(domains)
+ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitHyperCube{T}(domains)
 ProductDomain{T}(domains::AbstractVector{<:UnitInterval{T}}) where {T} = UnitHyperCube{T}(domains)
+
 
 "An N-dimensional hyperrectangle is the cartesian product of closed intervals."
 struct HyperRectangle{T} <: AbstractHyperRectangle{T}
@@ -101,5 +103,28 @@ ProductDomain(domains::ClosedInterval...) = HyperRectangle(domains...)
 ProductDomain(domains::AbstractVector{<:ClosedInterval}) =
     HyperRectangle(map(infimum, domains), map(supremum, domains))
 
-_boundary(d::HyperRectangle, domains) =
-	UnionDomain(ProductDomain(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...) for i in 1:length(domains))
+
+"The N-fold cartesian product of a fixed interval."
+struct FixedIntervalProduct{D,N,T} <: HyperCube{SVector{N,T}}
+end
+
+element(d::FixedIntervalProduct{D}, i) where {D} =
+    (1 <= i <= dimension(d) || throw(BoundsError); D())
+elements(d::FixedIntervalProduct{D,N}) where {D,N} =
+    ntuple(x->D(), Val(N))
+
+volume(d::FixedIntervalProduct{D,N}) where {D,N} = volume(D())^N
+
+const ChebyshevProductDomain{N,T} = FixedIntervalProduct{ChebyshevInterval{T},N,T}
+
+FixedIntervalProduct(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
+	FixedIntervalProduct{D,N,eltype(D)}()
+
+ProductDomain(domains::D...) where {D <: FixedInterval} =
+	FixedIntervalProduct(domains)
+ProductDomain(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
+	FixedIntervalProduct(domains)
+ProductDomain{T}(domains::D...) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
+	FixedIntervalProduct(convert.(Ref(Domain{S}), domains))
+ProductDomain{T}(domains::NTuple{N,D}) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
+	FixedIntervalProduct(convert.(Ref(Domain{S}), domains))

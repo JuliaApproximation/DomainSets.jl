@@ -44,7 +44,7 @@ function test_generic_domain(d::Domain)
     end
 end
 
-@testset "generic domains" begin
+@testset "generic domain interface" begin
     domains = [
         0..1,
         UnitInterval(),
@@ -95,6 +95,23 @@ end
 
         # promotion
         @test DomainSets.promote_domains() == ()
+        s1 = Set([0..1,2..3,3..4.0])
+        @test s1 isa Set{<:Domain{Float64}}
+        @test DomainSets.promote_domains(s1) == s1
+        s2 = Set([0..1,2..3,3..4.0, Point(2)])
+        @test s2 isa Set{Domain}
+        @test DomainSets.promote_domains(s2) isa Set{<:Domain{Float64}}
+
+        # compatible point-domain pairs
+        @test DomainSets.iscompatiblepair(0.5, 0..1)
+        @test DomainSets.iscompatiblepair(0.5, 0..1.0)
+        @test !DomainSets.iscompatiblepair(0.5, UnitBall())
+        @test DomainSets.iscompatiblepair(0.5, [0.3])
+        @test DomainSets.iscompatiblepair(0, [0.3])
+        @test DomainSets.iscompatiblepair(0.5, [1, 2, 3])
+        @test DomainSets.iscompatiblepair(0, Set([1, 2, 3]))
+        @test DomainSets.iscompatiblepair(0.5, Set([1, 2, 3]))
+        @test DomainSets.iscompatiblepair(0, Set([1.0, 2, 3]))
 
         @test DomainSets.convert_eltype(Float64, Set([1,2])) isa Set{Float64}
         @test_throws ErrorException DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
