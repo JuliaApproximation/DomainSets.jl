@@ -67,13 +67,12 @@ export Composition, ∘
 # from maps/product.jl
 export ProductMap, tensorproduct
 # from maps/basic.jl
-export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
+export StaticIdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
     isconstant, constant
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     matrix, vector,
-    islinear, isaffine,
-    interval_map, scaling_map
+    islinear, isaffine
 
 
 ## Generic domains
@@ -88,7 +87,7 @@ export Domain, EuclideanDomain, VectorDomain,
     volume,
     point_in_domain,
     canonicaldomain, tocanonical, fromcanonical,
-    bijection, parameterization
+    mapto, parameterization
 
 # from generic/lazy.jl
 export DerivedDomain, superdomain, WrappedDomain

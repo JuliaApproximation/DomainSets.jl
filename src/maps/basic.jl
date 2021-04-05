@@ -30,7 +30,7 @@ islinear(::AbstractIdentityMap) = true
 isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
 
 isidentity(::AbstractIdentityMap) = true
-isidentity(m::Map{T}) where {T} = m == IdentityMap{T}()
+isidentity(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
 
 dimension(m::AbstractIdentityMap{T}) where {T<:Number} = 1
 dimension(m::AbstractIdentityMap{T}) where {N,T<:SVector{N}} = N
@@ -50,30 +50,31 @@ mapcompose(m1::AbstractIdentityMap, maps...) = mapcompose(maps...)
 mapcompose2(m1, m2::AbstractIdentityMap, maps...) = mapcompose(m1, maps...)
 
 "The identity map for variables of type `T`."
-struct IdentityMap{T} <: AbstractIdentityMap{T}
+struct StaticIdentityMap{T} <: AbstractIdentityMap{T}
 end
 
-IdentityMap() = IdentityMap{Float64}()
+StaticIdentityMap() = StaticIdentityMap{Float64}()
 
-convert(::Type{Map{T}}, ::IdentityMap) where {T} = IdentityMap{T}()
-convert(::Type{IdentityMap{T}}, ::IdentityMap) where {T} = IdentityMap{T}()
+similarmap(m::StaticIdentityMap, ::Type{T}) where {T} = StaticIdentityMap{T}()
 
-==(::IdentityMap, ::IdentityMap) = true
+convert(::Type{StaticIdentityMap{T}}, ::StaticIdentityMap) where {T} = StaticIdentityMap{T}()
+
+==(::StaticIdentityMap, ::StaticIdentityMap) = true
 
 
 "Identity map with flexible size determined by a dimension field."
-struct FlexibleIdentityMap{T} <: AbstractIdentityMap{T}
+struct DynamicIdentityMap{T} <: AbstractIdentityMap{T}
     dimension   ::  Int
 end
-const VectorIdentityMap{T} = FlexibleIdentityMap{Vector{T}}
+const VectorIdentityMap{T} = DynamicIdentityMap{Vector{T}}
 
 VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
-dimension(m::FlexibleIdentityMap) = m.dimension
+dimension(m::DynamicIdentityMap) = m.dimension
 
-convert(::Type{Map{T}}, m::FlexibleIdentityMap) where {T} = FlexibleIdentityMap{T}(m.dimension)
+similarmap(m::DynamicIdentityMap, ::Type{T}) where {T} = DynamicIdentityMap{T}(dimension(m))
 
-==(m1::FlexibleIdentityMap, m2::FlexibleIdentityMap) = m1.dimension == m2.dimension
+==(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = dimension(m1) == dimension(m2)
 
 
 "The supertype of constant maps from `T` to `U`."

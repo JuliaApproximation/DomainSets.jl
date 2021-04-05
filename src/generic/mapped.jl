@@ -109,8 +109,3 @@ mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap
 canonicaldomain(d::MappedDomain) = superdomain(d)
 fromcanonical(d::MappedDomain) = forward_map(d)
 tocanonical(d::MappedDomain) = inverse_map(d)
-
-# bijection1(d1::MappedDomain, d2) =
-#     bijection(superdomain(d1), d2) ∘ inverse_map(d1)
-# bijection2(d1, d2::MappedDomain) =
-#     forward_map(d2) ∘ bijection(d1, superdomain(d2))

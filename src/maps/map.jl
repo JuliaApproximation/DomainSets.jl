@@ -33,6 +33,13 @@ convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
 convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
 
+"What is the euclidean dimension of the given type (if applicable)?"
+euclideandimension(::Type{T}) where {T <: Number} = 1
+euclideandimension(::Type{T}) where {N,S,T <: SVector{N,S}} = N
+euclideandimension(::Type{T}) where {N,T <: NTuple{N,Any}} = N
+# Does not apply to Vector{T}: we don't know its dimension
+
+
 # Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)
 

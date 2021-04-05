@@ -133,7 +133,7 @@ end
 
 function generic_tests(T)
     maps = [
-        IdentityMap{T}(),
+        StaticIdentityMap{T}(),
         VectorIdentityMap{T}(10),
         ConstantMap{T}(one(T)),
         ConstantMap{T}(SVector{2,T}(1,2)),
@@ -182,7 +182,7 @@ function test_linearmap(T)
     @test mw1.A isa widen(T)
     @test jacobian(m1) isa ConstantMap{T}
     @test jacobian(m1, 1) == 2
-    @test LinearMap(one(T)) == IdentityMap{T}()
+    @test LinearMap(one(T)) == StaticIdentityMap{T}()
 
     m2 = LinearMap(2)
     @test domaintype(m2) == Int
@@ -190,14 +190,14 @@ function test_linearmap(T)
     @test jacobian(m2, 1) == 2
     @test jacobian(m2) isa ConstantMap{Int}
     @test jacobian(m2, 1) == 2
-    @test LinearMap(1) == IdentityMap{T}()
+    @test LinearMap(1) == StaticIdentityMap{T}()
 
     m3 = LinearMap(SMatrix{2,2}(one(T), 2one(T), 3one(T), 4one(T)))
     @test m3 isa LinearMap{SVector{2,T}}
     @test m3(SVector(1,2)) == SVector(7, 10)
     @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
     @test m3 ∘ m3 isa LinearMap
-    @test LinearMap(SA[1 0; 0 1]) == IdentityMap{domaintype(m3)}()
+    @test LinearMap(SA[1 0; 0 1]) == StaticIdentityMap{domaintype(m3)}()
 
     A = rand(T,2,2)
     m4 = LinearMap(A)
@@ -268,21 +268,21 @@ function test_affinemap(T)
 end
 
 function test_scaling_maps(T)
-    test_generic_map(scaling_map(T(2)))
-    test_generic_map(scaling_map(T(2), T(3)))
-    test_generic_map(scaling_map(T(2), T(3), T(4)))
-    test_generic_map(scaling_map(T(2), T(3), T(4), T(5)))
+    test_generic_map(LinearMap(T(2)))
+    test_generic_map(LinearMap(T(2), T(3)))
+    test_generic_map(LinearMap(T(2), T(3), T(4)))
+    test_generic_map(LinearMap(T(2), T(3), T(4), T(5)))
 end
 
 function test_identity_map(T)
-    i1 = IdentityMap{T}()
-    i2 = IdentityMap{SVector{2,T}}()
+    i1 = StaticIdentityMap{T}()
+    i2 = StaticIdentityMap{SVector{2,T}}()
     test_generic_map(i1)
     test_generic_map(i2)
     @test i1 == i2
     @test islinear(i1)
     @test isaffine(i1)
-    @test convert(IdentityMap{SVector{2,T}}, i1) === i2
+    @test convert(StaticIdentityMap{SVector{2,T}}, i1) === i2
     @test jacobian(i1) isa ConstantMap
     @test jacobian(i1, 1) == 1
     @test jacdet(i1, 1) == 1
@@ -304,8 +304,8 @@ function test_composite_map(T)
     b = T(1)
     c = T(2)
     d = T(3)
-    ma = IdentityMap{T}()
-    mb = interval_map(a, b, c, d)
+    ma = StaticIdentityMap{T}()
+    mb = DomainSets.interval_map(a, b, c, d)
 
     r = suitable_point_to_map(ma)
     m1 = ma∘mb
@@ -326,8 +326,8 @@ function test_composite_map(T)
 end
 
 function test_product_map(T)
-    ma = IdentityMap{T}()
-    mb = interval_map(T(0), T(1), T(2), T(3))
+    ma = StaticIdentityMap{T}()
+    mb = DomainSets.interval_map(T(0), T(1), T(2), T(3))
 
     r1 = suitable_point_to_map(ma)
     r2 = suitable_point_to_map(ma)

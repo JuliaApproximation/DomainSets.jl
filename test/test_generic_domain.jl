@@ -30,12 +30,12 @@ function test_generic_domain(d::Domain)
         end
     end
     if canonicaldomain(d) == d
-        @test tocanonical(d) == IdentityMap{eltype(d)}()
-        @test fromcanonical(d) == IdentityMap{eltype(d)}()
+        @test tocanonical(d) == StaticIdentityMap{eltype(d)}()
+        @test fromcanonical(d) == StaticIdentityMap{eltype(d)}()
     else
         cd = canonicaldomain(d)
-        @test fromcanonical(d) == bijection(cd, d)
-        @test tocanonical(d) == bijection(d, cd)
+        @test fromcanonical(d) == mapto(cd, d)
+        @test tocanonical(d) == mapto(d, cd)
     end
     if iscomposite(d)
         @test numelements(d) == length(elements(d))
@@ -92,6 +92,7 @@ end
         @test (1..2) * 2 == (1..2) .* 2
         @test (1..2) / 2 ≈ (0.5..1)
         @test 2 \ (1..2) ≈ (0.5..1)
+        @test_throws MethodError (0..1) + 0.4
 
         # promotion
         @test DomainSets.promote_domains() == ()

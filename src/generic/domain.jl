@@ -45,11 +45,9 @@ const VectorDomain{T} = Domain{Vector{T}}
 const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 
 "What is the Euclidean dimension of the domain?"
-dimension(::Domain{<:Number}) = 1
-dimension(::EuclideanDomain{N}) where {N} = N
-dimension(::Domain{<:NTuple{N,Any}}) where {N} = N
-# We can't say anything generically about VectorDomain's here
-
+dimension(::Domain{T}) where {T} = euclideandimension(T)
+# This implementation throws an error for many types, including Vector{T},
+# because its dimension does not follow from the type.
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
@@ -159,34 +157,34 @@ canonical domains.
 canonicaldomain(d::Domain, args...) = d
 
 "Return a map from the domain to its canonical domain."
-tocanonical(d, args...) = IdentityMap{eltype(d)}()
+tocanonical(d, args...) = StaticIdentityMap{eltype(d)}()
 
 "Return a map to a domain from its canonical domain."
-fromcanonical(d, args...) = IdentityMap{eltype(d)}()
+fromcanonical(d, args...) = StaticIdentityMap{eltype(d)}()
 
 "Return a bijective map between domains `d1` and `d2`."
-bijection(d1, d2) = bijection1(d1, d2)
+mapto(d1, d2) = mapto1(d1, d2)
 
 # simplify the first argument
-bijection1(d1, d2) = _bijection1(d1, d2, canonicaldomain(d1))
-function _bijection1(d1, d2, cd)
+mapto1(d1, d2) = _mapto1(d1, d2, canonicaldomain(d1))
+function _mapto1(d1, d2, cd)
     if d1 == cd
-        bijection2(d1, d2)
+        mapto2(d1, d2)
     else
-        bijection(cd, d2) ∘ tocanonical(d1)
+        mapto(cd, d2) ∘ tocanonical(d1)
     end
 end
 # simplify the second argument
-bijection2(d1, d2) = _bijection2(d1, d2, canonicaldomain(d2))
-function _bijection2(d1, d2, cd)
+mapto2(d1, d2) = _mapto2(d1, d2, canonicaldomain(d2))
+function _mapto2(d1, d2, cd)
     if d2 == cd
-        no_known_bijection(d1, d2)
+        no_known_mapto(d1, d2)
     else
-        fromcanonical(d2) ∘ bijection(d1, cd)
+        fromcanonical(d2) ∘ mapto(d1, cd)
     end
 end
 
-no_known_bijection(d1, d2) = d1 == d2 ? IdentityMap{eltype(d1)}() : error("No bijection known between $(d1) and $(d2).")
+no_known_mapto(d1, d2) = d1 == d2 ? StaticIdentityMap{eltype(d1)}() : error("No map known between $(d1) and $(d2).")
 
 "Return a parameterization of the given domain."
 parameterization(d::Domain) = fromcanonical(d)

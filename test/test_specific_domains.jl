@@ -349,11 +349,11 @@ end
 
         @testset "mapping between intervals" begin
             @test canonicaldomain(UnitInterval()) == UnitInterval()
-            m = bijection(2..3, ChebyshevInterval())
+            m = mapto(2..3, ChebyshevInterval())
             @test isaffine(m)
             @test m(2) ≈ -1
             @test m(3) ≈ 1
-            m2 = bijection(4.0..6, 2..3)
+            m2 = mapto(4.0..6, 2..3)
             @test isaffine(m2)
             @test m2(4) ≈ 2
             @test m2(6) ≈ 3
@@ -823,21 +823,18 @@ end
     end
 
     @testset "mapped_domain" begin
+        @test MappedDomain(0..1.0, cos) isa MappedDomain{Float64}
+        @test MappedDomain{Float64}(0..1.0, cos) isa MappedDomain{Float64}
         # Test chaining of maps
         D = UnitCircle()
         D1 = 2 * D
         @test typeof(D1) <: MappedDomain
         @test typeof(superdomain(D1)) <: UnitHyperSphere
+        @test isclosedset(D1)
+        @test !isopenset(D1)
+        @test convert(Domain{SVector{2,BigFloat}}, D1) isa MappedDomain{SVector{2,BigFloat}}
         D2 = 2 * D1
         @test typeof(superdomain(D2)) <: UnitHyperSphere
-
-        # Once adding numbers is removed, test for error:
-        # @test try
-        #     (0..1) + 0.4
-        #     false
-        # catch
-        #     true
-        # end
 
         D = UnitInterval()^2
         show(io,rotate(D,1.))

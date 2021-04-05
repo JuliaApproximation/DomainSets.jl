@@ -133,7 +133,7 @@
         @test approx_in(SVector(1.01, 0.1), d1, 0.1)
         show(io,d1)
         @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
-        @test setdiff(d1, ProductDomain(-0.5..0.5, -.1..0.1))
+        @test setdiff(d1, ProductDomain(-0.5..0.5, -.1..0.1)) == d1
 
         d2 = SetdiffDomain(0.0..3.0, [1.0, 2.5])
         @test d2 isa Domain{Float64}

@@ -105,8 +105,8 @@ point_in_domain(ball::VectorHyperBall{T}) where {T} = zeros(T, dimension(ball))
 # The type hierarchy of spheres parallels that of Ball above:
 # abstract HyperSphere
 # |-> abstract UnitHyperSphere: radius is 1
-#     |-> FixedUnitSphere: dimension is part of type
-#     |-> FlexibleUnitSphere: dimension is specified by int field
+#     |-> StaticUnitSphere: dimension is part of type
+#     |-> DynamicUnitSphere: dimension is specified by int field
 # There are aliases for SVector{N,T} and Vector{T}.
 
 "Supertype of spherical domains for which elements satisfy `norm(x) == radius(sphere)`."
@@ -142,11 +142,11 @@ abstract type UnitHyperSphere{T} <: HyperSphere{T} end
 radius(::UnitHyperSphere) = 1
 
 "The unit sphere with fixed dimension(s) specified by the element type."
-struct FixedUnitSphere{T} <: UnitHyperSphere{T}
+struct StaticUnitSphere{T} <: UnitHyperSphere{T}
 end
 
 "The unit sphere in a fixed N-dimensional Euclidean space."
-const EuclideanUnitSphere{N,T} = FixedUnitSphere{SVector{N,T}}
+const EuclideanUnitSphere{N,T} = StaticUnitSphere{SVector{N,T}}
 
 EuclideanUnitSphere{N}() where {N} = EuclideanUnitSphere{N,Float64}()
 
@@ -157,20 +157,20 @@ const UnitCircle{T} = EuclideanUnitSphere{2,T}
 const UnitSphere{T} = EuclideanUnitSphere{3,T}
 
 "The unit sphere with variable dimension."
-struct FlexibleUnitSphere{T} <: UnitHyperSphere{T}
+struct DynamicUnitSphere{T} <: UnitHyperSphere{T}
     dimension   ::  Int
 end
 
-dimension(sphere::FlexibleUnitSphere) = sphere.dimension
+dimension(sphere::DynamicUnitSphere) = sphere.dimension
 
 "The unit sphere with vector elements of a given dimension."
-const VectorUnitSphere{T} = FlexibleUnitSphere{Vector{T}}
+const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
 
 VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
 VectorUnitCircle() = VectorUnitSphere(2)
 
-similardomain(sphere::FixedUnitSphere, ::Type{T}) where {T} = FixedUnitSphere{T}()
-similardomain(sphere::FlexibleUnitSphere, ::Type{T}) where {T} = FlexibleUnitSphere{T}(sphere.dimension)
+similardomain(sphere::StaticUnitSphere, ::Type{T}) where {T} = StaticUnitSphere{T}()
+similardomain(sphere::DynamicUnitSphere, ::Type{T}) where {T} = DynamicUnitSphere{T}(sphere.dimension)
 
 show(io::IO, d::UnitHyperSphere) =
     dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")
@@ -203,11 +203,11 @@ cylinder(radius::T, length::T) where {T} = (radius .* UnitDisk{T}()) × (0..leng
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)
-ellipse(a::T, b::T) where {T <: Number} = scaling_map(a, b).(UnitCircle{T}())
+ellipse(a::T, b::T) where {T <: Number} = LinearMap(a, b).(UnitCircle{T}())
 
 "Create an ellipse-shaped domain with semi-axes lengths `a` and `b` respectively."
 ellipse_shape(a::Number, b::Number) = ellipse_shape(promote(a,b)...)
-ellipse_shape(a::T, b::T) where {T <: Number} = scaling_map(a, b).(UnitDisk{T}())
+ellipse_shape(a::T, b::T) where {T <: Number} = LinearMap(a, b).(UnitDisk{T}())
 
 
 """
@@ -253,7 +253,7 @@ tocanonical(d::UnitCircle{T}) where {T} = AngleMap{T}()
 
 ## The complex plane
 
-const ComplexUnitCircle{T} = FixedUnitSphere{Complex{T}}
+const ComplexUnitCircle{T} = StaticUnitSphere{Complex{T}}
 const ComplexUnitDisk{T,C} = StaticUnitBall{Complex{T},C}
 
 ComplexUnitCircle() = ComplexUnitCircle{Float64}()
