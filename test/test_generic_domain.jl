@@ -30,8 +30,8 @@ function test_generic_domain(d::Domain)
         end
     end
     if canonicaldomain(d) == d
-        @test tocanonical(d) == StaticIdentityMap{eltype(d)}()
-        @test fromcanonical(d) == StaticIdentityMap{eltype(d)}()
+        @test tocanonical(d) == IdentityMap{eltype(d)}(dimension(d))
+        @test fromcanonical(d) == IdentityMap{eltype(d)}(dimension(d))
     else
         cd = canonicaldomain(d)
         @test fromcanonical(d) == mapto(cd, d)

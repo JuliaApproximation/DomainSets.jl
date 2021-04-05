@@ -2,6 +2,17 @@
 using DomainSets: convert_numtype, convert_prectype,
     promote_numtype, promote_prectype
 
+function test_dimension()
+    @test DomainSets.euclideandimension(Int) == 1
+    @test DomainSets.euclideandimension(Float64) == 1
+    @test DomainSets.euclideandimension(ComplexF64) == 1
+    @test DomainSets.euclideandimension(SVector{2,Float64}) == 2
+    @test DomainSets.euclideandimension(MVector{2,Float64}) == 2
+    @test DomainSets.euclideandimension(Tuple{Int,Int}) == 2
+    @test DomainSets.euclideandimension(Tuple{Int,Float64}) == 2
+    @test_throws MethodError DomainSets.euclideandimension(Vector{Float64})
+end
+
 function test_elements()
     @test elements([1,2,3]) == ()
     d = UnionDomain(Point(1),Point(2))
@@ -72,6 +83,9 @@ function test_numtype()
 end
 
 @testset "common functionality" begin
+    @testset "dimension" begin
+        test_dimension()
+    end
     @testset "elements" begin
         test_elements()
     end

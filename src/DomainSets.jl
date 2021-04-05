@@ -67,7 +67,9 @@ export Composition, ∘
 # from maps/product.jl
 export ProductMap, tensorproduct
 # from maps/basic.jl
-export StaticIdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
+export IdentityMap,
+    StaticIdentityMap, VectorIdentityMap,
+    ZeroMap, UnityMap, ConstantMap,
     isconstant, constant
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
@@ -132,12 +134,14 @@ export EuclideanUnitSimplex, VectorUnitSimplex, UnitSimplex,
 # from domains/point.jl
 export Point
 # from domains/ball.jl
-export UnitCircle, VectorUnitCircle,
-    UnitSphere, VectorUnitSphere,
+export UnitBall,
+    StaticUnitBall, DynamicUnitBall,
+    EuclideanUnitBall, VectorUnitBall,
+    UnitSphere,
+    StaticUnitSphere, DynamicUnitSphere,
+    VectorUnitSphere, EuclideanUnitSphere,
     UnitDisk, VectorUnitDisk,
-    UnitBall, VectorUnitBall,
-    UnitHyperBall,  UnitHyperSphere,
-    EuclideanUnitBall, EuclideanUnitSphere,
+    UnitCircle, VectorUnitCircle,
     ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder,
     gradient

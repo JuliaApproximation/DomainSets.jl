@@ -9,10 +9,10 @@ Base.getindex(::Basis3Vector, k::Int) = k == 1 ? 1.0 : 0.0
 const io = IOBuffer()
 
 
-struct NamedHyperBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
+struct NamedBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
     domain  ::  Domain{SVector{2,Float64}}
 
-    NamedHyperBall() = new(2UnitDisk())
+    NamedBall() = new(2UnitDisk())
 end
 
 @testset "specific domains" begin
@@ -593,6 +593,20 @@ end
     end
 
     @testset "unit ball" begin
+        # Test UnitBall constructor
+        @test UnitBall(2) isa VectorUnitBall{Float64}
+        @test UnitBall(Val(2)) isa EuclideanUnitBall{2,Float64}
+        @test UnitBall{Float64}() isa StaticUnitBall{Float64}
+        @test UnitBall{Float64}(1) isa StaticUnitBall{Float64}
+        @test_throws AssertionError UnitBall{Float64}(2)
+        @test UnitBall{SVector{2,Float64}}(Val(2)) isa EuclideanUnitBall{2,Float64}
+        @test_throws AssertionError UnitBall{SVector{2,Float64}}(Val(3))
+        @test UnitBall{SVector{2,Float64}}(2) isa EuclideanUnitBall{2,Float64}
+        @test_throws AssertionError UnitBall{SVector{2,Float64}}(3)
+        @test UnitBall{SVector{2,Float64}}() isa EuclideanUnitBall{2,Float64}
+        @test UnitBall{Vector{Float64}}(2) isa VectorUnitBall{Float64}
+        @test_throws MethodError UnitBall{Vector{Float64}}()
+
         D = UnitDisk()
         @test SA[1.,0.] ∈ D
         @test SA[1.,1.] ∉ D
@@ -676,7 +690,7 @@ end
         @test !isempty(D)
         @test approx_in(SA[1.01,0.0,0.0,0.0], D, 0.05)
 
-        @test isclosedset(DomainSets.StaticUnitBall{SVector{2,Float64}}())
+        @test isclosedset(StaticUnitBall{SVector{2,Float64}}())
         @test EuclideanUnitBall{2}() isa EuclideanUnitBall{2,Float64}
 
         show(io, EuclideanUnitBall{2,Float64,:open}())
@@ -686,7 +700,7 @@ end
     end
 
     @testset "custom named ball" begin
-        B = NamedHyperBall()
+        B = NamedBall()
         @test SA[1.4, 1.4] ∈ B
         @test SA[1.5, 1.5] ∉ B
         @test typeof(1.2 * B)==typeof(B * 1.2)
@@ -737,7 +751,21 @@ end
         @test 1.1+0.2im ∉ p
     end
 
-    @testset "sphere" begin
+    @testset "unit sphere" begin
+        # test UnitSphere constructor
+        @test UnitSphere(2) isa VectorUnitSphere{Float64}
+        @test UnitSphere(Val(2)) isa EuclideanUnitSphere{2,Float64}
+        @test UnitSphere{Float64}() isa StaticUnitSphere{Float64}
+        @test UnitSphere{Float64}(1) isa StaticUnitSphere{Float64}
+        @test_throws AssertionError UnitSphere{Float64}(2)
+        @test UnitSphere{SVector{2,Float64}}(Val(2)) isa EuclideanUnitSphere{2,Float64}
+        @test_throws AssertionError UnitSphere{SVector{2,Float64}}(Val(3))
+        @test UnitSphere{SVector{2,Float64}}(2) isa EuclideanUnitSphere{2,Float64}
+        @test_throws AssertionError UnitSphere{SVector{2,Float64}}(3)
+        @test UnitSphere{SVector{2,Float64}}() isa EuclideanUnitSphere{2,Float64}
+        @test UnitSphere{Vector{Float64}}(2) isa VectorUnitSphere{Float64}
+        @test_throws MethodError UnitSphere{Vector{Float64}}()
+
         C = UnitCircle()
         @test SA[1.,0.] ∈ C
         @test SA[1.,1.] ∉ C
@@ -790,7 +818,7 @@ end
         @test SVector(nextfloat(1.0),0) ∉ D
 
         D = UnitSphere()
-        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{BigFloat}()
+        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{SVector{3,BigFloat}}()
         @test SVector(1,0,0) in D
         @test SVector(nextfloat(1.0),0,0) ∉ D
     end
@@ -816,9 +844,9 @@ end
         E2 = ellipse_shape(1, 2.0)
         @test eltype(E) == SVector{2,Float64}
 
-        C = DomainSets.cylinder()
+        C = cylinder()
         @test eltype(C) == SVector{3,Float64}
-        C2 = DomainSets.cylinder(1.0, 2)
+        C2 = cylinder(1.0, 2)
         @test SA[0.5,0.2,1.5] ∈ C2
     end
 
@@ -829,12 +857,12 @@ end
         D = UnitCircle()
         D1 = 2 * D
         @test typeof(D1) <: MappedDomain
-        @test typeof(superdomain(D1)) <: UnitHyperSphere
+        @test typeof(superdomain(D1)) <: UnitSphere
         @test isclosedset(D1)
         @test !isopenset(D1)
         @test convert(Domain{SVector{2,BigFloat}}, D1) isa MappedDomain{SVector{2,BigFloat}}
         D2 = 2 * D1
-        @test typeof(superdomain(D2)) <: UnitHyperSphere
+        @test typeof(superdomain(D2)) <: UnitSphere
 
         D = UnitInterval()^2
         show(io,rotate(D,1.))

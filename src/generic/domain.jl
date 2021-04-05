@@ -36,8 +36,8 @@ compatible_eltype(d1, d2) = isconcretetype(promote_type(eltype(d1),eltype(d2)))
 
 
 
-"A `EuclideanDomain` is any domain whose eltype is `SVector{N,T}`."
-const EuclideanDomain{N,T} = Domain{SVector{N,T}}
+"A `EuclideanDomain` is any domain whose eltype is `<:StaticVector{N,T}`."
+const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
 
 "A `VectorDomain` is any domain whose eltype is `Vector{T}`."
 const VectorDomain{T} = Domain{Vector{T}}
@@ -46,8 +46,6 @@ const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 
 "What is the Euclidean dimension of the domain?"
 dimension(::Domain{T}) where {T} = euclideandimension(T)
-# This implementation throws an error for many types, including Vector{T},
-# because its dimension does not follow from the type.
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
@@ -157,12 +155,12 @@ canonical domains.
 canonicaldomain(d::Domain, args...) = d
 
 "Return a map from the domain to its canonical domain."
-tocanonical(d, args...) = StaticIdentityMap{eltype(d)}()
+tocanonical(d, args...) = IdentityMap{eltype(d)}(dimension(d))
 
 "Return a map to a domain from its canonical domain."
-fromcanonical(d, args...) = StaticIdentityMap{eltype(d)}()
+fromcanonical(d, args...) = IdentityMap{eltype(d)}(dimension(d))
 
-"Return a bijective map between domains `d1` and `d2`."
+"Return a map from domain `d1` to domain `d2`."
 mapto(d1, d2) = mapto1(d1, d2)
 
 # simplify the first argument

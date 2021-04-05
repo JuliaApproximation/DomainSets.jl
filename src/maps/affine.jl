@@ -84,9 +84,9 @@ isaffine(m::AbstractAffineMap) = true
 ==(m1::AbstractAffineMap, m2::AbstractAffineMap) =
     matrix(m1) == matrix(m2) && vector(m1) == vector(m2)
 
-==(m1::AbstractAffineMap, m2::AbstractIdentityMap) =
+==(m1::AbstractAffineMap, m2::IdentityMap) =
     islinear(m1) && matrix(m1) == matrix(m2)
-==(m1::AbstractIdentityMap, m2::AbstractAffineMap) = m2==m1
+==(m1::IdentityMap, m2::AbstractAffineMap) = m2==m1
 
 size(m::AbstractAffineMap) = _size(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 _size(m, T, A, b) = size(A)

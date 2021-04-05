@@ -20,54 +20,72 @@ zeromatrix(m::Map, ::Type{M}) where {M <: AbstractArray} = zeros(M, size(m))
 
 
 "Supertype of identity maps."
-abstract type AbstractIdentityMap{T} <: Map{T} end
+abstract type IdentityMap{T} <: Map{T} end
 
-applymap(map::AbstractIdentityMap, x) = x
+IdentityMap(n::Int) = DynamicIdentityMap(n)
+IdentityMap() = StaticIdentityMap()
+IdentityMap(::Val{N}) where {N} = StaticIdentityMap(Val(N))
 
-inv(m::AbstractIdentityMap) = m
+IdentityMap{T}(n::Int) where {T} = DynamicIdentityMap{T}(n)
+IdentityMap{T}(n::Int) where {T<:Number} = StaticIdentityMap{T}()
+IdentityMap{T}(n::Int) where {T<:StaticVector} = StaticIdentityMap{T}(n)
+IdentityMap{T}(::Val{N}) where {N,T} = StaticIdentityMap{T}(Val(N))
+IdentityMap{T}() where {T} = StaticIdentityMap{T}()
 
-islinear(::AbstractIdentityMap) = true
-isreal(::AbstractIdentityMap{T}) where {T} = eltype(T) <: Real
+applymap(map::IdentityMap, x) = x
+applymap!(y, map::IdentityMap, x) = y .= x
 
-isidentity(::AbstractIdentityMap) = true
+inv(m::IdentityMap) = m
+
+islinear(::IdentityMap) = true
+isreal(::IdentityMap{T}) where {T} = isreal(T)
+
+isidentity(::IdentityMap) = true
 isidentity(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
 
-dimension(m::AbstractIdentityMap{T}) where {T<:Number} = 1
-dimension(m::AbstractIdentityMap{T}) where {N,T<:SVector{N}} = N
+size(m::IdentityMap) = (dimension(m), dimension(m))
 
-size(m::AbstractIdentityMap) = (dimension(m), dimension(m))
+matrix(m::IdentityMap) = identitymatrix(m)
+vector(m::IdentityMap) = zerovector(m)
 
-matrix(m::AbstractIdentityMap) = identitymatrix(m)
-vector(m::AbstractIdentityMap) = zerovector(m)
+jacobian(m::IdentityMap) = ConstantMap(matrix(m))
+jacobian(m::IdentityMap, x) = matrix(m)
 
-jacobian(m::AbstractIdentityMap) = ConstantMap(matrix(m))
-jacobian(m::AbstractIdentityMap, x) = matrix(m)
+jacdet(m::IdentityMap, x) = 1
 
-jacdet(m::AbstractIdentityMap, x) = 1
+mapcompose(m1::IdentityMap) = m1
+mapcompose(m1::IdentityMap, maps...) = mapcompose(maps...)
+mapcompose2(m1, m2::IdentityMap, maps...) = mapcompose(m1, maps...)
 
-mapcompose(m1::AbstractIdentityMap) = m1
-mapcompose(m1::AbstractIdentityMap, maps...) = mapcompose(maps...)
-mapcompose2(m1, m2::AbstractIdentityMap, maps...) = mapcompose(m1, maps...)
 
 "The identity map for variables of type `T`."
-struct StaticIdentityMap{T} <: AbstractIdentityMap{T}
+struct StaticIdentityMap{T} <: IdentityMap{T}
 end
 
 StaticIdentityMap() = StaticIdentityMap{Float64}()
+StaticIdentityMap(::Val{N}) where {N} = StaticIdentityMap{SVector{N,Float64}}()
+
+StaticIdentityMap{T}(n::Int) where {T} =
+    (@assert n == euclideandimension(T); StaticIdentityMap{T}())
+StaticIdentityMap{T}(::Val{N}) where {N,T} =
+    (@assert N == euclideandimension(T); StaticIdentityMap{T}())
 
 similarmap(m::StaticIdentityMap, ::Type{T}) where {T} = StaticIdentityMap{T}()
 
 convert(::Type{StaticIdentityMap{T}}, ::StaticIdentityMap) where {T} = StaticIdentityMap{T}()
 
-==(::StaticIdentityMap, ::StaticIdentityMap) = true
+==(m1::StaticIdentityMap, m2::StaticIdentityMap) = true
 
 
 "Identity map with flexible size determined by a dimension field."
-struct DynamicIdentityMap{T} <: AbstractIdentityMap{T}
+struct DynamicIdentityMap{T} <: IdentityMap{T}
     dimension   ::  Int
 end
+
+const EuclideanIdentityMap{N,T} = StaticIdentityMap{SVector{N,T}}
 const VectorIdentityMap{T} = DynamicIdentityMap{Vector{T}}
 
+DynamicIdentityMap(dimension::Int) = VectorIdentityMap(dimension)
 VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
 dimension(m::DynamicIdentityMap) = m.dimension

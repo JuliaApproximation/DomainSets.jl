@@ -4,6 +4,13 @@ isreal(::Type{<:Real}) = true
 isreal(::Type{<:Complex}) = false
 isreal(::Type{T}) where {T} = isreal(eltype(T))
 
+const StaticTypes = Union{Number,<:StaticVector{N} where N,<:NTuple{N,Any} where N}
+
+"What is the euclidean dimension of the given type (if applicable)?"
+euclideandimension(::Type{T}) where {T <: Number} = 1
+euclideandimension(::Type{T}) where {N,T <: StaticVector{N}} = N
+euclideandimension(::Type{T}) where {N,T <: NTuple{N,Any}} = N
+# Does not apply to Vector{T}: we don't know its dimension
 
 #######################
 # Composite structures

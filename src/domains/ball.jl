@@ -1,61 +1,83 @@
 
 # The type hierarchy is as follows:
-# abstract HyperBall
-# |-> abstract UnitHyperBall: radius is 1
+# abstract Ball
+# |-> abstract UnitBall: radius is 1
 #     |-> StaticUnitBall: dimension is part of type
 #     |-> DynamicUnitBall: dimension is specified by int field
 # There are aliases for SVector{N,T} and Vector{T}:
-#   EuclideanHyperBall, VectorHyperBall,
+#   EuclideanBall, VectorBall,
 #   EuclideanUnitBall (StaticUnitBall), VectorUnitBall (DynamicUnitBall).
 
 """
 Supertype of balls for which elements satisfy `norm(x) < radius(ball)` (open ball)
 or `norm(x) <= radius(ball)` (closed ball).
 """
-abstract type HyperBall{T,C} <: Domain{T} end
+abstract type Ball{T,C} <: Domain{T} end
 
 "A ball in a fixed N-dimensional Euclidean space."
-const EuclideanHyperBall{N,T,C} = HyperBall{SVector{N,T},C}
+const EuclideanBall{N,T,C} = Ball{SVector{N,T},C}
 
 "A ball with vector elements of variable length."
-const VectorHyperBall{T,C} = HyperBall{Vector{T},C}
+const VectorBall{T,C} = Ball{Vector{T},C}
 
-iscompatiblepair(x::AbstractVector, d::VectorHyperBall) = length(x) == dimension(d)
+iscompatiblepair(x::AbstractVector, d::VectorBall) = length(x) == dimension(d)
 
-const ClosedHyperBall{T} = HyperBall{T,:closed}
-const OpenHyperBall{T} = HyperBall{T,:open}
+const ClosedBall{T} = Ball{T,:closed}
+const OpenBall{T} = Ball{T,:open}
 
-isclosedset(::ClosedHyperBall) = true
-isclosedset(::OpenHyperBall) = false
-isopenset(ball::HyperBall) = !isclosedset(ball)
+isclosedset(::ClosedBall) = true
+isclosedset(::OpenBall) = false
+isopenset(ball::Ball) = !isclosedset(ball)
 
-indomain(x, ball::OpenHyperBall) = norm(x) < radius(ball)
-indomain(x, ball::ClosedHyperBall) = norm(x) <= radius(ball)
-approx_indomain(x, ball::OpenHyperBall, tolerance) = norm(x) < radius(ball)+tolerance
-approx_indomain(x, ball::ClosedHyperBall, tolerance) = norm(x) <= radius(ball)+tolerance
+indomain(x, ball::OpenBall) = norm(x) < radius(ball)
+indomain(x, ball::ClosedBall) = norm(x) <= radius(ball)
+approx_indomain(x, ball::OpenBall, tolerance) = norm(x) < radius(ball)+tolerance
+approx_indomain(x, ball::ClosedBall, tolerance) = norm(x) <= radius(ball)+tolerance
 
 # A closed ball always contains at least the origin.
-isempty(ball::ClosedHyperBall) = false
-isempty(ball::OpenHyperBall) = radius(ball) == 0
+isempty(ball::ClosedBall) = false
+isempty(ball::OpenBall) = radius(ball) == 0
 
-==(d1::HyperBall, d2::HyperBall) = isclosedset(d1)==isclosedset(d2) &&
+==(d1::Ball, d2::Ball) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
-convert(::Type{SublevelSet}, d::HyperBall{T,C}) where {T,C} =
+convert(::Type{SublevelSet}, d::Ball{T,C}) where {T,C} =
     SublevelSet{T,C}(norm, radius(d))
-convert(::Type{SublevelSet{T}}, d::HyperBall{S,C}) where {T,S,C} =
+convert(::Type{SublevelSet{T}}, d::Ball{S,C}) where {T,S,C} =
     SublevelSet{T,C}(norm, radius(d))
 
 "The unit ball."
-abstract type UnitHyperBall{T,C} <: HyperBall{T,C} end
+abstract type UnitBall{T,C} <: Ball{T,C} end
 
-radius(::UnitHyperBall) = 1
+radius(::UnitBall) = 1
+
+UnitBall(n::Int) = DynamicUnitBall(n)
+UnitBall(::Val{N} = Val(3)) where {N} = EuclideanUnitBall{N}()
+
+UnitBall{T}(n::Int) where {T <: StaticTypes} = StaticUnitBall{T}(n)
+UnitBall{T}(::Val{N}) where {N,T} = StaticUnitBall{T}(Val(N))
+UnitBall{T}() where {T <: StaticTypes} = StaticUnitBall{T}()
+UnitBall{T}(n::Int) where {T} = DynamicUnitBall{T}(n)
+
 
 "The unit ball with fixed dimension(s) specified by the element type."
-struct StaticUnitBall{T,C} <: UnitHyperBall{T,C}
+struct StaticUnitBall{T,C} <: UnitBall{T,C}
 end
 
+StaticUnitBall() = StaticUnitBall{Float64}()
+StaticUnitBall(::Val{N}) where {N} = StaticUnitBall{SVector{N,Float64}}()
+
 StaticUnitBall{T}() where {T} = StaticUnitBall{T,:closed}()
+
+StaticUnitBall{T}(n::Int) where {T} =
+    (@assert n == euclideandimension(T); StaticUnitBall{T}())
+StaticUnitBall{T}(::Val{N}) where {N,T} =
+    (@assert N == euclideandimension(T); StaticUnitBall{T}())
+
+StaticUnitBall{T,C}(n::Int) where {T,C} =
+    (@assert n == euclideandimension(T); StaticUnitBall{T,C}())
+StaticUnitBall{T,C}(::Val{N}) where {N,T,C} =
+    (@assert N == euclideandimension(T); StaticUnitBall{T,C}())
 
 "The unit ball in a fixed N-dimensional space."
 const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
@@ -63,17 +85,16 @@ const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
 EuclideanUnitBall{N}() where {N} = EuclideanUnitBall{N,Float64}()
 
 const UnitDisk{T} = EuclideanUnitBall{2,T,:closed}
-const UnitBall{T} = EuclideanUnitBall{3,T,:closed}
-
 UnitDisk() = UnitDisk{Float64}()
-UnitBall() = UnitBall{Float64}()
+
 
 
 "The unit ball with variable dimension stored in a data field."
-struct DynamicUnitBall{T,C} <: UnitHyperBall{T,C}
+struct DynamicUnitBall{T,C} <: UnitBall{T,C}
     dimension   ::  Int
 end
 
+DynamicUnitBall(dimension::Int) = DynamicUnitBall{Vector{Float64}}(dimension)
 DynamicUnitBall{T}(dimension::Int) where {T} =
     DynamicUnitBall{T,:closed}(dimension)
 
@@ -91,59 +112,78 @@ similardomain(ball::DynamicUnitBall{S,C}, ::Type{T}) where {S,T,C} =
     DynamicUnitBall{T,C}(ball.dimension)
 
 
-show(io::IO, d::UnitHyperBall{T,:closed}) where {T} =
+show(io::IO, d::UnitBall{T,:closed}) where {T} =
     print(io, "the $(dimension(d))-dimensional closed unit ball")
-show(io::IO, d::UnitHyperBall{T,:open}) where {T} =
+show(io::IO, d::UnitBall{T,:open}) where {T} =
     print(io, "the $(dimension(d))-dimensional open unit ball")
 
 # We choose the origin here
-point_in_domain(ball::HyperBall{T}) where {T} = zero(T)
-point_in_domain(ball::VectorHyperBall{T}) where {T} = zeros(T, dimension(ball))
+point_in_domain(ball::Ball{T}) where {T} = zero(T)
+point_in_domain(ball::VectorBall{T}) where {T} = zeros(T, dimension(ball))
 
 
 
 # The type hierarchy of spheres parallels that of Ball above:
-# abstract HyperSphere
-# |-> abstract UnitHyperSphere: radius is 1
+# abstract Sphere
+# |-> abstract UnitSphere: radius is 1
 #     |-> StaticUnitSphere: dimension is part of type
 #     |-> DynamicUnitSphere: dimension is specified by int field
 # There are aliases for SVector{N,T} and Vector{T}.
 
 "Supertype of spherical domains for which elements satisfy `norm(x) == radius(sphere)`."
-abstract type HyperSphere{T} <: Domain{T} end
+abstract type Sphere{T} <: Domain{T} end
 
-indomain(x, sphere::HyperSphere) = norm(x) == radius(sphere)
-approx_indomain(x, sphere::HyperSphere, tolerance) =
-    radius(sphere)-tolerance <= norm(x) <= radius(sphere)+tolerance
+indomain(x, d::Sphere) = norm(x) == radius(d)
+approx_indomain(x, d::Sphere, tolerance) =
+    radius(d)-tolerance <= norm(x) <= radius(d)+tolerance
 
-isempty(::HyperSphere) = false
+isempty(::Sphere) = false
 
-isclosedset(::HyperSphere) = true
-isopenset(::HyperSphere) = false
+isclosedset(::Sphere) = true
+isopenset(::Sphere) = false
 
-==(d1::HyperSphere, d2::HyperSphere) =
+==(d1::Sphere, d2::Sphere) =
     radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
 
-convert(::Type{LevelSet}, d::HyperSphere{T}) where {T} =
+convert(::Type{LevelSet}, d::Sphere{T}) where {T} =
     LevelSet{T}(norm, radius(d))
-convert(::Type{LevelSet{T}}, d::HyperSphere) where {T} =
+convert(::Type{LevelSet{T}}, d::Sphere) where {T} =
     LevelSet{T}(norm, radius(d))
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
-const EuclideanHyperSphere{N,T} = HyperSphere{SVector{N,T}}
+const EuclideanSphere{N,T} = Sphere{SVector{N,T}}
 
 "A sphere with vector elements of variable length."
-const VectorHyperSphere{T} = HyperSphere{Vector{T}}
+const VectorSphere{T} = Sphere{Vector{T}}
 
 
 "The unit sphere."
-abstract type UnitHyperSphere{T} <: HyperSphere{T} end
+abstract type UnitSphere{T} <: Sphere{T} end
 
-radius(::UnitHyperSphere) = 1
+radius(::UnitSphere) = 1
+
+UnitSphere(n::Int) = DynamicUnitSphere(n)
+UnitSphere(::Val{N} = Val(3)) where {N} = EuclideanUnitSphere{N}()
+
+UnitSphere{T}(n::Int) where {T <: StaticTypes} = StaticUnitSphere{T}(n)
+UnitSphere{T}(::Val{N}) where {N,T} = StaticUnitSphere{T}(Val(N))
+UnitSphere{T}() where {T <: StaticTypes} = StaticUnitSphere{T}()
+UnitSphere{T}(n::Int) where {T} = DynamicUnitSphere{T}(n)
+
 
 "The unit sphere with fixed dimension(s) specified by the element type."
-struct StaticUnitSphere{T} <: UnitHyperSphere{T}
+struct StaticUnitSphere{T} <: UnitSphere{T}
 end
+
+StaticUnitSphere() = StaticUnitSphere{Float64}()
+StaticUnitSphere(::Val{N}) where {N} = StaticUnitSphere{SVector{N,Float64}}()
+
+StaticUnitSphere{T}() where {T} = StaticUnitSphere{T,:closed}()
+
+StaticUnitSphere{T}(n::Int) where {T} =
+    (@assert n == euclideandimension(T); StaticUnitSphere{T}())
+StaticUnitSphere{T}(::Val{N}) where {N,T} =
+    (@assert N == euclideandimension(T); StaticUnitSphere{T}())
 
 "The unit sphere in a fixed N-dimensional Euclidean space."
 const EuclideanUnitSphere{N,T} = StaticUnitSphere{SVector{N,T}}
@@ -153,15 +193,15 @@ EuclideanUnitSphere{N}() where {N} = EuclideanUnitSphere{N,Float64}()
 
 "The unit circle in 2D."
 const UnitCircle{T} = EuclideanUnitSphere{2,T}
-"The unit sphere in 3D."
-const UnitSphere{T} = EuclideanUnitSphere{3,T}
 
 "The unit sphere with variable dimension."
-struct DynamicUnitSphere{T} <: UnitHyperSphere{T}
+struct DynamicUnitSphere{T} <: UnitSphere{T}
     dimension   ::  Int
 end
 
-dimension(sphere::DynamicUnitSphere) = sphere.dimension
+DynamicUnitSphere(dimension::Int) = DynamicUnitSphere{Vector{Float64}}(dimension)
+
+dimension(d::DynamicUnitSphere) = d.dimension
 
 "The unit sphere with vector elements of a given dimension."
 const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
@@ -169,16 +209,16 @@ const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
 VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
 VectorUnitCircle() = VectorUnitSphere(2)
 
-similardomain(sphere::StaticUnitSphere, ::Type{T}) where {T} = StaticUnitSphere{T}()
-similardomain(sphere::DynamicUnitSphere, ::Type{T}) where {T} = DynamicUnitSphere{T}(sphere.dimension)
+similardomain(d::StaticUnitSphere, ::Type{T}) where {T} = StaticUnitSphere{T}()
+similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} = DynamicUnitSphere{T}(d.dimension)
 
-show(io::IO, d::UnitHyperSphere) =
+show(io::IO, d::UnitSphere) =
     dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")
 
-point_in_domain(d::EuclideanHyperSphere{N,T}) where {N,T} =
+point_in_domain(d::EuclideanSphere{N,T}) where {N,T} =
     SVector{N,T}(ntuple( i -> i==1, N))
 
-function point_in_domain(d::VectorHyperSphere{T}) where {T}
+function point_in_domain(d::VectorSphere{T}) where {T}
     p = zeros(T, dimension(d))
     p[1] = 1
     p
@@ -258,7 +298,7 @@ const ComplexUnitDisk{T,C} = StaticUnitBall{Complex{T},C}
 
 ComplexUnitCircle() = ComplexUnitCircle{Float64}()
 ComplexUnitDisk() = ComplexUnitDisk{Float64}()
-ComplexUnitDisk{Float64}() = ComplexUnitDisk{Float64,:closed}()
+ComplexUnitDisk{T}() where {T} = ComplexUnitDisk{T,:closed}()
 
 show(io::IO, d::ComplexUnitCircle{T}) where {T} =
     print(io, "the complex unit circle (T=Complex{$T})")
