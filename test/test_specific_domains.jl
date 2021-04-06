@@ -1019,6 +1019,7 @@ end
         @test closure(d3_open) == d3
         @test closure(d3) == d3
         @test interior(d3_open) == d3_open
+        @test boundary(d3) == LevelSet(cos, 0.5)
         @test 3.0 ∈ d3
         @test 0.0 ∉ d3
         @test 0.0 ∉ d3_open
@@ -1037,6 +1038,7 @@ end
         @test closure(d4_open) == d4
         @test closure(d4) == d4
         @test interior(d4_open) == d4_open
+        @test boundary(d4) == ZeroSet{SVector{2,Float64}}(prod)
         @test SA[0.1,0.3] ∉ d4
         @test SA[-0.1,0.3] ∈ d4
         @test SA[-0.1,-0.3] ∉ d4
@@ -1051,6 +1053,7 @@ end
         @test closure(d5_open) == d5
         @test closure(d5) == d5
         @test interior(d5_open) == d5_open
+        @test boundary(d5) == LevelSet(cos, 0.5)
         @test 3.0 ∉ d5
         @test 0.0 ∈ d5
         @test 0.0 ∈ d5
@@ -1068,6 +1071,7 @@ end
         @test closure(d6_open) == d6
         @test closure(d6) == d6
         @test interior(d6_open) == d6_open
+        @test boundary(d6) == ZeroSet{SVector{2,Float64}}(prod)
         @test SA[0.1,0.3] ∈ d6
         @test SA[-0.1,0.3] ∉ d6
         @test SA[-0.1,-0.3] ∈ d6

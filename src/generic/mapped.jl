@@ -109,3 +109,12 @@ mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap
 canonicaldomain(d::MappedDomain) = superdomain(d)
 fromcanonical(d::MappedDomain) = forward_map(d)
 tocanonical(d::MappedDomain) = inverse_map(d)
+
+boundary(d::MappedDomain) = _boundary(d, superdomain(d), inverse_map(d))
+_boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
+
+interior(d::MappedDomain) = _interior(d, superdomain(d), inverse_map(d))
+_interior(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
+
+closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
+_closure(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)

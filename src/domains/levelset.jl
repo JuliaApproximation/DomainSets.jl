@@ -73,6 +73,7 @@ similardomain(d::SubzeroSet{S,C}, ::Type{T}) where {S,C,T} =
 interior(d::SubzeroSet{T}) where {T} = SubzeroSet{T,:open}(d.f)
 closure(d::SubzeroSet{T}) where {T} = SubzeroSet{T,:closed}(d.f)
 
+boundary(d::SubzeroSet{T}) where {T} = ZeroSet{T}(d.f)
 
 "The domain defined by `f(x) <= C` (or `f(x) < C`) for a given function `f` and constant `C`."
 struct SublevelSet{T,C,F,S} <: AbstractSublevelSet{T,C}
@@ -89,6 +90,8 @@ similardomain(d::SublevelSet{S,C}, ::Type{T}) where {S,C,T} =
 
 interior(d::SublevelSet{T}) where {T} = SublevelSet{T,:open}(d.f, d.level)
 closure(d::SublevelSet{T}) where {T} = SublevelSet{T,:closed}(d.f, d.level)
+
+boundary(d::SublevelSet{T}) where {T} = LevelSet{T}(d.f, d.level)
 
 
 "Supertype of superlevel set domains."
@@ -119,6 +122,8 @@ similardomain(d::SuperzeroSet{S,C}, ::Type{T}) where {S,C,T} =
 interior(d::SuperzeroSet{T}) where {T} = SuperzeroSet{T,:open}(d.f)
 closure(d::SuperzeroSet{T}) where {T} = SuperzeroSet{T,:closed}(d.f)
 
+boundary(d::SuperzeroSet{T}) where {T} = ZeroSet{T}(d.f)
+
 
 "The domain defined by `f(x) >= C` (or `f(x) > C`) for a given function `f` and constant `C`."
 struct SuperlevelSet{T,C,F,S} <: AbstractSuperlevelSet{T,C}
@@ -135,6 +140,8 @@ similardomain(d::SuperlevelSet{S,C}, ::Type{T}) where {S,C,T} =
 
 interior(d::SuperlevelSet{T}) where {T} = SuperlevelSet{T,:open}(d.f, d.level)
 closure(d::SuperlevelSet{T}) where {T} = SuperlevelSet{T,:closed}(d.f, d.level)
+
+boundary(d::SuperlevelSet{T}) where {T} = LevelSet{T}(d.f, d.level)
 
 ## Additional functionality
 
