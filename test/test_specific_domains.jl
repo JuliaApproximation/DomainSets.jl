@@ -208,6 +208,9 @@ end
             @test minimum(d) == infimum(d) == leftendpoint(d)
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
+            # test for promotion
+            @test intersect(0..1, ChebyshevInterval()) == 0..1
+
             @test d ∩ d === d
             @test d ∪ d === d
             @test d \ d === EmptySpace{T}()
@@ -607,6 +610,20 @@ end
         @test UnitBall{Vector{Float64}}(2) isa VectorUnitBall{Float64}
         @test_throws MethodError UnitBall{Vector{Float64}}()
 
+        @test UnitBall{Float64,:open}() isa StaticUnitBall{Float64,:open}
+        @test UnitBall{Float64,:closed}(1) isa StaticUnitBall{Float64,:closed}
+        @test_throws AssertionError UnitBall{Float64,:closed}(2)
+        @test UnitBall{SVector{2,Float64},:open}(Val(2)) isa EuclideanUnitBall{2,Float64,:open}
+        @test_throws AssertionError UnitBall{SVector{2,Float64},:closed}(Val(3))
+        @test UnitBall{SVector{2,Float64},:open}(2) isa EuclideanUnitBall{2,Float64,:open}
+        @test_throws AssertionError UnitBall{SVector{2,Float64},:closed}(3)
+        @test UnitBall{SVector{2,Float64},:open}() isa EuclideanUnitBall{2,Float64,:open}
+        @test UnitBall{Vector{Float64},:closed}(2) isa VectorUnitBall{Float64,:closed}
+        @test_throws MethodError UnitBall{Vector{Float64},:open}()
+
+        @test DynamicUnitBall{Float64}(1) isa DynamicUnitBall{Float64}
+        @test_throws AssertionError DynamicUnitBall{Float64}(2)
+
         D = UnitDisk()
         @test SA[1.,0.] ∈ D
         @test SA[1.,1.] ∉ D
@@ -621,6 +638,10 @@ end
 
         @test convert(SublevelSet, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
         @test convert(SublevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SublevelSet{SVector{2,Float64},:open}
+
+        @test convert(Interval, UnitBall{Float64}()) === ChebyshevInterval()
+        @test convert(Interval, UnitBall{Float64,:open}()) === OpenInterval(-1.0, 1.0)
+        @test UnitBall{Float64}() == ChebyshevInterval()
 
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
@@ -765,6 +786,9 @@ end
         @test UnitSphere{SVector{2,Float64}}() isa EuclideanUnitSphere{2,Float64}
         @test UnitSphere{Vector{Float64}}(2) isa VectorUnitSphere{Float64}
         @test_throws MethodError UnitSphere{Vector{Float64}}()
+
+        @test DynamicUnitSphere{Float64}(1) isa DynamicUnitSphere{Float64}
+        @test_throws AssertionError DynamicUnitSphere{Float64}(2)
 
         C = UnitCircle()
         @test SA[1.,0.] ∈ C

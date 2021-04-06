@@ -34,7 +34,9 @@ convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 
 compatible_eltype(d1, d2) = isconcretetype(promote_type(eltype(d1),eltype(d2)))
 
-
+promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
+promote(d1::Domain, d2) = promote_domains((d1,d2))
+promote(d1, d2::Domain) = promote_domains((d1,d2))
 
 "A `EuclideanDomain` is any domain whose eltype is `<:StaticVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
@@ -139,50 +141,5 @@ isreal(d::Domain) = isreal(eltype(d))
 infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
 supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
 
-
-# override minimum and maximum for closed sets
 function boundary end
 const ∂ = boundary
-
-## Mappings to and from a canonical domain
-
-"""
-Return an associated canonical domain, if any, of the given domain.
-
-Optionally, additional arguments can be used to specify one of several
-canonical domains.
-"""
-canonicaldomain(d::Domain, args...) = d
-
-"Return a map from the domain to its canonical domain."
-tocanonical(d, args...) = IdentityMap{eltype(d)}(dimension(d))
-
-"Return a map to a domain from its canonical domain."
-fromcanonical(d, args...) = IdentityMap{eltype(d)}(dimension(d))
-
-"Return a map from domain `d1` to domain `d2`."
-mapto(d1, d2) = mapto1(d1, d2)
-
-# simplify the first argument
-mapto1(d1, d2) = _mapto1(d1, d2, canonicaldomain(d1))
-function _mapto1(d1, d2, cd)
-    if d1 == cd
-        mapto2(d1, d2)
-    else
-        mapto(cd, d2) ∘ tocanonical(d1)
-    end
-end
-# simplify the second argument
-mapto2(d1, d2) = _mapto2(d1, d2, canonicaldomain(d2))
-function _mapto2(d1, d2, cd)
-    if d2 == cd
-        no_known_mapto(d1, d2)
-    else
-        fromcanonical(d2) ∘ mapto(d1, cd)
-    end
-end
-
-no_known_mapto(d1, d2) = d1 == d2 ? StaticIdentityMap{eltype(d1)}() : error("No map known between $(d1) and $(d2).")
-
-"Return a parameterization of the given domain."
-parameterization(d::Domain) = fromcanonical(d)

@@ -119,6 +119,29 @@ function test_generic_map(m)
     end
 end
 
+function test_isomorphisms(T)
+    m1 = DomainSets.VectorToNumber{T}()
+    @test m1(SA[1.0]) == 1.0
+    m1b = DomainSets.NumberToVector{T}()
+    @test inverse(m1) == m1b
+    @test inverse(m1b) == m1
+    @test m1b(1.0) == SA[1.0]
+
+    m2 = DomainSets.VectorToComplex{T}()
+    @test m2(SA[one(T), one(T)]) == 1 + im
+    m2b = DomainSets.ComplexToVector{T}()
+    @test inverse(m2) == m2b
+    @test inverse(m2b) == m2
+    @test m2b(one(T)+one(T)*im) == SA[one(T),one(T)]
+
+    m3 = DomainSets.VectorToTuple{2,T}()
+    @test m3(SA[one(T), one(T)]) == (one(T),one(T))
+    m3b = DomainSets.TupleToVector{2,T}()
+    @test inverse(m3) == m3b
+    @test inverse(m3b) == m3
+    @test m3b( (one(T),one(T)) ) == SA[one(T),one(T)]
+end
+
 function test_maps(T)
     generic_tests(T)
 
@@ -129,6 +152,7 @@ function test_maps(T)
     test_product_map(T)
     test_wrapped_maps(T)
     test_scaling_maps(T)
+    test_isomorphisms(T)
 end
 
 function generic_tests(T)

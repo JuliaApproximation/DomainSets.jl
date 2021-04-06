@@ -59,6 +59,11 @@ UnitBall{T}(::Val{N}) where {N,T} = StaticUnitBall{T}(Val(N))
 UnitBall{T}() where {T <: StaticTypes} = StaticUnitBall{T}()
 UnitBall{T}(n::Int) where {T} = DynamicUnitBall{T}(n)
 
+UnitBall{T,C}(n::Int) where {T <: StaticTypes,C} = StaticUnitBall{T,C}(n)
+UnitBall{T,C}(::Val{N}) where {N,T,C} = StaticUnitBall{T,C}(Val(N))
+UnitBall{T,C}() where {T <: StaticTypes,C} = StaticUnitBall{T,C}()
+UnitBall{T,C}(n::Int) where {T,C} = DynamicUnitBall{T,C}(n)
+
 
 "The unit ball with fixed dimension(s) specified by the element type."
 struct StaticUnitBall{T,C} <: UnitBall{T,C}
@@ -84,30 +89,43 @@ const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
 
 EuclideanUnitBall{N}() where {N} = EuclideanUnitBall{N,Float64}()
 
+similardomain(ball::StaticUnitBall{S,C}, ::Type{T}) where {S,T,C} =
+    StaticUnitBall{T,C}()
+
 const UnitDisk{T} = EuclideanUnitBall{2,T,:closed}
 UnitDisk() = UnitDisk{Float64}()
 
+## A StaticUnitBall{<:Number} equals the interval [-1,1]  (open or closed)
+convert(::Type{Interval}, d::StaticUnitBall{T,:closed}) where {T <: Number} =
+    ChebyshevInterval{T}()
+convert(::Type{Interval}, d::StaticUnitBall{T,:open}) where {T <: Number} =
+    OpenInterval{T}(-1, 1)
 
+canonicaldomain(d::StaticUnitBall{T}, ::Equal) where {T<:Number} = convert(Interval, d)
+
+# canonicaldomain(d::StaticUnitBall{SVector{1,T}}, ::Isomorphic) where {T} =
+    # convert(Interval, convert(Domain{T}, d))
 
 "The unit ball with variable dimension stored in a data field."
 struct DynamicUnitBall{T,C} <: UnitBall{T,C}
     dimension   ::  Int
+
+    DynamicUnitBall{T,C}(n::Int) where {T,C} = new(n)
+    DynamicUnitBall{T,C}(n::Int) where {T<:StaticTypes,C} =
+        (@assert n == euclideandimension(T); new(n))
 end
 
-DynamicUnitBall(dimension::Int) = DynamicUnitBall{Vector{Float64}}(dimension)
-DynamicUnitBall{T}(dimension::Int) where {T} =
-    DynamicUnitBall{T,:closed}(dimension)
+DynamicUnitBall(n::Int) = DynamicUnitBall{Vector{Float64}}(n)
+DynamicUnitBall{T}(n::Int) where {T} = DynamicUnitBall{T,:closed}(n)
 
 dimension(ball::DynamicUnitBall) = ball.dimension
 
 "The unit ball with vector elements of a given dimension."
 const VectorUnitBall{T,C} = DynamicUnitBall{Vector{T},C}
 
-VectorUnitBall(dimension::Int = 3) = VectorUnitBall{Float64}(dimension)
+VectorUnitBall(n::Int = 3) = VectorUnitBall{Float64}(n)
 VectorUnitDisk() = VectorUnitBall(2)
 
-similardomain(ball::StaticUnitBall{S,C}, ::Type{T}) where {S,T,C} =
-    StaticUnitBall{T,C}()
 similardomain(ball::DynamicUnitBall{S,C}, ::Type{T}) where {S,T,C} =
     DynamicUnitBall{T,C}(ball.dimension)
 
@@ -178,12 +196,12 @@ end
 StaticUnitSphere() = StaticUnitSphere{Float64}()
 StaticUnitSphere(::Val{N}) where {N} = StaticUnitSphere{SVector{N,Float64}}()
 
-StaticUnitSphere{T}() where {T} = StaticUnitSphere{T,:closed}()
-
 StaticUnitSphere{T}(n::Int) where {T} =
     (@assert n == euclideandimension(T); StaticUnitSphere{T}())
 StaticUnitSphere{T}(::Val{N}) where {N,T} =
     (@assert N == euclideandimension(T); StaticUnitSphere{T}())
+
+similardomain(d::StaticUnitSphere, ::Type{T}) where {T} = StaticUnitSphere{T}()
 
 "The unit sphere in a fixed N-dimensional Euclidean space."
 const EuclideanUnitSphere{N,T} = StaticUnitSphere{SVector{N,T}}
@@ -197,19 +215,22 @@ const UnitCircle{T} = EuclideanUnitSphere{2,T}
 "The unit sphere with variable dimension."
 struct DynamicUnitSphere{T} <: UnitSphere{T}
     dimension   ::  Int
+
+    DynamicUnitSphere{T}(n::Int) where {T} = new(n)
+    DynamicUnitSphere{T}(n::Int) where {T<:StaticTypes} =
+        (@assert n == euclideandimension(T); new(n))
 end
 
-DynamicUnitSphere(dimension::Int) = DynamicUnitSphere{Vector{Float64}}(dimension)
+DynamicUnitSphere(n::Int) = DynamicUnitSphere{Vector{Float64}}(n)
 
 dimension(d::DynamicUnitSphere) = d.dimension
 
 "The unit sphere with vector elements of a given dimension."
 const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
 
-VectorUnitSphere(dimension::Int = 3) = VectorUnitSphere{Float64}(dimension)
+VectorUnitSphere(n::Int = 3) = VectorUnitSphere{Float64}(n)
 VectorUnitCircle() = VectorUnitSphere(2)
 
-similardomain(d::StaticUnitSphere, ::Type{T}) where {T} = StaticUnitSphere{T}()
 similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} = DynamicUnitSphere{T}(d.dimension)
 
 show(io::IO, d::UnitSphere) =
@@ -224,13 +245,14 @@ function point_in_domain(d::VectorSphere{T}) where {T}
     p
 end
 
-boundary(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitSphere{N,T}()
-boundary(d::VectorUnitBall{T}) where {T} = VectorUnitSphere{T}(dimension(d))
+boundary(d::StaticUnitBall{T}) where {T} = StaticUnitSphere{T}()
+boundary(d::DynamicUnitBall{T}) where {T} = DynamicUnitSphere{T}(dimension(d))
 
-interior(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitBall{N,T,:open}()
-interior(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:open}(dimension(d))
-closure(d::EuclideanUnitBall{N,T}) where {N,T} = EuclideanUnitBall{N,T,:closed}()
-closure(d::VectorUnitBall{T}) where {T} = VectorUnitBall{T,:closed}(dimension(d))
+interior(d::StaticUnitBall{T}) where {T} = StaticUnitBall{T,:open}()
+interior(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:open}(dimension(d))
+closure(d::StaticUnitBall{T}) where {T} = StaticUnitBall{T,:closed}()
+closure(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:closed}(dimension(d))
+
 
 ################
 # Applications
@@ -251,11 +273,16 @@ ellipse_shape(a::T, b::T) where {T <: Number} = LinearMap(a, b).(UnitDisk{T}())
 
 
 """
-The map `[cos(2πt), sin(2πt)]` from `[0,1)` to the unit circle in `ℝ^2`.
+The map `[cos(2πt), sin(2πt)]` from `[0,1]` to the unit circle in `ℝ^2`.
 """
 struct UnitCircleMap{T} <: Map{T} end
 
 applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
+function applymap!(y, m::UnitCircleMap{T}, t) where {T}
+    y[1] = cos(2*T(pi)*t)
+    y[2] = sin(2*T(pi)*t)
+    y
+end
 
 function gradient(m::UnitCircleMap{T}, t) where {T}
     a = 2*convert(T, pi)
@@ -285,10 +312,8 @@ end
 leftinverse(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
 rightinverse(m::AngleMap{T}) where {T} = UnitCircleMap{T}()
 
-canonicaldomain(d::UnitCircle{T}) where {T} = UnitInterval{T}()
-
-fromcanonical(d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
-tocanonical(d::UnitCircle{T}) where {T} = AngleMap{T}()
+canonicaldomain(d::UnitCircle{T}, ::Parameterization) where {T} = UnitInterval{T}()
+fromcanonical(d::UnitCircle{T}, ::Parameterization) where {T} = UnitCircleMap{T}()
 
 
 ## The complex plane

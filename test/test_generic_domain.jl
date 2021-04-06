@@ -29,6 +29,7 @@ function test_generic_domain(d::Domain)
         catch
         end
     end
+    @test canonicaldomain(d, DomainSets.Equal()) == d
     if canonicaldomain(d) == d
         @test tocanonical(d) == IdentityMap{eltype(d)}(dimension(d))
         @test fromcanonical(d) == IdentityMap{eltype(d)}(dimension(d))

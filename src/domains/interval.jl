@@ -71,18 +71,15 @@ endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 
 similardomain(::UnitInterval, ::Type{T}) where {T} = UnitInterval{T}()
 
-canonicaldomain(d::AbstractInterval) = isinf(width(d)) ? d : UnitInterval{eltype(d)}()
+canonicaldomain(d::AbstractInterval{T}) where {T} = isclosedset(d) ? UnitInterval{T}() : d
 
-tocanonical(d::UnitInterval{T}) where {T} = StaticIdentityMap{T}()
 fromcanonical(d::UnitInterval{T}) where {T} = StaticIdentityMap{T}()
 
 "Map the interval [a,b] to the interval [c,d]."
 interval_map(a, b, c, d) = AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
 
-tocanonical(d::AbstractInterval{T}) where {T} =
-    isinf(width(d)) ? StaticIdentityMap{T}() : interval_map(endpoints(d)..., 0, 1)
 fromcanonical(d::AbstractInterval{T}) where {T} =
-    isinf(width(d)) ? StaticIdentityMap{T}() : interval_map(0, 1, endpoints(d)...)
+    isclosedset(d) ? interval_map(0, 1, endpoints(d)...) : StaticIdentityMap{T}()
 
 
 "The closed interval [-1,1]."

@@ -26,7 +26,7 @@ import Base: *, +, -, /, \, ^,
     size, length, ndims, getindex, eltype, ndims, hash,
     inv, isreal, zero,
     # Types, promotions and conversions
-    convert, widen, promote_rule,
+    convert, widen, promote,
     # Display
     show,
     # Various
@@ -89,7 +89,8 @@ export Domain, EuclideanDomain, VectorDomain,
     volume,
     point_in_domain,
     canonicaldomain, tocanonical, fromcanonical,
-    mapto, parameterization
+    mapto,
+    parameterdomain, parameterization
 
 # from generic/lazy.jl
 export DerivedDomain, superdomain, WrappedDomain
@@ -98,7 +99,7 @@ export DerivedDomain, superdomain, WrappedDomain
 export ProductDomain, productdomain,
     VcatDomain, VectorProductDomain, TupleProductDomain
 
-# from generic/mapped_domain.jl
+# from generic/mapped.jl
 export MappedDomain,
     map_domain,
     mapped_domain,
@@ -170,11 +171,13 @@ include("maps/map.jl")
 include("maps/lazy.jl")
 include("maps/composite.jl")
 include("maps/product.jl")
+include("maps/isomorphism.jl")
 include("maps/basic.jl")
 include("maps/affine.jl")
 include("maps/arithmetics.jl")
 
 include("generic/domain.jl")
+include("generic/canonical.jl")
 include("generic/lazy.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
