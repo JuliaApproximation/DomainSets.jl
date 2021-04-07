@@ -1,8 +1,8 @@
 # Make sure the examples in the README continue to function
 
 @testset "$(rpad("examples",80))" begin
-    using DomainSets, StaticArrays; import DomainSets: ×
-    @test SVector(1,2) in (-1..1) × (0..3)
+    using DomainSets, StaticArrays
+    @test SVector(1,2) in ProductDomain(-1..1, 0..3)
 
     @test SVector(0,0,1.0) in UnitSphere(Val(3))
     @test [0.0,1.0,0.0,0.0] in UnitSphere(4)
@@ -20,4 +20,7 @@
     d = UnitCircle() ∩ (2UnitCircle() .+ SVector(1.0,0.0))
     @test !(SVector(1,0) in d)
     @test SVector(-1,0) in d
+
+    d = LevelSet{SVector{2,Float64}}(prod, 1.0)
+    @test [0.5,2] ∈ d
 end

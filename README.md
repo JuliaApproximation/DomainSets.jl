@@ -32,9 +32,9 @@ Rectangles can be constructed as a product of intervals, where the elements of t
 are `SVector{2}`:
 
 ```julia
-julia> using DomainSets, StaticArrays; import DomainSets: ×
+julia> using DomainSets, StaticArrays
 
-julia> SVector(1,2) in (-1..1) × (0..3)
+julia> SVector(1,2) in ProductDomain(-1..1, 0..3)
 true
 
 julia> UnitInterval()^3
@@ -85,15 +85,23 @@ true
 julia> [0.1,0.2,0.3,-0.1] in UnitBall(4)
 true
 ```
-By default `N=3`, but `UnitDisk` is a special case in 2D:
+By default `N=3`, but `UnitDisk` is a special case in 2D, and so are `ComplexUnitDisk` and `ComplexUnitCircle` in the complex plane:
 ```julia
 julia> SVector(0.1,0.2) in UnitDisk()
+true
+
+julia> 0.5+0.2im ∈ ComplexUnitDisk()
 true
 ```
 
 `UnitBall` itself is an abstract type, hence the examples above return
 concrete types `<:UnitBall`. The types are similar to those associated with
-`UnitSphere`.
+`UnitSphere`. Like intervals, balls can also be open or closed:
+```julia
+julia> EuclideanUnitBall{3,Float64,:open}()
+the 3-dimensional open unit ball
+```
+
 
 ### Product domains
 
@@ -163,6 +171,25 @@ false
 julia> SVector(-1,0) in d
 true
 ```
+
+
+### Level sets
+
+A domain can be defined by the level sets of a function. The domains of all
+points `[x,y]` for which `x*y = 1` or `x*y >= 1` are represented as follows:
+```julia
+julia> d = LevelSet{SVector{2,Float64}}(prod, 1.0)
+level set f(x) = 1.0 with f = prod
+
+julia> [0.5,2] ∈ d
+true
+
+julia> SuperlevelSet{SVector{2,Float64}}(prod, 1.0)
+superlevel set f(x) >= 1.0 with f = prod
+```
+There is also `SublevelSet`, and there are the special cases `ZeroSet`,
+`SubzeroSet` and `SuperzeroSet`.
+
 
 ### The domain interface
 
