@@ -204,9 +204,12 @@ function uniondomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpointsInte
     Interval{L,R,T}(a, b)
 end
 
-# go back to the definition of IntervalSets.jl
-intersectdomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) =
-    intersect(d1, d2)
+function intersectdomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval)
+    # go back to the definition of IntervalSets.jl
+    d = intersect(d1, d2)
+    # but avoid returning an interval like 2..1
+    isempty(d) ? EmptySpace{eltype(d)}() : d
+end
 
 # intersectdomain(d1::AbstractInterval, d2::AbstractInterval) = intersect(d1, d2)
 # uniondomain(d1::AbstractInterval, d2::AbstractInterval) = union(d1, d2)

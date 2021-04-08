@@ -16,10 +16,14 @@ isempty(d::ProductDomain) = any(isempty, elements(d))
 isclosedset(d::ProductDomain) = all(isclosedset, elements(d))
 isopenset(d::ProductDomain) = all(isopenset, elements(d))
 
+issubset(d1::ProductDomain, d2::ProductDomain) =
+	compatibleproductdims(d1, d2) && all(map(issubset, elements(d1), elements(d2)))
+
 volume(d::ProductDomain) = prod(map(volume, elements(d)))
 
 compatibleproductdims(d1::ProductDomain, d2::ProductDomain) =
-	all(map(==, map(dimension, elements(d1)), map(dimension, elements(d2))))
+	dimension(d1) == dimension(d2) &&
+		all(map(==, map(dimension, elements(d1)), map(dimension, elements(d2))))
 
 compatibleproduct(d1::ProductDomain, d2::ProductDomain) =
 	compatibleproductdims(d1, d2) && compatible_eltype(d1, d2)

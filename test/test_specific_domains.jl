@@ -42,6 +42,11 @@ end
         @test d1 \ d2 == d1
         @test d2 \ d1 == d2
         @test d2 \ d2 == d1
+        # Test some promotions
+        @test EmptySpace{Float64}() ∪ (0..1) isa AbstractInterval{Float64}
+        @test EmptySpace{Int}() ∩ (0..1.0) isa EmptySpace{Float64}
+        @test EmptySpace{Int}() \ (0..1.0) isa EmptySpace{Float64}
+        @test (0..1) \ EmptySpace{Float64}() isa AbstractInterval{Float64}
 
         d2 = EmptySpace(SVector{2,Float64})
         @test isempty(d2)
@@ -82,10 +87,12 @@ end
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
         @test d2 ∩ d1 == d2
+        @test (0..1.0) \ FullSpace{Int}() isa EmptySpace{Float64}
         @test typeof(FullSpace(0..1) .+ 1) <: FullSpace
         @test typeof(FullSpace(0..1) * 3) <: FullSpace
         @test infimum(d1) == typemin(Float64)
         @test supremum(d1) == typemax(Float64)
+        @test FullSpace{Int}() == FullSpace{Float64}()
 
         d2 = FullSpace{SVector{2,Float64}}()
         @test SA[0.1,0.2] ∈ d2
@@ -643,6 +650,9 @@ end
         @test convert(Interval, UnitBall{Float64,:open}()) === OpenInterval(-1.0, 1.0)
         @test UnitBall{Float64}() == ChebyshevInterval()
 
+        @test convert(Domain{SVector{2,Float64}}, UnitBall(2)) isa StaticUnitBall
+        @test convert(Domain{Vector{Float64}}, UnitBall(Val(2))) isa DynamicUnitBall
+
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
         @test in(SA[1.0-eps(Float64),0.0], D)
@@ -816,6 +826,9 @@ end
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
         @test eltype(C2) == SVector{2,BigFloat}
 
+        @test convert(Domain{SVector{2,Float64}}, UnitSphere(2)) isa StaticUnitSphere
+        @test convert(Domain{Vector{Float64}}, UnitSphere(Val(2))) isa DynamicUnitSphere
+
         C = 2UnitCircle() .+ SA[1.,1.]
         @test approx_in(SA[3.,1.], C)
 
@@ -831,6 +844,8 @@ end
         @test eltype(S2) == SVector{3,BigFloat}
 
         @test Basis3Vector() in S
+
+        @test issubset(UnitSphere(), UnitBall())
 
         S = 2 * UnitSphere() .+ SA[1.,1.,1.]
         @test approx_in(SA[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
@@ -1267,19 +1282,19 @@ end
         @test volume(UnitCube()) == 1
         @test EuclideanUnitCube{2}() == EuclideanUnitCube{2,Float64}()
         @test UnitSquare() == UnitSquare{Float64}()
-        @test UnitHyperCube(Val(2)) isa EuclideanUnitCube{2,Float64}
-        @test UnitHyperCube{BigFloat}(Val(2)) isa EuclideanUnitCube{2,BigFloat}
+        @test UnitCube(Val(2)) isa EuclideanUnitCube{2,Float64}
+        @test UnitCube{SVector{2,BigFloat}}(Val(2)) isa EuclideanUnitCube{2,BigFloat}
 
         d1 = VectorUnitCube{Float64}(4)
         @test VectorUnitCube(4) == d1
-        @test UnitHyperCube(4) == d1
-        @test UnitHyperCube{Float64}(4) == d1
+        @test UnitCube(4) == d1
+        @test UnitCube{Vector{Float64}}(4) == d1
         @test dimension(d1) == 4
         @test element(d1, 1) == 0..1
         @test SA[0.9,0.9,0.4,0.2] ∈ d1
         @test [1.2,0.3,0.4,0.6] ∉ d1
 
-        @test ProductDomain([UnitInterval(),UnitInterval()]) isa DomainSets.DynamicUnitCube{Float64}
+        @test ProductDomain([UnitInterval(),UnitInterval()]) isa VectorUnitCube{Float64}
         @test ProductDomain{Vector{BigFloat}}([UnitInterval(),UnitInterval()]) isa VectorProductDomain{Vector{BigFloat},Vector{UnitInterval{BigFloat}}}
         @test ProductDomain{SVector{2,BigFloat}}(UnitInterval(),UnitInterval()) isa EuclideanUnitCube{2,BigFloat}
         @test ProductDomain{SVector{2,BigFloat}}(SVector(UnitInterval(),UnitInterval())) isa EuclideanUnitCube{2,BigFloat}
@@ -1295,39 +1310,43 @@ end
         @test approx_in(SA[-0.1,-0.1], D, 0.1)
         @test !approx_in(SA[-0.1,-0.1], D, 0.09)
 
+        @test intersect(ChebyshevInterval()^3, UnitInterval()^3) isa EuclideanUnitCube{3,Float64}
+
         #Cube
         D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
         @test SA[0.9, 0.6, -2.5] ∈ D
         @test SA[0.0, 0.6, 0.0] ∉ D
+
+        @test issubset( (0..1)^3, (-1..2)^3 )
     end
-    @testset "HyperRectangle" begin
+    @testset "Rectangle" begin
         d1 = (-1.0..1.0) × (-1.0..1.0)
 
         d4 = d1 × (-1.0..1.0)
-        @test d4 isa HyperRectangle
+        @test d4 isa Rectangle
         @test SA[0.5,0.5,0.8] ∈ d4
         @test SA[-1.1,0.3,0.1] ∉ d4
         @test point_in_domain(d4) ∈ d4
 
         d5 = (-1.0..1.)×d1
-        @test d5 isa HyperRectangle
+        @test d5 isa Rectangle
         @test SA[0.,0.5,0.5] ∈ d5
         @test SA[0.,-1.1,0.3] ∉ d5
         @test point_in_domain(d5) ∈ d5
 
         d6 = d1 × d1
-        @test d6 isa HyperRectangle
+        @test d6 isa Rectangle
         @test SA[0.,0.,0.5,0.5] ∈ d6
         @test SA[0.,0.,-1.1,0.3] ∉ d6
         @test point_in_domain(d6) ∈ d6
 
-        @test HyperRectangle( SA[1,2], SA[2.0,3.0]) isa HyperRectangle{SVector{2,Float64}}
-        @test HyperRectangle([0..1, 2..3]) isa HyperRectangle{Vector{Int}}
+        @test Rectangle( SA[1,2], SA[2.0,3.0]) isa Rectangle{SVector{2,Float64}}
+        @test Rectangle([0..1, 2..3]) isa Rectangle{Vector{Int}}
 
-        @test_throws ErrorException HyperRectangle(UnitCircle(), UnitDisk())
-        @test_throws ErrorException HyperRectangle(OpenInterval(1,2), 3..4)
+        @test_throws ErrorException Rectangle(UnitCircle(), UnitDisk())
+        @test_throws ErrorException Rectangle(OpenInterval(1,2), 3..4)
 
-        bnd = boundary(HyperRectangle([1,2],[3,4]))
+        bnd = boundary(Rectangle([1,2],[3,4]))
         @test [1,3] ∈ bnd
         @test [1,2.5] ∈ bnd
         @test [1.5,4] ∈ bnd
@@ -1353,11 +1372,11 @@ end
         @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
 
         @test ProductDomain((d1,d3)) isa VcatDomain
-        @test ProductDomain((d1,d2)) isa HyperRectangle
+        @test ProductDomain((d1,d2)) isa Rectangle
 
         @test volume(ProductDomain(d1,d2)) == 2
 
-        @test ProductDomain(SVector(0..1, 0..2)) isa HyperRectangle{SVector{2,Int}}
+        @test ProductDomain(SVector(0..1, 0..2)) isa Rectangle{SVector{2,Int}}
         @test ProductDomain(1.05 * UnitDisk(), -1.0 .. 1.0) isa VcatDomain{3,Float64}
         @test ProductDomain(['a','b'], 0..1) isa TupleProductDomain
 
@@ -1368,8 +1387,8 @@ end
         @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
 
         # intersection of product domains
-        @test ProductDomain([0..1.0, 0..2.0]) ∩ ProductDomain([0..1, 0..3]) isa HyperRectangle{Vector{Float64}}
-        @test ProductDomain(0..1.0, 0..2.0) ∩ ProductDomain(0..1, 0..3) isa HyperRectangle{SVector{2,Float64}}
+        @test ProductDomain([0..1.0, 0..2.0]) ∩ ProductDomain([0..1, 0..3]) isa Rectangle{Vector{Float64}}
+        @test ProductDomain(0..1.0, 0..2.0) ∩ ProductDomain(0..1, 0..3) isa Rectangle{SVector{2,Float64}}
 
         # Generic functionality
         long_domain = ProductDomain([0..i for i in 1:20])

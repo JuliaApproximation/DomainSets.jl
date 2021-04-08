@@ -18,6 +18,7 @@ convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
 
 "Promote the given domains to have a common element type."
 promote_domains() = ()
+promote_domains(domains...) = promote_domains(domains)
 promote_domains(domains) = convert_eltype.(mapreduce(eltype, promote_type, domains), domains)
 
 promote_domains(domains::AbstractSet{<:Domain{T}}) where {T} = domains

@@ -50,6 +50,10 @@
         @test element(u45b,2) isa AbstractArray{Float64}
         @test [1,3] ∪ (0.0..1.5) isa Domain{Float64}
 
+        # larger union expressions
+        @test uniondomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa FullSpace
+        @test uniondomain(0..1, 1..3, Point(0.4)) == 0..3
+
         # ordering doesn't matter
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
@@ -110,7 +114,8 @@
         @test 1.1 ∉ d45
         @test convert(Domain{BigFloat}, d45) isa Domain{BigFloat}
 
-        @test_throws MethodError intersectdomain()
+        @test intersectdomain() == EmptySpace{Any}()
+        @test intersectdomain(UnitDisk()) == UnitDisk()
 
         @test (0..1) ∩ [1.5] isa IntersectDomain{Float64}
         @test [0.5] ∩ (1..2) isa IntersectDomain{Float64}

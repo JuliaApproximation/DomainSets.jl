@@ -144,7 +144,7 @@ julia> ProductDomain(0..2, 4..5, 6..7.0)
 0.0..2.0 x 4.0..5.0 x 6.0..7.0
 
 julia> typeof(ans)
-HyperRectangle{SVector{3, Float64}}
+Rectangle{SVector{3, Float64}}
 ```
 
 

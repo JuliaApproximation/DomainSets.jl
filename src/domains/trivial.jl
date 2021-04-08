@@ -28,22 +28,17 @@ closure(d::EmptySpace) = d
 
 # Arithmetic operations
 
-uniondomain(d1::EmptySpace, d2::EmptySpace) = d1
-uniondomain(d1::Domain, d2::EmptySpace) = d1
-uniondomain(d1::EmptySpace, d2::Domain) = d2
+issubset1(d1::EmptySpace, d2) = true
+issubset2(d1, d2::EmptySpace) = isempty(d1)
 
-intersectdomain(d1::EmptySpace, d2::EmptySpace) = d1
-intersectdomain(d1::Domain, d2::EmptySpace) = d2
-intersectdomain(d1::EmptySpace, d2::Domain) = d1
-
-setdiffdomain(d1::EmptySpace, d2::EmptySpace) = d1
-setdiffdomain(d1::EmptySpace, d2::Domain) = d1
-setdiffdomain(d1::Domain, d2::EmptySpace) = d1
+# setdiffdomain2(d1, d2::EmptySpace) = d2
 
 map_domain(map::Map{T}, d::EmptySpace{T}) where {T} = d
 mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
 
-==(::EmptySpace, ::EmptySpace) = true
+==(d1::EmptySpace, d2::EmptySpace) = true
+isequal1(d1::EmptySpace, d2) = isempty(d2)
+isequal2(d1, d2::EmptySpace) = isempty(d1)
 
 show(io::IO, d::EmptySpace) = print(io, "{} (empty domain)")
 
@@ -59,6 +54,8 @@ FullSpace(d) = FullSpace{eltype(d)}()
 fullspace(d) = fullspace(eltype(d))
 fullspace(::Type{T}) where {T} = FullSpace{T}()
 
+isfullspace(d::FullSpace) = true
+isfullspace(d::Domain) = false
 
 similardomain(::FullSpace, ::Type{T}) where {T} = FullSpace{T}()
 
@@ -83,14 +80,8 @@ closure(d::FullSpace) = d
 
 # Arithmetic operations
 
-uniondomain(d1::FullSpace, d2::FullSpace) = d1
-uniondomain(d1::Domain, d2::FullSpace) = d2
-uniondomain(d1::FullSpace, d2::Domain) = d1
-
-intersectdomain(d1::FullSpace, d2::FullSpace) = d1
-intersectdomain(d1::Domain, d2::FullSpace) = d1
-intersectdomain(d1::FullSpace, d2::Domain) = d2
-
+issubset1(d1::FullSpace, d2) = isfullspace(d2)
+issubset2(d1, d2::FullSpace) = true
 
 map_domain(m::AbstractAffineMap{T}, d::FullSpace{T}) where {T} = d
 

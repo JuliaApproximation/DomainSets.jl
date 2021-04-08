@@ -147,10 +147,11 @@ export UnitBall,
     ellipse, ellipse_shape, cylinder,
     gradient
 # from domains/cube.jl
-export UnitHyperCube,
-    UnitSquare, UnitCube,
+export UnitCube,
+    StaticUnitCube, DynamicUnitCube,
     EuclideanUnitCube, VectorUnitCube,
-    HyperRectangle
+    UnitSquare, UnitCube,
+    Rectangle
 # from domain/levelset.jl
 export LevelSet, ZeroSet,
     SublevelSet, SubzeroSet,

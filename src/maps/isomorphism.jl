@@ -42,3 +42,17 @@ inverse(::TupleToVector{N,T}) where {N,T} = VectorToTuple{N,T}()
 
 applymap(::VectorToTuple, x) = tuple(x...)
 applymap(::TupleToVector, x) = SVector(x)
+
+
+"Map a nested vector or tuple to a flat vector."
+struct NestedToFlat{N,T,U,DIM} <: Isomorphism{U,SVector{N,T}}
+end
+"Map a flattened vector to a nested one."
+struct FlatToNested{N,T,U,DIM} <: Isomorphism{SVector{N,T},U}
+end
+
+inverse(::NestedToFlat{N,T,U,DIM}) where {N,T,U,DIM} = FlatToNested{N,T,U,DIM}()
+inverse(::FlatToNested{N,T,U,DIM}) where {N,T,U,DIM} = NestedToFlat{N,T,U,DIM}()
+
+applymap(::NestedToFlat{N,T,U,DIM}, x) where {N,T,U,DIM} = convert_tocartesian(x, Val{DIM}())
+applymap(::FlatToNested{N,T,U,DIM}, x) where {N,T,U,DIM} = convert_fromcartesian(x, Val{DIM}())

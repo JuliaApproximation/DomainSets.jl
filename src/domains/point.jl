@@ -60,6 +60,6 @@ function setdiffdomain(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
     return d
 end
 
-issubset(p::Point, d::Domain) = p.x ∈ d
+issubset1(d1::Point, d2) = d1.x ∈ d2
 
 setdiffdomain1(p::Point, d2) = issubset(p, d2) ? EmptySpace{eltype(p)}() : p

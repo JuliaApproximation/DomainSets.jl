@@ -87,7 +87,7 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 
 ## Equality for domains
 
-==(d1::Domain, d2::Domain) = isequal1(d1, d2)
+==(d1::Domain, d2::Domain) = isequal1(promote_domains(d1, d2)...)
 # simplify the first argument
 isequal1(d1, d2) = _isequal1(d1, d2, simplify(d1))
 _isequal1(d1::D, d2, sd::D) where {D} = isequal2(d1, d2)

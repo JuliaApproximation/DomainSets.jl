@@ -89,8 +89,10 @@ const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
 
 EuclideanUnitBall{N}() where {N} = EuclideanUnitBall{N,Float64}()
 
-similardomain(ball::StaticUnitBall{S,C}, ::Type{T}) where {S,T,C} =
+similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
     StaticUnitBall{T,C}()
+similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T} =
+    DynamicUnitBall{T,C}(dimension(d))
 
 const UnitDisk{T} = EuclideanUnitBall{2,T,:closed}
 UnitDisk() = UnitDisk{Float64}()
@@ -126,8 +128,10 @@ const VectorUnitBall{T,C} = DynamicUnitBall{Vector{T},C}
 VectorUnitBall(n::Int = 3) = VectorUnitBall{Float64}(n)
 VectorUnitDisk() = VectorUnitBall(2)
 
-similardomain(ball::DynamicUnitBall{S,C}, ::Type{T}) where {S,T,C} =
-    DynamicUnitBall{T,C}(ball.dimension)
+similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T} =
+    DynamicUnitBall{T,C}(dimension(d))
+similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
+    StaticUnitBall{T,C}()
 
 
 show(io::IO, d::UnitBall{T,:closed}) where {T} =
@@ -188,6 +192,7 @@ UnitSphere{T}(::Val{N}) where {N,T} = StaticUnitSphere{T}(Val(N))
 UnitSphere{T}() where {T <: StaticTypes} = StaticUnitSphere{T}()
 UnitSphere{T}(n::Int) where {T} = DynamicUnitSphere{T}(n)
 
+issubset1(d1::UnitSphere, d2::UnitBall) = dimension(d1) == dimension(d2)
 
 "The unit sphere with fixed dimension(s) specified by the element type."
 struct StaticUnitSphere{T} <: UnitSphere{T}
@@ -201,7 +206,11 @@ StaticUnitSphere{T}(n::Int) where {T} =
 StaticUnitSphere{T}(::Val{N}) where {N,T} =
     (@assert N == euclideandimension(T); StaticUnitSphere{T}())
 
-similardomain(d::StaticUnitSphere, ::Type{T}) where {T} = StaticUnitSphere{T}()
+similardomain(d::StaticUnitSphere, ::Type{T}) where {T<:StaticTypes} =
+    StaticUnitSphere{T}()
+similardomain(d::StaticUnitSphere, ::Type{T}) where {T} =
+    DynamicUnitSphere{T}(dimension(d))
+
 
 "The unit sphere in a fixed N-dimensional Euclidean space."
 const EuclideanUnitSphere{N,T} = StaticUnitSphere{SVector{N,T}}
@@ -231,7 +240,10 @@ const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
 VectorUnitSphere(n::Int = 3) = VectorUnitSphere{Float64}(n)
 VectorUnitCircle() = VectorUnitSphere(2)
 
-similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} = DynamicUnitSphere{T}(d.dimension)
+similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} =
+    DynamicUnitSphere{T}(d.dimension)
+similardomain(d::DynamicUnitSphere, ::Type{T}) where {T <: StaticTypes} =
+    StaticUnitSphere{T}()
 
 show(io::IO, d::UnitSphere) =
     dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")

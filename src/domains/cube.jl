@@ -1,111 +1,151 @@
 
 "A `HyperRectangle` is the cartesian product of intervals."
-abstract type AbstractHyperRectangle{T} <: ProductDomain{T} end
+abstract type HyperRectangle{T} <: ProductDomain{T} end
 
-"A `HyperCube` is a hyperrectangle with equal side lengths in each dimension."
-abstract type HyperCube{T} <: AbstractHyperRectangle{T} end
+"A `Cube` is a hyperrectangle with equal side lengths in each dimension."
+abstract type Cube{T} <: HyperRectangle{T} end
+
+"A cube in a fixed N-dimensional Euclidean space."
+const EuclideanCube{N,T} = Cube{SVector{N,T}}
+
+"A cube with vector elements of variable length."
+const VectorCube{T} = Cube{Vector{T}}
+
+# This will cause a warning if vectors of different length are used with cubes
+iscompatiblepair(x::AbstractVector, d::VectorCube) = length(x) == dimension(d)
+
 
 "The unit cube is the domain `[0,1]^d`."
-abstract type UnitHyperCube{T} <: HyperCube{T} end
+abstract type UnitCube{T} <: Cube{T} end
 
-element(d::UnitHyperCube, i) =
+element(d::UnitCube, i) =
     (1 <= i <= dimension(d) || throw(BoundsError); UnitInterval{numtype(d)}())
 
-volume(d::UnitHyperCube) = 1
+volume(d::UnitCube) = 1
+
 
 "A unit cube that is specified by the element type `T`."
-struct StaticUnitCube{T} <: UnitHyperCube{T}
+struct StaticUnitCube{T} <: UnitCube{T}
 end
+
+StaticUnitCube() = StaticUnitCube{Float64}()
+StaticUnitCube(::Val{N}) where {N} = StaticUnitCube{SVector{N,Float64}}()
+
+StaticUnitCube{T}(n::Int) where {T} =
+    (@assert n == euclideandimension(T); StaticUnitCube{T}())
+StaticUnitCube{T}(::Val{N}) where {N,T} =
+    (@assert N == euclideandimension(T); StaticUnitCube{T}())
+
+similardomain(d::StaticUnitCube, ::Type{T}) where {T<:StaticTypes} =
+    StaticUnitCube{T}()
+similardomain(d::StaticUnitCube, ::Type{T}) where {T} =
+    DynamicUnitCube{T}(dimension(d))
 
 elements(d::StaticUnitCube{SVector{N,T}}) where {N,T} =
     ntuple(x->UnitInterval{T}(), Val(N))
 
 "The unit cube in a fixed N-dimensional space."
 const EuclideanUnitCube{N,T} = StaticUnitCube{SVector{N,T}}
-const UnitSquare{T} = EuclideanUnitCube{2,T}
-const UnitCube{T} = EuclideanUnitCube{3,T}
 
 EuclideanUnitCube{N}() where {N} = EuclideanUnitCube{N,Float64}()
-UnitSquare() = UnitSquare{Float64}()
-UnitCube() = UnitCube{Float64}()
+
+const UnitSquare{T} = EuclideanUnitCube{2,T}
+
 
 "A unit cube whose dimension is specified by a field."
-struct DynamicUnitCube{T} <: UnitHyperCube{T}
+struct DynamicUnitCube{T} <: UnitCube{T}
     dimension   ::  Int
+
+    DynamicUnitCube{T}(n::Int) where {T} = new(n)
+    DynamicUnitCube{T}(n::Int) where {T<:StaticTypes} =
+        (@assert n == euclideandimension(T); new(n))
 end
+
+DynamicUnitCube(n::Int) = DynamicUnitCube{Vector{Float64}}(n)
 
 dimension(d::DynamicUnitCube) = d.dimension
 
 elements(d::DynamicUnitCube) = map(x->UnitInterval{numtype(d)}(), 1:dimension(d))
 
+similardomain(d::DynamicUnitCube, ::Type{T}) where {T} =
+    DynamicUnitCube{T}(d.dimension)
+similardomain(d::DynamicUnitCube, ::Type{T}) where {T <: StaticTypes} =
+    StaticUnitCube{T}()
+
 "The unit cube with vector elements of a given dimension."
 const VectorUnitCube{T} = DynamicUnitCube{Vector{T}}
 
-VectorUnitCube(n::Int) = VectorUnitCube{Float64}(n)
+VectorUnitCube(n::Int = 3) = VectorUnitCube{Float64}(n)
+VectorUnitSquare() = VectorUnitCube(2)
 
-UnitHyperCube(n::Int) = UnitHyperCube{Vector{Float64}}(n)
-UnitHyperCube(::Val{N}) where {N} = EuclideanUnitCube{N}()
-UnitHyperCube(domains::UnitInterval...) = UnitHyperCube(domains)
-UnitHyperCube(domains::NTuple{N,UnitInterval{T}}) where {N,T} =
-    UnitHyperCube{SVector{N,T}}(domains)
-UnitHyperCube(domains::SVector{N,UnitInterval{T}}) where {N,T} =
-    UnitHyperCube{SVector{N,T}}(domains)
 
-UnitHyperCube{T}(n::Int) where {T} = DynamicUnitCube{T}(n)
-UnitHyperCube{T}(::Val{N}) where {N,T} = EuclideanUnitCube{N,T}()
-UnitHyperCube{T}(domains::UnitInterval...) where {T} = UnitHyperCube{T}(domains)
-UnitHyperCube{T}(domain::NTuple{N,<:UnitInterval}) where {N,T<:SVector{N}} =
+UnitCube(n::Int) = DynamicUnitCube(n)
+UnitCube(::Val{N} = Val(3)) where {N} = EuclideanUnitCube{N}()
+
+UnitCube{T}(n::Int) where {T <: StaticTypes} = StaticUnitCube{T}(n)
+UnitCube{T}(::Val{N}) where {N,T} = StaticUnitCube{T}(Val(N))
+UnitCube{T}() where {T <: StaticTypes} = StaticUnitCube{T}()
+UnitCube{T}(n::Int) where {T} = DynamicUnitCube{T}(n)
+
+UnitCube(domains::UnitInterval...) = UnitCube(domains)
+UnitCube(domains::NTuple{N,UnitInterval{T}}) where {N,T} =
+    UnitCube{SVector{N,T}}(domains)
+UnitCube(domains::SVector{N,UnitInterval{T}}) where {N,T} =
+    UnitCube{SVector{N,T}}(domains)
+
+UnitCube{T}(domains::UnitInterval...) where {T} = UnitCube{T}(domains)
+UnitCube{T}(domain::NTuple{N,<:UnitInterval}) where {N,T<:SVector{N}} =
     StaticUnitCube{T}()
-UnitHyperCube{T}(domain::SVector{N,<:UnitInterval}) where {N,T<:SVector{N}} =
+UnitCube{T}(domain::SVector{N,<:UnitInterval}) where {N,T<:SVector{N}} =
     StaticUnitCube{T}()
 
 # Constructor: careful about ambiguities with FixedInterval arguments below
-ProductDomain(domains::UnitInterval...) = UnitHyperCube(domains...)
-ProductDomain(domains::NTuple{N,<:UnitInterval}) where {N} = UnitHyperCube(domains)
-ProductDomain(domains::SVector{N,<:UnitInterval}) where {N} = UnitHyperCube(domains)
+ProductDomain(domains::UnitInterval...) = UnitCube(domains...)
+ProductDomain(domains::NTuple{N,<:UnitInterval}) where {N} = UnitCube(domains)
+ProductDomain(domains::SVector{N,<:UnitInterval}) where {N} = UnitCube(domains)
 ProductDomain(domains::AbstractVector{<:UnitInterval{T}}) where {T} =
-    UnitHyperCube{T}(length(domains))
-ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:SVector{N,S}} = UnitHyperCube{T}(domains...)
-ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitHyperCube{T}(domains)
-ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitHyperCube{T}(domains)
-ProductDomain{T}(domains::AbstractVector{<:UnitInterval{T}}) where {T} = UnitHyperCube{T}(domains)
+    VectorUnitCube{T}(length(domains))
+ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains...)
+ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains)
+ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains)
+ProductDomain{T}(domains::AbstractVector{<:UnitInterval{T}}) where {T} = VectorUnitCube{T}(domains)
 
 
-"An N-dimensional hyperrectangle is the cartesian product of closed intervals."
-struct HyperRectangle{T} <: AbstractHyperRectangle{T}
+"An N-dimensional rectangle is the cartesian product of closed intervals."
+struct Rectangle{T} <: HyperRectangle{T}
     a   ::  T
     b   ::  T
 
-    function HyperRectangle{T}(a::T,b::T) where {T}
+    function Rectangle{T}(a::T,b::T) where {T}
         @assert length(a)==length(b)
         new(a,b)
     end
 end
 
-dimension(d::HyperRectangle) = length(d.a)
-element(d::HyperRectangle, i) = ClosedInterval(d.a[i],d.b[i])
-elements(d::HyperRectangle) = map(ClosedInterval, d.a, d.b)
+dimension(d::Rectangle) = length(d.a)
+element(d::Rectangle, i) = ClosedInterval(d.a[i],d.b[i])
+elements(d::Rectangle) = map(ClosedInterval, d.a, d.b)
 
-HyperRectangle(a, b) = HyperRectangle(promote(a,b)...)
-HyperRectangle(a::T, b::T) where {T} = HyperRectangle{T}(a, b)
-HyperRectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
-    HyperRectangle(SVector{N,T}(a), SVector{N,T}(b))
+Rectangle(a, b) = Rectangle(promote(a,b)...)
+Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
+Rectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
+    Rectangle(SVector{N,T}(a), SVector{N,T}(b))
 
-HyperRectangle(domains::ClosedInterval...) = HyperRectangle(promote_domains(domains)...)
-HyperRectangle(domains::ClosedInterval{T}...) where {T} =
-    HyperRectangle(map(infimum, domains), map(supremum, domains))
-HyperRectangle(domains::AbstractVector{<:ClosedInterval}) =
-    HyperRectangle(map(infimum, domains), map(supremum, domains))
-HyperRectangle(domains::Domain...) =
-    error("The HyperRectangle constructor expects two points or a list of intervals (closed).")
+Rectangle(domains::ClosedInterval...) = Rectangle(promote_domains(domains)...)
+Rectangle(domains::ClosedInterval{T}...) where {T} =
+    Rectangle(map(infimum, domains), map(supremum, domains))
+Rectangle(domains::AbstractVector{<:ClosedInterval}) =
+    Rectangle(map(infimum, domains), map(supremum, domains))
+Rectangle(domains::Domain...) =
+    error("The Rectangle constructor expects two points or a list of intervals (closed).")
 
-ProductDomain(domains::ClosedInterval...) = HyperRectangle(domains...)
+ProductDomain(domains::ClosedInterval...) = Rectangle(domains...)
 ProductDomain(domains::AbstractVector{<:ClosedInterval}) =
-    HyperRectangle(map(infimum, domains), map(supremum, domains))
+    Rectangle(map(infimum, domains), map(supremum, domains))
 
 
 "The N-fold cartesian product of a fixed interval."
-struct FixedIntervalProduct{D,N,T} <: HyperCube{SVector{N,T}}
+struct FixedIntervalProduct{D,N,T} <: Cube{SVector{N,T}}
 end
 
 element(d::FixedIntervalProduct{D}, i) where {D} =
