@@ -1111,10 +1111,21 @@ end
         @test convert(Domain{BigFloat}, d) isa IndicatorFunction{BigFloat}
         @test 0.5 ∈ convert(IndicatorFunction, 0..1)
 
-        d2 = DomainSets.UntypedIndicatorFunction(ispositive)
-        @test d2 isa DomainSets.UntypedIndicatorFunction{Float64}
-        @test DomainSets.indicatorfunction(d2) == ispositive
-        @test convert(Domain{BigFloat}, d2) isa DomainSets.UntypedIndicatorFunction{BigFloat}
+        d2 = Domain(x>0 for x in -1..1)
+        @test -0.5 ∉ d2
+        @test 0.5 ∈ d2
+        show(io, d2)
+        @test String(take!(io)) == "indicator function bounded by: -1..1"
+
+        d3 = Domain(x*y>0 for (x,y) in UnitDisk())
+        @test [0.4,0.2] ∈ d3
+        @test [0.4,-0.2] ∉ d3
+
+        d4 = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
+        @test d4 isa DomainSets.BoxedIndicatorFunction{F,<:TupleProductDomain} where F
+        @test ( [0.5,0.2], 0.5) ∈ d4
+        @test ( [0.5,0.2], 1.5) ∉ d4
+        @test ( [-0.5,-0.2], 0.1) ∉ d4
     end
 end
 

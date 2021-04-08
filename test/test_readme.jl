@@ -23,4 +23,16 @@
 
     d = LevelSet{SVector{2,Float64}}(prod, 1.0)
     @test [0.5,2] ∈ d
+
+    d = IndicatorFunction{Float64}( t ->  cos(t) > 0)
+    @test (0.5 ∈ d, 3.1 ∈ d) == (true, false)
+
+    d = Domain(x>0 for x in -1..1)
+    @test (0.5 ∈ d, -0.5 ∈ d) == (true, false)
+
+    d = Domain( x*y > 0 for (x,y) in UnitDisk())
+    @test ([0.2, 0.3] ∈ d, [0.2, -0.3] ∈ d) == (true, false)
+
+    d = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
+    @test ([0.3,0.2], 0.5) ∈ d
 end

@@ -39,14 +39,39 @@ convert(::Type{IndicatorFunction}, d::Domain{T}) where {T} =
     IndicatorFunction{T}(indicatorfunction(d))
 
 
-"Like `IndicatorFunction` but without the type of the function as type parameter."
-struct UntypedIndicatorFunction{T} <: AbstractIndicatorFunction{T}
-    f
+"An indicator function with a known bounding domain."
+struct BoxedIndicatorFunction{F,D,T} <: AbstractIndicatorFunction{T}
+    f       ::  F
+    domain  ::  D
 end
 
-UntypedIndicatorFunction(f) = UntypedIndicatorFunction{Float64}(f)
+BoxedIndicatorFunction(f, a, b) = BoxedIndicatorFunction(f, Rectangle(a, b))
+BoxedIndicatorFunction(f::F, domain::D) where {F,T,D<:Domain{T}} =
+    BoxedIndicatorFunction{F,D,T}(f, domain)
 
-indicatorfunction(d::UntypedIndicatorFunction) = d.f
+indicatorfunction(d::BoxedIndicatorFunction) = d.f
 
-similardomain(d::UntypedIndicatorFunction, ::Type{T}) where {T} =
-    UntypedIndicatorFunction{T}(d.f)
+domain(d::BoxedIndicatorFunction) = d.domain
+
+indomain(x, d::BoxedIndicatorFunction) = x ∈ domain(d) && d.f(x)
+
+
+boundingbox(d::BoxedIndicatorFunction) = Rectangle(d.a, d.b)
+
+similardomain(d::BoxedIndicatorFunction, ::Type{T}) where {T} =
+    BoxedIndicatorFunction(d.f, convert(Domain{T}, d.domain))
+
+Domain(gen::Base.Generator) = generator_domain(gen)
+
+generator_domain(gen::Base.Generator{<:Domain}) = BoxedIndicatorFunction(gen.f, gen.iter)
+
+generator_domain(gen::Base.Generator{<:Base.Iterators.ProductIterator}) =
+    productgenerator_domain(gen, gen.iter.iterators)
+
+function productgenerator_domain(gen, domains::Tuple{Vararg{Domain,N} where N})
+    domain = TupleProductDomain(gen.iter.iterators)
+    BoxedIndicatorFunction(gen.f, domain)
+end
+
+show(io::IO, d::BoxedIndicatorFunction) =
+    print(io, "indicator function bounded by: $(domain(d))")

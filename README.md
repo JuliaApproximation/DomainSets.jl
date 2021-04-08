@@ -190,6 +190,38 @@ superlevel set f(x) >= 1.0 with f = prod
 There is also `SublevelSet`, and there are the special cases `ZeroSet`,
 `SubzeroSet` and `SuperzeroSet`.
 
+### Indicator functions
+
+A domain can be defined by an indicator function or a characteristic function.
+This is a function `f(x)` which evaluates to true or false, depending on whether or
+not the point `x` belongs to the domain.
+```julia
+julia> d = IndicatorFunction{Float64}( t ->  cos(t) > 0)
+indicator domain defined by function f = #5
+
+julia> 0.5 ∈ d, 3.1 ∈ d
+(true, false)
+```
+This enables generator syntax to define domains:
+```julia
+julia> d = Domain(x>0 for x in -1..1)
+indicator function bounded by: -1..1
+
+julia> 0.5 ∈ d, -0.5 ∈ d
+(true, false)
+
+julia> d = Domain( x*y > 0 for (x,y) in UnitDisk())
+indicator function bounded by: the 2-dimensional closed unit ball
+
+julia> [0.2, 0.3] ∈ d, [0.2, -0.3] ∈ d
+(true, false)
+
+julia> d = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
+indicator function bounded by: the 2-dimensional closed unit ball x 0..1
+
+julia> ([0.3,0.2], 0.5) ∈ d
+true
+```
 
 ### The domain interface
 
