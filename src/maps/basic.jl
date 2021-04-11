@@ -27,8 +27,7 @@ IdentityMap() = StaticIdentityMap()
 IdentityMap(::Val{N}) where {N} = StaticIdentityMap(Val(N))
 
 IdentityMap{T}(n::Int) where {T} = DynamicIdentityMap{T}(n)
-IdentityMap{T}(n::Int) where {T<:Number} = StaticIdentityMap{T}()
-IdentityMap{T}(n::Int) where {T<:StaticVector} = StaticIdentityMap{T}(n)
+IdentityMap{T}(n::Int) where {T<:StaticTypes} = StaticIdentityMap{T}()
 IdentityMap{T}(::Val{N}) where {N,T} = StaticIdentityMap{T}(Val(N))
 IdentityMap{T}() where {T} = StaticIdentityMap{T}()
 
@@ -70,14 +69,16 @@ StaticIdentityMap{T}(n::Int) where {T} =
 StaticIdentityMap{T}(::Val{N}) where {N,T} =
     (@assert N == euclideandimension(T); StaticIdentityMap{T}())
 
-similarmap(m::StaticIdentityMap, ::Type{T}) where {T} = StaticIdentityMap{T}()
+similarmap(m::StaticIdentityMap, ::Type{T}) where {T<:StaticTypes} = StaticIdentityMap{T}()
+similarmap(m::StaticIdentityMap, ::Type{T}) where {T} =
+    DynamicIdentityMap{T}(euclideandimension(T))
 
 convert(::Type{StaticIdentityMap{T}}, ::StaticIdentityMap) where {T} = StaticIdentityMap{T}()
 
 ==(m1::StaticIdentityMap, m2::StaticIdentityMap) = true
 
 
-"Identity map with flexible size determined by a dimension field."
+"Identity map with dynamic size determined by a dimension field."
 struct DynamicIdentityMap{T} <: IdentityMap{T}
     dimension   ::  Int
 end
@@ -90,74 +91,72 @@ VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
 dimension(m::DynamicIdentityMap) = m.dimension
 
-similarmap(m::DynamicIdentityMap, ::Type{T}) where {T} = DynamicIdentityMap{T}(dimension(m))
+similarmap(m::DynamicIdentityMap, ::Type{T}) where {T} =
+    DynamicIdentityMap{T}(dimension(m))
+similarmap(m::DynamicIdentityMap, ::Type{T}) where {T<:StaticTypes} =
+    StaticIdentityMap{T}()
 
 ==(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = dimension(m1) == dimension(m2)
 
 
 "The supertype of constant maps from `T` to `U`."
-abstract type AbstractConstantMap{T,U} <: TypedMap{T,U} end
+abstract type ConstantMap{T,U} <: TypedMap{T,U} end
 
-applymap(m::AbstractConstantMap, x) = constant(m)
+applymap(m::ConstantMap, x) = constant(m)
 
 isconstant(m::AbstractMap) = false
-isconstant(m::AbstractConstantMap) = true
+isconstant(m::ConstantMap) = true
 
-isreal(m::AbstractConstantMap) = isreal(constant(m))
+isreal(m::ConstantMap{T,U}) where {T,U} =
+    isreal(T) && isreal(U) && isreal(constant(m))
 
-dimension(m::AbstractConstantMap) = length(constant(m))
-size(m::AbstractConstantMap{<:Number}) = (dimension(m), 1)
-size(m::AbstractConstantMap) = (dimension(m), dimension(m))
+dimension(m::ConstantMap) = length(constant(m))
+size(m::ConstantMap{<:Number}) = (dimension(m), 1)
+size(m::ConstantMap) = (dimension(m), dimension(m))
 
-matrix(m::AbstractConstantMap) = zeromatrix(m)
-vector(m::AbstractConstantMap) = constant(m)
+matrix(m::ConstantMap) = zeromatrix(m)
+vector(m::ConstantMap) = constant(m)
 
-jacobian(m::AbstractConstantMap{T}) where {T} = ConstantMap{T}(matrix(m))
-jacobian(m::AbstractConstantMap, x) = matrix(m)
+jacobian(m::ConstantMap{T}) where {T} = ConstantMap{T}(matrix(m))
+jacobian(m::ConstantMap, x) = matrix(m)
 
-jacdet(::AbstractConstantMap, x) = 0
+jacdet(::ConstantMap, x) = 0
 
-==(m1::AbstractConstantMap, m2::AbstractConstantMap) = constant(m1)==constant(m2)
+==(m1::ConstantMap, m2::ConstantMap) = constant(m1)==constant(m2)
+
+similarmap(m::ConstantMap, ::Type{T}) where {T} = ConstantMap{T}(constant(m))
+similarmap(m::ConstantMap, ::Type{T}, ::Type{U}) where {T,U} = ConstantMap{T,U}(m.c)
+
+ConstantMap() = ConstantMap{Float64}()
+ConstantMap(c) = FixedConstantMap(c)
+ConstantMap{T}() where {T} = UnityMap{T}()
+ConstantMap{T}(c) where {T} = FixedConstantMap{T}(c)
+ConstantMap{T,U}() where {T,U} = UnityMap{T,U}()
+ConstantMap{T,U}(c) where {T,U} = FixedConstantMap{T,U}(c)
+
 
 "The zero map `f(x) = 0`."
-struct ZeroMap{T,U} <: AbstractConstantMap{T,U}
+struct ZeroMap{T,U} <: ConstantMap{T,U}
 end
-
 ZeroMap{T}() where {T} = ZeroMap{T,T}()
+constant(m::ZeroMap{T,U}) where {T,U} = zero(U)
+similarmap(m::ZeroMap{S,U}, ::Type{T}) where {T,S,U} = ZeroMap{T,U}()
+similarmap(m::ZeroMap, ::Type{T}, ::Type{U}) where {T,U} = ZeroMap{T,U}()
 
-constant(m::ZeroMap{T,U}) where {T,U} = zero(T)
-
-convert(::Type{Map{T}}, ::ZeroMap{S,U}) where {T,S,U} = ZeroMap{T,U}()
 
 "The unity map `f(x) = 1`."
-struct UnityMap{T,U} <: AbstractConstantMap{T,U}
+struct UnityMap{T,U} <: ConstantMap{T,U}
 end
-
 UnityMap{T}() where {T} = UnityMap{T,T}()
-
 constant(m::UnityMap{T,U}) where {T,U} = one(U)
-
-convert(::Type{Map{T}}, ::UnityMap{S,U}) where {T,S,U} = UnityMap{T,U}()
+similarmap(m::UnityMap{S,U}, ::Type{T}) where {T,S,U} = UnityMap{T,U}()
+similarmap(m::UnityMap, ::Type{T}, ::Type{U}) where {T,U} = UnityMap{T,U}()
 
 
 "The constant map `f(x) = c`."
-struct ConstantMap{T,U} <: AbstractConstantMap{T,U}
+struct FixedConstantMap{T,U} <: ConstantMap{T,U}
     c   ::  U
 end
-
-ConstantMap{T}(c::U) where {T,U} = ConstantMap{T,U}(c)
-ConstantMap(c::T) where {T} = ConstantMap{T}(c)
-
-constant(m::ConstantMap) = m.c
-
-convert(::Type{Map{T}}, m::ConstantMap{S,U}) where {T,S,U} = ConstantMap{T,U}(m.c)
-
-
-"A generic map defined by a function object."
-struct GenericFunctionMap{T,F} <: Map{T}
-    fun     ::  F
-end
-
-GenericFunctionMap{T}(fun) where {T} = GenericFunctionMap{T,typeof(fun)}(fun)
-
-convert(::Type{Map{T}}, m::GenericFunctionMap{S,F}) where {S,F,T} = GenericFunctionMap{T}(m.fun)
+FixedConstantMap{T}(c::U) where {T,U} = FixedConstantMap{T,U}(c)
+FixedConstantMap(c::T) where {T} = FixedConstantMap{T}(c)
+constant(m::FixedConstantMap) = m.c

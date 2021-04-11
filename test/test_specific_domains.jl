@@ -925,6 +925,13 @@ end
 
         B = 2 * VectorUnitBall(10)
         @test dimension(B) == 10
+        @test superdomain(B) ∘ inverse_map(B) == B
+        @test isopenset(interior(B))
+        @test B == closure(interior(B))
+        @test DomainSets.superdomain(boundary(B)) isa UnitSphere
+        @test canonicaldomain(B) == VectorUnitBall(10)
+        @test fromcanonical(B) == forward_map(B)
+        @test tocanonical(B) == inverse_map(B)
     end
 
     @testset "simplex" begin

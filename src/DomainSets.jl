@@ -65,7 +65,7 @@ export WrappedMap
 # from maps/composite.jl
 export Composition, ∘
 # from maps/product.jl
-export ProductMap, tensorproduct
+export ProductMap, productmap
 # from maps/basic.jl
 export IdentityMap,
     StaticIdentityMap, VectorIdentityMap,

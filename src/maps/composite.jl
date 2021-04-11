@@ -4,16 +4,11 @@ struct Composition{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-function Composition(maps...)
-    T = domaintype(maps[1])
-    Composition{T}(maps...)
-end
-
+Composition(map1, maps...) = Composition{domaintype(map1)}(map1, maps...)
 Composition{T}(maps...) where {T} = Composition{T,typeof(maps)}(maps)
 
 # TODO: make proper conversion
-convert(::Type{Map{T}}, m::Composition{T}) where {T} = m
-convert(::Type{Map{T}}, m::Composition) where {T} = Composition{T}(m.maps...)
+similarmap(m::Composition, ::Type{T}) where {T} = Composition{T}(m.maps...)
 
 # Maps are applied in the order that they appear in m.maps
 applymap(m::Composition, x) = applymap_rec(x, m.maps...)
@@ -40,20 +35,25 @@ codomaintype(m::Composition) = codomaintype(m.maps[end])
 
 size(m::Composition) = (size(m.maps[end])[1], size(m.maps[1])[2])
 
-mapcompose(m) = m
-mapcompose(map1, maps...) = mapcompose2(map1, maps...)
-# mapcompose2 enables dispatch on the second map, or on the combination of the
-# first two maps
-mapcompose2(map1, map2, maps...) = Composition(map1, map2, maps...)
+compose_map() = ()
+compose_map(m) = m
+compose_map(m1, m2) = compose_map1(m1, m2)
+compose_map1(m1, m2) = compose_map2(m1, m2)
+compose_map2(m1, m2) = Composition(m1, m2)
+
+compose_map(m1, m2, maps...) = compose_map(compose_map(m1, m2), maps...)
+
+compose_map(m1::Composition, m2::Composition) =
+    Composition(elements(m1)..., elements(m2)...)
+compose_map1(m1::Composition, m2) = Composition(elements(m1)..., m2)
+compose_map2(m1, m2::Composition) = Composition(m1, elements(m2)...)
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
-(∘)(map1::Map, map2::Map) = mapcompose(map2, map1)
-(∘)(map1::Composition, map2::Map) = mapcompose(map2, elements(map1)...)
-(∘)(map1::Map, map2::Composition) = mapcompose(elements(map2)..., map1)
-(∘)(map1::Composition, map2::Composition) = mapcompose(elements(map2)..., elements(map1)...)
+(∘)(map1::Map, map2::Map) = compose_map(map2, map1)
 
 
-==(m1::Composition, m2::Composition) = all(map(isequal, elements(m1), elements(m2)))
+==(m1::Composition, m2::Composition) =
+    numelements(m1) == numelements(m2) && all(map(isequal, elements(m1), elements(m2)))
 
 ## Lazy multiplication
 
@@ -67,8 +67,7 @@ MulMap{T}(maps::Map{T}...) where {T} = MulMap{T,typeof(maps)}(maps)
 MulMap{T}(maps...) where {T} = _mulmap(T, convert.(Map{T}, maps)...)
 _mulmap(::Type{T}, maps...) where {T} = MulMap{T,typeof(maps)}(maps)
 
-convert(::Type{Map{T}}, m::MulMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::MulMap) where {T} = MulMap{T}(m.maps...)
+similarmap(m::MulMap, ::Type{T}) where {T} = MulMap{T}(m.maps...)
 
 applymap(m::MulMap, x) = reduce(*, applymap.(elements(m), Ref(x)))
 
@@ -87,6 +86,8 @@ SumMap(maps::Map{T}...) where {T} = SumMap{T}(maps...)
 SumMap{T}(maps::Map{T}...) where {T} = SumMap{T,typeof(maps)}(maps)
 SumMap{T}(maps...) where {T} = _summap(T, convert.(Map{T}, maps)...)
 _summap(::Type{T}, maps...) where {T} = SumMap{T,typeof(maps)}(maps)
+
+similarmap(m::SumMap, ::Type{T}) where {T} = SumMap{T}(m.maps...)
 
 applymap(m::SumMap, x) = reduce(+, applymap.(elements(m), Ref(x)))
 

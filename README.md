@@ -216,10 +216,10 @@ indicator function bounded by: the 2-dimensional closed unit ball
 julia> [0.2, 0.3] ∈ d, [0.2, -0.3] ∈ d
 (true, false)
 
-julia> d = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
+julia> d = Domain( x+y+z > 0 for (x,y,z) in ProductDomain(UnitDisk(), 0..1))
 indicator function bounded by: the 2-dimensional closed unit ball x 0..1
 
-julia> ([0.3,0.2], 0.5) ∈ d
+julia> [0.3,0.2,0.5] ∈ d
 true
 ```
 

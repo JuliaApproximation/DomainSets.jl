@@ -156,7 +156,6 @@ end
 # The intersection of domains
 ##############################
 
-@deprecate IntersectionDomain IntersectDomain
 
 """
 An `IntersectDomain` represents the intersection of a set of domains.

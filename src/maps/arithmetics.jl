@@ -1,11 +1,11 @@
 
 # Simplifications go here
 
-mapcompose(m1::IdentityMap{T}, m2::Map{T}) where {T} = m2
-mapcompose(m1::Map{T}, m2::IdentityMap{T}) where {T} = m1
-mapcompose(m1::IdentityMap{T}, m2::IdentityMap{T}) where {T} = m1
+compose_map1(m1::IdentityMap, m2) = m2
+compose_map2(m1, m2::IdentityMap) = m1
 
-mapcompose(m1::AbstractAffineMap, m2::AbstractAffineMap) = affine_composition(m1, m2)
+compose_map(m1::AbstractAffineMap, m2::AbstractAffineMap) =
+    affine_composition(m1, m2)
 
 """
 Compute the affine map that represents map2 after map1, that is:

@@ -33,6 +33,6 @@
     d = Domain( x*y > 0 for (x,y) in UnitDisk())
     @test ([0.2, 0.3] ∈ d, [0.2, -0.3] ∈ d) == (true, false)
 
-    d = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
-    @test ([0.3,0.2], 0.5) ∈ d
+    d = Domain( x+y+z > 0 for (x,y,z) in ProductDomain(UnitDisk(), 0..1))
+    @test [0.3,0.2,0.5] ∈ d
 end

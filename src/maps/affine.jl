@@ -12,14 +12,14 @@ to_matrix(::Type{T}, A) where {T} = A
 to_matrix(::Type{T}, A::AbstractMatrix) where {T} = A
 to_matrix(::Type{T}, A::NumberLike) where {T<:Number} = A
 to_matrix(::Type{SVector{N,T}}, A::Number) where {N,T} = A * one(SMatrix{N,N,T})
-to_matrix(::Type{SVector{N,T}}, A::UniformScaling) where {N,T} = A * one(SMatrix{N,N,T})
+to_matrix(::Type{SVector{N,T}}, A::UniformScaling) where {N,T} = A.λ * one(SMatrix{N,N,T})
 to_matrix(::Type{T}, A::Number) where {T<:AbstractVector} = A * I
 to_matrix(::Type{T}, A::UniformScaling) where {T<:AbstractVector} = A
 
 to_matrix(::Type{T}, A, b) where {T} = A
 to_matrix(::Type{T}, A::AbstractMatrix, b) where {T} = A
 to_matrix(::Type{T}, A::Number, b::Number) where {T<:Number} = A
-to_matrix(::Type{T}, A::UniformScaling, b::Number) where {T<:Number} = 1
+to_matrix(::Type{T}, A::UniformScaling, b::Number) where {T<:Number} = A.λ
 to_matrix(::Type{SVector{N,T}}, A::NumberLike, b::SVector{N,T}) where {N,T} = A * one(SMatrix{N,N,T})
 to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVector{S}} =
     A * Array{S,2}(I, length(b), length(b))
@@ -57,7 +57,7 @@ applymap(m::AbstractAffineMap, x) = _applymap(m, x, unsafe_matrix(m), unsafe_vec
 _applymap(m::AbstractAffineMap, x, A, b) = A*x + b
 
 applymap!(y, m::AbstractAffineMap, x) = _applymap!(y, m, x, unsafe_matrix(m), unsafe_vector(m))
-function applymap!(y, m::AbstractAffineMap, x, A, b)
+function _applymap!(y, m::AbstractAffineMap, x, A, b)
     mul!(y, A, x)
     y .+= b
     y
@@ -71,8 +71,9 @@ jacobian(m::AbstractAffineMap, x) = matrix(m)
 
 jacdet(m::AbstractAffineMap, x) = _jacdet(m, x, unsafe_matrix(m))
 _jacdet(m::AbstractAffineMap, x, A) = det(A)
-_jacdet(m::AbstractAffineMap, x, A::UniformScaling) = 1
-_jacdet(m::AbstractAffineMap, x::AbstractVector, A::NumberLike) = det(A)^length(x)
+_jacdet(m::AbstractAffineMap, x::Number, A::UniformScaling) = A.λ
+_jacdet(m::AbstractAffineMap, x::AbstractVector, A::Number) = A^length(x)
+_jacdet(m::AbstractAffineMap, x::AbstractVector, A::UniformScaling) = A.λ^length(x)
 
 islinear(m::AbstractMap) = false
 islinear(m::AbstractAffineMap) = _islinear(m, unsafe_vector(m))
@@ -287,8 +288,8 @@ similarmap(m::Translation, ::Type{T}) where {T} = Translation{T}(m.b)
 
 applymap(m::Translation, x) = _applymap(m, x, unsafe_vector(m))
 _applymap(m::Translation, x, b) = x + b
-applymap!(y, m, x) = _applymap!(y, m, x, unsafe_vector(m))
-_applymap!(y, m, x, b) = y .= x .+ m.b
+applymap!(y, m::Translation, x) = _applymap!(y, m, x, unsafe_vector(m))
+_applymap!(y, m::Translation, x, b) = y .= x .+ m.b
 
 inv(m::Translation{T}) where {T} = Translation{T}(-m.b)
 
@@ -299,7 +300,7 @@ ScalarTranslation(b::Number) = ScalarTranslation{typeof(b)}(b)
 
 StaticTranslation(b::AbstractVector{T}) where {T} = StaticTranslation{T}(b)
 
-StaticTranslation{T}(b::AbstractVector{S}) where {S,T} =
+StaticTranslation{T}(b::AbstractVector) where {T} =
     StaticTranslation{T}(convert(AbstractVector{T}, b))
 StaticTranslation{T}(b::SVector{N,T}) where {N,T} =
     StaticTranslation{T,N}(b)
@@ -323,9 +324,6 @@ The supertype of all affine maps that store `A` and `b`.
 Concrete subtypes differ in how `A` and `b` are represented.
 """
 abstract type AffineMap{T} <: AbstractAffineMap{T} end
-
-applymap(m::AffineMap, x) = _applymap(m, x, unsafe_matrix(m), unsafe_vector(m))
-applymap!(y, m::AffineMap, x) = _applymap!(y, m, x, unsafe_matrix(m), unsafe_vector(m))
 
 AffineMap(A::Number, b::Number) = ScalarAffineMap(A, b)
 AffineMap(A::SMatrix, b::SVector) = StaticAffineMap(A, b)
@@ -380,8 +378,8 @@ end
 GenericAffineMap(A, b) = GenericAffineMap{promote_type(eltype(A),eltype(b))}(A, b)
 GenericAffineMap(A::AbstractArray{S}, b::AbstractVector{T}) where {S,T} =
     GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
-GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:Number,T} =
-    GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
+GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:NumberLike,T} =
+    GenericAffineMap{Vector{promote_type(eltype(S),T)}}(A, b)
 GenericAffineMap(A::S, b::SVector{N,T}) where {S<:Number,N,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
 

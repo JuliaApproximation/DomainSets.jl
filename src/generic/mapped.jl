@@ -114,7 +114,7 @@ boundary(d::MappedDomain) = _boundary(d, superdomain(d), inverse_map(d))
 _boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
 
 interior(d::MappedDomain) = _interior(d, superdomain(d), inverse_map(d))
-_interior(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
+_interior(d::MappedDomain, superdomain, invmap) = MappedDomain(interior(superdomain), invmap)
 
 closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
-_closure(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
+_closure(d::MappedDomain, superdomain, invmap) = MappedDomain(closure(superdomain), invmap)

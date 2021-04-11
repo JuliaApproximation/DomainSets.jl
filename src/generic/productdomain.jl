@@ -1,9 +1,5 @@
 
-"""
-```using DomainSets```
-
-A `ProductDomain` represents the cartesian product of other domains.
-"""
+"A `ProductDomain` represents the cartesian product of other domains."
 abstract type ProductDomain{T} <: CompositeLazyDomain{T} end
 
 composition(d::ProductDomain) = Product()
@@ -97,8 +93,6 @@ productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, elements(d2)...)
 # Only override cross for variables of type Domain, it may have a different
 # meaning for other variables (like the vector cross product)
 cross(x::Domain...) = productdomain(x...)
-
-@deprecate cartesianproduct productdomain
 
 
 ^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)

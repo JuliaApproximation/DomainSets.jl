@@ -41,7 +41,8 @@ broadcasted(::DomainSetStyle, ::typeof(\), a::Number, d::Domain) =
 
 broadcasted(::DomainSetStyle, m::AbstractMap, d::Domain) = map_domain(m, d)
 
-broadcasted(::DomainSetStyle, fun::Function, d::Domain{T}) where {T} = GenericFunctionMap{T}(fun).(d)
+broadcasted(::DomainSetStyle, fun::Function, d::Domain{T}) where {T} =
+    convert(Map{T}, fun).(d)
 
 # Intercept broadcast applied to `in`, e.g. in.(A, d).
 # This gives domains an opportunity to provide a more efficient implementation

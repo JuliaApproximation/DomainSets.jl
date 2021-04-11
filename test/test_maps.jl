@@ -1,4 +1,18 @@
 
+using DomainSets: ScalarAffineMap,
+    VectorAffineMap,
+    StaticAffineMap,
+    GenericAffineMap,
+    ScalarLinearMap,
+    VectorLinearMap,
+    StaticLinearMap,
+    GenericLinearMap,
+    ScalarTranslation,
+    VectorTranslation,
+    StaticTranslation,
+    GenericTranslation
+
+
 randvec(T,n) = SVector{n,T}(rand(n))
 randvec(T,m,n) = SMatrix{m,n,T}(rand(m,n))
 
@@ -182,13 +196,33 @@ function generic_tests(T)
 end
 
 function test_affine_maps(T)
+    A = rand(T,2,2)
+    @test DomainSets.to_matrix(Vector{T}, A) == A
+    @test DomainSets.to_matrix(T, 2) == 2
+    @test DomainSets.to_matrix(SVector{2,T}, 2) == SMatrix{2,2}(2,0,0,2)
+    @test DomainSets.to_matrix(SVector{2,T}, LinearAlgebra.I) == SMatrix{2,2}(1,0,0,1)
+    @test DomainSets.to_matrix(Vector{T}, 2) == UniformScaling(2)
+    @test DomainSets.to_matrix(Vector{T}, LinearAlgebra.I) == LinearAlgebra.I
+    # test fallback with nonsensical call
+    @test DomainSets.to_matrix(Tuple{Int}, 2) == 2
+
+    @test DomainSets.to_matrix(T, A, 2) == A
+    @test DomainSets.to_matrix(T, 2, 3) == 2
+    @test DomainSets.to_matrix(T, UniformScaling(2), 3) == 2
+    @test DomainSets.to_matrix(SVector{2,T}, 2, SVector(1,1)) == SMatrix{2,2}(2,0,0,2)
+    @test DomainSets.to_matrix(Vector{T}, 2, [1,2]) == [2 0 ; 0 2]
+
+    @test DomainSets.to_vector(T, 2) == 0
+    @test DomainSets.to_vector(SVector{2,T}, 2) == SVector(0,0)
+    @test DomainSets.to_vector(Vector{T}, A) == [0,0]
+    @test DomainSets.to_vector(T, 2, 3) == 3
+
     test_linearmap(T)
     test_translation(T)
     test_affinemap(T)
 end
 
 
-using DomainSets: ScalarLinearMap, VectorLinearMap, StaticLinearMap, GenericLinearMap
 
 function test_linearmap(T)
     m1 = LinearMap(2one(T))
@@ -210,7 +244,9 @@ function test_linearmap(T)
 
     m2 = LinearMap(2)
     @test domaintype(m2) == Int
+    @test m2 === ScalarLinearMap(2)
     @test m2(one(T)) isa T
+    @test m2 == convert(Map, 2)
     @test jacobian(m2, 1) == 2
     @test jacobian(m2) isa ConstantMap{Int}
     @test jacobian(m2, 1) == 2
@@ -218,6 +254,7 @@ function test_linearmap(T)
 
     m3 = LinearMap(SMatrix{2,2}(one(T), 2one(T), 3one(T), 4one(T)))
     @test m3 isa LinearMap{SVector{2,T}}
+    @test m3 === StaticLinearMap(m3.A)
     @test m3(SVector(1,2)) == SVector(7, 10)
     @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
     @test m3 ∘ m3 isa LinearMap
@@ -227,7 +264,14 @@ function test_linearmap(T)
     m4 = LinearMap(A)
     @test m4 isa LinearMap{Vector{T}}
     @test m4([1,2]) ==  A * [1,2]
+    y = zeros(T,2)
+    @test (DomainSets.applymap!(y, m4, [1,2]); y == A * [1,2])
     @test jacobian(m4, [1,2]) == A
+
+    m5 = LinearMap{Vector{T}}(UniformScaling(2*one(T)))
+    @test m5 isa LinearMap{Vector{T}}
+    @test m5([1,2]) ==  2 * [1,2]
+    @test jacobian(m5, [1,2]) == UniformScaling(2)
 
     # Test construction and conversion
     @test LinearMap{T}(1) isa ScalarLinearMap{T}
@@ -239,7 +283,6 @@ function test_linearmap(T)
 end
 
 
-using DomainSets: ScalarTranslation, VectorTranslation, StaticTranslation, GenericTranslation
 
 function test_translation(T)
     v = randvec(T,3)
@@ -262,8 +305,6 @@ function test_translation(T)
 end
 
 
-using DomainSets: ScalarAffineMap, VectorAffineMap, StaticAffineMap, GenericAffineMap
-
 function test_affinemap(T)
     m1 = AffineMap(T(2), T(3))
     @test m1 isa ScalarAffineMap{T}
@@ -271,11 +312,23 @@ function test_affinemap(T)
     @test isaffine(m1)
     @test m1(2) == 7
 
+    @test m1 ∘ m1 isa AffineMap
+    @test (m1 ∘ m1)(2) == 2*(2*2+3)+3
+
     m2 = AffineMap(T(2), SVector{2,T}(1,2))
     @test m2 isa GenericAffineMap{SVector{2,T}}
     @test m2(SVector(1,2)) == SVector(3,6)
+    @test size(m2) == (2,2)
 
-    @test m1 ∘ m1 isa AffineMap
+    m3 = AffineMap(UniformScaling(2*one(T)), [one(T),2*one(T)])
+    @test m3 isa AffineMap{Vector{T}}
+    @test size(m3) == (2,2)
+    @test m3([1,2]) ==  2 * [1,2] + [1,2]
+    y = zeros(T,2)
+    @test (DomainSets.applymap!(y, m3, [1,2]); y == m3([1,2]))
+    @test jacobian(m3, [1,2]) == [2 0; 0 2]
+    @test jacdet(m3, [1,2]) == 4
+
 
     # Test construction and conversion
     @test AffineMap(1, 2*one(T)) isa ScalarAffineMap{T}
@@ -359,20 +412,20 @@ function test_product_map(T)
     r4 = suitable_point_to_map(ma)
     r5 = suitable_point_to_map(ma)
 
-    m1 = tensorproduct(ma,mb)
+    m1 = productmap(ma,mb)
     test_generic_map(m1)
     @test m1(SVector(r1,r2)) ≈ SVector(ma(r1),mb(r2))
-    m2 = tensorproduct(m1,mb)
+    m2 = productmap(m1,mb)
     test_generic_map(m2)
     @test m2(SVector(r1,r2,r3)) ≈ SVector(ma(r1),mb(r2),mb(r3))
-    m3 = tensorproduct(mb,m2)
+    m3 = productmap(mb,m2)
     test_generic_map(m3)
     @test m3(SVector(r1,r2,r3,r4)) ≈ SVector(mb(r1),ma(r2),mb(r3),mb(r4))
-    m4 = tensorproduct(m1,m2)
+    m4 = productmap(m1,m2)
     test_generic_map(m4)
     @test m4(SVector(r1,r2,r3,r4,r5)) ≈ SVector(m1(SVector(r1,r2))...,m2(SVector(r3,r4,r5))...)
 
-    m5 = tensorproduct(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
+    m5 = productmap(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
     test_generic_map(m5)
     x = SVector{3,T}(rand(T,3))
     @test m5(x) ≈ SVector(element(m5,1)(SVector(x[1],x[2]))...,element(m5,2)(x[3]))

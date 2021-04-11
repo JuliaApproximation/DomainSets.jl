@@ -41,10 +41,13 @@ toexternalpoint(m::ProductMap, y) = y
 applymap(m::ProductMap, x) =
 	toexternalpoint(m, map(applymap, elements(m), tointernalpoint(m, x)))
 
-tensorproduct(map1::Map, map2::Map) = ProductMap(map1, map2)
-tensorproduct(map1::ProductMap, map2::Map) = ProductMap(elements(map1)..., map2)
-tensorproduct(map1::Map, map2::ProductMap) = ProductMap(map1, elements(map2)...)
-tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
+productmap(map1, map2) = productmap1(map1, map2)
+productmap1(map1, map2) = productmap2(map1, map2)
+productmap2(map1, map2) = ProductMap(map1, map2)
+productmap(map1::ProductMap, map2::ProductMap) =
+	ProductMap(elements(map1)..., elements(map2)...)
+productmap1(map1::ProductMap, map2) = ProductMap(elements(map1)..., map2)
+productmap2(map1, map2::ProductMap) = ProductMap(map1, elements(map2)...)
 
 for op in (:inv, :leftinverse, :rightinverse)
     @eval $op(m::ProductMap) = ProductMap(map($op, elements(m)))
