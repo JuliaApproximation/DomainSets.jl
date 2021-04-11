@@ -11,9 +11,17 @@ function test_generic_domain(d::Domain)
     @test isreal(d) == isreal(eltype(d))
     @test isreal(d) == isreal(numtype(d))
 
+    @test convert(Domain{eltype(d)}, d) == d
+    @test convert(Domain{widen_eltype(eltype(d))}, d) == d
+    @test prectype(convert_prectype(d, BigFloat)) == BigFloat
+
     if !isempty(d)
         x = point_in_domain(d)
         @test x ∈ d
+        @test approx_in(x, d, 0.01)
+        @test_throws ErrorException approx_in(x, d, -1)
+        @test in.([x,x], d) == in.([x,x], Ref(d))
+        @test approx_in.([x,x], d, 0.01) == approx_in.([x,x], Ref(d), 0.01)
     else
         try
             x = point_in_domain(d)
@@ -21,11 +29,23 @@ function test_generic_domain(d::Domain)
         catch
         end
     end
-    @test convert(Domain{eltype(d)}, d) == d
-    @test convert(Domain{widen_eltype(eltype(d))}, d) == d
+    @test canonicaldomain(d, DomainSets.Equal()) == d
+    if canonicaldomain(d) == d
+        @test tocanonical(d) == IdentityMap{eltype(d)}(dimension(d))
+        @test fromcanonical(d) == IdentityMap{eltype(d)}(dimension(d))
+    else
+        cd = canonicaldomain(d)
+        @test fromcanonical(d) == mapto(cd, d)
+        @test tocanonical(d) == mapto(d, cd)
+    end
+    if iscomposite(d)
+        @test numelements(d) == length(elements(d))
+        els = elements(d)
+        @test all([element(d,i) == els[i] for i in 1:numelements(d)])
+    end
 end
 
-@testset "generic domains" begin
+@testset "generic domain interface" begin
     domains = [
         0..1,
         UnitInterval(),
@@ -33,6 +53,7 @@ end
         HalfLine(),
         NegativeHalfLine(),
         UnitInterval()^3,
+        (0..1) × (2.0..3) × (3..4),
         UnitBall(),
         VectorUnitBall(),
         VectorUnitBall(8),
@@ -44,12 +65,58 @@ end
         VectorUnitSphere(),
         UnitSimplex{2}(),
         VectorUnitSimplex(2),
-        WrappedDomain(0..1.0)
+        WrappedDomain(0..2.0)
     ]
 
-    @testset "$(rpad("generic domains",80))" begin
+    @testset "generic domains" begin
         for domain in domains
             test_generic_domain(domain)
         end
+    end
+
+    @testset "generic functionality" begin
+        struct SomeDomain <: Domain{Float64}
+        end
+        @test_throws MethodError 0.5 ∈ SomeDomain()
+        @test_throws MethodError approx_in(0.5, SomeDomain())
+
+        if VERSION < v"1.6-"
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64,Float64} and domain eltype: SArray{Tuple{2},Float64,1,2}. Returning false.") (0.5,0.2) ∈ UnitCircle()
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64,Float64} and domain eltype: SArray{Tuple{2},Float64,1,2}. Returning false.") approx_in((0.5,0.2), UnitCircle())
+        else
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") (0.5,0.2) ∈ UnitCircle()
+            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") approx_in((0.5,0.2), UnitCircle())
+        end
+
+        # some functionality in broadcast
+        @test 2 * (1..2) == 2 .* (1..2)
+        @test (1..2) * 2 == (1..2) .* 2
+        @test (1..2) / 2 ≈ (0.5..1)
+        @test 2 \ (1..2) ≈ (0.5..1)
+        @test_throws MethodError (0..1) + 0.4
+
+        # promotion
+        @test DomainSets.promote_domains() == ()
+        s1 = Set([0..1,2..3,3..4.0])
+        @test s1 isa Set{<:Domain{Float64}}
+        @test DomainSets.promote_domains(s1) == s1
+        s2 = Set([0..1,2..3,3..4.0, Point(2)])
+        @test s2 isa Set{Domain}
+        @test DomainSets.promote_domains(s2) isa Set{<:Domain{Float64}}
+
+        # compatible point-domain pairs
+        @test DomainSets.iscompatiblepair(0.5, 0..1)
+        @test DomainSets.iscompatiblepair(0.5, 0..1.0)
+        @test !DomainSets.iscompatiblepair(0.5, UnitBall())
+        @test DomainSets.iscompatiblepair(0.5, [0.3])
+        @test DomainSets.iscompatiblepair(0, [0.3])
+        @test DomainSets.iscompatiblepair(0.5, [1, 2, 3])
+        @test DomainSets.iscompatiblepair(0, Set([1, 2, 3]))
+        @test DomainSets.iscompatiblepair(0.5, Set([1, 2, 3]))
+        @test DomainSets.iscompatiblepair(0, Set([1.0, 2, 3]))
+
+        @test DomainSets.convert_eltype(Float64, Set([1,2])) isa Set{Float64}
+        @test_throws ErrorException DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
+        @test DomainSets.convert_eltype(Int, (1,2)) == (1,2)
     end
 end

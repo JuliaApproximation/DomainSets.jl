@@ -8,14 +8,14 @@ struct Point{T} <: Domain{T}
     x::T
 end
 
+similardomain(d::Point, ::Type{T}) where {T} = Point{T}(d.x)
+
 convert(::Type{Number}, d::Point{<:Number}) = d.x
 convert(::Type{N}, d::Point{<:Number}) where N<:Number = convert(N, convert(Number, d.x))
 Number(d::Point) = convert(Number, d)
 
-convert(::Type{Domain{T}}, d::Point{T}) where T = d
-convert(::Type{Domain{T}}, d::Point) where T = Point(T(d.x))
 convert(::Type{Domain}, c::Number) = Point(c)
-convert(::Type{Domain{T}}, c::Number) where T = Point(convert(T,c))
+convert(::Type{Domain{T}}, c::Number) where T = Point{T}(c)
 
 ==(a::Point,b::Point) = a.x == b.x
 indomain(x, d::Point) = x == d.x
@@ -27,6 +27,9 @@ isopenset(d::Point) = false
 isclosedset(d::Point) = true
 
 boundary(d::Point) = d
+
+interior(d::Point{T}) where {T} = EmptySpace{T}()
+closure(d::Point) = d
 
 point_in_domain(d::Point) = d.x
 
@@ -43,15 +46,20 @@ for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))
 end
 
-function setdiff(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
+# Interval minus a point:
+setdiffdomain(d::Interval, x::Number) = setdiffdomain(d, Point(x))
+setdiffdomain(d::Interval, p::Point) = setdiffdomain(promote_domains((d,p))...)
+function setdiffdomain(d::Interval{L,R,T}, p::Point{T}) where {L,R,T}
     a = leftendpoint(d)
     b = rightendpoint(d)
+    x = p.x
 
-    a == p.x && return Interval{:open,R}(a,b)
-    a < p.x < b && return UnionDomain(Interval{L,:open}(a,p.x)) ∪ UnionDomain(Interval{:open,R}(p.x,b))
-    b == p.x && return Interval{L,:open}(a,b)
-
+    a == x && return Interval{:open,R,T}(a,b)
+    a < x < b && return UnionDomain(Interval{L,:open,T}(a,p.x), Interval{:open,R,T}(p.x,b))
+    b == x && return Interval{L,:open,T}(a,b)
     return d
 end
 
-issubset(p::Point, d::Domain) = p.x ∈ d
+issubset1(d1::Point, d2) = d1.x ∈ d2
+
+setdiffdomain1(p::Point, d2) = issubset(p, d2) ? EmptySpace{eltype(p)}() : p

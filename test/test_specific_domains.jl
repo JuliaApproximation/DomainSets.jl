@@ -1,4 +1,5 @@
 using StaticArrays, DomainSets, Test
+
 import DomainSets: MappedDomain, similar_interval
 
 struct Basis3Vector <: StaticVector{3,Float64} end
@@ -8,10 +9,10 @@ Base.getindex(::Basis3Vector, k::Int) = k == 1 ? 1.0 : 0.0
 const io = IOBuffer()
 
 
-struct NamedHyperBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
+struct NamedBall <: DomainSets.DerivedDomain{SVector{2,Float64}}
     domain  ::  Domain{SVector{2,Float64}}
 
-    NamedHyperBall() = new(2UnitDisk())
+    NamedBall() = new(2UnitDisk())
 end
 
 @testset "specific domains" begin
@@ -21,19 +22,31 @@ end
         @test isempty(d1)
         @test String(take!(io)) == "{} (empty domain)"
         @test eltype(d1) == Float64
+        @test convert(Domain{BigFloat}, d1) === EmptySpace{BigFloat}()
         @test 0.5 ∉ d1
         @test !approx_in(0.5, d1)
         @test d1 ∩ d1 == d1
         @test d1 ∪ d1 == d1
+        @test d1 \ d1 == d1
         @test boundary(d1) == d1
         @test dimension(d1) == 1
         @test isclosedset(d1)
-        @test DomainSets.isopenset(d1)
+        @test isopenset(d1)
+        @test interior(d1) == d1
+        @test closure(d1) == d1
         d2 = 0..1
         @test d1 ∩ d2 == d1
+        @test d2 ∩ d1 == d1
         @test d1 ∪ d2 == d2
+        @test d2 ∪ d1 == d2
+        @test d1 \ d2 == d1
         @test d2 \ d1 == d2
         @test d2 \ d2 == d1
+        # Test some promotions
+        @test EmptySpace{Float64}() ∪ (0..1) isa AbstractInterval{Float64}
+        @test EmptySpace{Int}() ∩ (0..1.0) isa EmptySpace{Float64}
+        @test EmptySpace{Int}() \ (0..1.0) isa EmptySpace{Float64}
+        @test (0..1) \ EmptySpace{Float64}() isa AbstractInterval{Float64}
 
         d2 = EmptySpace(SVector{2,Float64})
         @test isempty(d2)
@@ -43,25 +56,43 @@ end
         @test !approx_in(SA[0.1,0.2], d2)
         @test boundary(d2) == d2
         @test dimension(d2) == 2
+
+        @test emptyspace(0..1) == EmptySpace{Int}()
+        @test emptyspace([1,2]) == EmptySpace{Int}()
+
+        m = LinearMap(2)
+        @test map_domain(m, emptyspace(Int)) == EmptySpace{Int}()
+        @test mapped_domain(m, emptyspace(Int)) == EmptySpace{Int}()
     end
 
     @testset "full space" begin
-        d1 = FullSpace{Float64}()
+        d1 = FullSpace()
+        @test d1 == FullSpace{Float64}()
         show(io,d1)
         @test String(take!(io)) == "{x} (full space)"
+        @test convert(Domain{BigFloat}, d1) === FullSpace{BigFloat}()
+        @test DomainSets.euclideanspace(Val{2}()) == FullSpace{SVector{2,Float64}}()
         @test 0.5 ∈ d1
+        @test point_in_domain(d1) == 0
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1
         @test isempty(d1) == false
         @test boundary(d1) == EmptySpace{Float64}()
         @test isclosedset(d1)
-        @test DomainSets.isopenset(d1)
+        @test isopenset(d1)
+        @test interior(d1) == d1
+        @test closure(d1) == d1
         @test dimension(d1) == 1
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
+        @test d2 ∩ d1 == d2
+        @test (0..1.0) \ FullSpace{Int}() isa EmptySpace{Float64}
         @test typeof(FullSpace(0..1) .+ 1) <: FullSpace
         @test typeof(FullSpace(0..1) * 3) <: FullSpace
+        @test infimum(d1) == typemin(Float64)
+        @test supremum(d1) == typemax(Float64)
+        @test FullSpace{Int}() == FullSpace{Float64}()
 
         d2 = FullSpace{SVector{2,Float64}}()
         @test SA[0.1,0.2] ∈ d2
@@ -72,9 +103,14 @@ end
         @test d2 == Domain(SVector{2,Float64})
         @test d2 == convert(Domain,SVector{2,Float64})
         @test d2 == convert(Domain{SVector{2,Float64}}, SVector{2,Float64})
+
+        @test fullspace(0..1) == FullSpace{Int}()
+        @test fullspace([1,2]) == FullSpace{Int}()
+
+        @test uniondomain(UnitDisk(), FullSpace{SVector{2,Float64}}()) == FullSpace{SVector{2,Float64}}()
     end
 
-    @testset "points" begin
+    @testset "point" begin
         d = Domain(1.0)
         @test d isa Point
         @test 1 ∈ d
@@ -84,8 +120,10 @@ end
         @test !isempty(d)
         @test boundary(d) == d
         @test isclosedset(d)
-        @test !DomainSets.isopenset(d)
+        @test !isopenset(d)
         @test dimension(d) == 1
+        @test isempty(interior(d))
+        @test closure(d) == d
 
         @test d .+ 1 == Domain(2.0)
         @test 1 .+ d == Domain(2.0)
@@ -103,6 +141,22 @@ end
 
         @test convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
         @test Number(Point(1)) ≡ convert(Number, Point(1)) ≡ convert(Int, Point(1)) ≡ 1
+        @test convert(Domain{Float64}, 1) isa Point{Float64}
+
+        @test point_in_domain(Point(1)) == 1
+
+        @test Point(1) + Point(2) == Point(3)
+        @test Point(1) - Point(2) == Point(-1)
+
+        @test 0.5 ∉ (0..1)\Point(0.5)
+        @test (0..1) \ Point(0.5) isa  UnionDomain{Float64}
+        @test (0..1) \ Point(0.0) == Interval{:open,:closed,Float64}(0,1)
+        @test (0..1) \ Point(1.0) == Interval{:closed,:open,Float64}(0,1)
+        @test (0..1) \ Point(2.0) == Interval{:closed,:closed,Float64}(0,1)
+        @test (0..1) \ 2.0 == (0..1) \ Point(2.0)
+        @test issubset(Point(1), (0..2))
+        @test Point(0.5) \ (0..1) == EmptySpace{Float64}()
+        @test Point(0.5) \ (1..2) == Point(0.5)
 
         @test dimension(Point([1,2,3]))==3
     end
@@ -116,13 +170,18 @@ end
             @test !approx_in(-0.2, d, 0.1)
             @test !approx_in(1.2, d, 0.1)
             @test isclosedset(d)
-            @test !DomainSets.isopenset(d)
+            @test !isopenset(d)
+            @test similar_interval(d, big(0), big(1)) == Interval{:closed,:closed,BigInt}(0,1)
+            @test closure(d) == d
+            @test isopenset(interior(d))
 
             @test iscompact(d)
             @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
 
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+
+            @test similar_interval(0..1, 0, big(1.0)) isa ClosedInterval{BigFloat}
         end
         @testset "UnitInterval{$T}" begin
             d = UnitInterval{T}()
@@ -136,7 +195,7 @@ end
             @test d \ d === EmptySpace{T}()
 
             @test isclosedset(d)
-            @test !DomainSets.isopenset(d)
+            @test !isopenset(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -156,6 +215,9 @@ end
             @test minimum(d) == infimum(d) == leftendpoint(d)
             @test maximum(d) == supremum(d) == rightendpoint(d)
 
+            # test for promotion
+            @test intersect(0..1, ChebyshevInterval()) == 0..1
+
             @test d ∩ d === d
             @test d ∪ d === d
             @test d \ d === EmptySpace{T}()
@@ -167,7 +229,7 @@ end
             @test unit \ d === EmptySpace{T}()
 
             @test isclosedset(d)
-            @test !DomainSets.isopenset(d)
+            @test !isopenset(d)
             @test iscompact(d)
 
             @test convert(Domain, d) ≡ d
@@ -179,6 +241,9 @@ end
             @test convert(Domain{Float64}, d) ≡ ChebyshevInterval()
             @test convert(AbstractInterval{Float64}, d) ≡ ChebyshevInterval()
             @test convert(ChebyshevInterval{Float64}, d) ≡ ChebyshevInterval()
+
+            show(io, ChebyshevInterval())
+            @test String(take!(io)) == "-1.0..1.0 (Chebyshev)"
         end
         @testset "HalfLine{$T}" begin
             d = HalfLine{T}()
@@ -202,7 +267,7 @@ end
             @test unit \ d === EmptySpace{T}()
 
             @test !isclosedset(d)
-            @test !DomainSets.isopenset(d)
+            @test !isopenset(d)
             @test !iscompact(d)
             @test 1. ∈ d
             @test -1. ∉ d
@@ -245,7 +310,7 @@ end
             @test d \ halfline === d
 
             @test !isclosedset(d)
-            @test DomainSets.isopenset(d)
+            @test isopenset(d)
             @test !iscompact(d)
             @test -1. ∈ d
             @test 1. ∉ d
@@ -260,7 +325,8 @@ end
 
         @testset "OpenInterval{$T}" begin
             d = OpenInterval(0,1)
-            @test DomainSets.isopenset(d)
+            @test isopenset(d)
+            @test closure(d) == UnitInterval()
 
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
@@ -274,10 +340,33 @@ end
             d = Interval{:open,:closed}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+            @test closure(d) == 0..1
 
             d = Interval{:closed,:open}(0,1)
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+            @test closure(d) == 0..1
+        end
+
+        @testset "approximate in for open and closed intervals" begin
+            @test !approx_in(1.0, Interval{:open,:open}(0,1), 0)
+            @test !approx_in(1.0, Interval{:closed,:open}(0,1), 0)
+            @test !approx_in(0.0, Interval{:open,:open}(0,1), 0)
+            @test !approx_in(0.0, Interval{:open,:closed}(0,1), 0)
+            @test approx_in(0.0, Interval{:closed,:closed}(0,1), 0)
+            @test approx_in(1.0, Interval{:closed,:closed}(0,1), 0)
+        end
+
+        @testset "mapping between intervals" begin
+            @test canonicaldomain(UnitInterval()) == UnitInterval()
+            m = mapto(2..3, ChebyshevInterval())
+            @test isaffine(m)
+            @test m(2) ≈ -1
+            @test m(3) ≈ 1
+            m2 = mapto(4.0..6, 2..3)
+            @test isaffine(m2)
+            @test m2(4) ≈ 2
+            @test m2(6) ≈ 3
         end
 
         @test typeof(UnitInterval{Float64}(0.0..1.0)) <: UnitInterval
@@ -400,25 +489,33 @@ end
         i3 = one(T)/2 .. 2*one(T)
         i4 = T(2) .. T(3)
         # - union of completely overlapping intervals
-        du1 = i1 ∪ i2
+        du1 = uniondomain(i1, i2)
         @test typeof(du1) <: AbstractInterval
         @test leftendpoint(du1) == leftendpoint(i1)
         @test rightendpoint(du1) == rightendpoint(i1)
+        @test uniondomain(0..1, 0.1..1.5) isa AbstractInterval{Float64}
 
         # - intersection of completely overlapping intervals
-        du2 = i1 ∩ i2
+        du2 = intersectdomain(i1, i2)
         @test typeof(du2) <: AbstractInterval
         @test leftendpoint(du2) == leftendpoint(i2)
         @test rightendpoint(du2) == rightendpoint(i2)
 
         # - union of partially overlapping intervals
-        du3 = i1 ∪ i3
+        du3 = uniondomain(i1, i3)
         @test typeof(du3) <: AbstractInterval
         @test leftendpoint(du3) == leftendpoint(i1)
         @test rightendpoint(du3) == rightendpoint(i3)
 
+        @test uniondomain(OpenInterval(0,1), 0..2) == 0..2
+        @test uniondomain(OpenInterval(0,1), OpenInterval(0,2)) == OpenInterval(0,2)
+        @test uniondomain(1..2, 0..1.5) == 0..2.0
+        @test uniondomain(1..2.5, 0.8..1.5) == 0.8..2.5
+        @test uniondomain(1..2.5, 0.8..2.5) == 0.8..2.5
+        @test uniondomain(OpenInterval(1,2.5), OpenInterval(0.8,2.5)) == OpenInterval(0.8,2.5)
+
         # - intersection of partially overlapping intervals
-        du4 = i1 ∩ i3
+        du4 = intersectdomain(i1, i3)
         @test typeof(du4) <: AbstractInterval
         @test leftendpoint(du4) == leftendpoint(i3)
         @test rightendpoint(du4) == rightendpoint(i1)
@@ -428,7 +525,7 @@ end
         @test typeof(du5) <: UnionDomain
 
         # - intersection of non-overlapping intervals
-        du6 = i1 ∩ i4
+        du6 = intersectdomain(i1, i4)
         @test isempty(du6)
 
         # - setdiff of intervals
@@ -439,11 +536,20 @@ end
         @test d1 \ (-3one(T) .. zero(T)) == (zero(T) .. 2one(T))
         @test d1 \ (-4one(T) .. -3one(T)) == d1
         @test d1 \ (-4one(T) .. 4one(T)) == EmptySpace{T}()
+        @test setdiffdomain(d1, (3one(T) .. 4one(T))) == d1
+        @test setdiffdomain(d1, (zero(T) .. one(T))) == UnionDomain((-2one(T)..zero(T))) ∪ UnionDomain((one(T).. 2one(T)))
+        @test setdiffdomain(d1, (zero(T) .. 3one(T))) == (-2one(T) .. zero(T))
+        @test setdiffdomain(d1, (-3one(T) .. zero(T))) == (zero(T) .. 2one(T))
+        @test setdiffdomain(d1, (-4one(T) .. -3one(T))) == d1
+        @test setdiffdomain(d1, (-4one(T) .. 4one(T))) == EmptySpace{T}()
 
-        d1 \ (-3one(T)) == d1
-        d1 \ (-2one(T)) == Interval{:open,:closed}(-2one(T),2one(T))
-        d1 \ (2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
-        d1 \ zero(T) == UnionDomain(Interval{:closed,:open}(-2one(T),zero(T))) ∪ UnionDomain(Interval{:open,:closed}(zero(T),2one(T)))
+        # mixed types
+        @test setdiffdomain(0..1, 0.0..0.5) == 0.5..1
+
+        @test setdiffdomain(d1, -3) == d1
+        @test setdiffdomain(d1, -2) == Interval{:open,:closed}(-2one(T),2one(T))
+        @test setdiffdomain(d1, 2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
+        @test setdiffdomain(d1, zero(T)) == UnionDomain(Interval{:closed,:open}(-2one(T),zero(T))) ∪ UnionDomain(Interval{:open,:closed}(zero(T),2one(T)))
 
         # - empty interval
         @test isempty(one(T)..zero(T))
@@ -497,25 +603,64 @@ end
     end
 
     @testset "unit ball" begin
+        # Test UnitBall constructor
+        @test UnitBall(2) isa VectorUnitBall{Float64}
+        @test UnitBall(Val(2)) isa EuclideanUnitBall{2,Float64}
+        @test UnitBall{Float64}() isa StaticUnitBall{Float64}
+        @test UnitBall{Float64}(1) isa StaticUnitBall{Float64}
+        @test_throws AssertionError UnitBall{Float64}(2)
+        @test UnitBall{SVector{2,Float64}}(Val(2)) isa EuclideanUnitBall{2,Float64}
+        @test_throws AssertionError UnitBall{SVector{2,Float64}}(Val(3))
+        @test UnitBall{SVector{2,Float64}}(2) isa EuclideanUnitBall{2,Float64}
+        @test_throws AssertionError UnitBall{SVector{2,Float64}}(3)
+        @test UnitBall{SVector{2,Float64}}() isa EuclideanUnitBall{2,Float64}
+        @test UnitBall{Vector{Float64}}(2) isa VectorUnitBall{Float64}
+        @test_throws MethodError UnitBall{Vector{Float64}}()
+
+        @test UnitBall{Float64,:open}() isa StaticUnitBall{Float64,:open}
+        @test UnitBall{Float64,:closed}(1) isa StaticUnitBall{Float64,:closed}
+        @test_throws AssertionError UnitBall{Float64,:closed}(2)
+        @test UnitBall{SVector{2,Float64},:open}(Val(2)) isa EuclideanUnitBall{2,Float64,:open}
+        @test_throws AssertionError UnitBall{SVector{2,Float64},:closed}(Val(3))
+        @test UnitBall{SVector{2,Float64},:open}(2) isa EuclideanUnitBall{2,Float64,:open}
+        @test_throws AssertionError UnitBall{SVector{2,Float64},:closed}(3)
+        @test UnitBall{SVector{2,Float64},:open}() isa EuclideanUnitBall{2,Float64,:open}
+        @test UnitBall{Vector{Float64},:closed}(2) isa VectorUnitBall{Float64,:closed}
+        @test_throws MethodError UnitBall{Vector{Float64},:open}()
+
+        @test DynamicUnitBall{Float64}(1) isa DynamicUnitBall{Float64}
+        @test_throws AssertionError DynamicUnitBall{Float64}(2)
+
         D = UnitDisk()
         @test SA[1.,0.] ∈ D
         @test SA[1.,1.] ∉ D
         @test approx_in(SA[1.0,0.0+1e-5], D, 1e-4)
         @test !isempty(D)
         @test isclosedset(D)
-        @test !DomainSets.isopenset(D)
+        @test !isopenset(D)
         D2 = convert(Domain{SVector{2,BigFloat}}, D)
         @test eltype(D2) == SVector{2,BigFloat}
         @test boundary(D) == UnitCircle()
         @test dimension(D) == 2
 
+        @test convert(SublevelSet, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
+        @test convert(SublevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SublevelSet{SVector{2,Float64},:open}
+
+        @test convert(Interval, UnitBall{Float64}()) === ChebyshevInterval()
+        @test convert(Interval, UnitBall{Float64,:open}()) === OpenInterval(-1.0, 1.0)
+        @test UnitBall{Float64}() == ChebyshevInterval()
+
+        @test convert(Domain{SVector{2,Float64}}, UnitBall(2)) isa StaticUnitBall
+        @test convert(Domain{Vector{Float64}}, UnitBall(Val(2))) isa DynamicUnitBall
+
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
         @test in(SA[1.0-eps(Float64),0.0], D)
-        @test approx_in(SA[1.0,0.0], D)
+        @test approx_in(SA[1.1,0.0], D, 0.2)
+        @test !approx_in(SA[1.1,0.0], D, 0.01)
         @test SA[0.2,0.2] ∈ D
         @test !isclosedset(D)
-        @test DomainSets.isopenset(D)
+        @test isopenset(D)
         @test boundary(D) == UnitCircle()
 
         D = 2UnitDisk()
@@ -537,8 +682,9 @@ end
         @test SA[1.,0.1,0.] ∉ B
         @test !isempty(B)
         @test isclosedset(B)
-        @test !DomainSets.isopenset(B)
+        @test !isopenset(B)
         @test boundary(B) == UnitSphere()
+        @test isopenset(interior(B))
 
         B = 2UnitBall()
         @test SA[1.9,0.0,0.0] ∈ B
@@ -558,21 +704,34 @@ end
         @test [1, 0, 0, 0] ∈ C
         @test [0.0,0.1,0.2,0.1] ∈ C
         @test SA[0.0,0.1,0.2,0.1] ∈ C
-        @test [0.0,0.1] ∉ C
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 2 and domain 'the 4-dimensional closed unit ball' with dimension 4. Returning false.") [0.0,0.1] ∉ C
         @test [0.0,1.1,0.2,0.1] ∉ C
         @test !isempty(C)
         @test isclosedset(C)
-        @test !DomainSets.isopenset(C)
+        @test !isopenset(C)
         @test boundary(C) == VectorUnitSphere(4)
         @test dimension(C) == 4
+        @test isopenset(interior(C))
 
         D = VectorUnitBall{Float64,:open}(4)
         @test !in([1, 0, 0, 0], D)
         @test in([1-eps(Float64), 0, 0, 0], D)
+        @test approx_in([1.1, 0, 0, 0], D, 0.2)
+        @test !approx_in([1.1, 0, 0, 0], D, 0.01)
+        @test !isempty(D)
+        @test approx_in(SA[1.01,0.0,0.0,0.0], D, 0.05)
+
+        @test isclosedset(StaticUnitBall{SVector{2,Float64}}())
+        @test EuclideanUnitBall{2}() isa EuclideanUnitBall{2,Float64}
+
+        show(io, EuclideanUnitBall{2,Float64,:open}())
+        @test String(take!(io)) == "the 2-dimensional open unit ball"
+        show(io, UnitCircle())
+        @test String(take!(io)) == "the unit circle"
     end
 
     @testset "custom named ball" begin
-        B = NamedHyperBall()
+        B = NamedBall()
         @test SA[1.4, 1.4] ∈ B
         @test SA[1.5, 1.5] ∉ B
         @test typeof(1.2 * B)==typeof(B * 1.2)
@@ -608,35 +767,39 @@ end
         @test 1im ∉ D2
         @test 0.999 ∈ D2
 
-        io = IOBuffer()
         show(io,C)
         @test String(take!(io)) == "the complex unit circle (T=Complex{Float64})"
         show(io,D)
         @test String(take!(io)) == "the complex unit disk (T=Complex{Float64})"
         show(io,D2)
         @test String(take!(io)) == "the complex open unit disk (T=Complex{BigFloat})"
+
+        @test pseudolevel(ComplexUnitCircle(), 0.1) isa SublevelSet{Complex{Float64},:open}
+        p = pseudolevel(ComplexUnitCircle(), 0.1)
+        @test 0.8 ∉ p
+        @test 0.95 ∈ p
+        @test 1+0.1im ∈ p
+        @test 1.1+0.2im ∉ p
     end
 
+    @testset "unit sphere" begin
+        # test UnitSphere constructor
+        @test UnitSphere(2) isa VectorUnitSphere{Float64}
+        @test UnitSphere(Val(2)) isa EuclideanUnitSphere{2,Float64}
+        @test UnitSphere{Float64}() isa StaticUnitSphere{Float64}
+        @test UnitSphere{Float64}(1) isa StaticUnitSphere{Float64}
+        @test_throws AssertionError UnitSphere{Float64}(2)
+        @test UnitSphere{SVector{2,Float64}}(Val(2)) isa EuclideanUnitSphere{2,Float64}
+        @test_throws AssertionError UnitSphere{SVector{2,Float64}}(Val(3))
+        @test UnitSphere{SVector{2,Float64}}(2) isa EuclideanUnitSphere{2,Float64}
+        @test_throws AssertionError UnitSphere{SVector{2,Float64}}(3)
+        @test UnitSphere{SVector{2,Float64}}() isa EuclideanUnitSphere{2,Float64}
+        @test UnitSphere{Vector{Float64}}(2) isa VectorUnitSphere{Float64}
+        @test_throws MethodError UnitSphere{Vector{Float64}}()
 
-    @testset "cube" begin
-        #Square
-        D = UnitInterval()^2
-        @test SA[0.9, 0.9] ∈ D
-        @test SA[1.1, 1.1] ∉ D
-        @test !isempty(D)
-        @test isclosedset(D)
-        @test !DomainSets.isopenset(D)
+        @test DynamicUnitSphere{Float64}(1) isa DynamicUnitSphere{Float64}
+        @test_throws AssertionError DynamicUnitSphere{Float64}(2)
 
-        @test approx_in(SA[-0.1,-0.1], D, 0.1)
-        @test !approx_in(SA[-0.1,-0.1], D, 0.09)
-
-        #Cube
-        D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
-        @test SA[0.9, 0.6, -2.5] ∈ D
-        @test SA[0.0, 0.6, 0.0] ∉ D
-    end
-
-    @testset "sphere" begin
         C = UnitCircle()
         @test SA[1.,0.] ∈ C
         @test SA[1.,1.] ∉ C
@@ -644,16 +807,27 @@ end
         @test !approx_in(SA[1.,1.], C)
         @test !isempty(C)
         @test isclosedset(C)
-        @test !DomainSets.isopenset(C)
+        @test !isopenset(C)
         p = parameterization(C)
         x = applymap(p, 1/2)
-        @test DomainSets.domain(p) == Interval{:closed,:open,Float64}(0, 1)
+        @test gradient(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
         @test approx_in(x, C)
         q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
+        @test applymap(q, -x) ≈ 1
+        @test rightinverse(q) == p
+
+        @test convert(LevelSet, UnitCircle()) isa LevelSet{SVector{2,Float64}}
+        @test convert(LevelSet{SVector{2,BigFloat}}, UnitCircle()) isa LevelSet{SVector{2,BigFloat}}
+        @test pseudolevel(UnitCircle(), 0.1) isa SublevelSet
+        @test SA[1.05,0] ∈ pseudolevel(UnitCircle(), 0.1)
+        @test SA[1.15,0] ∉ pseudolevel(UnitCircle(), 0.1)
 
         C2 = convert(Domain{SVector{2,BigFloat}}, C)
         @test eltype(C2) == SVector{2,BigFloat}
+
+        @test convert(Domain{SVector{2,Float64}}, UnitSphere(2)) isa StaticUnitSphere
+        @test convert(Domain{Vector{Float64}}, UnitSphere(Val(2))) isa DynamicUnitSphere
 
         C = 2UnitCircle() .+ SA[1.,1.]
         @test approx_in(SA[3.,1.], C)
@@ -671,10 +845,24 @@ end
 
         @test Basis3Vector() in S
 
+        @test issubset(UnitSphere(), UnitBall())
+
         S = 2 * UnitSphere() .+ SA[1.,1.,1.]
         @test approx_in(SA[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
         @test !approx_in(SA[4.,1.,5.], S)
 
+        D = UnitCircle()
+        @test convert(Domain{SVector{2,BigFloat}}, D) ≡ UnitCircle{BigFloat}()
+        @test SVector(1,0) in D
+        @test SVector(nextfloat(1.0),0) ∉ D
+
+        D = UnitSphere()
+        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{SVector{3,BigFloat}}()
+        @test SVector(1,0,0) in D
+        @test SVector(nextfloat(1.0),0,0) ∉ D
+    end
+
+    @testset "derived types" begin
         # Create an ellipse, the curve
         E = ellipse(2.0, 4.0)
         @test SA[2.0,0.0] ∈ E
@@ -695,34 +883,25 @@ end
         E2 = ellipse_shape(1, 2.0)
         @test eltype(E) == SVector{2,Float64}
 
-        D = UnitCircle()
-        @test convert(Domain{SVector{2,BigFloat}}, D) ≡ UnitCircle{BigFloat}()
-        @test SVector(1,0) in D
-        @test SVector(nextfloat(1.0),0) ∉ D
-
-        D = UnitSphere()
-        @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{BigFloat}()
-        @test SVector(1,0,0) in D
-        @test SVector(nextfloat(1.0),0,0) ∉ D
+        C = cylinder()
+        @test eltype(C) == SVector{3,Float64}
+        C2 = cylinder(1.0, 2)
+        @test SA[0.5,0.2,1.5] ∈ C2
     end
 
-
     @testset "mapped_domain" begin
+        @test MappedDomain(0..1.0, cos) isa MappedDomain{Float64}
+        @test MappedDomain{Float64}(0..1.0, cos) isa MappedDomain{Float64}
         # Test chaining of maps
         D = UnitCircle()
         D1 = 2 * D
         @test typeof(D1) <: MappedDomain
-        @test typeof(superdomain(D1)) <: UnitHyperSphere
+        @test typeof(superdomain(D1)) <: UnitSphere
+        @test isclosedset(D1)
+        @test !isopenset(D1)
+        @test convert(Domain{SVector{2,BigFloat}}, D1) isa MappedDomain{SVector{2,BigFloat}}
         D2 = 2 * D1
-        @test typeof(superdomain(D2)) <: UnitHyperSphere
-
-        # Once adding numbers is removed, test for error:
-        # @test try
-        #     (0..1) + 0.4
-        #     false
-        # catch
-        #     true
-        # end
+        @test typeof(superdomain(D2)) <: UnitSphere
 
         D = UnitInterval()^2
         show(io,rotate(D,1.))
@@ -746,6 +925,13 @@ end
 
         B = 2 * VectorUnitBall(10)
         @test dimension(B) == 10
+        @test superdomain(B) ∘ inverse_map(B) == B
+        @test isopenset(interior(B))
+        @test B == closure(interior(B))
+        @test DomainSets.superdomain(boundary(B)) isa UnitSphere
+        @test canonicaldomain(B) == VectorUnitBall(10)
+        @test fromcanonical(B) == forward_map(B)
+        @test tocanonical(B) == inverse_map(B)
     end
 
     @testset "simplex" begin
@@ -768,17 +954,25 @@ end
         @test approx_in(SA[-0.1,-0.1], d, 0.1)
         @test !approx_in(SA[-0.1,-0.1], d, 0.09)
 
+        @test corners(d) == [ SA[0.0,0.0], SA[1.0,0.0], SA[0.0,1.0]]
+
         @test convert(Domain{SVector{2,BigFloat}}, d) == UnitSimplex{2,BigFloat}()
 
         @test isclosedset(d)
-        @test !DomainSets.isopenset(d)
+        @test !isopenset(d)
+        @test isopenset(interior(d))
+        @test closure(d) == d
         @test point_in_domain(d) ∈ d
 
         # open/closed
         d2 = EuclideanUnitSimplex{2,Float64,:open}()
         @test !isclosedset(d2)
-        @test DomainSets.isopenset(d2)
+        @test isopenset(d2)
         @test SA[0.3,0.1] ∈ d2
+        @test SA[0.0,0.1] ∉ d2
+        @test SA[0.3,0.0] ∉ d2
+        @test approx_in(SA[-0.01,0.0], d2, 0.1)
+        @test !approx_in(SA[-0.01,0.0], d2, 0.001)
 
         d3 = EuclideanUnitSimplex{3,BigFloat}()
         @test point_in_domain(d3) ∈ d3
@@ -799,6 +993,8 @@ end
         @test SA[x1,x1,x1] ∉ d3
 
         D = VectorUnitSimplex(2)
+        @test isopenset(interior(D))
+        @test closure(D) == D
         @test SA[0.2,0.2] ∈ D
         @test SA[0.0,0.2] ∈ D
         @test SA[0.2,0.0] ∈ D
@@ -812,379 +1008,411 @@ end
         @test SA[-0.2,0.2] ∉ D
         @test SA[0.2,-0.2] ∉ D
         @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
+
+        @test corners(D) == [ [0.0,0.0], [1.0,0.0], [0.0,1.0]]
     end
 
-    @testset "arithmetics" begin
-        D = UnitInterval()^3
-        S = 2 * UnitBall()
-        @testset "joint domain" begin
-            DS = D ∪ S
-            @test SA[0.0, 0.6, 0.0] ∈ DS
-            @test SA[0.9, 0.6,-2.5] ∉ DS
-        end
+    @testset "level sets" begin
+        d1 = LevelSet(cos, 1.0)
+        @test d1 isa LevelSet{Float64}
+        @test convert(Domain{ComplexF64}, d1) isa LevelSet{ComplexF64}
+        show(io,d1)
+        @test String(take!(io)) == "level set f(x) = 1.0 with f = cos"
+        @test 0.0 ∈ d1
+        @test 0im ∈ d1
+        @test 0.1 ∉ d1
+        @test 0.1+1im ∉ d1
 
-        @testset "domain intersection" begin
-            DS = D ∩ S
-            @test SA[0.1, 0.1, 0.1] ∈ DS
-            @test SA[0.1, -0.1, 0.1] ∉ DS
-        end
-        @testset "domain difference" begin
-            DS = D\S
-            @test SA[0.1, 0.1, 0.1] ∉ DS
+        # prod yields the function (x,y) -> x*y
+        d2 = ZeroSet{SVector{2,Float64}}(prod)
+        @test d2 isa ZeroSet{SVector{2,Float64}}
+        @test SA[0.1,0.3] ∉ d2
+        @test SA[0.0,0.3] ∈ d2
+        @test SA[0.1,0.0] ∈ d2
+        @test ZeroSet(cos) isa ZeroSet{Float64}
+        @test convert(Domain{BigFloat}, ZeroSet(cos)) isa ZeroSet{BigFloat}
+        @test convert(LevelSet, ZeroSet{BigFloat}(cos)) isa LevelSet{BigFloat}
+        @test convert(LevelSet{BigFloat}, ZeroSet{Float64}(cos)) isa LevelSet{BigFloat}
 
-            D1 = 2 * D
-            D2 = D * 2
-            D3 = D / 2
+        d3 = SublevelSet(cos, 0.5)
+        d3_open = SublevelSet{Float64,:open}(cos,0.5)
+        @test d3 isa SublevelSet{Float64,:closed}
+        @test interior(d3) == d3_open
+        @test closure(d3_open) == d3
+        @test closure(d3) == d3
+        @test interior(d3_open) == d3_open
+        @test boundary(d3) == LevelSet(cos, 0.5)
+        @test 3.0 ∈ d3
+        @test 0.0 ∉ d3
+        @test 0.0 ∉ d3_open
+        show(io, d3)
+        @test String(take!(io)) == "sublevel set f(x) <= 0.5 with f = cos"
+        show(io, d3_open)
+        @test String(take!(io)) == "sublevel set f(x) < 0.5 with f = cos"
+        @test convert(Domain{BigFloat}, d3) isa SublevelSet{BigFloat,:closed}
+        @test convert(Domain{BigFloat}, d3_open) isa SublevelSet{BigFloat,:open}
 
-            @test SA[2., 2., 2.] ∈ D1
-            @test SA[0.9, 0.6,-2.5] ∉ D1
-            @test SA[2., 2., 2.] ∈ D2
-            @test SA[0.9, 0.6,-2.5] ∉ D2
-            @test SA[.5, .4, .45] ∈ D3
-            @test SA[.3, 0.6,-.2] ∉ D3
-        end
+
+        d4 = SubzeroSet{SVector{2,Float64}}(prod)
+        d4_open = SubzeroSet{SVector{2,Float64},:open}(prod)
+        @test d4 isa SubzeroSet{SVector{2,Float64},:closed}
+        @test interior(d4) == d4_open
+        @test closure(d4_open) == d4
+        @test closure(d4) == d4
+        @test interior(d4_open) == d4_open
+        @test boundary(d4) == ZeroSet{SVector{2,Float64}}(prod)
+        @test SA[0.1,0.3] ∉ d4
+        @test SA[-0.1,0.3] ∈ d4
+        @test SA[-0.1,-0.3] ∉ d4
+        @test SA[-0.1,0.3] ∈ d4_open
+        convert(Domain{SVector{2,BigFloat}}, d4) isa SubzeroSet{SVector{2,BigFloat},:closed}
+        convert(Domain{SVector{2,BigFloat}}, d4_open) isa SubzeroSet{SVector{2,BigFloat},:open}
+
+        d5 = SuperlevelSet(cos, 0.5)
+        d5_open = SuperlevelSet{Float64,:open}(cos, 0.5)
+        @test d5 isa SuperlevelSet{Float64,:closed}
+        @test interior(d5) == d5_open
+        @test closure(d5_open) == d5
+        @test closure(d5) == d5
+        @test interior(d5_open) == d5_open
+        @test boundary(d5) == LevelSet(cos, 0.5)
+        @test 3.0 ∉ d5
+        @test 0.0 ∈ d5
+        @test 0.0 ∈ d5
+        show(io, d5)
+        @test String(take!(io)) == "superlevel set f(x) >= 0.5 with f = cos"
+        show(io, d5_open)
+        @test String(take!(io)) == "superlevel set f(x) > 0.5 with f = cos"
+        @test convert(Domain{BigFloat}, d5) isa SuperlevelSet{BigFloat}
+        @test convert(Domain{BigFloat}, d5_open) isa SuperlevelSet{BigFloat,:open}
+
+        d6 = SuperzeroSet{SVector{2,Float64}}(prod)
+        d6_open = SuperzeroSet{SVector{2,Float64},:open}(prod)
+        @test d6 isa SuperzeroSet{SVector{2,Float64},:closed}
+        @test interior(d6) == d6_open
+        @test closure(d6_open) == d6
+        @test closure(d6) == d6
+        @test interior(d6_open) == d6_open
+        @test boundary(d6) == ZeroSet{SVector{2,Float64}}(prod)
+        @test SA[0.1,0.3] ∈ d6
+        @test SA[-0.1,0.3] ∉ d6
+        @test SA[-0.1,-0.3] ∈ d6
+        @test SuperzeroSet(cos) isa SuperzeroSet{Float64}
+        @test convert(Domain{SVector{2,BigFloat}}, d6) isa SuperzeroSet{SVector{2,BigFloat},:closed}
+        @test convert(Domain{SVector{2,BigFloat}}, d6_open) isa SuperzeroSet{SVector{2,BigFloat},:open}
     end
 
-    @testset "cartesian product" begin
-        @testset "ProductDomain 1" begin
-            d1 = (-1.0 .. 1.0)^2
-            @test d1 isa VcatDomain
-            @test d1.domains isa Tuple
-            @test eltype(d1) == SVector{2,typeof(1.0)}
-            @test SA[0.5,0.5] ∈ d1
-            @test SA[-1.1,0.3] ∉ d1
-            @test @inferred(ProductDomain(-1.0..1, -1.0..1)) === d1
-            # Test promotion
-            @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
-            d1w = convert(Domain{SVector{2,BigFloat}}, d1)
-            @test eltype(d1w) == SVector{2,BigFloat}
-            @test eltype(DomainSets.element(d1w, 1)) == BigFloat
-            @test eltype(DomainSets.element(d1w, 2)) == BigFloat
+    @testset "indicator functions" begin
+        ispositive(x) = x >= 0
+        d = IndicatorFunction(ispositive)
+        @test d isa IndicatorFunction{Float64}
+        @test DomainSets.indicatorfunction(d) == ispositive
+        show(io,d)
+        @test String(take!(io)) == "indicator domain defined by function f = ispositive"
+        @test 0 ∈ d
+        @test big(0) ∈ d
+        @test -1 ∉ d
 
-            # A single domain
-            @test ProductDomain(0..1) isa VcatDomain{1}
+        @test convert(IndicatorFunction, 0..1) isa IndicatorFunction
+        @test convert(IndicatorFunction, d) == d
+        @test convert(Domain{BigFloat}, d) isa IndicatorFunction{BigFloat}
+        @test 0.5 ∈ convert(IndicatorFunction, 0..1)
 
-            # Test vectors of wrong length
-            @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") SA[0.0,0.0,0.0] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") SA[0.0] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible dimension 3 of x and 2 of the domain. Returning false.") [0.0,0.0,0.0] ∉ d1
-            @test_logs (:warn, "in(x,domain): incompatible dimension 1 of x and 2 of the domain. Returning false.") [0.0] ∉ d1
+        d2 = Domain(x>0 for x in -1..1)
+        @test -0.5 ∉ d2
+        @test 0.5 ∈ d2
+        show(io, d2)
+        @test String(take!(io)) == "indicator function bounded by: -1..1"
 
-            d2 = cartesianproduct((-1.0 .. 1.0), 2)
-            @test SA[0.5,0.5] ∈ d2
-            @test SA[-1.1,0.3] ∉ d2
+        d3 = Domain(x*y>0 for (x,y) in UnitDisk())
+        @test [0.4,0.2] ∈ d3
+        @test [0.4,-0.2] ∉ d3
 
-            d3 = (-1.0 .. 1.0) × (-1.5 .. 2.5)
-            @test SA[0.5,0.5] ∈ d3
-            @test SA[-1.1,0.3] ∉ d3
-
-            d4 = cartesianproduct((-1.0 .. 1.0), 2)
-            bnd = boundary(d4)
-            @test bnd isa EuclideanDomain
-            @test bnd isa UnionDomain
-            @test [-1.0, 0.5] ∈ bnd
-            @test [1.0, 0.5] ∈ bnd
-            @test [0.5, -1.0] ∈ bnd
-            @test [0.5, 1.0] ∈ bnd
-            @test [0.5, 0.2] ∉ bnd
-        end
-        @testset "ProductDomain 2" begin
-            d1 = cartesianproduct((-1.0 .. 1.0), 2)
-            @test d1 isa VcatDomain
-            @test d1.domains isa Tuple
-
-            d3 = ProductDomain(1.05 * UnitDisk(), (-1.0 .. 1.0))
-            @inferred(cross(1.05 * UnitDisk(), (-1.0 .. 1.0))) === d3
-            @test d3 isa VcatDomain
-            @test eltype(d3) == SVector{3,Float64}
-            @test SA[0.5,0.5,0.8] ∈ d3
-            @test SA[-1.1,0.3,0.1] ∉ d3
-            @test point_in_domain(d3) ∈ d3
-
-            d4 = d1×(-1.0..1.)
-            @test d4 isa VcatDomain
-            @test SA[0.5,0.5,0.8] ∈ d4
-            @test SA[-1.1,0.3,0.1] ∉ d4
-            @test point_in_domain(d4) ∈ d4
-
-            d5 = (-1.0..1.)×d1
-            @test d5 isa VcatDomain
-            @test SA[0.,0.5,0.5] ∈ d5
-            @test SA[0.,-1.1,0.3] ∉ d5
-            @test point_in_domain(d5) ∈ d5
-
-            d6 = d1×d1
-            @test d6 isa VcatDomain
-            @test SA[0.,0.,0.5,0.5] ∈ d6
-            @test SA[0.,0.,-1.1,0.3] ∉ d6
-            @test point_in_domain(d6) ∈ d6
-
-            io = IOBuffer()
-            show(io,d1)
-            @test String(take!(io)) == "-1.0..1.0 x -1.0..1.0"
-        end
-        @testset "mixed intervals" begin
-            d = (0..1) × (0.0..1)
-            @test SA[0.1,0.2] ∈ d
-            @test SA[0.1,1.2] ∉ d
-            @test SA[1.1,1.3] ∉ d
-            @test d isa EuclideanDomain{2}
-            # Make sure promotion of domains happened
-            @test eltype(DomainSets.element(d,1)) == Float64
-            @test eltype(DomainSets.element(d,2)) == Float64
-            @test point_in_domain(d) ∈ d
-        end
-        @testset "vector domains" begin
-            d1 = ProductDomain([0..1.0, 0..2.0])
-            @test d1 isa VectorDomain{Float64}
-            @test d1.domains isa Vector
-            @test dimension(d1) == 2
-            @test [0.1,0.2] ∈ d1
-            @test SA[0.1,0.2] ∈ d1
-            @test point_in_domain(d1) ∈ d1
-            @test convert(Domain{Vector{BigFloat}}, d1) == d1
-            d1big = convert(Domain{Vector{BigFloat}}, d1)
-            @test eltype(d1big) == Vector{BigFloat}
-
-            # Test an integer type as well
-            d2 = ProductDomain([0..1, 0..2])
-            @test dimension(d2) == 2
-            @test [0.1,0.2] ∈ d2
-            @test point_in_domain(d2) ∈ d2
-
-            bnd = boundary(d1)
-            @test bnd isa VectorDomain
-            @test bnd isa UnionDomain
-            @test dimension(bnd) == 2
-            @test [0.0, 0.5] ∈ bnd
-            @test [1.0, 0.5] ∈ bnd
-            @test [0.2, 0.0] ∈ bnd
-            @test [0.2, 2.0] ∈ bnd
-            @test [0.2, 0.5] ∉ bnd
-
-            d3 = VectorProductDomain([0..i for i in 1:10])
-            @test d3 isa VectorProductDomain
-            @test eltype(d3) == Vector{Int}
-            @test rand(10) ∈ d3
-            @test 2 .+ rand(10) ∉ d3
-            d4 = VectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
-            @test d4 isa VectorProductDomain
-            @test eltype(d4) == Vector{Float64}
-            @test rand(10) ∈ d4
-            @test 2 .+ rand(10) ∉ d4
-
-            @test ProductDomain(SVector(0..1, 0..2)) isa VectorProductDomain{Vector{Int}}
-            @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
-        end
-        @testset "Tuple product domain" begin
-            # Use the constructor ProductDomain{T} directly
-            d1 = ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
-            @test d1 isa TupleProductDomain
-            @test d1.domains isa Tuple
-            @test eltype(d1) == Tuple{Float64,Float64}
-            @test dimension(d1) == 2
-            @test (0.2,0.6) ∈ d1
-            @test (0.2,0.8) ∉ d1
-            @test (true,0.6) ∉ d1
-            if VERSION < v"1.6-"
-                @test_logs (:warn, "in(x,domain): incompatible types SArray{Tuple{2},Float64,1,2} and Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-                @test_logs (:warn, "in(x,domain): incompatible types Array{Float64,1} and Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
-            else
-                @test_logs (:warn, "in(x,domain): incompatible types SVector{2, Float64} and Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
-                @test_logs (:warn, "in(x,domain): incompatible types Vector{Float64} and Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
-            end
-            @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
-            d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
-            @test eltype(d1big) == Tuple{BigFloat,BigFloat}
-            @test eltype(DomainSets.element(d1big,1)) == BigFloat
-            @test eltype(DomainSets.element(d1big,2)) == BigFloat
-
-            d2 = ProductDomain(['a','b'], 0..1)
-            @test d2 isa TupleProductDomain
-            @test d2.domains isa Tuple
-            @test dimension(d2) == 2
-            @test eltype(d2) == Tuple{Char,Int}
-            @test ('a',0.4) ∈ d2
-            @test ('b',1.5) ∉ d2
-            @test ('c',0.5) ∉ d2
-
-            bnd = boundary(d1)
-            @test eltype(bnd) == Tuple{Float64,Float64}
-            @test bnd isa UnionDomain
-            @test dimension(bnd) == 2
-            @test (0.0, 0.5) ∈ bnd
-            @test (0.5, 0.5) ∈ bnd
-            @test (0.3, 0.2) ∉ bnd
-            @test (0.3, 0.0) ∈ bnd
-            @test (0.3, 0.7) ∈ bnd
-        end
-        @testset "ProductDomain{T}" begin
-            d1 = 0..1.0
-            d2 = 0..2.0
-            @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
-            @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
-            @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
-
-            # Some conversions
-            @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
-            @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
-            @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
-        end
+        d4 = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
+        @test d4 isa DomainSets.BoxedIndicatorFunction{F,<:TupleProductDomain} where F
+        @test ( [0.5,0.2], 0.5) ∈ d4
+        @test ( [0.5,0.2], 1.5) ∉ d4
+        @test ( [-0.5,-0.2], 0.1) ∉ d4
     end
 end
 
-@testset "Set operations" begin
-    @testset "union" begin
-        d1 = UnitDisk()
-        d2 = (-.9..0.9)^2
-        d3 = (-.5 .. -.1) × (.5 .. 0.1)
-        d4 = (0.0..1.5)
-        d5 = [1.0,3.0]
+@testset "cartesian product" begin
+    @test productdomain() == ()
+    @test productdomain(2) == 2
 
-        @test isempty(d3)
-        @test convert(Domain{SVector{2,Float64}}, d3) isa Domain{SVector{2,Float64}}
+    @testset "VcatDomain" begin
+        d1 = VcatDomain(-1.0..1.0, -1.0..1.0)
+        @test d1 isa DomainSets.VcatDomain
+        @test d1.domains isa Tuple
+        @test eltype(d1) == SVector{2,typeof(1.0)}
+        @test SA[0.5,0.5] ∈ d1
+        @test SA[-1.1,0.3] ∉ d1
+        @test @inferred(VcatDomain(-1.0..1, -1.0..1)) === d1
+        # Test promotion
+        @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
+        d1w = convert(Domain{SVector{2,BigFloat}}, d1)
+        @test eltype(d1w) == SVector{2,BigFloat}
+        @test eltype(element(d1w, 1)) == BigFloat
+        @test eltype(element(d1w, 2)) == BigFloat
 
-        u1 = d1 ∪ d2
-        u2 = u1 ∪ d3
-        @test dimension(u1) == 2
-        @test dimension(u2) == 2
+        @test VcatDomain( (-1..1, -2..2)) isa VcatDomain{2,Int,(1,1),Tuple{ClosedInterval{Int64}, ClosedInterval{Int64}}}
 
-        u3 = d3 ∪ u1
-        u4 = u1 ∪ u2
-        x = SVector(0.,.15)
-        y = SVector(1.1,.75)
-        @test x∈u3
-        @test x∈u4
+        show(io,d1)
+        @test String(take!(io)) == "-1.0..1.0 x -1.0..1.0"
 
-        @test y∉u3
-        @test y∉u4
+        bnd = boundary(d1)
+        @test bnd isa EuclideanDomain
+        @test bnd isa UnionDomain
+        @test [-1.0, 0.5] ∈ bnd
+        @test [1.0, 0.5] ∈ bnd
+        @test [0.5, -1.0] ∈ bnd
+        @test [0.5, 1.0] ∈ bnd
+        @test [0.5, 0.2] ∉ bnd
 
-        ũ1 = UnionDomain(d1,d2)
-        @test u1 == ũ1
-        ũ1 = UnionDomain((d1,d2))
-        @test u1 == ũ1
-        ũ2 = UnionDomain([d1,d2])
-        @test ũ2 == ũ2
-        @test u1 == ũ2
+        # A single domain
+        @test VcatDomain(UnitCircle()) isa VcatDomain{2}
 
-        # Don't create a union with two identical elements
-        @test (d1 ∪ d1) isa typeof(d1)
+        # Test vectors of wrong length
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") SA[0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") SA[0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") [0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '-1.0..1.0 x -1.0..1.0' with dimension 2. Returning false.") [0.0] ∉ d1
 
-        # union with non-Domain type that implements domain interface
-        u45 = UnionDomain(d4, d5)
-        @test u45 isa Domain{Float64}
-        @test 0.2 ∈ u45
-        @test 1.2 ∈ u45
-        @test -1.2 ∉ u45
-        @test convert(Domain{BigFloat}, u45) isa Domain{BigFloat}
+        d3 = VcatDomain(-1.0 .. 1.0, -1.5 .. 2.5)
+        @test SA[0.5,0.5] ∈ d3
+        @test SA[-1.1,0.3] ∉ d3
 
-        # ordering doesn't matter
-        @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
-
-        @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
-
-        @test !isempty(u1)
-
-        show(io,u1)
-        @test String(take!(io)) == "the union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
+        d3 = VcatDomain(1.05 * UnitDisk(), -1.0 .. 1.0)
+        @inferred(cross(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
+        @test d3 isa VcatDomain
+        @test eltype(d3) == SVector{3,Float64}
+        @test SA[0.5,0.5,0.8] ∈ d3
+        @test SA[-1.1,0.3,0.1] ∉ d3
+        @test point_in_domain(d3) ∈ d3
     end
-
-    @testset "intersection" begin
-        d1 = UnitDisk()
-        d2 = (-.4..0.4)^2
-        d3 = (-.5 .. 0.5) × (-.1.. 0.1)
-        d4 = (0.0..1.5)
-        d5 = [1.0,3.0]
-
-        # intersection of productdomains
-        i1 = d2 & d3
-        show(io,i1)
-        @test String(take!(io)) == "-0.4..0.4 x -0.1..0.1"
-        i2 = d1 & d2
-        show(io,i2)
-        @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.4..0.4 x -0.4..0.4\n"
-        @test dimension(i1) == 2
-        @test dimension(i2) == 2
-
-        i3 = d3 & i2
-        i4 = i2 & d3
-        i5 = i3 & i2
-
-        x = SVector(0.,.05)
-        y = SVector(0.,.75)
-        @test x∈i3
-        @test x∈i4
-
-        @test y∉i3
-        @test y∉i4
-
-        d45 = IntersectionDomain(d4, d5)
-        @test d45 isa Domain{Float64}
-        @test 1.0 ∈ d45
-        @test 1.1 ∉ d45
-        @test convert(Domain{BigFloat}, d45) isa Domain{BigFloat}
+    @testset "mixed intervals" begin
+        d = (0..1) × (0.0..1)
+        @test SA[0.1,0.2] ∈ d
+        @test SA[0.1,1.2] ∉ d
+        @test SA[1.1,1.3] ∉ d
+        @test d isa EuclideanDomain{2}
+        # Make sure promotion of domains happened
+        @test eltype(element(d,1)) == Float64
+        @test eltype(element(d,2)) == Float64
+        @test point_in_domain(d) ∈ d
     end
+    @testset "vector domains" begin
+        d1 = VectorProductDomain([0..1.0, 0..2.0])
+        @test d1 isa VectorDomain{Float64}
+        @test d1.domains isa Vector
+        @test dimension(d1) == 2
+        @test [0.1,0.2] ∈ d1
+        @test SA[0.1,0.2] ∈ d1
+        @test point_in_domain(d1) ∈ d1
+        @test convert(Domain{Vector{BigFloat}}, d1) == d1
+        d1big = convert(Domain{Vector{BigFloat}}, d1)
+        @test eltype(d1big) == Vector{BigFloat}
 
-    @testset "difference" begin
-        d1 = UnitDisk()
-        d2 = (-.5..0.5) × (-.1..0.1)
-        d3 = 0.0..3.0
-        d4 = [1.0, 2.5]
+        # Test an integer type as well
+        d2 = VectorProductDomain([0..1, 0..3])
+        @test dimension(d2) == 2
+        @test [0.1,0.2] ∈ d2
+        @test point_in_domain(d2) ∈ d2
 
-        # intersection of productdomains
-        d = d1\d2
-        show(io,d)
-        @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
-        @test dimension(d) == 2
+        # other constructor calls
+        @test VectorProductDomain(0..1, 1..2) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain((0..1, 1..2)) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain{Vector{Int}}(0..1, 1..2) isa VectorProductDomain{Vector{Int}}
+        @test VectorProductDomain{Vector{Int}}((0..1, 1..2)) isa VectorProductDomain{Vector{Int}}
 
-        x = SVector(0.,.74)
-        y = SVector(0.,.25)
-        @test x∈d
-        @test x∈d
+        bnd = boundary(d1)
+        @test bnd isa VectorDomain
+        @test bnd isa UnionDomain
+        @test dimension(bnd) == 2
+        @test [0.0, 0.5] ∈ bnd
+        @test [1.0, 0.5] ∈ bnd
+        @test [0.2, 0.0] ∈ bnd
+        @test [0.2, 2.0] ∈ bnd
+        @test [0.2, 0.5] ∉ bnd
 
-        d34 = DifferenceDomain(d3, d4)
-        @test d34 isa Domain{Float64}
-        @test d34 isa DifferenceDomain
-        @test 0.99 ∈ d34
-        @test 1.0 ∉ d34
-        @test convert(Domain{BigFloat}, d34) isa Domain{BigFloat}
+        d3 = VectorProductDomain([0..i for i in 1:10])
+        @test d3 isa VectorProductDomain
+        @test eltype(d3) == Vector{Int}
+        @test rand(10) ∈ d3
+        @test 2 .+ rand(10) ∉ d3
+        d4 = VectorProductDomain{Vector{Float64}}([0..i for i in 1:10])
+        @test d4 isa VectorProductDomain
+        @test eltype(d4) == Vector{Float64}
+        @test rand(10) ∈ d4
+        @test 2 .+ rand(10) ∉ d4
+
+        @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
     end
+    @testset "Tuple product domain" begin
+        # Use the constructor ProductDomain{T} directly
+        d1 = TupleProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7)
+        @test d1 isa TupleProductDomain{Tuple{Float64,Float64}}
+        @test d1.domains isa Tuple
+        @test eltype(d1) == Tuple{Float64,Float64}
+        @test dimension(d1) == 2
+        @test (0.2,0.6) ∈ d1
+        @test (0.2,0.8) ∉ d1
+        @test (true,0.6) ∉ d1
+        if VERSION < v"1.6-"
+            @test_logs (:warn, "`in`: incompatible combination of point: SArray{Tuple{2},Float64,1,2} and domain eltype: Tuple{Float64,Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+            @test_logs (:warn, "`in`: incompatible combination of point: Array{Float64,1} and domain eltype: Tuple{Float64,Float64}. Returning false.") [0.2,0.6] ∉ d1
+        else
+            @test_logs (:warn, "`in`: incompatible combination of point: SVector{2, Float64} and domain eltype: Tuple{Float64, Float64}. Returning false.") SA[0.2,0.6] ∉ d1
+            @test_logs (:warn, "`in`: incompatible combination of point: Vector{Float64} and domain eltype: Tuple{Float64, Float64}. Returning false.") [0.2,0.6] ∉ d1
+        end
+        @test convert(Domain{Tuple{BigFloat,BigFloat}}, d1) == d1
+        d1big = convert(Domain{Tuple{BigFloat,BigFloat}}, d1)
+        @test eltype(d1big) == Tuple{BigFloat,BigFloat}
+        @test eltype(element(d1big,1)) == BigFloat
+        @test eltype(element(d1big,2)) == BigFloat
 
-    @testset "arithmetic" begin
-        d1 = (0..1)
-        d2 = (2..3)
-        d = UnionDomain(d1) ∪ UnionDomain(d2)
+        d2 = TupleProductDomain(['a','b'], 0..1)
+        @test d2.domains isa Tuple
+        @test dimension(d2) == 2
+        @test eltype(d2) == Tuple{Char,Int}
+        @test ('a',0.4) ∈ d2
+        @test ('b',1.5) ∉ d2
+        @test ('c',0.5) ∉ d2
 
-        @test d .+ 1 == UnionDomain(d1 .+ 1) ∪ (d2 .+ 1)
-        @test d .- 1 == UnionDomain(d1 .- 1) ∪ (d2 .- 1)
-        @test 2 * d  == UnionDomain(2 * d1)  ∪ (2 * d2)
-        @test d * 2 == UnionDomain(d1 * 2) ∪ (d2 * 2)
-        @test d / 2 == UnionDomain(d1 / 2) ∪ (d2 / 2)
-        @test 2 \ d == UnionDomain(2 \ d1) ∪ (2 \ d2)
+        # other constructor calls
+        @test TupleProductDomain(0..1, 1..2.0) isa TupleProductDomain{Tuple{Int,Float64}}
+        @test TupleProductDomain([0..1, 1..2.0]) isa TupleProductDomain{Tuple{Float64,Float64}}
+        @test TupleProductDomain{Tuple{Int,Float64}}(0..1, 1..2.0) isa TupleProductDomain{Tuple{Int,Float64}}
+        @test TupleProductDomain{Tuple{Float64,Float64}}(0..1, 1..2.0) isa TupleProductDomain{Tuple{Float64,Float64}}
+        @test TupleProductDomain{Tuple{Float64,Float64}}([0..1, 1..2.0]) isa TupleProductDomain{Tuple{Float64,Float64}}
 
-        @test infimum(d) == minimum(d) == 0
-        @test supremum(d) == maximum(d) == 3
+        bnd = boundary(d1)
+        @test eltype(bnd) == Tuple{Float64,Float64}
+        @test bnd isa UnionDomain
+        @test dimension(bnd) == 2
+        @test (0.0, 0.5) ∈ bnd
+        @test (0.5, 0.5) ∈ bnd
+        @test (0.3, 0.2) ∉ bnd
+        @test (0.3, 0.0) ∈ bnd
+        @test (0.3, 0.7) ∈ bnd
     end
+    @testset "cube" begin
+        @test volume(UnitCube()) == 1
+        @test EuclideanUnitCube{2}() == EuclideanUnitCube{2,Float64}()
+        @test UnitSquare() == UnitSquare{Float64}()
+        @test UnitCube(Val(2)) isa EuclideanUnitCube{2,Float64}
+        @test UnitCube{SVector{2,BigFloat}}(Val(2)) isa EuclideanUnitCube{2,BigFloat}
 
-    @testset "different types" begin
-        d̃1 = (0..1)
-        d1 = (0f0.. 1f0)
-        d2 = (2..3)
+        d1 = VectorUnitCube{Float64}(4)
+        @test VectorUnitCube(4) == d1
+        @test UnitCube(4) == d1
+        @test UnitCube{Vector{Float64}}(4) == d1
+        @test dimension(d1) == 4
+        @test element(d1, 1) == 0..1
+        @test SA[0.9,0.9,0.4,0.2] ∈ d1
+        @test [1.2,0.3,0.4,0.6] ∉ d1
 
-        @test UnionDomain(d1) ∪ d2 == UnionDomain(d̃1) ∪ d2
+        @test ProductDomain([UnitInterval(),UnitInterval()]) isa VectorUnitCube{Float64}
+        @test ProductDomain{Vector{BigFloat}}([UnitInterval(),UnitInterval()]) isa VectorProductDomain{Vector{BigFloat},Vector{UnitInterval{BigFloat}}}
+        @test ProductDomain{SVector{2,BigFloat}}(UnitInterval(),UnitInterval()) isa EuclideanUnitCube{2,BigFloat}
+        @test ProductDomain{SVector{2,BigFloat}}(SVector(UnitInterval(),UnitInterval())) isa EuclideanUnitCube{2,BigFloat}
+
+        D = UnitInterval()^2
+        @test D isa EuclideanUnitCube{2,Float64}
+        @test SA[0.9, 0.9] ∈ D
+        @test SA[1.1, 1.1] ∉ D
+        @test !isempty(D)
+        @test isclosedset(D)
+        @test !isopenset(D)
+
+        @test approx_in(SA[-0.1,-0.1], D, 0.1)
+        @test !approx_in(SA[-0.1,-0.1], D, 0.09)
+
+        @test intersect(ChebyshevInterval()^3, UnitInterval()^3) isa EuclideanUnitCube{3,Float64}
+
+        #Cube
+        D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
+        @test SA[0.9, 0.6, -2.5] ∈ D
+        @test SA[0.0, 0.6, 0.0] ∉ D
+
+        @test issubset( (0..1)^3, (-1..2)^3 )
     end
+    @testset "Rectangle" begin
+        d1 = (-1.0..1.0) × (-1.0..1.0)
 
-    @testset "disk × interval" begin
-        d = (0.0..1) × UnitDisk()
-        @test SVector(0.1, 0.2, 0.3) ∈ d
+        d4 = d1 × (-1.0..1.0)
+        @test d4 isa Rectangle
+        @test SA[0.5,0.5,0.8] ∈ d4
+        @test SA[-1.1,0.3,0.1] ∉ d4
+        @test point_in_domain(d4) ∈ d4
 
-        d = UnitDisk() × (0.0..1)
-        @test SVector(0.1, 0.2, 0.3) ∈ d
+        d5 = (-1.0..1.)×d1
+        @test d5 isa Rectangle
+        @test SA[0.,0.5,0.5] ∈ d5
+        @test SA[0.,-1.1,0.3] ∉ d5
+        @test point_in_domain(d5) ∈ d5
+
+        d6 = d1 × d1
+        @test d6 isa Rectangle
+        @test SA[0.,0.,0.5,0.5] ∈ d6
+        @test SA[0.,0.,-1.1,0.3] ∉ d6
+        @test point_in_domain(d6) ∈ d6
+
+        @test Rectangle( SA[1,2], SA[2.0,3.0]) isa Rectangle{SVector{2,Float64}}
+        @test Rectangle([0..1, 2..3]) isa Rectangle{Vector{Int}}
+
+        @test_throws ErrorException Rectangle(UnitCircle(), UnitDisk())
+        @test_throws ErrorException Rectangle(OpenInterval(1,2), 3..4)
+
+        bnd = boundary(Rectangle([1,2],[3,4]))
+        @test [1,3] ∈ bnd
+        @test [1,2.5] ∈ bnd
+        @test [1.5,4] ∈ bnd
+        @test [1.5,3.5] ∉ bnd
     end
+    @testset "fixed product domains" begin
+        d1 = ProductDomain(ChebyshevInterval(), ChebyshevInterval())
+        @test d1 isa DomainSets.FixedIntervalProduct
+        @test d1 isa DomainSets.ChebyshevProductDomain
+        @test element(d1,1) isa ChebyshevInterval{Float64}
+        @test elements(d1) isa NTuple{2,ChebyshevInterval{Float64}}
+        @test convert(Domain{SVector{2,BigFloat}}, d1) isa DomainSets.ChebyshevProductDomain{2,BigFloat}
+        @test ProductDomain(elements(d1)) == d1
+        @test ProductDomain{SVector{2,BigFloat}}(elements(d1)) isa DomainSets.ChebyshevProductDomain{2,BigFloat}
+        @test ProductDomain{SVector{2,BigFloat}}(elements(d1)...) isa DomainSets.ChebyshevProductDomain{2,BigFloat}
+    end
+    @testset "ProductDomain" begin
+        d1 = 0..1.0
+        d2 = 0..2.0
+        d3 = UnitCircle()
+        @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
+        @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
+        @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
 
-    @testset "Wrapped domain" begin
-        d = 0..1.0
-        w = DomainSets.WrappedDomain(d)
-        @test w isa Domain
+        @test ProductDomain((d1,d3)) isa VcatDomain
+        @test ProductDomain((d1,d2)) isa Rectangle
+
+        @test volume(ProductDomain(d1,d2)) == 2
+
+        @test ProductDomain(SVector(0..1, 0..2)) isa Rectangle{SVector{2,Int}}
+        @test ProductDomain(1.05 * UnitDisk(), -1.0 .. 1.0) isa VcatDomain{3,Float64}
+        @test ProductDomain(['a','b'], 0..1) isa TupleProductDomain
+
+        @test ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7) isa TupleProductDomain{Tuple{Float64,Float64}}
+        # Some conversions
+        @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
+        @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
+        @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
+
+        # intersection of product domains
+        @test ProductDomain([0..1.0, 0..2.0]) ∩ ProductDomain([0..1, 0..3]) isa Rectangle{Vector{Float64}}
+        @test ProductDomain(0..1.0, 0..2.0) ∩ ProductDomain(0..1, 0..3) isa Rectangle{SVector{2,Float64}}
+
+        # Generic functionality
+        long_domain = ProductDomain([0..i for i in 1:20])
+        show(io, long_domain)
+        @test String(take!(io)) == "0..1 x 0..2 x 0..3 x 0..4 x 0..5 x ... x 0..16 x 0..17 x 0..18 x 0..19 x 0..20"
+        @test isopenset(interior(UnitCube()))
+        @test isclosedset(closure(interior(UnitCube())))
     end
 end

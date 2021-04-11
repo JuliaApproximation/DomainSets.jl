@@ -1,11 +1,11 @@
 
 # Simplifications go here
 
-mapcompose(m1::AbstractIdentityMap{T}, m2::Map{T}) where {T} = m2
-mapcompose(m1::Map{T}, m2::AbstractIdentityMap{T}) where {T} = m1
-mapcompose(m1::AbstractIdentityMap{T}, m2::AbstractIdentityMap{T}) where {T} = m1
+compose_map1(m1::IdentityMap, m2) = m2
+compose_map2(m1, m2::IdentityMap) = m1
 
-mapcompose(m1::AbstractAffineMap, m2::AbstractAffineMap) = affine_composition(m1, m2)
+compose_map(m1::AbstractAffineMap, m2::AbstractAffineMap) =
+    affine_composition(m1, m2)
 
 """
 Compute the affine map that represents map2 after map1, that is:
@@ -32,3 +32,7 @@ affine_composition(map1::Translation, map2::Translation) =
 # The sum of two affine maps is again an affine map
 mapsum(map1::AbstractAffineMap, map2::AbstractAffineMap) =
     AffineMap(matrix(map1)+matrix(map2), vector(map1)+vector(map2))
+
+
+==(m1::ProductMap, m2::IdentityMap) = all(map(isidentity, elements(m1)))
+==(m1::IdentityMap, m2::ProductMap) = m2 == m1

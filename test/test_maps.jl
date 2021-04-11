@@ -1,4 +1,18 @@
 
+using DomainSets: ScalarAffineMap,
+    VectorAffineMap,
+    StaticAffineMap,
+    GenericAffineMap,
+    ScalarLinearMap,
+    VectorLinearMap,
+    StaticLinearMap,
+    GenericLinearMap,
+    ScalarTranslation,
+    VectorTranslation,
+    StaticTranslation,
+    GenericTranslation
+
+
 randvec(T,n) = SVector{n,T}(rand(n))
 randvec(T,m,n) = SMatrix{m,n,T}(rand(m,n))
 
@@ -10,7 +24,7 @@ suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, s
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
     map(suitable_point_to_map, elements(m))
-suitable_point_to_map(m::DomainSets.VcatProductMap{N,T}) where {N,T} =
+suitable_point_to_map(m::DomainSets.VcatMap{N,T}) where {N,T} =
     SVector{N,T}(rand(T,N))
 
 suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
@@ -119,23 +133,45 @@ function test_generic_map(m)
     end
 end
 
+function test_isomorphisms(T)
+    m1 = DomainSets.VectorToNumber{T}()
+    @test m1(SA[1.0]) == 1.0
+    m1b = DomainSets.NumberToVector{T}()
+    @test inverse(m1) == m1b
+    @test inverse(m1b) == m1
+    @test m1b(1.0) == SA[1.0]
+
+    m2 = DomainSets.VectorToComplex{T}()
+    @test m2(SA[one(T), one(T)]) == 1 + im
+    m2b = DomainSets.ComplexToVector{T}()
+    @test inverse(m2) == m2b
+    @test inverse(m2b) == m2
+    @test m2b(one(T)+one(T)*im) == SA[one(T),one(T)]
+
+    m3 = DomainSets.VectorToTuple{2,T}()
+    @test m3(SA[one(T), one(T)]) == (one(T),one(T))
+    m3b = DomainSets.TupleToVector{2,T}()
+    @test inverse(m3) == m3b
+    @test inverse(m3b) == m3
+    @test m3b( (one(T),one(T)) ) == SA[one(T),one(T)]
+end
+
 function test_maps(T)
     generic_tests(T)
 
     # Test special maps
+    test_identity_map(T)
     test_affine_maps(T)
     test_composite_map(T)
     test_product_map(T)
     test_wrapped_maps(T)
     test_scaling_maps(T)
-    test_identity_map(T)
-    test_rotation_map(T)
-    test_cart_polar_map(T)
+    test_isomorphisms(T)
 end
 
 function generic_tests(T)
     maps = [
-        IdentityMap{T}(),
+        StaticIdentityMap{T}(),
         VectorIdentityMap{T}(10),
         ConstantMap{T}(one(T)),
         ConstantMap{T}(SVector{2,T}(1,2)),
@@ -160,13 +196,33 @@ function generic_tests(T)
 end
 
 function test_affine_maps(T)
+    A = rand(T,2,2)
+    @test DomainSets.to_matrix(Vector{T}, A) == A
+    @test DomainSets.to_matrix(T, 2) == 2
+    @test DomainSets.to_matrix(SVector{2,T}, 2) == SMatrix{2,2}(2,0,0,2)
+    @test DomainSets.to_matrix(SVector{2,T}, LinearAlgebra.I) == SMatrix{2,2}(1,0,0,1)
+    @test DomainSets.to_matrix(Vector{T}, 2) == UniformScaling(2)
+    @test DomainSets.to_matrix(Vector{T}, LinearAlgebra.I) == LinearAlgebra.I
+    # test fallback with nonsensical call
+    @test DomainSets.to_matrix(Tuple{Int}, 2) == 2
+
+    @test DomainSets.to_matrix(T, A, 2) == A
+    @test DomainSets.to_matrix(T, 2, 3) == 2
+    @test DomainSets.to_matrix(T, UniformScaling(2), 3) == 2
+    @test DomainSets.to_matrix(SVector{2,T}, 2, SVector(1,1)) == SMatrix{2,2}(2,0,0,2)
+    @test DomainSets.to_matrix(Vector{T}, 2, [1,2]) == [2 0 ; 0 2]
+
+    @test DomainSets.to_vector(T, 2) == 0
+    @test DomainSets.to_vector(SVector{2,T}, 2) == SVector(0,0)
+    @test DomainSets.to_vector(Vector{T}, A) == [0,0]
+    @test DomainSets.to_vector(T, 2, 3) == 3
+
     test_linearmap(T)
     test_translation(T)
     test_affinemap(T)
 end
 
 
-using DomainSets: ScalarLinearMap, VectorLinearMap, StaticLinearMap, GenericLinearMap
 
 function test_linearmap(T)
     m1 = LinearMap(2one(T))
@@ -184,25 +240,38 @@ function test_linearmap(T)
     @test mw1.A isa widen(T)
     @test jacobian(m1) isa ConstantMap{T}
     @test jacobian(m1, 1) == 2
+    @test LinearMap(one(T)) == StaticIdentityMap{T}()
 
     m2 = LinearMap(2)
     @test domaintype(m2) == Int
+    @test m2 === ScalarLinearMap(2)
     @test m2(one(T)) isa T
+    @test m2 == convert(Map, 2)
     @test jacobian(m2, 1) == 2
     @test jacobian(m2) isa ConstantMap{Int}
     @test jacobian(m2, 1) == 2
+    @test LinearMap(1) == StaticIdentityMap{T}()
 
     m3 = LinearMap(SMatrix{2,2}(one(T), 2one(T), 3one(T), 4one(T)))
     @test m3 isa LinearMap{SVector{2,T}}
+    @test m3 === StaticLinearMap(m3.A)
     @test m3(SVector(1,2)) == SVector(7, 10)
     @test m3(SVector{2,T}(1,2)) == SVector{2,T}(7, 10)
     @test m3 ∘ m3 isa LinearMap
+    @test LinearMap(SA[1 0; 0 1]) == StaticIdentityMap{domaintype(m3)}()
 
     A = rand(T,2,2)
     m4 = LinearMap(A)
     @test m4 isa LinearMap{Vector{T}}
     @test m4([1,2]) ==  A * [1,2]
+    y = zeros(T,2)
+    @test (DomainSets.applymap!(y, m4, [1,2]); y == A * [1,2])
     @test jacobian(m4, [1,2]) == A
+
+    m5 = LinearMap{Vector{T}}(UniformScaling(2*one(T)))
+    @test m5 isa LinearMap{Vector{T}}
+    @test m5([1,2]) ==  2 * [1,2]
+    @test jacobian(m5, [1,2]) == UniformScaling(2)
 
     # Test construction and conversion
     @test LinearMap{T}(1) isa ScalarLinearMap{T}
@@ -214,7 +283,6 @@ function test_linearmap(T)
 end
 
 
-using DomainSets: ScalarTranslation, VectorTranslation, StaticTranslation, GenericTranslation
 
 function test_translation(T)
     v = randvec(T,3)
@@ -237,8 +305,6 @@ function test_translation(T)
 end
 
 
-using DomainSets: ScalarAffineMap, VectorAffineMap, StaticAffineMap, GenericAffineMap
-
 function test_affinemap(T)
     m1 = AffineMap(T(2), T(3))
     @test m1 isa ScalarAffineMap{T}
@@ -246,11 +312,23 @@ function test_affinemap(T)
     @test isaffine(m1)
     @test m1(2) == 7
 
+    @test m1 ∘ m1 isa AffineMap
+    @test (m1 ∘ m1)(2) == 2*(2*2+3)+3
+
     m2 = AffineMap(T(2), SVector{2,T}(1,2))
     @test m2 isa GenericAffineMap{SVector{2,T}}
     @test m2(SVector(1,2)) == SVector(3,6)
+    @test size(m2) == (2,2)
 
-    @test m1 ∘ m1 isa AffineMap
+    m3 = AffineMap(UniformScaling(2*one(T)), [one(T),2*one(T)])
+    @test m3 isa AffineMap{Vector{T}}
+    @test size(m3) == (2,2)
+    @test m3([1,2]) ==  2 * [1,2] + [1,2]
+    y = zeros(T,2)
+    @test (DomainSets.applymap!(y, m3, [1,2]); y == m3([1,2]))
+    @test jacobian(m3, [1,2]) == [2 0; 0 2]
+    @test jacdet(m3, [1,2]) == 4
+
 
     # Test construction and conversion
     @test AffineMap(1, 2*one(T)) isa ScalarAffineMap{T}
@@ -267,21 +345,21 @@ function test_affinemap(T)
 end
 
 function test_scaling_maps(T)
-    test_generic_map(scaling_map(T(2)))
-    test_generic_map(scaling_map(T(2), T(3)))
-    test_generic_map(scaling_map(T(2), T(3), T(4)))
-    test_generic_map(scaling_map(T(2), T(3), T(4), T(5)))
+    test_generic_map(LinearMap(T(2)))
+    test_generic_map(LinearMap(T(2), T(3)))
+    test_generic_map(LinearMap(T(2), T(3), T(4)))
+    test_generic_map(LinearMap(T(2), T(3), T(4), T(5)))
 end
 
 function test_identity_map(T)
-    i1 = IdentityMap{T}()
-    i2 = IdentityMap{SVector{2,T}}()
+    i1 = StaticIdentityMap{T}()
+    i2 = StaticIdentityMap{SVector{2,T}}()
     test_generic_map(i1)
     test_generic_map(i2)
     @test i1 == i2
     @test islinear(i1)
     @test isaffine(i1)
-    @test convert(IdentityMap{SVector{2,T}}, i1) === i2
+    @test convert(StaticIdentityMap{SVector{2,T}}, i1) === i2
     @test jacobian(i1) isa ConstantMap
     @test jacobian(i1, 1) == 1
     @test jacdet(i1, 1) == 1
@@ -303,8 +381,8 @@ function test_composite_map(T)
     b = T(1)
     c = T(2)
     d = T(3)
-    ma = IdentityMap{T}()
-    mb = interval_map(a, b, c, d)
+    ma = StaticIdentityMap{T}()
+    mb = DomainSets.interval_map(a, b, c, d)
 
     r = suitable_point_to_map(ma)
     m1 = ma∘mb
@@ -325,8 +403,8 @@ function test_composite_map(T)
 end
 
 function test_product_map(T)
-    ma = IdentityMap{T}()
-    mb = interval_map(T(0), T(1), T(2), T(3))
+    ma = StaticIdentityMap{T}()
+    mb = DomainSets.interval_map(T(0), T(1), T(2), T(3))
 
     r1 = suitable_point_to_map(ma)
     r2 = suitable_point_to_map(ma)
@@ -334,27 +412,27 @@ function test_product_map(T)
     r4 = suitable_point_to_map(ma)
     r5 = suitable_point_to_map(ma)
 
-    m1 = tensorproduct(ma,mb)
+    m1 = productmap(ma,mb)
     test_generic_map(m1)
     @test m1(SVector(r1,r2)) ≈ SVector(ma(r1),mb(r2))
-    m2 = tensorproduct(m1,mb)
+    m2 = productmap(m1,mb)
     test_generic_map(m2)
     @test m2(SVector(r1,r2,r3)) ≈ SVector(ma(r1),mb(r2),mb(r3))
-    m3 = tensorproduct(mb,m2)
+    m3 = productmap(mb,m2)
     test_generic_map(m3)
     @test m3(SVector(r1,r2,r3,r4)) ≈ SVector(mb(r1),ma(r2),mb(r3),mb(r4))
-    m4 = tensorproduct(m1,m2)
+    m4 = productmap(m1,m2)
     test_generic_map(m4)
     @test m4(SVector(r1,r2,r3,r4,r5)) ≈ SVector(m1(SVector(r1,r2))...,m2(SVector(r3,r4,r5))...)
 
-    m5 = tensorproduct(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
+    m5 = productmap(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
     test_generic_map(m5)
     x = SVector{3,T}(rand(T,3))
     @test m5(x) ≈ SVector(element(m5,1)(SVector(x[1],x[2]))...,element(m5,2)(x[3]))
 
     m6 = ProductMap([ma,mb])
     @test m6 isa DomainSets.VectorProductMap
-    @test convert(Map{SVector{2,T}}, m6) isa DomainSets.VcatProductMap
+    @test convert(Map{SVector{2,T}}, m6) isa DomainSets.VcatMap
     test_generic_map(m6)
 end
 
@@ -367,50 +445,6 @@ function test_wrapped_maps(T)
     @test m3(one(T)) ≈ cos(sin(one(T)))
 
     @test convert(Map{T}, cos) isa WrappedMap{T,typeof(cos)}
-end
-
-function test_rotation_map(T)
-    ϕ = T(pi)/4
-    m = rotation_map(ϕ)
-    x = [one(T), zero(T)]
-    y = m(x)
-    @test y[1] ≈ sqrt(T(2))/2
-    @test y[2] ≈ sqrt(T(2))/2
-
-    ϕ = T(pi)/4
-    m = rotation_map(ϕ, 0, 0)
-    x = [zero(T), one(T), zero(T)]
-    y = m(x)
-    @test y[1] ≈ 0
-    @test y[2] ≈ sqrt(T(2))/2
-    @test y[3] ≈ sqrt(T(2))/2
-
-    # TODO: add more tests for a 3D rotation
-
-    theta = T(rand())
-    phi = T(rand())
-    psi = T(rand())
-    m2 = rotation_map(theta)
-    test_generic_map(m2)
-    m3 = rotation_map(phi, theta, psi)
-    test_generic_map(m3)
-
-    r = suitable_point_to_map(m2)
-    @test norm(m2(r))≈norm(r)
-
-    r = suitable_point_to_map(m3)
-    @test norm(m3(r))≈norm(r)
-    @test islinear(m3)
-end
-
-function test_cart_polar_map(T)
-    m1 = CartToPolarMap{T}()
-    test_generic_map(m1)
-    @test !islinear(m1)
-
-    m2 = PolarToCartMap{T}()
-    test_generic_map(m2)
-    @test !islinear(m2)
 end
 
 

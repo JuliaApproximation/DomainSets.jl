@@ -8,6 +8,9 @@ abstract type Map{T} <: AbstractMap end
 "A `TypedMap{T,U}` maps a variable of type `T` to a variable of type `U`."
 abstract type TypedMap{T,U} <: Map{T} end
 
+const EuclideanMap{N,T} = Map{<:StaticVector{N,T}}
+const VectorMap{T} = Map{Vector{T}}
+
 domaintype(m::AbstractMap) = domaintype(typeof(m))
 domaintype(::Type{<:AbstractMap}) = Any
 domaintype(::Type{<:Map{T}}) where {T} = T
@@ -27,10 +30,14 @@ prectype(::Type{<:Map{T}}) where {T} = prectype(T)
 
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m
+convert(::Type{Map{T}}, m::Map{S}) where {S,T} = similarmap(m, T)
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
+convert(::Type{TypedMap{T,U}}, m::TypedMap) where {T,U} = similarmap(m, T, U)
 
-convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{convert_numtype(T,U)}, map)
-convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{convert_prectype(T,U)}, map)
+convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
+convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
+
+dimension(m::Map{T}) where {T} = euclideandimension(T)
 
 # Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)
@@ -39,18 +46,33 @@ convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{convert_prect
 (m::Map{T})(x) where {T} = apply(m, x)
 (m::Map{T})(x...) where {T} = apply(m, convert(T, x))
 
-@deprecate (*)(m::AbstractMap, x) m(x)
+"Promote map and point to compatible types."
+promote_map_point_pair(m, x) = (m, x)
+promote_map_point_pair(m::AbstractMap, x) = (m, x)
+promote_map_point_pair(m::Map, x) = _promote_map_point_pair(m, x, promote_type(domaintype(m), typeof(x)))
+# This is the line where we promote both the map and the point:
+_promote_map_point_pair(m, x, ::Type{T}) where {T} =
+    convert(Map{T}, m), convert(T, x)
+_promote_map_point_pair(m, x, ::Type{Any}) = m, x
 
-# For maps of type Map{T}, we convert the point x or the map or both, then call applymap
-apply(m::Map, x) = _apply(m, x)
-_apply(m::Map{T}, x::T) where {T} = applymap(m, x)
-_apply(m::Map{S}, x::T) where {S,T} = _apply(m, x, promote_type(S,T))
-_apply(m::Map{S}, x::T, ::Type{V}) where {S,T,V} =
-    applymap(convert(Map{V}, m), convert(V, x))
+# Some exceptions:
+# - types match, do nothing
+promote_map_point_pair(m::Map{T}, x::T) where {T} = m, x
+# - an Any map, do nothing
+promote_map_point_pair(m::Map{Any}, x) = m, x
+# - tuples: these are typically composite maps, promotion may happen later
+promote_map_point_pair(m::Map{<:Tuple}, x::Tuple) = m, x
+# - abstract vectors: promotion may be expensive
+promote_map_point_pair(m::Map{<:AbstractVector}, x::AbstractVector) = m, x
+# - SVector: promotion is likely cheap
+promote_map_point_pair(m::EuclideanMap{N,T}, x::AbstractVector{S}) where {N,S,T} =
+    _promote_map_point_pair(m, x, SVector{N,promote_type(S,T)})
 
+# For maps of type Map{T}, we call promote_map_point_pair and then applymap
+apply(m::Map, x) = applymap(promote_map_point_pair(m,x)...)
 applymap!(y, m::AbstractMap, x) = y .= m(x)
 
-# Note that there is a difference between a map being invertible, and the map
+# There is a difference between a map being invertible, and the map
 # knowing its inverse explicitly and implementing `inv`.
 inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse.")
 
@@ -88,11 +110,6 @@ The two-argument function applies the right inverse to the point `x`.
 """
 rightinverse(m::AbstractMap) = inverse(m)
 rightinverse(m::AbstractMap, x) = rightinverse(m)(x)
-
-@deprecate leftinv(m::AbstractMap) leftinverse(m)
-@deprecate rightinv(m::AbstractMap) rightinverse(m)
-@deprecate apply_left_inverse(m::AbstractMap, x) leftinverse(m, x)
-@deprecate apply_right_inverse(m::AbstractMap, x) rightinverse(m, x)
 
 
 """

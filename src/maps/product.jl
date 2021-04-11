@@ -10,13 +10,15 @@ elements(m::ProductMap) = m.maps
 VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
 
 ProductMap(maps::Tuple) = ProductMap(maps...)
+ProductMap(maps::SVector) = ProductMap(maps...)
 ProductMap(maps...) = TupleProductMap(maps...)
-ProductMap(maps::VcatMapElement...) = VcatProductMap(maps...)
-ProductMap(maps::Vector) = VectorProductMap(maps)
+ProductMap(maps::VcatMapElement...) = VcatMap(maps...)
+ProductMap(maps::AbstractVector) = VectorProductMap(maps)
 
-ProductMap{T}(maps...) where {T<:Tuple} = TupleProductMap(maps...)
-ProductMap{SVector{N,T}}(maps...) where {N,T} = VcatProductMap{N,T}(maps...)
-ProductMap{Vector{T}}(maps) where {T} = VectorProductMap{T}(maps)
+ProductMap{T}(maps...) where {T} = _TypedProductMap(T, maps...)
+_TypedProductMap(::Type{T}, maps...) where {T<:Tuple} = TupleProductMap(maps...)
+_TypedProductMap(::Type{SVector{N,T}}, maps...) where {N,T} = VcatMap{N,T}(maps...)
+_TypedProductMap(::Type{T}, maps...) where {T<:AbstractVector} = VectorProductMap{T}(maps...)
 
 
 isconstant(m::ProductMap) = mapreduce(isconstant, &, elements(m))
@@ -31,8 +33,7 @@ jacobian(m::ProductMap, x) =
 	toexternalmatrix(m, map(jacobian, elements(m), tointernalpoint(m, x)))
 jacobian(m::ProductMap) = LazyJacobian(m)
 
-convert(::Type{Map{T}}, m::ProductMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::ProductMap{S}) where {S,T} = ProductMap{T}(elements(m))
+similarmap(m::ProductMap, ::Type{T}) where {T} = ProductMap{T}(elements(m))
 
 tointernalpoint(m::ProductMap, x) = x
 toexternalpoint(m::ProductMap, y) = y
@@ -40,10 +41,13 @@ toexternalpoint(m::ProductMap, y) = y
 applymap(m::ProductMap, x) =
 	toexternalpoint(m, map(applymap, elements(m), tointernalpoint(m, x)))
 
-tensorproduct(map1::Map, map2::Map) = ProductMap(map1, map2)
-tensorproduct(map1::ProductMap, map2::Map) = ProductMap(elements(map1)..., map2)
-tensorproduct(map1::Map, map2::ProductMap) = ProductMap(map1, elements(map2)...)
-tensorproduct(map1::ProductMap, map2::ProductMap) = ProductMap(elements(map1)..., elements(map2)...)
+productmap(map1, map2) = productmap1(map1, map2)
+productmap1(map1, map2) = productmap2(map1, map2)
+productmap2(map1, map2) = ProductMap(map1, map2)
+productmap(map1::ProductMap, map2::ProductMap) =
+	ProductMap(elements(map1)..., elements(map2)...)
+productmap1(map1::ProductMap, map2) = ProductMap(elements(map1)..., map2)
+productmap2(map1, map2::ProductMap) = ProductMap(map1, elements(map2)...)
 
 for op in (:inv, :leftinverse, :rightinverse)
     @eval $op(m::ProductMap) = ProductMap(map($op, elements(m)))
@@ -54,45 +58,44 @@ size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,elements(m
 
 ==(m1::ProductMap, m2::ProductMap) = all(map(isequal, elements(m1), elements(m2)))
 
-
 """
-A `VcatProductMap` is a product map with domain and codomain vectors
+A `VcatMap` is a product map with domain and codomain vectors
 concatenated (`vcat`) into a single vector.
 """
-struct VcatProductMap{N,T,DIM,MAPS} <: ProductMap{SVector{N,T}}
+struct VcatMap{N,T,DIM,MAPS} <: ProductMap{SVector{N,T}}
     maps    ::  MAPS
 end
 
-VcatProductMap(maps::Union{Tuple,Vector}) = VcatProductMap(maps...)
-function VcatProductMap(maps...)
+VcatMap(maps::Union{Tuple,Vector}) = VcatMap(maps...)
+function VcatMap(maps...)
 	T = numtype(maps...)
 	M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,maps))
 	@assert M==N
-	VcatProductMap{N,T}(maps...)
+	VcatMap{N,T}(maps...)
 end
 
 mapdim(map) = size(map,2)
 
-VcatProductMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatProductMap{N,T}(maps...)
-function VcatProductMap{N,T}(maps...) where {N,T}
+VcatMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatMap{N,T}(maps...)
+function VcatMap{N,T}(maps...) where {N,T}
 	DIM = map(mapdim,maps)
-	VcatProductMap{N,T,DIM}(maps...)
+	VcatMap{N,T,DIM}(maps...)
 end
 
-VcatProductMap{N,T,DIM}(maps...) where {N,T,DIM} = VcatProductMap{N,T,DIM,typeof(maps)}(maps)
+VcatMap{N,T,DIM}(maps...) where {N,T,DIM} = VcatMap{N,T,DIM,typeof(maps)}(maps)
 
-size(m::VcatProductMap{N}) where {N} = (N,N)
+size(m::VcatMap{N}) where {N} = (N,N)
 
-tointernalpoint(m::VcatProductMap{N,T,DIM}, x) where {N,T,DIM} =
+tointernalpoint(m::VcatMap{N,T,DIM}, x) where {N,T,DIM} =
 	convert_fromcartesian(x, Val{DIM}())
-toexternalpoint(m::VcatProductMap{N,T,DIM}, y) where {N,T,DIM} =
+toexternalpoint(m::VcatMap{N,T,DIM}, y) where {N,T,DIM} =
 	convert_tocartesian(y, Val{DIM}())
 
 matsize(A::AbstractArray) = size(A)
 matsize(A::Number) = (1,1)
 
 # The Jacobian is block-diagonal
-function toexternalmatrix(m::VcatProductMap{N,T}, matrices) where {N,T}
+function toexternalmatrix(m::VcatMap{N,T}, matrices) where {N,T}
 	A = zeros(T, N, N)
 	l = 0
 	for el in matrices
@@ -109,7 +112,7 @@ end
 A `VectorProductMap` is a product map where all components are univariate maps,
 with inputs and outputs collected into a `Vector`.
 """
-struct VectorProductMap{T,M} <: ProductMap{Vector{T}}
+struct VectorProductMap{T<:AbstractVector,M} <: ProductMap{T}
     maps    ::  Vector{M}
 end
 
@@ -117,13 +120,13 @@ VectorProductMap(maps::Map...) = VectorProductMap(maps)
 VectorProductMap(maps) = VectorProductMap(collect(maps))
 function VectorProductMap(maps::Vector)
 	T = mapreduce(numtype, promote_type, maps)
-	VectorProductMap{T}(maps)
+	VectorProductMap{Vector{T}}(maps)
 end
 
 VectorProductMap{T}(maps::Map...) where {T} = VectorProductMap{T}(maps)
 VectorProductMap{T}(maps) where {T} = VectorProductMap{T}(collect(maps))
 function VectorProductMap{T}(maps::Vector) where {T}
-	Tmaps = convert.(Map{T}, maps)
+	Tmaps = convert.(Map{eltype(T)}, maps)
 	VectorProductMap{T,eltype(Tmaps)}(Tmaps)
 end
 
@@ -149,6 +152,7 @@ function TupleProductMap(maps::Tuple)
 end
 
 TupleProductMap{T}(maps::Vector) where {T} = TupleProductMap{T}(maps...)
+TupleProductMap{T}(maps::Map...) where {T} = TupleProductMap{T}(maps)
 TupleProductMap{T}(maps...) where {T} = TupleProductMap{T}(maps)
 function TupleProductMap{T}(maps) where {T <: Tuple}
 	Tmaps = map((t,d) -> convert(Map{t},d), tuple(T.parameters...), maps)

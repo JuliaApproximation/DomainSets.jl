@@ -11,14 +11,14 @@ The `in(x, domain::LazyDomain)` applies three types of transformations:
 The distribution step is determined by the result of `composition(domain)`,
 see `composition`. The combination is performed by `combine`. Mapping between
 points of the lazy domain and points of its member domains is described by
-`y = tointernalpoint(domain,x)` and `x = toexternalpoint(domain, y)`.
+`y = tointernalpoint(domain, x)` and `x = toexternalpoint(domain, y)`.
 """
 abstract type LazyDomain{T} <: Domain{T} end
 
 "Translate a point of the lazy domain to a point (or points) of the composing domain."
 tointernalpoint(d::LazyDomain, x) = x
 "Inverse of `tointernalpoint`."
-toexternalpoint(d::LazyDomain, y) = y
+toexternalpoint(d::LazyDomain{T}, y) where {T} = T(y)
 
 
 """
@@ -30,13 +30,14 @@ abstract type SingleLazyDomain{T} <: LazyDomain{T} end
 
 superdomain(d::SingleLazyDomain) = d.domain
 
+indomain(x, d::SingleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
+approx_indomain(x, d::SingleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
+
+
 "A composite lazy domain is defined in terms of multiple domains."
 abstract type CompositeLazyDomain{T} <: LazyDomain{T} end
 
 elements(d::CompositeLazyDomain) = d.domains
-
-indomain(x, d::SingleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
-approx_indomain(x, d::SingleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
 
 """
 Supertype of all compositions of a lazy domain. The composition determines how
@@ -98,6 +99,8 @@ abstract type DerivedDomain{T} <: SingleLazyDomain{T} end
 
 isempty(d::DerivedDomain) = isempty(superdomain(d))
 
+canonicaldomain(d::DerivedDomain) = superdomain(d)
+
 
 """
 A `WrappedDomain` is a wrapper around an object that implements the domain
@@ -114,12 +117,13 @@ WrappedDomain{T}(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
 WrappedDomain{T}(domain::Domain) where {T} = WrappedDomain{T}(convert(Domain{T}, domain))
 WrappedDomain{T}(domain) where {T} = WrappedDomain{T,typeof(domain)}(domain)
 
-convert(::Type{Domain{T}}, d::WrappedDomain) where {T} = WrappedDomain{T}(d.domain)
+similardomain(d::WrappedDomain, ::Type{T}) where {T} = WrappedDomain{T}(d.domain)
 
 # Anything can be converted to a domain by wrapping it. An error will be thrown
 # if the object does not support `eltype`.
 convert(::Type{Domain}, v::Domain) = v
 convert(::Type{Domain}, v) = WrappedDomain(v)
+convert(::Type{Domain{T}}, v) where {T} = WrappedDomain{T}(v)
 
 ==(d1::WrappedDomain, d2::WrappedDomain) = superdomain(d1)==superdomain(d2)
 

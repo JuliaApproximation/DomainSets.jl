@@ -26,7 +26,7 @@ import Base: *, +, -, /, \, ^,
     size, length, ndims, getindex, eltype, ndims, hash,
     inv, isreal, zero,
     # Types, promotions and conversions
-    convert, widen, promote_rule,
+    convert, widen, promote,
     # Display
     show,
     # Various
@@ -51,9 +51,6 @@ export prectype, numtype,
     convert_numtype, promote_numtype,
     convert_prectype, promote_prectype,
     iscomposite, elements, element, numelements
-# from util/products.jl
-export cartesianproduct
-
 
 ## Maps
 
@@ -68,15 +65,16 @@ export WrappedMap
 # from maps/composite.jl
 export Composition, ∘
 # from maps/product.jl
-export ProductMap, tensorproduct
+export ProductMap, productmap
 # from maps/basic.jl
-export IdentityMap, VectorIdentityMap, ZeroMap, UnityMap, ConstantMap,
+export IdentityMap,
+    StaticIdentityMap, VectorIdentityMap,
+    ZeroMap, UnityMap, ConstantMap,
     isconstant, constant
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     matrix, vector,
-    islinear, isaffine,
-    interval_map, scaling_map
+    islinear, isaffine
 
 
 ## Generic domains
@@ -87,15 +85,21 @@ export Domain, EuclideanDomain, VectorDomain,
     approx_in,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
-    point_in_domain
+    interior, closure,
+    volume,
+    point_in_domain,
+    canonicaldomain, tocanonical, fromcanonical,
+    mapto,
+    parameterdomain, parameterization
 
 # from generic/lazy.jl
 export DerivedDomain, superdomain, WrappedDomain
 
 # from generic/productdomain.jl
-export ProductDomain, VcatDomain, VectorProductDomain, TupleProductDomain
+export ProductDomain, productdomain,
+    VcatDomain, VectorProductDomain, TupleProductDomain
 
-# from generic/mapped_domain.jl
+# from generic/mapped.jl
 export MappedDomain,
     map_domain,
     mapped_domain,
@@ -103,7 +107,9 @@ export MappedDomain,
     inverse_map
 
 # from generic/setoperations.jl
-export UnionDomain, IntersectionDomain, DifferenceDomain
+export UnionDomain, uniondomain,
+    IntersectDomain, intersectdomain,
+    SetdiffDomain, setdiffdomain
 
 # from applications/rotations.jl
 export rotate
@@ -115,6 +121,7 @@ export infimum, supremum
 
 # from domains/trivial.jl
 export EmptySpace, FullSpace,
+    emptyspace, fullspace,
     ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
@@ -128,15 +135,30 @@ export EuclideanUnitSimplex, VectorUnitSimplex, UnitSimplex,
 # from domains/point.jl
 export Point
 # from domains/ball.jl
-export UnitCircle, VectorUnitCircle,
-    UnitSphere, VectorUnitSphere,
+export UnitBall,
+    StaticUnitBall, DynamicUnitBall,
+    EuclideanUnitBall, VectorUnitBall,
+    UnitSphere,
+    StaticUnitSphere, DynamicUnitSphere,
+    VectorUnitSphere, EuclideanUnitSphere,
     UnitDisk, VectorUnitDisk,
-    UnitBall, VectorUnitBall,
-    UnitHyperBall,  UnitHyperSphere,
-    EuclideanUnitBall, EuclideanUnitSphere,
+    UnitCircle, VectorUnitCircle,
     ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder,
-    parameterization, gradient
+    gradient
+# from domains/cube.jl
+export UnitCube,
+    StaticUnitCube, DynamicUnitCube,
+    EuclideanUnitCube, VectorUnitCube,
+    UnitSquare, UnitCube,
+    Rectangle
+# from domain/levelset.jl
+export LevelSet, ZeroSet,
+    SublevelSet, SubzeroSet,
+    SuperlevelSet, SuperzeroSet,
+    pseudolevel
+# from domain/indicator.jl
+export IndicatorFunction
 
 ## Applications
 # from applications/rotation.jl
@@ -144,30 +166,33 @@ export rotation_map,
     CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
-include("util/products.jl")
+# include("util/products.jl")
 
 include("maps/map.jl")
 include("maps/lazy.jl")
 include("maps/composite.jl")
 include("maps/product.jl")
+include("maps/isomorphism.jl")
 include("maps/basic.jl")
 include("maps/affine.jl")
 include("maps/arithmetics.jl")
 
 include("generic/domain.jl")
+include("generic/canonical.jl")
 include("generic/lazy.jl")
 include("generic/productdomain.jl")
 include("generic/setoperations.jl")
-include("generic/mapped_domain.jl")
-include("generic/promotion.jl")
-include("generic/arithmetics.jl")
+include("generic/mapped.jl")
 include("generic/broadcast.jl")
 
 include("domains/trivial.jl")
+include("domains/levelset.jl")
 include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
+include("domains/cube.jl")
+include("domains/indicator.jl")
 
 include("applications/rotation.jl")
 

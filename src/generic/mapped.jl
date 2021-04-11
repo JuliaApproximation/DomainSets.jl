@@ -18,6 +18,7 @@ show(io::IO, d::AbstractMappedDomain) =  print(io, "A mapped domain based on ", 
 tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
 toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
 
+
 const MappedVectorDomain{T} = AbstractMappedDomain{Vector{T}}
 
 # TODO: check whether the map alters the dimension
@@ -49,7 +50,8 @@ MappedDomain{T}(domain::Domain, invmap::Map{T}) where {T} =
 MappedDomain{T}(domain::Domain, invmap::Map{S}) where {S,T} =
     MappedDomain{T}(domain, convert(Map{T}, invmap))
 
-convert(::Type{Domain{T}}, d::MappedDomain) where {T} = MappedDomain{T}(d.domain, d.invmap)
+similardomain(d::MappedDomain, ::Type{T}) where {T} =
+    MappedDomain{T}(d.domain, d.invmap)
 
 forward_map(d::MappedDomain) = inv(d.invmap)
 forward_map(d::MappedDomain, x) = inverse(d.invmap, x)
@@ -103,3 +105,16 @@ _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
 # Avoid nested mapping domains, construct a composite map instead
 # This assumes that the map types can be combined using \circ
 mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
+
+canonicaldomain(d::MappedDomain) = superdomain(d)
+fromcanonical(d::MappedDomain) = forward_map(d)
+tocanonical(d::MappedDomain) = inverse_map(d)
+
+boundary(d::MappedDomain) = _boundary(d, superdomain(d), inverse_map(d))
+_boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
+
+interior(d::MappedDomain) = _interior(d, superdomain(d), inverse_map(d))
+_interior(d::MappedDomain, superdomain, invmap) = MappedDomain(interior(superdomain), invmap)
+
+closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
+_closure(d::MappedDomain, superdomain, invmap) = MappedDomain(closure(superdomain), invmap)

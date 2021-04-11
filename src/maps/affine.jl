@@ -1,9 +1,39 @@
 
 import Base: convert
 
-tomatrix(::Type{T}, a::Number) where {T<:Number} = a
-tomatrix(::Type{SVector{N,T}}, a::Number) where {N,T} = a * one(SMatrix{N,N,T})
-tomatrix(::Type{<:AbstractVector{T}}, a::Number) where {T} = a * I
+const NumberLike = Union{Number,UniformScaling}
+
+"""
+    to_matrix(::Type{T}, A[, b])
+
+Convert the `A` in the affine map `A*x` or `A*x+b` with domaintype `T` to a matrix.
+"""
+to_matrix(::Type{T}, A) where {T} = A
+to_matrix(::Type{T}, A::AbstractMatrix) where {T} = A
+to_matrix(::Type{T}, A::NumberLike) where {T<:Number} = A
+to_matrix(::Type{SVector{N,T}}, A::Number) where {N,T} = A * one(SMatrix{N,N,T})
+to_matrix(::Type{SVector{N,T}}, A::UniformScaling) where {N,T} = A.λ * one(SMatrix{N,N,T})
+to_matrix(::Type{T}, A::Number) where {T<:AbstractVector} = A * I
+to_matrix(::Type{T}, A::UniformScaling) where {T<:AbstractVector} = A
+
+to_matrix(::Type{T}, A, b) where {T} = A
+to_matrix(::Type{T}, A::AbstractMatrix, b) where {T} = A
+to_matrix(::Type{T}, A::Number, b::Number) where {T<:Number} = A
+to_matrix(::Type{T}, A::UniformScaling, b::Number) where {T<:Number} = A.λ
+to_matrix(::Type{SVector{N,T}}, A::NumberLike, b::SVector{N,T}) where {N,T} = A * one(SMatrix{N,N,T})
+to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVector{S}} =
+    A * Array{S,2}(I, length(b), length(b))
+
+"""
+    to_vector(::Type{T}, A[, b])
+
+Convert the `b` in the affine map `A*x` or `A*x+b` with domaintype `T` to a vector.
+"""
+to_vector(::Type{T}, A) where {T} = zero(T)
+to_vector(::Type{T}, A) where {T<:SVector} = zero(T)
+to_vector(::Type{T}, A) where {T<:AbstractVector} = zeros(eltype(T),size(A,1))
+to_vector(::Type{T}, A, b) where {T} = b
+
 
 """
 An affine map has the general form `y = A*x + b`.
@@ -14,56 +44,61 @@ form `y = x + b`.
 """
 abstract type AbstractAffineMap{T} <: Map{T} end
 
+unsafe_matrix(m::AbstractAffineMap) = m.A
+unsafe_vector(m::AbstractAffineMap) = m.b
+
 "Return the matrix `A` in the affine map `Ax+b`."
-matrix(m::AbstractAffineMap) = copy(unsafe_matrix(m))
+matrix(m::AbstractAffineMap) = to_matrix(domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 
 "Return the vector `b` in the affine map `Ax+b`."
-vector(m::AbstractAffineMap) = copy(unsafe_vector(m))
+vector(m::AbstractAffineMap) = to_vector(domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 
-applymap(m::AbstractAffineMap, x) = _applymap(m, x, matrix(m), vector(m))
+applymap(m::AbstractAffineMap, x) = _applymap(m, x, unsafe_matrix(m), unsafe_vector(m))
 _applymap(m::AbstractAffineMap, x, A, b) = A*x + b
 
-applymap!(y, m::AbstractAffineMap, x) = _applymap!(y, m, x, matrix(m), vector(m))
-function applymap!(y, m::AbstractAffineMap, x, A, b)
+applymap!(y, m::AbstractAffineMap, x) = _applymap!(y, m, x, unsafe_matrix(m), unsafe_vector(m))
+function _applymap!(y, m::AbstractAffineMap, x, A, b)
     mul!(y, A, x)
     y .+= b
     y
 end
 
-isreal(m::AbstractAffineMap) = _isreal(m, matrix(m), vector(m))
-_isreal(m::AbstractAffineMap, A) = isreal(A)
+isreal(m::AbstractAffineMap) = _isreal(m, unsafe_matrix(m), unsafe_vector(m))
 _isreal(m::AbstractAffineMap, A, b) = isreal(A) && isreal(b)
 
 jacobian(m::AbstractAffineMap{T}) where {T} = ConstantMap{T}(matrix(m))
 jacobian(m::AbstractAffineMap, x) = matrix(m)
 
-jacdet(m::AbstractAffineMap, x) = _jacdet(m, x, matrix(m))
+jacdet(m::AbstractAffineMap, x) = _jacdet(m, x, unsafe_matrix(m))
 _jacdet(m::AbstractAffineMap, x, A) = det(A)
-_jacdet(m::AbstractAffineMap, x::AbstractVector, A::Number) = det(A)^length(x)
+_jacdet(m::AbstractAffineMap, x::Number, A::UniformScaling) = A.λ
+_jacdet(m::AbstractAffineMap, x::AbstractVector, A::Number) = A^length(x)
+_jacdet(m::AbstractAffineMap, x::AbstractVector, A::UniformScaling) = A.λ^length(x)
 
 islinear(m::AbstractMap) = false
-islinear(m::AbstractAffineMap) = _islinear(m, vector(m))
+islinear(m::AbstractAffineMap) = _islinear(m, unsafe_vector(m))
 _islinear(m::AbstractAffineMap, b) = all(b .== 0)
 
 isaffine(m::AbstractMap) = islinear(m) || isconstant(m)
 isaffine(m::AbstractAffineMap) = true
 
 ==(m1::AbstractAffineMap, m2::AbstractAffineMap) =
-    (unsafe_matrix(m1) == unsafe_matrix(m2)) && (unsafe_vector(m1)==unsafe_vector(m2))
+    matrix(m1) == matrix(m2) && vector(m1) == vector(m2)
 
-size(m::AbstractAffineMap) = _size(m, matrix(m), vector(m))
-_size(m, A, b) = size(A)
-_size(m, A::Number, b::Number) = (1,1)
-_size(m, A::Number, b::AbstractVector) = (length(b),length(b))
+==(m1::AbstractAffineMap, m2::IdentityMap) =
+    islinear(m1) && matrix(m1) == matrix(m2)
+==(m1::IdentityMap, m2::AbstractAffineMap) = m2==m1
 
-unsafe_matrix(m::AbstractAffineMap) = m.A
-unsafe_vector(m::AbstractAffineMap) = m.b
+size(m::AbstractAffineMap) = _size(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
+_size(m, T, A, b) = size(A)
+_size(m, T, A::Number, b::Number) = (1,1)
+_size(m, T, A::Number, b::AbstractVector) = (length(b),length(b))
+_size(m, T, A::UniformScaling, b) = (length(b),length(b))
 
 
 ########################
 # Linear maps: y = A*x
 ########################
-
 
 """
 The supertype of all linear maps `y = A*x`.
@@ -71,9 +106,13 @@ Concrete subtypes may differ in how `A` is represented.
 """
 abstract type LinearMap{T} <: AbstractAffineMap{T} end
 
-vector(m::LinearMap{T}) where {T<:SVector} = zero(T)
-vector(m::LinearMap{T}) where {T<:Number} = zero(T)
-vector(m::LinearMap{T}) where {T<:AbstractVector} = zeros(eltype(T),size(m.A,1))
+size(m::LinearMap) = _size(m, domaintype(m), unsafe_matrix(m))
+_size(m, T, A) = size(A)
+_size(m, ::Type{T}, A::Number) where {T<:Number} = (1,1)
+_size(m, ::Type{T}, A::Number) where {N,T<:SVector{N}} = (N,N)
+
+matrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
+vector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
 
 LinearMap(A::Number) = ScalarLinearMap(A)
 LinearMap(A::SMatrix) = StaticLinearMap(A)
@@ -85,18 +124,22 @@ LinearMap{T}(A::SMatrix{M,N}) where {M,N,S,T <: SVector{N,S}} = StaticLinearMap{
 LinearMap{T}(A::Matrix) where {S,T <: Vector{S}} = VectorLinearMap{S}(A)
 LinearMap{T}(A) where {T} = GenericLinearMap{T}(A)
 
-applymap(m::LinearMap, x) = m.A * x
-applymap!(y, m::LinearMap, x) = mul!(y, m.A, x)
+# convenience functions
+LinearMap(a::Number...) = LinearMap(promote(a...))
+LinearMap(a::NTuple{N,T}) where {N,T <: Number} = LinearMap{SVector{N,T}}(Diagonal(SVector{N,T}(a)))
+
+applymap(m::LinearMap, x) = _applymap(m, x, unsafe_matrix(m))
+_applymap(m::LinearMap, x, A) = A*x
+
+applymap!(y, m::LinearMap, x) = _applymap!(y, m, x, unsafe_matrix(m))
+_applymap!(y, m::LinearMap, x, A) = mul!(y, A, x)
 
 islinear(m::LinearMap) = true
 
 isreal(m::LinearMap) = _isreal(m, unsafe_matrix(m))
+_isreal(m::LinearMap, A) = isreal(A)
 
-size(m::LinearMap) = _size(m, unsafe_matrix(m), 0)
-
-==(m1::LinearMap, m2::LinearMap) = unsafe_matrix(m1) == unsafe_matrix(m2)
-
-jacdet(m::LinearMap, x) = _jacdet(m, x, unsafe_matrix(m))
+==(m1::LinearMap, m2::LinearMap) = matrix(m1) == matrix(m2)
 
 inv(m::LinearMap) = LinearMap(inv(m.A))
 inverse(m::LinearMap, x) = m.A \ x
@@ -122,13 +165,15 @@ function rightinverse(m::LinearMap, x)
     m.A \ x
 end
 
-convert(::Type{Map{T}}, m::LinearMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::LinearMap{S}) where {S,T} = LinearMap{T}(m.A)
+similarmap(m::LinearMap, ::Type{T}) where {T} = LinearMap{T}(m.A)
 
+convert(::Type{Map}, a::Number) = LinearMap(a)
 convert(::Type{Map{T}}, a::Number) where {T} = LinearMap{T}(a)
 
-convert(::Type{AbstractAffineMap{T}}, ::IdentityMap) where {T} = LinearMap{T}(1)
-convert(::Type{LinearMap{T}}, ::IdentityMap) where {T} = LinearMap{T}(1)
+convert(::Type{LinearMap}, ::StaticIdentityMap{T}) where {T} = LinearMap{T}(1)
+convert(::Type{LinearMap{T}}, ::StaticIdentityMap) where {T} = LinearMap{T}(1)
+convert(::Type{AbstractAffineMap}, m::StaticIdentityMap) = convert(LinearMap, m)
+convert(::Type{AbstractAffineMap{T}}, m::StaticIdentityMap) where {T} = convert(LinearMap, m)
 
 
 "A `GenericLinearMap` is a linear map `y = A*x` for any type of `A`."
@@ -165,9 +210,9 @@ ScalarLinearMap(A::Number) = ScalarLinearMap{typeof(A)}(A)
 
 
 
-"A `VectorLinearMap` is a linear map `y = A*x` using vectors and arrays."
+"A `VectorLinearMap` is a linear map `y = A*x` using vectors and matrices."
 struct VectorLinearMap{T} <: LinearMap{Vector{T}}
-    A   ::  Array{T}
+    A   ::  Matrix{T}
 end
 
 VectorLinearMap(A::AbstractMatrix{T}) where {T} =
@@ -200,6 +245,8 @@ convert(::Type{Map{SVector{N,T}}}, m::VectorLinearMap) where {N,T} = StaticLinea
 "A `Translation` represents the map `y = x + b`."
 abstract type Translation{T} <: AbstractAffineMap{T} end
 
+unsafe_matrix(m::Translation) = I
+
 "Translation by a scalar value."
 struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
@@ -216,7 +263,7 @@ struct VectorTranslation{T} <: Translation{Vector{T}}
 end
 
 "Translation by a generic vectorlike object."
-struct GenericTranslation{T,B} <: Translation{Vector{T}}
+struct GenericTranslation{T,B} <: Translation{T}
     b   ::  B
 end
 
@@ -230,24 +277,19 @@ Translation{T}(b::AbstractVector) where {N,S,T<:SVector{N,S}} = StaticTranslatio
 Translation{T}(b::Vector) where {S,T<:Vector{S}} = VectorTranslation{S}(b)
 Translation{T}(b) where {T} = GenericTranslation{T}(b)
 
-size(m::Translation) = (length(unsafe_vector(m)), length(unsafe_vector(m)))
-
-matrix(m::Translation) = identitymatrix(m)
-
-jacdet(m::Translation, x) = one(prectype(m))
+jacdet(m::Translation, x) = 1
 
 isreal(m::Translation) = isreal(unsafe_vector(m))
 
 ==(m1::Translation, m2::Translation) = unsafe_vector(m1)==unsafe_vector(m2)
 
 
-convert(::Type{Map{T}}, m::Translation{T}) where {T} = m
-convert(::Type{Map{T}}, m::Translation{S}) where {S,T} = Translation{T}(m.b)
+similarmap(m::Translation, ::Type{T}) where {T} = Translation{T}(m.b)
 
-convert(::Type{Map{SVector{N,T}}}, m::Translation) where {N,T} = StaticTranslation{T,N}(m.b)
-
-applymap(m::Translation, x) = x + m.b
-applymap!(y, m, x) = y .+= x .+ m.b
+applymap(m::Translation, x) = _applymap(m, x, unsafe_vector(m))
+_applymap(m::Translation, x, b) = x + b
+applymap!(y, m::Translation, x) = _applymap!(y, m, x, unsafe_vector(m))
+_applymap!(y, m::Translation, x, b) = y .= x .+ m.b
 
 inv(m::Translation{T}) where {T} = Translation{T}(-m.b)
 
@@ -258,7 +300,7 @@ ScalarTranslation(b::Number) = ScalarTranslation{typeof(b)}(b)
 
 StaticTranslation(b::AbstractVector{T}) where {T} = StaticTranslation{T}(b)
 
-StaticTranslation{T}(b::AbstractVector{S}) where {S,T} =
+StaticTranslation{T}(b::AbstractVector) where {T} =
     StaticTranslation{T}(convert(AbstractVector{T}, b))
 StaticTranslation{T}(b::SVector{N,T}) where {N,T} =
     StaticTranslation{T,N}(b)
@@ -283,9 +325,6 @@ Concrete subtypes differ in how `A` and `b` are represented.
 """
 abstract type AffineMap{T} <: AbstractAffineMap{T} end
 
-applymap(m::AffineMap, x) = _applymap(m, x, unsafe_matrix(m), unsafe_vector(m))
-applymap!(y, m::AffineMap, x) = _applymap!(y, m, x, unsafe_matrix(m), unsafe_vector(m))
-
 AffineMap(A::Number, b::Number) = ScalarAffineMap(A, b)
 AffineMap(A::SMatrix, b::SVector) = StaticAffineMap(A, b)
 AffineMap(A::Matrix, b::Vector) = VectorAffineMap(A, b)
@@ -296,18 +335,7 @@ AffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {N,S,T<:SVector{N,S}} =
 AffineMap{T}(A::Matrix, b::Vector) where {S,T<:Vector{S}} = VectorAffineMap{S}(A, b)
 AffineMap{T}(A, b) where {T} = GenericAffineMap{T}(A, b)
 
-convert(::Type{Map{T}}, m::AffineMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::AffineMap{S}) where {S,T} = AffineMap{T}(m.A, m.b)
-
-isreal(m::AffineMap) = _isreal(m, unsafe_matrix(m), unsafe_vector(m))
-islinear(m::AffineMap) = _islinear(m, unsafe_vector(m))
-
-==(m1::AffineMap, m2::AffineMap) =
-    (unsafe_matrix(m1) == unsafe_matrix(m2)) && (unsafe_vector(m1)==unsafe_vector(m2))
-
-size(m::AffineMap) = _size(m, unsafe_matrix(m), unsafe_vector(m))
-
-jacdet(m::AffineMap, x) = _jacdet(m, x, unsafe_matrix(m))
+similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
 # If y = a*x+b, then x = inv(a)*(y-b) = inv(a)*y - inv(A)*b
 inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
@@ -350,8 +378,8 @@ end
 GenericAffineMap(A, b) = GenericAffineMap{promote_type(eltype(A),eltype(b))}(A, b)
 GenericAffineMap(A::AbstractArray{S}, b::AbstractVector{T}) where {S,T} =
     GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
-GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:Number,T} =
-    GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
+GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:NumberLike,T} =
+    GenericAffineMap{Vector{promote_type(eltype(S),T)}}(A, b)
 GenericAffineMap(A::S, b::SVector{N,T}) where {S<:Number,N,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
 
@@ -369,12 +397,10 @@ GenericAffineMap{T}(A::AbstractMatrix{S}, b::AbstractVector{S}) where {S,T<:Abst
     GenericAffineMap{T,typeof(A),typeof(b)}(A, b)
 
 
-convert(::Type{Map{T}}, m::GenericAffineMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::GenericAffineMap{S}) where {S,T} = GenericAffineMap{T}(m.A, m.b)
-convert(::Type{GenericAffineMap{T}}, m::GenericAffineMap) where {T} = convert(Map{T}, m)
+similarmap(m::GenericAffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
-matrix(m::GenericAffineMap{T,<:Number}) where {T<:AbstractVector} = tomatrix(T, m.A)
-
+convert(::Type{GenericAffineMap{T}}, m::GenericAffineMap) where {T} =
+    GenericAffineMap{T}(m.A, m.b)
 
 
 
@@ -390,7 +416,7 @@ ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
 "An affine map with array and vector representation."
 struct VectorAffineMap{T} <: AffineMap{Vector{T}}
-    A   ::  Array{T}
+    A   ::  Matrix{T}
     b   ::  Vector{T}
 end
 
@@ -437,30 +463,5 @@ StaticAffineMap{T,N}(A::SMatrix{M,N}, b::AbstractVector) where {T,N,M} =
 StaticAffineMap{T,N,M}(A::AbstractMatrix, b::AbstractVector) where {T,N,M} =
     StaticAffineMap{T,N,M,M*N}(A, b)
 
-convert(::Type{Map{SVector{N,T}}}, m::VectorAffineMap) where {N,T} = StaticAffineMap{T,N}(m.A, m.b)
-
-
-
-########################
-# Some useful functions
-########################
-
-@deprecate linear_map(a, b) AffineMap(a, b)
-
-"Map the interval [a,b] to the interval [c,d]."
-interval_map(a, b, c, d) = AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
-
-
-## Simple scaling maps
-
-"Scale all variables by a."
-scaling_map(a) = LinearMap(a)
-
-"Scale the variables by a and b."
-scaling_map(a, b) = LinearMap(SMatrix{2,2}(a, 0, 0, b))
-
-"Scale the variables by a, b and c."
-scaling_map(a, b, c) = LinearMap(SMatrix{3,3}(a, 0, 0,  0, b, 0,  0, 0,c))
-
-"Scale the variables by a, b, c and d."
-scaling_map(a, b, c, d) = LinearMap(SMatrix{4,4}(a,0,0,0, 0,b,0,0, 0,0,c,0, 0,0,0,d))
+convert(::Type{Map{SVector{N,T}}}, m::VectorAffineMap) where {N,T} =
+    StaticAffineMap{T,N}(m.A, m.b)
