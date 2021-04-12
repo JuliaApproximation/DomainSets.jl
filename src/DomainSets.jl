@@ -10,6 +10,9 @@ using IntervalSets
 ## Exhaustive list of imports
 ################################
 
+@deprecate IntersectionDomain(args...) IntersectDomain(args...)
+@deprecate DifferenceDomain(args...) SetdiffDomain(args...)
+
 # Generated functions
 import Base: @ncall
 
