@@ -437,14 +437,14 @@ function test_product_map(T)
 end
 
 function test_wrapped_maps(T)
-    m1 = WrappedMap{T}(cos)
-    m2 = WrappedMap{T}(sin)
+    m1 = DomainSets.WrappedMap{T}(cos)
+    m2 = DomainSets.WrappedMap{T}(sin)
     @test m1(one(T)) ≈ cos(one(T))
     @test m2(one(T)) ≈ sin(one(T))
     m3 = m1 ∘ m2
     @test m3(one(T)) ≈ cos(sin(one(T)))
 
-    @test convert(Map{T}, cos) isa WrappedMap{T,typeof(cos)}
+    @test convert(Map{T}, cos) isa DomainSets.WrappedMap{T,typeof(cos)}
 end
 
 

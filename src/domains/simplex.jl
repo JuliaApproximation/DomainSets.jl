@@ -10,10 +10,22 @@ isclosedset(::Simplex{T,:open}) where {T} = false
 
 isopenset(d::Simplex) = !isclosedset(d)
 
-abstract type AbstractUnitSimplex{T,C} <: Simplex{T,C} end
+abstract type UnitSimplex{T,C} <: Simplex{T,C} end
+const ClosedUnitSimplex{T} = UnitSimplex{T,:closed}
+const OpenUnitSimplex{T} = UnitSimplex{T,:open}
 
-const ClosedUnitSimplex{T} = AbstractUnitSimplex{T,:closed}
-const OpenUnitSimplex{T} = AbstractUnitSimplex{T,:open}
+UnitSimplex(n::Int) = DynamicUnitSimplex(n)
+UnitSimplex(::Val{N}) where {N} = EuclideanUnitSimplex{N}()
+
+UnitSimplex{T}(n::Int) where {T <: StaticTypes} = StaticUnitSimplex{T}(n)
+UnitSimplex{T}(::Val{N}) where {N,T} = StaticUnitSimplex{T}(Val(N))
+UnitSimplex{T}() where {T <: StaticTypes} = StaticUnitSimplex{T}()
+UnitSimplex{T}(n::Int) where {T} = DynamicUnitSimplex{T}(n)
+
+UnitSimplex{T,C}(n::Int) where {T <: StaticTypes,C} = StaticUnitSimplex{T,C}(n)
+UnitSimplex{T,C}(::Val{N}) where {N,T,C} = StaticUnitSimplex{T,C}(Val(N))
+UnitSimplex{T,C}() where {T <: StaticTypes,C} = StaticUnitSimplex{T,C}()
+UnitSimplex{T,C}(n::Int) where {T,C} = DynamicUnitSimplex{T,C}(n)
 
 insimplex_closed(x) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 insimplex_open(x) = mapreduce( t-> t > 0, &, x) && norm(x,1) < 1
@@ -25,30 +37,53 @@ indomain(x, ::OpenUnitSimplex) = insimplex_open(x)
 approx_indomain(x, ::ClosedUnitSimplex, tolerance) = insimplex_closed(x, tolerance)
 approx_indomain(x, ::OpenUnitSimplex, tolerance) = insimplex_open(x, tolerance)
 
-isempty(::AbstractUnitSimplex) = false
+isempty(::UnitSimplex) = false
 
-==(d1::AbstractUnitSimplex, d2::AbstractUnitSimplex) =
+==(d1::UnitSimplex, d2::UnitSimplex) =
     isclosedset(d1)==isclosedset(d2) && dimension(d1)==dimension(d2)
 
-struct StaticUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
+boundingbox(d::UnitSimplex{T}) where {T} = UnitCube{T}(dimension(d))
+
+
+
+struct StaticUnitSimplex{T,C} <: UnitSimplex{T,C}
 end
+
+StaticUnitSimplex() = StaticUnitSimplex{Float64}()
+StaticUnitSimplex(::Val{N}) where {N} = StaticUnitSimplex{SVector{N,Float64}}()
 
 StaticUnitSimplex{T}() where {T} = StaticUnitSimplex{T,:closed}()
 
-struct DynamicUnitSimplex{T,C} <: AbstractUnitSimplex{T,C}
+StaticUnitSimplex{T}(n::Int) where {T} =
+    (@assert n == euclideandimension(T); StaticUnitSimplex{T}())
+StaticUnitSimplex{T}(::Val{N}) where {N,T} =
+    (@assert N == euclideandimension(T); StaticUnitSimplex{T}())
+
+StaticUnitSimplex{T,C}(n::Int) where {T,C} =
+    (@assert n == euclideandimension(T); StaticUnitSimplex{T,C}())
+StaticUnitSimplex{T,C}(::Val{N}) where {N,T,C} =
+    (@assert N == euclideandimension(T); StaticUnitSimplex{T,C}())
+
+const EuclideanUnitSimplex{N,T,C} = StaticUnitSimplex{SVector{N,T},C}
+
+EuclideanUnitSimplex{N}() where {N} = EuclideanUnitSimplex{N,Float64}()
+
+
+struct DynamicUnitSimplex{T,C} <: UnitSimplex{T,C}
     dimension   ::  Int
+
+    DynamicUnitSimplex{T,C}(n::Int) where {T,C} = new(n)
+    DynamicUnitSimplex{T,C}(n::Int) where {T<:StaticTypes,C} =
+        (@assert n == euclideandimension(T); new(n))
 end
 
-DynamicUnitSimplex{T}(dimension) where {T} = DynamicUnitSimplex{T,:closed}(dimension)
+DynamicUnitSimplex(n::Int) = DynamicUnitSimplex{Vector{Float64}}(n)
+DynamicUnitSimplex{T}(n::Int) where {T} = DynamicUnitSimplex{T,:closed}(n)
 
 dimension(d::DynamicUnitSimplex) = d.dimension
 
-
-const EuclideanUnitSimplex{N,T,C} = StaticUnitSimplex{SVector{N,T},C}
 const VectorUnitSimplex{T,C} = DynamicUnitSimplex{Vector{T},C}
-const UnitSimplex{N,T,C} = EuclideanUnitSimplex{N,T,C}
 
-EuclideanUnitSimplex{N}() where {N} = EuclideanUnitSimplex{N,Float64}()
 VectorUnitSimplex(dimension) = VectorUnitSimplex{Float64}(dimension)
 
 center(d::EuclideanUnitSimplex{N,T}) where {N,T} = ones(SVector{N,T})/N
@@ -67,7 +102,7 @@ closure(d::VectorUnitSimplex{T}) where {T} = VectorUnitSimplex{T,:closed}(dimens
 
 # We pick the center point, because it belongs to the domain regardless of
 # whether it is open or closed.
-point_in_domain(d::AbstractUnitSimplex) = center(d)
+point_in_domain(d::UnitSimplex) = center(d)
 
 similardomain(d::StaticUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
     StaticUnitSimplex{T,C}()

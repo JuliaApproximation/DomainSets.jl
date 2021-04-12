@@ -31,6 +31,8 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 
+boundingbox(d::AbstractInterval) = d
+
 volume(d::AbstractInterval) = width(d)
 
 similar_interval(d::AbstractInterval, a, b) = similar_interval(d, promote(a, b)...)

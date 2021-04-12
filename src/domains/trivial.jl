@@ -25,6 +25,7 @@ isclosedset(d::EmptySpace) = true
 boundary(d::EmptySpace) = d
 interior(d::EmptySpace) = d
 closure(d::EmptySpace) = d
+boundingbox(d::EmptySpace) = d
 
 # Arithmetic operations
 

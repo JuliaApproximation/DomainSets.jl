@@ -100,7 +100,9 @@ abstract type DerivedDomain{T} <: SingleLazyDomain{T} end
 isempty(d::DerivedDomain) = isempty(superdomain(d))
 
 canonicaldomain(d::DerivedDomain) = superdomain(d)
-
+boundingbox(d::DerivedDomain) = boundingbox(superdomain(d))
+interior(d::DerivedDomain) = interior(superdomain(d))
+closure(d::DerivedDomain) = closure(superdomain(d))
 
 """
 A `WrappedDomain` is a wrapper around an object that implements the domain

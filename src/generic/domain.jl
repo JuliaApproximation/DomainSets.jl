@@ -144,3 +144,5 @@ supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the s
 
 function boundary end
 const ∂ = boundary
+
+boundingbox(d) = FullSpace{eltype(d)}()

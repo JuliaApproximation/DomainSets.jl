@@ -38,6 +38,8 @@ convert(::Type{IndicatorFunction}, d::AbstractIndicatorFunction) = d
 convert(::Type{IndicatorFunction}, d::Domain{T}) where {T} =
     IndicatorFunction{T}(indicatorfunction(d))
 
+intersectdomain1(d1::IndicatorFunction, d2) = BoxedIndicatorFunction(d1.f, d2)
+intersectdomain2(d1, d2::IndicatorFunction) = BoxedIndicatorFunction(d2.f, d1)
 
 "An indicator function with a known bounding domain."
 struct BoxedIndicatorFunction{F,D,T} <: AbstractIndicatorFunction{T}
@@ -56,15 +58,12 @@ domain(d::BoxedIndicatorFunction) = d.domain
 indomain(x, d::BoxedIndicatorFunction) = x ∈ domain(d) && d.f(x)
 
 
-boundingbox(d::BoxedIndicatorFunction) = Rectangle(d.a, d.b)
-
 similardomain(d::BoxedIndicatorFunction, ::Type{T}) where {T} =
     BoxedIndicatorFunction(d.f, convert(Domain{T}, d.domain))
 
 Domain(gen::Base.Generator) = generator_domain(gen)
 
 generator_domain(gen::Base.Generator{<:Domain}) = BoxedIndicatorFunction(gen.f, gen.iter)
-
 generator_domain(gen::Base.Generator{<:Base.Iterators.ProductIterator}) =
     productgenerator_domain(gen, gen.iter.iterators)
 
@@ -72,6 +71,8 @@ function productgenerator_domain(gen, domains::Tuple{Vararg{Domain,N} where N})
     domain = TupleProductDomain(gen.iter.iterators)
     BoxedIndicatorFunction(gen.f, domain)
 end
+
+boundingbox(d::BoxedIndicatorFunction) = boundingbox(d.domain)
 
 show(io::IO, d::BoxedIndicatorFunction) =
     print(io, "indicator function bounded by: $(domain(d))")

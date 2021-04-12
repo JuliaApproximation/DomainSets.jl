@@ -119,6 +119,7 @@ end
         @test !approx_in(1.2, d, 0.1)
         @test !isempty(d)
         @test boundary(d) == d
+        @test boundingbox(d) == 1.0..1.0
         @test isclosedset(d)
         @test !isopenset(d)
         @test dimension(d) == 1
@@ -180,6 +181,8 @@ end
 
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
+
+            @test boundingbox(d) == d
 
             @test similar_interval(0..1, 0, big(1.0)) isa ClosedInterval{BigFloat}
         end
@@ -642,6 +645,9 @@ end
         @test eltype(D2) == SVector{2,BigFloat}
         @test boundary(D) == UnitCircle()
         @test dimension(D) == 2
+        @test boundingbox(D) == ProductDomain(ChebyshevInterval(), ChebyshevInterval())
+
+        @test boundingbox(UnitBall{Float64}()) == ChebyshevInterval()
 
         @test convert(SublevelSet, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
         @test convert(SublevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SublevelSet{SVector{2,Float64},:open}
@@ -710,6 +716,8 @@ end
         @test isclosedset(C)
         @test !isopenset(C)
         @test boundary(C) == VectorUnitSphere(4)
+        cheb = ChebyshevInterval()
+        @test boundingbox(C) == ProductDomain([cheb, cheb, cheb, cheb])
         @test dimension(C) == 4
         @test isopenset(interior(C))
 
@@ -817,6 +825,9 @@ end
         @test applymap(q, -x) ≈ 1
         @test rightinverse(q) == p
 
+        @test boundingbox(C) == ProductDomain(ChebyshevInterval(), ChebyshevInterval())
+        @test boundingbox(UnitSphere{Float64}()) == ChebyshevInterval()
+
         @test convert(LevelSet, UnitCircle()) isa LevelSet{SVector{2,Float64}}
         @test convert(LevelSet{SVector{2,BigFloat}}, UnitCircle()) isa LevelSet{SVector{2,BigFloat}}
         @test pseudolevel(UnitCircle(), 0.1) isa SublevelSet
@@ -860,6 +871,13 @@ end
         @test convert(Domain{SVector{3,BigFloat}}, D) ≡ UnitSphere{SVector{3,BigFloat}}()
         @test SVector(1,0,0) in D
         @test SVector(nextfloat(1.0),0,0) ∉ D
+
+        D4 = UnitSphere(4)
+        @test D4 isa DynamicUnitSphere
+        @test D4 isa VectorUnitSphere
+        @test dimension(D4) == 4
+        cheb = ChebyshevInterval()
+        @test boundingbox(D4) == ProductDomain([cheb, cheb, cheb, cheb])
     end
 
     @testset "derived types" begin
@@ -935,7 +953,34 @@ end
     end
 
     @testset "simplex" begin
-        d = UnitSimplex{2}()
+        @test UnitSimplex(2) isa VectorUnitSimplex{Float64}
+        @test UnitSimplex(Val(2)) isa EuclideanUnitSimplex{2,Float64}
+        @test UnitSimplex{Float64}() isa StaticUnitSimplex{Float64}
+        @test UnitSimplex{Float64}(1) isa StaticUnitSimplex{Float64}
+        @test_throws AssertionError UnitSimplex{Float64}(2)
+        @test UnitSimplex{SVector{2,Float64}}(Val(2)) isa EuclideanUnitSimplex{2,Float64}
+        @test_throws AssertionError UnitSimplex{SVector{2,Float64}}(Val(3))
+        @test UnitSimplex{SVector{2,Float64}}(2) isa EuclideanUnitSimplex{2,Float64}
+        @test_throws AssertionError UnitSimplex{SVector{2,Float64}}(3)
+        @test UnitSimplex{SVector{2,Float64}}() isa EuclideanUnitSimplex{2,Float64}
+        @test UnitSimplex{Vector{Float64}}(2) isa VectorUnitSimplex{Float64}
+        @test_throws MethodError UnitSimplex{Vector{Float64}}()
+
+        @test UnitSimplex{Float64,:open}() isa StaticUnitSimplex{Float64,:open}
+        @test UnitSimplex{Float64,:closed}(1) isa StaticUnitSimplex{Float64,:closed}
+        @test_throws AssertionError UnitSimplex{Float64,:closed}(2)
+        @test UnitSimplex{SVector{2,Float64},:open}(Val(2)) isa EuclideanUnitSimplex{2,Float64,:open}
+        @test_throws AssertionError UnitSimplex{SVector{2,Float64},:closed}(Val(3))
+        @test UnitSimplex{SVector{2,Float64},:open}(2) isa EuclideanUnitSimplex{2,Float64,:open}
+        @test_throws AssertionError UnitSimplex{SVector{2,Float64},:closed}(3)
+        @test UnitSimplex{SVector{2,Float64},:open}() isa EuclideanUnitSimplex{2,Float64,:open}
+        @test UnitSimplex{Vector{Float64},:closed}(2) isa VectorUnitSimplex{Float64,:closed}
+        @test_throws MethodError UnitSimplex{Vector{Float64},:open}()
+
+        @test DynamicUnitSimplex{Float64}(1) isa DynamicUnitSimplex{Float64}
+        @test_throws AssertionError DynamicUnitSimplex{Float64}(2)
+
+        d = UnitSimplex(Val(2))
         # We test a point in the interior, a point on each of the boundaries and
         # all corners.
         @test SA[0.2,0.2] ∈ d
@@ -950,13 +995,14 @@ end
         @test SA[0.5,0.6] ∉ d
         @test SA[-0.2,0.2] ∉ d
         @test SA[0.2,-0.2] ∉ d
+        @test boundingbox(d) == UnitCube{SVector{2,Float64}}()
 
         @test approx_in(SA[-0.1,-0.1], d, 0.1)
         @test !approx_in(SA[-0.1,-0.1], d, 0.09)
 
         @test corners(d) == [ SA[0.0,0.0], SA[1.0,0.0], SA[0.0,1.0]]
 
-        @test convert(Domain{SVector{2,BigFloat}}, d) == UnitSimplex{2,BigFloat}()
+        @test convert(Domain{SVector{2,BigFloat}}, d) == EuclideanUnitSimplex{2,BigFloat}()
 
         @test isclosedset(d)
         @test !isopenset(d)
@@ -1008,8 +1054,8 @@ end
         @test SA[-0.2,0.2] ∉ D
         @test SA[0.2,-0.2] ∉ D
         @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
-
         @test corners(D) == [ [0.0,0.0], [1.0,0.0], [0.0,1.0]]
+        @test boundingbox(D) == UnitCube(4)
     end
 
     @testset "level sets" begin
@@ -1112,6 +1158,8 @@ end
         @test 0 ∈ d
         @test big(0) ∈ d
         @test -1 ∉ d
+        @test d ∩ ChebyshevInterval() isa DomainSets.BoxedIndicatorFunction
+        @test ChebyshevInterval() ∩ d isa DomainSets.BoxedIndicatorFunction
 
         @test convert(IndicatorFunction, 0..1) isa IndicatorFunction
         @test convert(IndicatorFunction, d) == d
@@ -1149,7 +1197,7 @@ end
         @test SA[-1.1,0.3] ∉ d1
         @test @inferred(VcatDomain(-1.0..1, -1.0..1)) === d1
         # Test promotion
-        @test convert(Domain{SVector{2,BigFloat}}, d1) isa VcatDomain
+        @test convert(Domain{SVector{2,BigFloat}}, d1) isa ProductDomain{SVector{2,BigFloat}}
         d1w = convert(Domain{SVector{2,BigFloat}}, d1)
         @test eltype(d1w) == SVector{2,BigFloat}
         @test eltype(element(d1w, 1)) == BigFloat
@@ -1383,26 +1431,26 @@ end
     end
     @testset "ProductDomain" begin
         d1 = 0..1.0
-        d2 = 0..2.0
+        d2 = UnitBall{Float64}()
         d3 = UnitCircle()
         @test ProductDomain{SVector{2,Float64}}(d1, d2) isa VcatDomain
         @test ProductDomain{Tuple{Float64,Float64}}(d1, d2) isa TupleProductDomain
         @test ProductDomain{Vector{Float64}}([d1; d2]) isa VectorProductDomain
 
         @test ProductDomain((d1,d3)) isa VcatDomain
-        @test ProductDomain((d1,d2)) isa Rectangle
+        @test ProductDomain((d1,d1)) isa Rectangle
 
-        @test volume(ProductDomain(d1,d2)) == 2
+        @test volume(ProductDomain(0..1,1..3)) == 2
 
         @test ProductDomain(SVector(0..1, 0..2)) isa Rectangle{SVector{2,Int}}
         @test ProductDomain(1.05 * UnitDisk(), -1.0 .. 1.0) isa VcatDomain{3,Float64}
         @test ProductDomain(['a','b'], 0..1) isa TupleProductDomain
 
-        @test ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7) isa TupleProductDomain{Tuple{Float64,Float64}}
+        @test ProductDomain{Tuple{Float64,Float64}}(0..0.5, 0..0.7) isa Rectangle{Tuple{Float64,Float64}}
         # Some conversions
-        @test convert(Domain{Vector{Float64}}, (-1..1)^2) isa VectorProductDomain{Vector{Float64}}
-        @test convert(Domain{SVector{2,Float64}}, ProductDomain([-1..1,-2..2])) isa VcatDomain{2,Float64}
-        @test convert(Domain{Vector{Float64}}, TupleProductDomain(-1..1,-2..2)) isa VectorDomain{Float64}
+        @test convert(Domain{Vector{Float64}}, productdomain(d1,d2)) isa VectorProductDomain{Vector{Float64}}
+        @test convert(Domain{SVector{2,Float64}}, ProductDomain([d1,d2])) isa VcatDomain{2,Float64}
+        @test convert(Domain{Vector{Float64}}, TupleProductDomain(d1,d2)) isa VectorDomain{Float64}
 
         # intersection of product domains
         @test ProductDomain([0..1.0, 0..2.0]) ∩ ProductDomain([0..1, 0..3]) isa Rectangle{Vector{Float64}}
@@ -1414,5 +1462,33 @@ end
         @test String(take!(io)) == "0..1 x 0..2 x 0..3 x 0..4 x 0..5 x ... x 0..16 x 0..17 x 0..18 x 0..19 x 0..20"
         @test isopenset(interior(UnitCube()))
         @test isclosedset(closure(interior(UnitCube())))
+    end
+    @testset "bounding box" begin
+        using DomainSets: unionbox, intersectbox
+        @test unionbox(0..1) == 0..1
+        @test unionbox(0..1, 2..3) == 0..3
+        @test unionbox(0..1, 2..3, 5..6.0) === 0..6.0
+
+        @test unionbox(EmptySpace{Float64}(), 2..3) === 2..3.0
+        @test unionbox(2..3, EmptySpace{Float64}()) === 2..3.0
+        @test unionbox(FullSpace{Int}(), 2..3.0) === FullSpace{Float64}()
+        @test unionbox(2..3.0, FullSpace{Int}()) === FullSpace{Float64}()
+
+        d1 = ProductDomain(0..1.0, 2..4.0)
+        d2 = ProductDomain(0.5..1.5, 2.5..4.5)
+        @test unionbox(d1, d2) == ProductDomain(0..1.5, 2..4.5)
+
+        @test intersectbox(0..1) == 0..1
+        @test intersectbox(0..1.5, 1..3) === 1.0..1.5
+        @test intersectbox(0..1, 0.5..3, 0.0..4.0) === 0.5..1.0
+
+        @test intersectbox(EmptySpace{Int}(), 2..3.0) === EmptySpace{Float64}()
+        @test intersectbox(2..3.0, EmptySpace{Int}()) === EmptySpace{Float64}()
+        @test intersectbox(FullSpace{Float64}(), 2..3) === 2.0..3.0
+        @test intersectbox(2..3, FullSpace{Float64}()) === 2.0..3.0
+
+        d1 = ProductDomain(0..1.0, 2..4.0)
+        d2 = ProductDomain(0.5..1.5, 2.5..4.5)
+        @test intersectbox(d1, d2) == ProductDomain(0.5..1.0, 2.5..4.0)
     end
 end

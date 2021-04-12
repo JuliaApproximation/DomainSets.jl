@@ -12,6 +12,7 @@
         u2 = u1 ∪ d3
         @test dimension(u1) == 2
         @test dimension(u2) == 2
+        @test boundingbox(u1) == ChebyshevInterval()^2
 
         u3 = d3 ∪ u1
         u4 = u1 ∪ u2
@@ -199,7 +200,7 @@
         @test w isa Domain
         @test 0.5 ∈ w
 
-        d1 = WrappedDomain{Any}([0,5])
+        d1 = DomainSets.WrappedDomain{Any}([0,5])
         @test 0 ∈ d1
         @test 1 ∉ d1
 

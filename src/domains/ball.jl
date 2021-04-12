@@ -144,7 +144,6 @@ point_in_domain(ball::Ball{T}) where {T} = zero(T)
 point_in_domain(ball::VectorBall{T}) where {T} = zeros(T, dimension(ball))
 
 
-
 # The type hierarchy of spheres parallels that of Ball above:
 # abstract Sphere
 # |-> abstract UnitSphere: radius is 1
@@ -264,6 +263,18 @@ interior(d::StaticUnitBall{T}) where {T} = StaticUnitBall{T,:open}()
 interior(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:open}(dimension(d))
 closure(d::StaticUnitBall{T}) where {T} = StaticUnitBall{T,:closed}()
 closure(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:closed}(dimension(d))
+
+boundingbox(d::UnitBall{T}) where {T<:Number} = ChebyshevInterval{T}()
+boundingbox(d::UnitBall{SVector{N,T}}) where {N,T} =
+    ChebyshevProductDomain{N,T}()
+boundingbox(d::UnitBall{T}) where {T} =
+    ProductDomain{T}((ChebyshevInterval{eltype(T)}() for i in 1:dimension(d))...)
+
+boundingbox(d::UnitSphere{T}) where {T<:Number} = ChebyshevInterval{T}()
+boundingbox(d::UnitSphere{SVector{N,T}}) where {N,T} =
+    ChebyshevProductDomain{N,T}()
+boundingbox(d::UnitSphere{T}) where {T} =
+    ProductDomain{T}((ChebyshevInterval{eltype(T)}() for i in 1:dimension(d))...)
 
 
 ################

@@ -27,6 +27,7 @@ isopenset(d::Point) = false
 isclosedset(d::Point) = true
 
 boundary(d::Point) = d
+boundingbox(d::Point) = d.x..d.x
 
 interior(d::Point{T}) where {T} = EmptySpace{T}()
 closure(d::Point) = d

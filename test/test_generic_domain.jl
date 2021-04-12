@@ -63,9 +63,9 @@ end
         VectorUnitCircle(),
         UnitSphere(),
         VectorUnitSphere(),
-        UnitSimplex{2}(),
-        VectorUnitSimplex(2),
-        WrappedDomain(0..2.0)
+        UnitSimplex(Val(2)),
+        UnitSimplex(2),
+        DomainSets.WrappedDomain(0..2.0)
     ]
 
     @testset "generic domains" begin

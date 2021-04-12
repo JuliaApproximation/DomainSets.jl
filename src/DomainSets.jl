@@ -6,12 +6,16 @@ import LinearAlgebra: cross, ×, pinv
 
 using IntervalSets
 
+# deprecations in v0.5
+@deprecate IntersectionDomain IntersectDomain
+@deprecate DifferenceDomain SetdiffDomain
+@deprecate FlexibleUnitCube DynamicUnitCube
+@deprecate FlexibleUnitSphere DynamicUnitSphere
+@deprecate FlexibleUnitBall DynamicUnitBall
+
 ################################
 ## Exhaustive list of imports
 ################################
-
-@deprecate IntersectionDomain(args...) IntersectDomain(args...)
-@deprecate DifferenceDomain(args...) SetdiffDomain(args...)
 
 # Generated functions
 import Base: @ncall
@@ -63,8 +67,6 @@ export AbstractMap, Map, TypedMap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
     jacobian, jacdet
-# from maps/lazy.jl
-export WrappedMap
 # from maps/composite.jl
 export Composition, ∘
 # from maps/product.jl
@@ -88,6 +90,7 @@ export Domain, EuclideanDomain, VectorDomain,
     approx_in,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
+    boundingbox,
     interior, closure,
     volume,
     point_in_domain,
@@ -96,7 +99,7 @@ export Domain, EuclideanDomain, VectorDomain,
     parameterdomain, parameterization
 
 # from generic/lazy.jl
-export DerivedDomain, superdomain, WrappedDomain
+export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain, productdomain,
@@ -133,7 +136,9 @@ export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     cardinality,
     HalfLine, NegativeHalfLine
 # from domains/simplex.jl
-export EuclideanUnitSimplex, VectorUnitSimplex, UnitSimplex,
+export UnitSimplex,
+    StaticUnitSimplex, DynamicUnitSimplex,
+    EuclideanUnitSimplex, VectorUnitSimplex,
     center, corners
 # from domains/point.jl
 export Point
@@ -196,6 +201,7 @@ include("domains/simplex.jl")
 include("domains/ball.jl")
 include("domains/cube.jl")
 include("domains/indicator.jl")
+include("domains/boundingbox.jl")
 
 include("applications/rotation.jl")
 

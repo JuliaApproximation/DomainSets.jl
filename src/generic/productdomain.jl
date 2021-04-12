@@ -54,6 +54,7 @@ _boundary(d::ProductDomain, domains) =
 _boundary(d::ProductDomain, domains::Tuple) =
 	UnionDomain(tuple((boundary_part(d, domains, i) for i in 1:length(domains))...))
 
+boundingbox(d::ProductDomain{T}) where {T} = ProductDomain{T}(map(boundingbox, elements(d)))
 
 infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
 supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
@@ -72,6 +73,7 @@ ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
 # and this may end up creating a VcatDomain instead.
 ProductDomain(domains::Tuple) = ProductDomain(domains...)
 
+ProductDomain{T}(domains::Tuple) where {T} = ProductDomain{T}(domains...)
 ProductDomain{T}(domains...) where {T} = _TypedProductDomain(T, domains...)
 _TypedProductDomain(::Type{SVector{N,T}}, domains...) where {N,T} = VcatDomain{N,T}(domains...)
 _TypedProductDomain(::Type{T}, domains...) where {T<:Vector} = VectorProductDomain{T}(domains...)

@@ -103,6 +103,8 @@ isempty(d::UnionDomain) = all(isempty, d.domains)
 interior(d::UnionDomain) = UnionDomain(map(interior, elements(d)))
 closure(d::UnionDomain) = UnionDomain(map(closure, elements(d)))
 
+boundingbox(d::UnionDomain) = unionbox(map(boundingbox, elements(d))...)
+
 function show(io::IO, d::UnionDomain)
     print(io, "the union of $(numelements(d)) domains:\n")
     for (i,e) in enumerate(elements(d))
@@ -248,6 +250,8 @@ similardomain(d::IntersectDomain, ::Type{T}) where {T} =
 
 ==(a::IntersectDomain, b::IntersectDomain) = Set(elements(a)) == Set(elements(b))
 
+boundingbox(d::IntersectDomain) = intersectbox(map(boundingbox, elements(d))...)
+
 function show(io::IO, d::IntersectDomain)
     print(io, "the intersection of $(numelements(d)) domains:\n")
 	for i in 1:numelements(d)
@@ -260,7 +264,6 @@ end
 ### The difference between two domains
 #########################################
 
-@deprecate DifferenceDomain SetdiffDomain
 
 "A `SetdiffDomain` represents the difference between two domains."
 struct SetdiffDomain{T,DD} <: CompositeLazyDomain{T}
@@ -314,6 +317,8 @@ end
 setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], uniondomain(d2, d1.domains[2]))
 
 ==(a::SetdiffDomain, b::SetdiffDomain) = a.domains == b.domains
+
+boundingbox(d::SetdiffDomain) =  boundingbox(d.domains[1])
 
 function show(io::IO, d::SetdiffDomain)
     print(io, "the difference of 2 domains:\n")

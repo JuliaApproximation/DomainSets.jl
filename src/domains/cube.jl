@@ -2,6 +2,8 @@
 "A `HyperRectangle` is the cartesian product of intervals."
 abstract type HyperRectangle{T} <: ProductDomain{T} end
 
+boundingbox(d::HyperRectangle) = d
+
 "A `Cube` is a hyperrectangle with equal side lengths in each dimension."
 abstract type Cube{T} <: HyperRectangle{T} end
 
@@ -116,7 +118,7 @@ struct Rectangle{T} <: HyperRectangle{T}
     a   ::  T
     b   ::  T
 
-    function Rectangle{T}(a::T,b::T) where {T}
+    function Rectangle{T}(a::S,b::S) where {S,T}
         @assert length(a)==length(b)
         new(a,b)
     end
@@ -131,6 +133,7 @@ Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
 Rectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
     Rectangle(SVector{N,T}(a), SVector{N,T}(b))
 
+Rectangle(domains::Tuple) = Rectangle(domains...)
 Rectangle(domains::ClosedInterval...) = Rectangle(promote_domains(domains)...)
 Rectangle(domains::ClosedInterval{T}...) where {T} =
     Rectangle(map(infimum, domains), map(supremum, domains))
@@ -139,9 +142,21 @@ Rectangle(domains::AbstractVector{<:ClosedInterval}) =
 Rectangle(domains::Domain...) =
     error("The Rectangle constructor expects two points or a list of intervals (closed).")
 
+Rectangle{T}(domains::Tuple) where {T} = Rectangle{T}(domains...)
+Rectangle{T}(domains::ClosedInterval...) where {T} =
+	Rectangle{T}(map(infimum, domains), map(supremum, domains))
+Rectangle{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
+    Rectangle{T}(map(infimum, domains), map(supremum, domains))
+Rectangle{T}(domains::Domain...) where {T} =
+    error("The Rectangle constructor expects two points or a list of intervals (closed).")
+
+
 ProductDomain(domains::ClosedInterval...) = Rectangle(domains...)
 ProductDomain(domains::AbstractVector{<:ClosedInterval}) =
     Rectangle(map(infimum, domains), map(supremum, domains))
+ProductDomain{T}(domains::ClosedInterval...) where {T} = Rectangle{T}(domains...)
+ProductDomain{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
+    Rectangle{T}(map(infimum, domains), map(supremum, domains))
 
 
 "The N-fold cartesian product of a fixed interval."
@@ -155,10 +170,12 @@ elements(d::FixedIntervalProduct{D,N}) where {D,N} =
 
 volume(d::FixedIntervalProduct{D,N}) where {D,N} = volume(D())^N
 
-const ChebyshevProductDomain{N,T} = FixedIntervalProduct{ChebyshevInterval{T},N,T}
-
 FixedIntervalProduct(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
 	FixedIntervalProduct{D,N,eltype(D)}()
+
+const ChebyshevProductDomain{N,T} = FixedIntervalProduct{ChebyshevInterval{T},N,T}
+ChebyshevProductDomain(::Val{N}) where {N} = ChebyshevProductDomain{N}()
+ChebyshevProductDomain{N}() where {N} = ChebyshevProductDomain{N,Float64}()
 
 ProductDomain(domains::D...) where {D <: FixedInterval} =
 	FixedIntervalProduct(domains)
