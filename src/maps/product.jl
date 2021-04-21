@@ -58,7 +58,7 @@ size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,components
 
 ==(m1::ProductMap, m2::ProductMap) = all(map(isequal, components(m1), components(m2)))
 
-Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊗')
+Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊕')
 Display.displaystencil(m::ProductMap) = composite_displaystencil(m)
 show(io::IO, mime::MIME"text/plain", m::ProductMap) = composite_show(io, mime, m)
 show(io::IO, m::ProductMap) = composite_show_compact(io, m)

@@ -187,7 +187,6 @@ convert(::Type{AbstractAffineMap}, m::StaticIdentityMap) = convert(LinearMap, m)
 convert(::Type{AbstractAffineMap{T}}, m::StaticIdentityMap) where {T} = convert(LinearMap, m)
 
 Display.displaystencil(m::LinearMap) = ["x -> ", unsafe_matrix(m), " * x"]
-show(io::IO, mime::MIME"text/plain", m::LinearMap) = composite_show(io, mime, m)
 
 map_stencil(m::LinearMap, x) = [unsafe_matrix(m), " * ", x]
 map_stencil_broadcast(m::LinearMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m))
@@ -227,7 +226,7 @@ end
 
 ScalarLinearMap(A::Number) = ScalarLinearMap{typeof(A)}(A)
 
-
+show(io::IO, m::ScalarLinearMap) = print(io, "x -> $(m.A) * x")
 
 "A `VectorLinearMap` is a linear map `y = A*x` using vectors and matrices."
 struct VectorLinearMap{T} <: LinearMap{Vector{T}}
@@ -282,6 +281,8 @@ _map_stencil_broadcast(m::Translation, x, b) = [x, " .+ ", b]
 struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
 end
+
+show(io::IO, m::ScalarTranslation) = print(io, "x -> x + $(m.b)")
 
 "Translation by a static vector."
 struct StaticTranslation{T,N} <: Translation{SVector{N,T}}
@@ -443,6 +444,7 @@ end
 
 ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
+show(io::IO, m::ScalarAffineMap) = print(io, "x -> $(m.A) * x + $(m.b)")
 
 
 "An affine map with array and vector representation."

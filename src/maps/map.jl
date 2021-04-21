@@ -76,7 +76,7 @@ applymap!(y, m::AbstractMap, x) = y .= m(x)
 
 # There is a difference between a map being invertible, and the map
 # knowing its inverse explicitly and implementing `inv`.
-inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse.")
+inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse map.")
 
 # For inverse functions, we supply a two-argument version because finding the
 # inverse for a given point is often cheaper than finding the inverse and then
@@ -124,7 +124,7 @@ rightinverse(m::AbstractMap, x) = rightinverse(m)(x)
 Return the jacobian map. The two-argument version evaluates the jacobian
 at a point `x`.
 """
-jacobian(m::AbstractMap) = error("Map ", m, " does not have a known Jacobian.")
+jacobian(m::AbstractMap) = error("Map ", m, " does not have a known Jacobian map.")
 jacobian(m::AbstractMap, x) = jacobian(m)(x)
 
 jacobian!(y, m::AbstractMap, x) = y .= jacobian(m, x)

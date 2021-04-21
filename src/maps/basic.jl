@@ -56,6 +56,8 @@ mapcompose(m1::IdentityMap) = m1
 mapcompose(m1::IdentityMap, maps...) = mapcompose(maps...)
 mapcompose2(m1, m2::IdentityMap, maps...) = mapcompose(m1, maps...)
 
+show(io::IO, m::IdentityMap{T}) where {T} = print(io, "x -> x")
+Display.object_parentheses(m::IdentityMap) = true
 
 "The identity map for variables of type `T`."
 struct StaticIdentityMap{T} <: IdentityMap{T}
@@ -133,6 +135,9 @@ ConstantMap{T}() where {T} = UnityMap{T}()
 ConstantMap{T}(c) where {T} = FixedConstantMap{T}(c)
 ConstantMap{T,U}() where {T,U} = UnityMap{T,U}()
 ConstantMap{T,U}(c) where {T,U} = FixedConstantMap{T,U}(c)
+
+show(io::IO, m::ConstantMap{T}) where {T} = print(io, "x -> $(constant(m))")
+Display.object_parentheses(m::ConstantMap) = true
 
 
 "The zero map `f(x) = 0`."

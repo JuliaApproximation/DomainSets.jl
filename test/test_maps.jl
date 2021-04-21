@@ -67,16 +67,17 @@ function test_generic_inverse(m)
 end
 
 function test_generic_jacobian(m)
-    jac = jacobian(m)
     x = suitable_point_to_map(m)
+    δ = sqrt(eps(prectype(m)))
+    x2 = x .+ δ
+    # we intentionally test jacobian(m, x) before testing jacobian(m)
+    if !(m isa ProductMap)
+        @test norm(m(x2) - m(x) + jacobian(m, x)*(x-x2)) < 100δ
+    end
+    jac = jacobian(m)
     @test jac(x) == jacobian(m, x)
     if issquarematrix(jac(x))
         @test jacdet(m, x) == det(jacobian(m, x))
-    end
-    δ = sqrt(eps(prectype(m)))
-    x2 = x .+ δ
-    if !(m isa ProductMap)
-        @test norm(m(x2) .- (m(x)+jac(x)*(x-x2))) < 100δ
     end
 end
 
@@ -193,6 +194,11 @@ function generic_tests(T)
         @test prectype(map) == T
         test_generic_map(map)
     end
+    # Test an additional composite map
+    m1 = LinearMap(SMatrix{2,2}(1,2,3,4.0))
+    m2 = CartToPolarMap()
+    cmap = m1 ∘ m2 ∘ m1
+    test_generic_map(cmap)
 end
 
 function test_affine_maps(T)
@@ -374,6 +380,8 @@ function test_identity_map(T)
     test_generic_map(i3)
     r = rand(T, 10)
     @test i3(r) ≈ r
+
+    @test IdentityMap() ∘ LinearMap(2) == LinearMap(2.0)
 end
 
 function test_composite_map(T)
@@ -400,6 +408,7 @@ function test_composite_map(T)
 
     m5 = Composition(LinearMap(rand(T,2,2)), AffineMap(rand(T,2,2),rand(T,2)))
     test_generic_map(m5)
+    @test jacobian(m5) isa ConstantMap
 end
 
 function test_product_map(T)

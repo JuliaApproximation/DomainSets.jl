@@ -37,10 +37,12 @@ function test_cart_polar_map(T)
     m1 = CartToPolarMap{T}()
     test_generic_map(m1)
     @test !islinear(m1)
+    @test isreal(m1)
 
     m2 = PolarToCartMap{T}()
     test_generic_map(m2)
     @test !islinear(m2)
+    @test isreal(m2)
 
     @test inv(m1) == m2
     @test inv(m2) == m1

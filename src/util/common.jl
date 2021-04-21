@@ -115,5 +115,3 @@ end
     E = vcat([[:(x[$i][$j]) for j in 1:DIM[i]] for i in 1:length(DIM)]...)
     quote SVector($(E...)) end
 end
-
-Display.displaysymbol(A::StaticArray) = 'A'
