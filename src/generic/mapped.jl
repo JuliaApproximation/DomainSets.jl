@@ -13,11 +13,15 @@ abstract type AbstractMappedDomain{T} <: SimpleLazyDomain{T} end
 
 superdomain(d::AbstractMappedDomain) = d.domain
 
+const MappedVectorDomain{T} = AbstractMappedDomain{Vector{T}}
+
 tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
 toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
 
+canonicaldomain(d::AbstractMappedDomain) = superdomain(d)
+fromcanonical(d::AbstractMappedDomain) = forward_map(d)
+tocanonical(d::AbstractMappedDomain) = inverse_map(d)
 
-const MappedVectorDomain{T} = AbstractMappedDomain{Vector{T}}
 
 # TODO: check whether the map alters the dimension
 dimension(d::MappedVectorDomain) = dimension(superdomain(d))
@@ -119,15 +123,40 @@ _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
 # This assumes that the map types can be combined using \circ
 mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
 
-canonicaldomain(d::MappedDomain) = superdomain(d)
-fromcanonical(d::MappedDomain) = forward_map(d)
-tocanonical(d::MappedDomain) = inverse_map(d)
-
 boundary(d::MappedDomain) = _boundary(d, superdomain(d), inverse_map(d))
 _boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
-
 interior(d::MappedDomain) = _interior(d, superdomain(d), inverse_map(d))
 _interior(d::MappedDomain, superdomain, invmap) = MappedDomain(interior(superdomain), invmap)
-
 closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
 _closure(d::MappedDomain, superdomain, invmap) = MappedDomain(closure(superdomain), invmap)
+
+
+
+"A `ParametricDomain` stores the forward map of a mapped domain."
+struct ParametricDomain{T,D,F} <: AbstractMappedDomain{T}
+    domain  ::  D
+    fmap    ::  F
+end
+
+ParametricDomain(domain::Domain, fmap) = ParametricDomain{codomaintype(fmap)}(domain, fmap)
+ParametricDomain{T}(domain::Domain, fmap) where {T} =
+    ParametricDomain{T,typeof(domain),typeof(fmap)}(domain, fmap)
+
+similardomain(d::ParametricDomain, ::Type{T}) where {T} =
+    ParametricDomain{T}(d.domain, d.fmap)
+
+forward_map(d::ParametricDomain) = d.fmap
+forward_map(d::ParametricDomain, x) = d.fmap(x)
+
+inverse_map(d::ParametricDomain) = inverse(d.fmap)
+inverse_map(d::ParametricDomain, y) = inverse(d.fmap, y)
+
+"Return the domain that results from mapping the given domain."
+parametric_domain(domain::Domain, fmap) = ParametricDomain(domain, fmap)
+
+boundary(d::ParametricDomain) = _boundary(d, superdomain(d), forward_map(d))
+_boundary(d::ParametricDomain, superdomain, fmap) = ParametricDomain(boundary(superdomain), fmap)
+interior(d::ParametricDomain) = _interior(d, superdomain(d), forward_map(d))
+_interior(d::ParametricDomain, superdomain, fmap) = ParametricDomain(interior(superdomain), fmap)
+closure(d::ParametricDomain) = _closure(d, superdomain(d), forward_map(d))
+_closure(d::ParametricDomain, superdomain, fmap) = ParametricDomain(closure(superdomain), fmap)
