@@ -2,9 +2,7 @@
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
 
-##################
-### An interval
-##################
+Display.object_parentheses(::AbstractInterval) = true
 
 approx_indomain(x, d::AbstractInterval, tolerance) =
     (x >= leftendpoint(d)-tolerance) && (x <= rightendpoint(d)+tolerance)
@@ -24,9 +22,9 @@ function point_in_domain(d::AbstractInterval)
     mean(d)
 end
 
-isapprox(d1::AbstractInterval, d2::AbstractInterval; kwds...) =
-    isapprox(leftendpoint(d1), leftendpoint(d2); kwds...) &&
-    isapprox(rightendpoint(d1), rightendpoint(d2); kwds...)
+isapprox(d1::AbstractInterval, d2::AbstractInterval) =
+    isapprox(leftendpoint(d1), leftendpoint(d2); atol=default_tolerance(d1)) &&
+    isapprox(rightendpoint(d1), rightendpoint(d2); atol=default_tolerance(d1))
 
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))

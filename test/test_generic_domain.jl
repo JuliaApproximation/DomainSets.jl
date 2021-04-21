@@ -39,9 +39,9 @@ function test_generic_domain(d::Domain)
         @test tocanonical(d) == mapto(d, cd)
     end
     if iscomposite(d)
-        @test numelements(d) == length(elements(d))
-        els = elements(d)
-        @test all([element(d,i) == els[i] for i in 1:numelements(d)])
+        @test ncomponents(d) == length(components(d))
+        els = components(d)
+        @test all([component(d,i) == els[i] for i in 1:ncomponents(d)])
     end
 end
 

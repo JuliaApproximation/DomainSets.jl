@@ -16,6 +16,8 @@ by the type `HalfLine{Float64}()`.
 DomainSets.jl uses [IntervalSets.jl](https://github.com/JuliaMath/IntervalSets.jl) for closed and open intervals. In addition, it defines a few standard intervals.
 
 ```julia
+julia> using DomainSets, StaticArrays
+
 julia> UnitInterval()
 0.0..1.0 (Unit)
 
@@ -32,13 +34,16 @@ Rectangles can be constructed as a product of intervals, where the elements of t
 are `SVector{2}`:
 
 ```julia
-julia> using DomainSets, StaticArrays
+julia> using DomainSets: ×
 
-julia> SVector(1,2) in ProductDomain(-1..1, 0..3)
+julia> (-1..1) × (0..3) × (4.0..5.0)
+(-1.0..1.0) × (0.0..3.0) × (4.0..5.0)
+
+julia> SVector(1,2) in (-1..1) × (0..3)
 true
 
 julia> UnitInterval()^3
-0.0..1.0 (Unit) x 0.0..1.0 (Unit) x 0.0..1.0 (Unit)
+UnitCube()
 ```
 
 ### Circles and Spheres

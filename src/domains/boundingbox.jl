@@ -27,7 +27,7 @@ function unionbox(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T}
 end
 
 unionbox(d1::HyperRectangle{T}, d2::HyperRectangle{T}) where {T} =
-    Rectangle{T}(map(unionbox, elements(d1), elements(d2)))
+    Rectangle{T}(map(unionbox, components(d1), components(d2)))
 
 "Return the bounding box of the intersection of two or more bounding boxes."
 intersectbox(d::Domain) = d
@@ -49,6 +49,28 @@ intersectbox(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T} =
     intersectdomain(d1, d2)
 
 function intersectbox(d1::HyperRectangle{T}, d2::HyperRectangle{T}) where {T}
-    d = Rectangle{T}(map(intersectbox, elements(d1), elements(d2)))
+    d = Rectangle{T}(map(intersectbox, components(d1), components(d2)))
     isempty(d) ? EmptySpace{T}() : d
+end
+
+boundingbox(d::AbstractMappedDomain) = map_boundingbox(boundingbox(superdomain(d)), forward_map(d))
+
+function map_boundingbox(box::Interval, fmap)
+    l,r = (infimum(box),supremum(box))
+    ml = fmap(l); mr = fmap(r)
+    min(ml,mr)..max(ml,mr)
+end
+
+# This is a best effort implementation, it could be wrong for some maps,
+# because we only map the corners. Hence we restrict to affine maps here.
+map_boundingbox(box::HyperRectangle, fmap::AbstractAffineMap) =
+    map_boundingbox_generic(box, fmap)
+
+# This is a best effort implementation. It could be wrong for some maps,
+# because we only map the corners.
+function map_boundingbox_generic(box::HyperRectangle{T}, fmap) where {T}
+    mapped_corners = map(fmap, corners(box))
+    left = [minimum(x[j] for x in mapped_corners) for j in 1:dimension(box)]
+    right = [maximum(x[j] for x in mapped_corners) for j in 1:dimension(box)]
+    Rectangle{T}(left, right)
 end

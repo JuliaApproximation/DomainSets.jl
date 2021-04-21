@@ -86,6 +86,10 @@ const VectorUnitSimplex{T,C} = DynamicUnitSimplex{Vector{T},C}
 
 VectorUnitSimplex(dimension) = VectorUnitSimplex{Float64}(dimension)
 
+show(io::IO, d::EuclideanUnitSimplex{N,Float64,:closed}) where {N} = print(io, "UnitSimplex(Val($(N)))")
+show(io::IO, d::VectorUnitSimplex{Float64,:closed}) = print(io, "UnitSimplex($(dimension(d)))")
+
+
 center(d::EuclideanUnitSimplex{N,T}) where {N,T} = ones(SVector{N,T})/N
 center(d::VectorUnitSimplex{T}) where {T} = ones(T, dimension(d))/dimension(d)
 

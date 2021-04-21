@@ -16,7 +16,7 @@ issubset2(d1, d2) = d1 == d2
 
 A `UnionDomain` represents the union of a set of domains.
 """
-struct UnionDomain{T,DD} <: CompositeLazyDomain{T}
+struct UnionDomain{T,DD} <: CompositeDomain{T}
 	domains	::	DD
 end
 
@@ -76,11 +76,11 @@ _ud(d1, d2, d3, domains...) = uniondomain(uniondomain(d1, d2, d3), domains...)
 
 # avoid nested union domains
 uniondomain(d1::UnionDomain, d2::UnionDomain) =
-	d1 == d2 ? d1 : UnionDomain(elements(d1)..., elements(d2)...)
-uniondomain1(d1::UnionDomain, d2) = UnionDomain(elements(d1)..., d2)
-uniondomain2(d1, d2::UnionDomain) = UnionDomain(d1, elements(d2)...)
+	d1 == d2 ? d1 : UnionDomain(components(d1)..., components(d2)...)
+uniondomain1(d1::UnionDomain, d2) = UnionDomain(components(d1)..., d2)
+uniondomain2(d1, d2::UnionDomain) = UnionDomain(d1, components(d2)...)
 
-==(a::UnionDomain, b::UnionDomain) = Set(elements(a)) == Set(elements(b))
+==(a::UnionDomain, b::UnionDomain) = Set(components(a)) == Set(components(b))
 
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
@@ -91,63 +91,60 @@ convert(::Type{Domain{T}}, v::AbstractSet{<:Domain}) where {T} = UnionDomain{T}(
 convert(::Type{Domain{T}}, s::AbstractSet) where {T} = UnionDomain{T}(map(Point,collect(s)))
 
 similardomain(d::UnionDomain, ::Type{T}) where {T} =
-    UnionDomain(convert.(Domain{T}, elements(d)))
+    UnionDomain(convert.(Domain{T}, components(d)))
 
 hash(d::UnionDomain, h::UInt) = hash(Set(d.domains), h)
 
 
-point_in_domain(d::UnionDomain) = convert(eltype(d), point_in_domain(element(d,1)))
+point_in_domain(d::UnionDomain) = convert(eltype(d), point_in_domain(component(d,1)))
 
 isempty(d::UnionDomain) = all(isempty, d.domains)
 
-interior(d::UnionDomain) = UnionDomain(map(interior, elements(d)))
-closure(d::UnionDomain) = UnionDomain(map(closure, elements(d)))
+interior(d::UnionDomain) = UnionDomain(map(interior, components(d)))
+closure(d::UnionDomain) = UnionDomain(map(closure, components(d)))
 
-boundingbox(d::UnionDomain) = unionbox(map(boundingbox, elements(d))...)
+boundingbox(d::UnionDomain) = unionbox(map(boundingbox, components(d))...)
 
-function show(io::IO, d::UnionDomain)
-    print(io, "the union of $(numelements(d)) domains:\n")
-    for (i,e) in enumerate(elements(d))
-        print(io, "\t$i.\t: ", e, "\n")
-    end
-end
-
+Display.combinationsymbol(d::UnionDomain) = Display.Symbol('∪')
+Display.displaystencil(d::UnionDomain) = composite_displaystencil(d)
+show(io::IO, mime::MIME"text/plain", d::UnionDomain) = Display.composite_show(io, mime, d)
+show(io::IO, d::UnionDomain) = Display.composite_show_compact(io, d)
 
 ## ualgebra
 
 # preserve the uniondomain when mapping
-map_domain(map, domain::UnionDomain) = UnionDomain(map_domain.(Ref(map), elements(domain)))
-mapped_domain(map, domain::UnionDomain) = UnionDomain(mapped_domain.(Ref(map), elements(domain)))
+map_domain(map, domain::UnionDomain) = UnionDomain(map_domain.(Ref(map), components(domain)))
+mapped_domain(map, domain::UnionDomain) = UnionDomain(mapped_domain.(Ref(map), components(domain)))
 
 # for op in (:+, :-, :*, :/)
 #     @eval begin
-#         $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, elements(domain), x))
-#         $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, elements(domain)))
+#         $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, components(domain), x))
+#         $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, components(domain)))
 #     end
 # end
 #
-# \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, elements(domain)))
+# \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, components(domain)))
 
 
 for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:supremum, :max))
-    @eval $op(d::UnionDomain) = mapreduce($op, $mop, elements(d))
+    @eval $op(d::UnionDomain) = mapreduce($op, $mop, components(d))
 end
 
 
 setdiffdomain(d1::UnionDomain, d2::UnionDomain) =
-	UnionDomain(setdiffdomain.(elements(d1), Ref(d2)))
+	UnionDomain(setdiffdomain.(components(d1), Ref(d2)))
 
-function setdiffdomain(d1::UnionDomain, d2::Domain)
-    s = Set(elements(d1))
+function setdiffdomain1(d1::UnionDomain, d2)
+    s = Set(components(d1))
     # check if any element is in d1 and just remove
     s2 = Set(setdiff(s, tuple(d2)))
     s2 ≠ s && return UnionDomain(s2)
-    UnionDomain(setdiffdomain.(elements(d1), Ref(d2)))
+    UnionDomain(setdiffdomain.(components(d1), Ref(d2)))
 end
 
-function setdiffdomain(d1::Domain, d2::UnionDomain)
+function setdiffdomain2(d1, d2::UnionDomain)
     result = d1
-    for d in elements(d2)
+    for d in components(d2)
         result = setdiffdomain(result, d)
     end
     result
@@ -162,7 +159,7 @@ end
 """
 An `IntersectDomain` represents the intersection of a set of domains.
 """
-struct IntersectDomain{T,DD} <: CompositeLazyDomain{T}
+struct IntersectDomain{T,DD} <: CompositeDomain{T}
     domains ::  DD
 end
 
@@ -223,14 +220,14 @@ _id(d1, d2, d3, domains...) = intersectdomain(intersectdomain(d1, d2, d3), domai
 
 # avoid nested intersect domains
 intersectdomain(d1::IntersectDomain, d2::IntersectDomain) =
-	d1 == d2 ? d1 : IntersectDomain(elements(d1)..., elements(d2)...)
-intersectdomain1(d1::IntersectDomain, d2) = IntersectDomain(elements(d1)..., d2)
-intersectdomain2(d1, d2::IntersectDomain) = IntersectDomain(d1, elements(d2)...)
+	d1 == d2 ? d1 : IntersectDomain(components(d1)..., components(d2)...)
+intersectdomain1(d1::IntersectDomain, d2) = IntersectDomain(components(d1)..., d2)
+intersectdomain2(d1, d2::IntersectDomain) = IntersectDomain(d1, components(d2)...)
 
 
 function intersectdomain(d1::UnionDomain, d2::UnionDomain)
     d1 == d2 && return d1
-    uniondomain(intersectdomain.(Ref(d1), elements(d2))...)
+    uniondomain(intersectdomain.(Ref(d1), components(d2))...)
 end
 intersectdomain(d1::UnionDomain, d2::Domain) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
 intersectdomain(d1::Domain, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
@@ -239,25 +236,23 @@ intersectdomain(d1::Domain, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 	if compatibleproduct(d1, d2)
-        ProductDomain(map(intersectdomain, elements(d1), elements(d2)))
+        ProductDomain(map(intersectdomain, components(d1), components(d2)))
     else
         IntersectDomain(d1, d2)
     end
 end
 
 similardomain(d::IntersectDomain, ::Type{T}) where {T} =
-    IntersectDomain(convert.(Domain{T}, elements(d)))
+    IntersectDomain(convert.(Domain{T}, components(d)))
 
-==(a::IntersectDomain, b::IntersectDomain) = Set(elements(a)) == Set(elements(b))
+==(a::IntersectDomain, b::IntersectDomain) = Set(components(a)) == Set(components(b))
 
-boundingbox(d::IntersectDomain) = intersectbox(map(boundingbox, elements(d))...)
+boundingbox(d::IntersectDomain) = intersectbox(map(boundingbox, components(d))...)
 
-function show(io::IO, d::IntersectDomain)
-    print(io, "the intersection of $(numelements(d)) domains:\n")
-	for i in 1:numelements(d)
-    	print(io, "\t$(i).\t: ", element(d,i), "\n")
-	end
-end
+Display.combinationsymbol(d::IntersectDomain) = Display.Symbol('∩')
+Display.displaystencil(d::IntersectDomain) = composite_displaystencil(d)
+show(io::IO, mime::MIME"text/plain", d::IntersectDomain) = Display.composite_show(io, mime, d)
+show(io::IO, d::IntersectDomain) = Display.composite_show_compact(io, d)
 
 
 #########################################
@@ -266,7 +261,7 @@ end
 
 
 "A `SetdiffDomain` represents the difference between two domains."
-struct SetdiffDomain{T,DD} <: CompositeLazyDomain{T}
+struct SetdiffDomain{T,DD} <: CompositeDomain{T}
     domains	::	DD
 	function SetdiffDomain{T,DD}(domains::DD) where {T,DD}
 		@assert length(domains) == 2
@@ -320,8 +315,7 @@ setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], uniondomain
 
 boundingbox(d::SetdiffDomain) =  boundingbox(d.domains[1])
 
-function show(io::IO, d::SetdiffDomain)
-    print(io, "the difference of 2 domains:\n")
-    print(io, "\t1.\t: ", element(d, 1), "\n")
-    print(io, "\t2.\t: ", element(d, 2), "\n")
-end
+Display.combinationsymbol(d::SetdiffDomain) = Display.Symbol('\\')
+Display.displaystencil(d::SetdiffDomain) = composite_displaystencil(d)
+show(io::IO, mime::MIME"text/plain", d::SetdiffDomain) = Display.composite_show(io, mime, d)
+show(io::IO, d::SetdiffDomain) = Display.composite_show_compact(io, d)

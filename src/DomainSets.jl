@@ -5,6 +5,8 @@ using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
 
 using IntervalSets
+using CompositeTypes, CompositeTypes.Display
+const Display = CompositeTypes.Display
 
 # deprecations in v0.5
 @deprecate IntersectionDomain IntersectDomain
@@ -12,6 +14,11 @@ using IntervalSets
 @deprecate FlexibleUnitCube DynamicUnitCube
 @deprecate FlexibleUnitSphere DynamicUnitSphere
 @deprecate FlexibleUnitBall DynamicUnitBall
+
+@deprecate element component
+@deprecate elements components
+@deprecate numelements ncomponents
+
 
 ################################
 ## Exhaustive list of imports
@@ -47,6 +54,9 @@ import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsIn
 export ..
 
 
+import CompositeTypes: component, components
+
+
 ################################
 ## Exhaustive list of exports
 ################################
@@ -57,7 +67,7 @@ export ..
 export prectype, numtype,
     convert_numtype, promote_numtype,
     convert_prectype, promote_prectype,
-    iscomposite, elements, element, numelements
+    iscomposite, component, components, ncomponents
 
 ## Maps
 

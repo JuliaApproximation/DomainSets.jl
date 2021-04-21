@@ -16,18 +16,18 @@ applymap_rec(x) = x
 applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
 
 for op in (:inv, :leftinverse, :rightinverse)
-    @eval $op(cmap::Composition) = Composition(reverse(map($op, elements(cmap)))...)
+    @eval $op(cmap::Composition) = Composition(reverse(map($op, components(cmap)))...)
 end
 
-inverse(m::Composition, x) = inverse_rec(x, reverse(elements(m))...)
+inverse(m::Composition, x) = inverse_rec(x, reverse(components(m))...)
 inverse_rec(x) = x
 inverse_rec(x, map1, maps...) = inverse_rec(leftinverse(map1, x), maps...)
 
-leftinverse(m::Composition, x) = leftinverse_rec(x, reverse(elements(m))...)
+leftinverse(m::Composition, x) = leftinverse_rec(x, reverse(components(m))...)
 leftinverse_rec(x) = x
 leftinverse_rec(x, map1, maps...) = leftinverse_rec(leftinverse(map1, x), maps...)
 
-rightinverse(m::Composition, x) = rightinverse_rec(x, reverse(elements(m))...)
+rightinverse(m::Composition, x) = rightinverse_rec(x, reverse(components(m))...)
 rightinverse_rec(x) = x
 rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), maps...)
 
@@ -44,16 +44,16 @@ compose_map2(m1, m2) = Composition(m1, m2)
 compose_map(m1, m2, maps...) = compose_map(compose_map(m1, m2), maps...)
 
 compose_map(m1::Composition, m2::Composition) =
-    Composition(elements(m1)..., elements(m2)...)
-compose_map1(m1::Composition, m2) = Composition(elements(m1)..., m2)
-compose_map2(m1, m2::Composition) = Composition(m1, elements(m2)...)
+    Composition(components(m1)..., components(m2)...)
+compose_map1(m1::Composition, m2) = Composition(components(m1)..., m2)
+compose_map2(m1, m2::Composition) = Composition(m1, components(m2)...)
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
 (∘)(map1::Map, map2::Map) = compose_map(map2, map1)
 
 
 ==(m1::Composition, m2::Composition) =
-    numelements(m1) == numelements(m2) && all(map(isequal, elements(m1), elements(m2)))
+    ncomponents(m1) == ncomponents(m2) && all(map(isequal, components(m1), components(m2)))
 
 ## Lazy multiplication
 
@@ -69,7 +69,7 @@ _mulmap(::Type{T}, maps...) where {T} = MulMap{T,typeof(maps)}(maps)
 
 similarmap(m::MulMap, ::Type{T}) where {T} = MulMap{T}(m.maps...)
 
-applymap(m::MulMap, x) = reduce(*, applymap.(elements(m), Ref(x)))
+applymap(m::MulMap, x) = reduce(*, applymap.(components(m), Ref(x)))
 
 mapmultiply(m) = m
 mapmultiply(maps...) = MulMap(maps...)
@@ -89,14 +89,14 @@ _summap(::Type{T}, maps...) where {T} = SumMap{T,typeof(maps)}(maps)
 
 similarmap(m::SumMap, ::Type{T}) where {T} = SumMap{T}(m.maps...)
 
-applymap(m::SumMap, x) = reduce(+, applymap.(elements(m), Ref(x)))
+applymap(m::SumMap, x) = reduce(+, applymap.(components(m), Ref(x)))
 
 mapsum(m) = m
 mapsum(maps...) = SumMap(maps...)
 
 
 # Define the jacobian of a composite map
-jacobian(m::Composition) = composite_jacobian(elements(m)...)
+jacobian(m::Composition) = composite_jacobian(components(m)...)
 composite_jacobian(map1) = jacobian(map1)
 composite_jacobian(map1, map2) = mapmultiply(jacobian(map1) ∘ map2, jacobian(map2))
 function composite_jacobian(map1, map2, maps...)
@@ -106,7 +106,7 @@ function composite_jacobian(map1, map2, maps...)
     mapmultiply(f1, f2)
 end
 
-jacobian(m::MulMap) = mul_jacobian(elements(m)...)
+jacobian(m::MulMap) = mul_jacobian(components(m)...)
 mul_jacobian(map1) = jacobian(map1)
 mul_jacobian(map1, map2) = mapsum(mapmultiply(jacobian(map1), map2), mapmultiply(map1, jacobian(map2)))
 function mul_jacobian(map1, map2, maps...)
@@ -114,6 +114,6 @@ function mul_jacobian(map1, map2, maps...)
     mul_jacobian(map1, rest)
 end
 
-jacobian(m::SumMap) = sum_jacobian(elements(m)...)
+jacobian(m::SumMap) = sum_jacobian(components(m)...)
 sum_jacobian(map1) = jacobian(map1)
 sum_jacobian(maps...) = SumMap(map(jacobian, maps)...)

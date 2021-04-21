@@ -47,6 +47,8 @@ const VectorDomain{T} = Domain{Vector{T}}
 
 const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 
+CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
+
 "What is the Euclidean dimension of the domain?"
 dimension(::Domain{T}) where {T} = euclideandimension(T)
 

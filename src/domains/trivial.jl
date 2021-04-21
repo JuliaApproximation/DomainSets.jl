@@ -14,8 +14,9 @@ emptyspace(d) = emptyspace(eltype(d))
 emptyspace(::Type{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
-
 approx_indomain(x, d::EmptySpace, tolerance) = in(x, d)
+
+show(io::IO, d::EmptySpace) = print(io, "{} (empty domain)")
 
 isempty(d::EmptySpace) = true
 
@@ -41,8 +42,6 @@ mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
 isequal1(d1::EmptySpace, d2) = isempty(d2)
 isequal2(d1, d2::EmptySpace) = isempty(d1)
 
-show(io::IO, d::EmptySpace) = print(io, "{} (empty domain)")
-
 
 "The full space of elements of type `T`."
 struct FullSpace{T} <: Domain{T} end
@@ -64,8 +63,9 @@ euclideanspace(n::Val{N}) where {N} = euclideanspace(n, Float64)
 euclideanspace(::Val{N}, ::Type{T}) where {N,T} = FullSpace{SVector{N,T}}()
 
 indomain(x::T, d::FullSpace{T}) where {T} = true
-
 approx_indomain(x, d::FullSpace, tolerance) = in(x, d)
+
+show(io::IO, d::FullSpace) = print(io, "{x} (full space)")
 
 # We choose the origin as a point in the full space
 point_in_domain(d::FullSpace) = zero(eltype(d))
@@ -86,7 +86,9 @@ issubset2(d1, d2::FullSpace) = true
 
 map_domain(m::AbstractAffineMap{T}, d::FullSpace{T}) where {T} = d
 
-show(io::IO, d::FullSpace) = print(io, "{x} (full space)")
+==(d1::FullSpace, d2::FullSpace) = true
+isequal1(d1::FullSpace, d2) = isfullspace(d2)
+isequal2(d1, d2::FullSpace) = isfullspace(d1)
 
 
 convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()

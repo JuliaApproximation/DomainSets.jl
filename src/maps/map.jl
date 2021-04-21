@@ -11,6 +11,8 @@ abstract type TypedMap{T,U} <: Map{T} end
 const EuclideanMap{N,T} = Map{<:StaticVector{N,T}}
 const VectorMap{T} = Map{Vector{T}}
 
+CompositeTypes.Display.displaysymbol(m::Map) = 'F'
+
 domaintype(m::AbstractMap) = domaintype(typeof(m))
 domaintype(::Type{<:AbstractMap}) = Any
 domaintype(::Type{<:Map{T}}) where {T} = T
@@ -76,6 +78,10 @@ applymap!(y, m::AbstractMap, x) = y .= m(x)
 # knowing its inverse explicitly and implementing `inv`.
 inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse.")
 
+# For inverse functions, we supply a two-argument version because finding the
+# inverse for a given point is often cheaper than finding the inverse and then
+# applying it to a point.
+
 """
     inverse(m::AbstractMap[, x])
 
@@ -130,7 +136,9 @@ The Jacobian determinant of the map at a point `x`.
 """
 jacdet(m::AbstractMap, x) = det(jacobian(m, x))
 
-
+# Display routines
+map_stencil(m::AbstractMap, x) = [SymbolObject(m), '(', x, ')']
+map_stencil_broadcast(m::AbstractMap, x) = [SymbolObject(m), ".(", x, ')']
 
 "Return the expected type of the jacobian matrix of the map"
 matrixtype(m::AbstractMap) = matrixtype(domaintype(m), codomaintype(m))

@@ -23,7 +23,7 @@ suitable_point_to_map(m::Map, ::Type{T}) where {T<:Number} = rand(T)
 suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, size(m,2))
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
-    map(suitable_point_to_map, elements(m))
+    map(suitable_point_to_map, components(m))
 suitable_point_to_map(m::DomainSets.VcatMap{N,T}) where {N,T} =
     SVector{N,T}(rand(T,N))
 
@@ -428,7 +428,7 @@ function test_product_map(T)
     m5 = productmap(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
     test_generic_map(m5)
     x = SVector{3,T}(rand(T,3))
-    @test m5(x) ≈ SVector(element(m5,1)(SVector(x[1],x[2]))...,element(m5,2)(x[3]))
+    @test m5(x) ≈ SVector(component(m5,1)(SVector(x[1],x[2]))...,component(m5,2)(x[3]))
 
     m6 = ProductMap([ma,mb])
     @test m6 isa DomainSets.VectorProductMap

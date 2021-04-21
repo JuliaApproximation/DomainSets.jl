@@ -4,6 +4,22 @@ abstract type HyperRectangle{T} <: ProductDomain{T} end
 
 boundingbox(d::HyperRectangle) = d
 
+"Compute all corners of the hyperrectangle."
+function corners(d::HyperRectangle)
+	left = infimum(d)
+	right = supremum(d)
+    N = length(left)
+    corners = [zeros(numtype(d), N) for i in 1:2^N]
+    # All possible permutations of the corners
+    for i=1:2^length(left)
+        for j=1:N
+            corners[i][j] = ((i>>(j-1))%2==0) ? left[j] : right[j]
+        end
+    end
+    corners
+end
+
+
 "A `Cube` is a hyperrectangle with equal side lengths in each dimension."
 abstract type Cube{T} <: HyperRectangle{T} end
 
@@ -20,7 +36,7 @@ iscompatiblepair(x::AbstractVector, d::VectorCube) = length(x) == dimension(d)
 "The unit cube is the domain `[0,1]^d`."
 abstract type UnitCube{T} <: Cube{T} end
 
-element(d::UnitCube, i) =
+component(d::UnitCube, i::Int) =
     (1 <= i <= dimension(d) || throw(BoundsError); UnitInterval{numtype(d)}())
 
 volume(d::UnitCube) = 1
@@ -43,7 +59,7 @@ similardomain(d::StaticUnitCube, ::Type{T}) where {T<:StaticTypes} =
 similardomain(d::StaticUnitCube, ::Type{T}) where {T} =
     DynamicUnitCube{T}(dimension(d))
 
-elements(d::StaticUnitCube{SVector{N,T}}) where {N,T} =
+components(d::StaticUnitCube{SVector{N,T}}) where {N,T} =
     ntuple(x->UnitInterval{T}(), Val(N))
 
 "The unit cube in a fixed N-dimensional space."
@@ -67,7 +83,7 @@ DynamicUnitCube(n::Int) = DynamicUnitCube{Vector{Float64}}(n)
 
 dimension(d::DynamicUnitCube) = d.dimension
 
-elements(d::DynamicUnitCube) = map(x->UnitInterval{numtype(d)}(), 1:dimension(d))
+components(d::DynamicUnitCube) = map(x->UnitInterval{numtype(d)}(), 1:dimension(d))
 
 similardomain(d::DynamicUnitCube, ::Type{T}) where {T} =
     DynamicUnitCube{T}(d.dimension)
@@ -112,6 +128,19 @@ ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} 
 ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains)
 ProductDomain{T}(domains::AbstractVector{<:UnitInterval{T}}) where {T} = VectorUnitCube{T}(domains)
 
+## Display:
+show(io::IO, d::EuclideanUnitCube{3,Float64}) = print(io, "UnitCube()")
+show(io::IO, d::EuclideanUnitCube{N,Float64}) where {N} = print(io, "UnitCube(Val($(N)))")
+show(io::IO, d::UnitSquare{Float64}) = print(io, "UnitSquare()")
+show(io::IO, d::UnitSquare{T}) where {T} = print(io, "UnitSquare{$(T)}()")
+show(io::IO, d::VectorUnitCube{Float64}) = print(io, "UnitCube($(dimension(d)))")
+
+# set the display stencils to [] to opt-out of composite display for the types above
+Display.displaystencil(d::EuclideanUnitCube{N,Float64}) where {N} = []
+Display.displaystencil(d::UnitSquare) = []
+Display.displaystencil(d::VectorUnitCube{Float64}) = []
+
+
 
 "An N-dimensional rectangle is the cartesian product of closed intervals."
 struct Rectangle{T} <: HyperRectangle{T}
@@ -125,8 +154,8 @@ struct Rectangle{T} <: HyperRectangle{T}
 end
 
 dimension(d::Rectangle) = length(d.a)
-element(d::Rectangle, i) = ClosedInterval(d.a[i],d.b[i])
-elements(d::Rectangle) = map(ClosedInterval, d.a, d.b)
+component(d::Rectangle, i::Int) = ClosedInterval(d.a[i],d.b[i])
+components(d::Rectangle) = map(ClosedInterval, d.a, d.b)
 
 Rectangle(a, b) = Rectangle(promote(a,b)...)
 Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
@@ -150,7 +179,6 @@ Rectangle{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
 Rectangle{T}(domains::Domain...) where {T} =
     error("The Rectangle constructor expects two points or a list of intervals (closed).")
 
-
 ProductDomain(domains::ClosedInterval...) = Rectangle(domains...)
 ProductDomain(domains::AbstractVector{<:ClosedInterval}) =
     Rectangle(map(infimum, domains), map(supremum, domains))
@@ -159,13 +187,14 @@ ProductDomain{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
     Rectangle{T}(map(infimum, domains), map(supremum, domains))
 
 
+
 "The N-fold cartesian product of a fixed interval."
 struct FixedIntervalProduct{D,N,T} <: Cube{SVector{N,T}}
 end
 
-element(d::FixedIntervalProduct{D}, i) where {D} =
+component(d::FixedIntervalProduct{D}, i::Int) where {D} =
     (1 <= i <= dimension(d) || throw(BoundsError); D())
-elements(d::FixedIntervalProduct{D,N}) where {D,N} =
+components(d::FixedIntervalProduct{D,N}) where {D,N} =
     ntuple(x->D(), Val(N))
 
 volume(d::FixedIntervalProduct{D,N}) where {D,N} = volume(D())^N

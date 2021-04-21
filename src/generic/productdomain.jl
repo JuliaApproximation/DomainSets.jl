@@ -1,66 +1,50 @@
 
 "A `ProductDomain` represents the cartesian product of other domains."
-abstract type ProductDomain{T} <: CompositeLazyDomain{T} end
+abstract type ProductDomain{T} <: CompositeDomain{T} end
 
 composition(d::ProductDomain) = Product()
 
-elements(d::ProductDomain) = d.domains
+components(d::ProductDomain) = d.domains
 
-==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, elements(d1), elements(d2))
+==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, components(d1), components(d2))
 
-isempty(d::ProductDomain) = any(isempty, elements(d))
-isclosedset(d::ProductDomain) = all(isclosedset, elements(d))
-isopenset(d::ProductDomain) = all(isopenset, elements(d))
+isempty(d::ProductDomain) = any(isempty, components(d))
+isclosedset(d::ProductDomain) = all(isclosedset, components(d))
+isopenset(d::ProductDomain) = all(isopenset, components(d))
 
 issubset(d1::ProductDomain, d2::ProductDomain) =
-	compatibleproductdims(d1, d2) && all(map(issubset, elements(d1), elements(d2)))
+	compatibleproductdims(d1, d2) && all(map(issubset, components(d1), components(d2)))
 
-volume(d::ProductDomain) = prod(map(volume, elements(d)))
+volume(d::ProductDomain) = prod(map(volume, components(d)))
 
 compatibleproductdims(d1::ProductDomain, d2::ProductDomain) =
 	dimension(d1) == dimension(d2) &&
-		all(map(==, map(dimension, elements(d1)), map(dimension, elements(d2))))
+		all(map(==, map(dimension, components(d1)), map(dimension, components(d2))))
 
 compatibleproduct(d1::ProductDomain, d2::ProductDomain) =
 	compatibleproductdims(d1, d2) && compatible_eltype(d1, d2)
 
-function show(io::IO, d::ProductDomain)
-    L = numelements(d)
-	if L <= 10
-	    for i in 1:L-1
-	        show(io, element(d, i))
-	        print(io, " x ")
-	    end
-	    show(io, element(d, L))
-	else
-		for i in 1:5
-	        show(io, element(d, i))
-	        print(io, " x ")
-	    end
-	    print(io, "...")
-		for i in L-4:L
-			print(io, " x ")
-	        show(io, element(d, i))
-	    end
-	end
-end
+Display.combinationsymbol(d::ProductDomain) = Display.Times()
+Display.displaystencil(d::ProductDomain) = composite_displaystencil(d)
+show(io::IO, mime::MIME"text/plain", d::ProductDomain) = composite_show(io, mime, d)
+show(io::IO, d::ProductDomain) = composite_show_compact(io, d)
 
 boundary_part(d::ProductDomain{T}, domains, i) where {T} =
 	ProductDomain{T}(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...)
 
-boundary(d::ProductDomain) = _boundary(d, elements(d))
+boundary(d::ProductDomain) = _boundary(d, components(d))
 _boundary(d::ProductDomain, domains) =
 	UnionDomain(boundary_part(d, domains, i) for i in 1:length(domains))
 _boundary(d::ProductDomain, domains::Tuple) =
 	UnionDomain(tuple((boundary_part(d, domains, i) for i in 1:length(domains))...))
 
-boundingbox(d::ProductDomain{T}) where {T} = ProductDomain{T}(map(boundingbox, elements(d)))
+boundingbox(d::ProductDomain{T}) where {T} = ProductDomain{T}(map(boundingbox, components(d)))
 
-infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, elements(d)))
-supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, elements(d)))
+infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, components(d)))
+supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, components(d)))
 
-interior(d::ProductDomain) = ProductDomain(map(interior, elements(d)))
-closure(d::ProductDomain) = ProductDomain(map(closure, elements(d)))
+interior(d::ProductDomain) = ProductDomain(map(interior, components(d)))
+closure(d::ProductDomain) = ProductDomain(map(closure, components(d)))
 
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
@@ -78,6 +62,7 @@ ProductDomain{T}(domains...) where {T} = _TypedProductDomain(T, domains...)
 _TypedProductDomain(::Type{SVector{N,T}}, domains...) where {N,T} = VcatDomain{N,T}(domains...)
 _TypedProductDomain(::Type{T}, domains...) where {T<:Vector} = VectorProductDomain{T}(domains...)
 _TypedProductDomain(::Type{T}, domains...) where {T<:Tuple} = TupleProductDomain{T}(domains...)
+_TypedProductDomain(::Type{T}, domains...) where {T} = TupleProductDomain{T}(domains...)
 
 productdomain() = ()
 productdomain(d) = d
@@ -88,23 +73,22 @@ productdomain1(d1, d2) = productdomain2(d1, d2)
 productdomain2(d1, d2) = ProductDomain(d1, d2)
 
 productdomain(d1::ProductDomain, d2::ProductDomain) =
-	ProductDomain(elements(d1)..., elements(d2)...)
-productdomain1(d1::ProductDomain, d2) = ProductDomain(elements(d1)..., d2)
-productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, elements(d2)...)
+	ProductDomain(components(d1)..., components(d2)...)
+productdomain1(d1::ProductDomain, d2) = ProductDomain(components(d1)..., d2)
+productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, components(d2)...)
 
 # Only override cross for variables of type Domain, it may have a different
 # meaning for other variables (like the vector cross product)
 cross(x::Domain...) = productdomain(x...)
 
-
 ^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
 
-similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(elements(d))
+similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(components(d))
 
-canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain, elements(d)))
+canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain, components(d)))
 
-tocanonical(d::ProductDomain) = ProductMap(map(tocanonical, elements(d)))
-fromcanonical(d::ProductDomain) = ProductMap(map(fromcanonical, elements(d)))
+tocanonical(d::ProductDomain) = ProductMap(map(tocanonical, components(d)))
+fromcanonical(d::ProductDomain) = ProductMap(map(fromcanonical, components(d)))
 
 
 """
@@ -135,9 +119,6 @@ tointernalpoint(d::VcatDomain{N,T,DIM}, x) where {N,T,DIM} =
 	convert_fromcartesian(x, Val{DIM}())
 toexternalpoint(d::VcatDomain{N,T,DIM}, y) where {N,T,DIM} =
 	convert_tocartesian(y, Val{DIM}())
-
-
-
 
 """
 A `VectorProductDomain` is a product domain of arbitrary dimension where the
@@ -170,7 +151,7 @@ VectorProductDomain{V}(domains::Domain...) where {V} = VectorProductDomain{V}(do
 VectorProductDomain{V}(domains) where {V} = VectorProductDomain{V}(collect(domains))
 
 # the dimension equals the number of composite elements
-dimension(d::VectorProductDomain) = numelements(d)
+dimension(d::VectorProductDomain) = ncomponents(d)
 
 tointernalpoint(d::VectorProductDomain, x) =
 	(@assert length(x) == dimension(d); x)
@@ -203,3 +184,5 @@ function TupleProductDomain{T}(domains::Tuple) where {T <: Tuple}
 	Tdomains = map((t,d) -> convert(Domain{t},d), tuple(T.parameters...), domains)
 	TupleProductDomain{T,typeof(Tdomains)}(Tdomains)
 end
+TupleProductDomain{T}(domains::Tuple) where {T} =
+	TupleProductDomain{T,typeof(domains)}(domains)

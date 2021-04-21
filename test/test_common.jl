@@ -13,11 +13,11 @@ function test_dimension()
     @test_throws MethodError DomainSets.euclideandimension(Vector{Float64})
 end
 
-function test_elements()
-    @test elements([1,2,3]) == ()
+function test_components()
+    @test components([1,2,3]) == ()
     d = UnionDomain(Point(1),Point(2))
     @test iscomposite(d)
-    @test numelements(d) == length(elements(d))
+    @test ncomponents(d) == length(components(d))
 end
 
 function test_prectype()
@@ -87,7 +87,7 @@ end
         test_dimension()
     end
     @testset "elements" begin
-        test_elements()
+        test_components()
     end
     @testset "prectype" begin
         test_prectype()

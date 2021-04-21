@@ -9,11 +9,9 @@ terms of the inverse map `g = inv(f)`:
 x ∈ m ⟺ g(x) ∈ d
 ```
 """
-abstract type AbstractMappedDomain{T} <: SingleLazyDomain{T} end
+abstract type AbstractMappedDomain{T} <: SimpleLazyDomain{T} end
 
 superdomain(d::AbstractMappedDomain) = d.domain
-
-show(io::IO, d::AbstractMappedDomain) =  print(io, "A mapped domain based on ", superdomain(d))
 
 tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
 toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
@@ -28,6 +26,16 @@ dimension(d::MappedVectorDomain) = dimension(superdomain(d))
 isempty(d::AbstractMappedDomain) = isempty(superdomain(d))
 isopenset(d::AbstractMappedDomain) = isopenset(superdomain(d))
 isclosedset(d::AbstractMappedDomain) = isclosedset(superdomain(d))
+
+
+## I/O functionality
+
+show(io::IO, mime::MIME"text/plain", d::AbstractMappedDomain) = composite_show(io, mime, d)
+Display.displaystencil(d::AbstractMappedDomain) =
+    map_stencil_broadcast(forward_map(d), superdomain(d))
+Display.object_parentheses(d::AbstractMappedDomain) =
+    Display.object_parentheses(forward_map(d))
+
 
 
 "A `MappedDomain` stores the inverse map of a mapped domain."
@@ -64,9 +72,14 @@ map_domain(map, domain::Domain) = _map_domain(map, domain)
 
 # Fallback: we don't know anything about map, just try to invert
 _map_domain(map, domain) = mapped_domain(inv(map), domain)
+_map_domain(map::Map{T}, domain::Domain{T}) where {T} =
+    mapped_domain(inverse(map), domain)
 # If map is a Map{T}, then verify and if necessary update T
 function _map_domain(map::Map, domain)
     U = codomaintype(map, eltype(domain))
+    if U == Union{}
+        error("incompatible types of $(map) and $(domain)")
+    end
     mapped_domain(inv(convert(Map{U}, map)), domain)
 end
 

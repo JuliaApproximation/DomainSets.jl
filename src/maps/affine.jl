@@ -96,6 +96,17 @@ _size(m, T, A::Number, b::AbstractVector) = (length(b),length(b))
 _size(m, T, A::UniformScaling, b) = (length(b),length(b))
 
 
+Display.displaystencil(m::AbstractAffineMap) = ["x -> ", unsafe_matrix(m), " * x + ", unsafe_vector(m)]
+show(io::IO, mime::MIME"text/plain", m::AbstractAffineMap) = composite_show(io, mime, m)
+
+map_stencil(m::AbstractAffineMap, x) = [unsafe_matrix(m), " * ", x, " + ", unsafe_vector(m)]
+map_stencil_broadcast(m::AbstractAffineMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m), unsafe_vector(m))
+_map_stencil_broadcast(m::AbstractAffineMap, x, A, b) = [A, " .* ", x, " .+ ", b]
+_map_stencil_broadcast(m::AbstractAffineMap, x, A::Number, b) = [A, " * ", x, " .+ ", b]
+_map_stencil_broadcast(m::AbstractAffineMap, x, A::Number, b::Number) = [A, " * ", x, " + ", b]
+
+Display.object_parentheses(m::AbstractAffineMap) = true
+
 ########################
 # Linear maps: y = A*x
 ########################
@@ -175,6 +186,14 @@ convert(::Type{LinearMap{T}}, ::StaticIdentityMap) where {T} = LinearMap{T}(1)
 convert(::Type{AbstractAffineMap}, m::StaticIdentityMap) = convert(LinearMap, m)
 convert(::Type{AbstractAffineMap{T}}, m::StaticIdentityMap) where {T} = convert(LinearMap, m)
 
+Display.displaystencil(m::LinearMap) = ["x -> ", unsafe_matrix(m), " * x"]
+show(io::IO, mime::MIME"text/plain", m::LinearMap) = composite_show(io, mime, m)
+
+map_stencil(m::LinearMap, x) = [unsafe_matrix(m), " * ", x]
+map_stencil_broadcast(m::LinearMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m))
+_map_stencil_broadcast(m::AbstractAffineMap, x, A) = [A, " .* ", x]
+_map_stencil_broadcast(m::AbstractAffineMap, x, A::Number) = [A, " * ", x]
+
 
 "A `GenericLinearMap` is a linear map `y = A*x` for any type of `A`."
 struct GenericLinearMap{T,AA} <: LinearMap{T}
@@ -245,7 +264,19 @@ convert(::Type{Map{SVector{N,T}}}, m::VectorLinearMap) where {N,T} = StaticLinea
 "A `Translation` represents the map `y = x + b`."
 abstract type Translation{T} <: AbstractAffineMap{T} end
 
-unsafe_matrix(m::Translation) = I
+# unsafe_matrix(m::Translation) = I
+matrix(m::Translation) = to_matrix(domaintype(m), LinearAlgebra.I, unsafe_vector(m))
+vector(m::Translation) = unsafe_vector(m)
+
+size(m::Translation) = _size(m, domaintype(m), unsafe_vector(m))
+_size(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
+
+Display.displaystencil(m::Translation) = ["x -> x + ", unsafe_vector(m)]
+
+map_stencil(m::Translation, x) = [x, " + ", unsafe_vector(m)]
+map_stencil_broadcast(m::Translation, x) = _map_stencil_broadcast(m, x, unsafe_vector(m))
+_map_stencil_broadcast(m::Translation, x, b::Number) = [x, " + ", b]
+_map_stencil_broadcast(m::Translation, x, b) = [x, " .+ ", b]
 
 "Translation by a scalar value."
 struct ScalarTranslation{T} <: Translation{T}

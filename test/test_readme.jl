@@ -2,7 +2,13 @@
 
 @testset "$(rpad("examples",80))" begin
     using DomainSets, StaticArrays
-    @test SVector(1,2) in ProductDomain(-1..1, 0..3)
+    @test repr(UnitInterval()) == "0.0..1.0 (Unit)"
+    @test repr(ChebyshevInterval()) == "-1.0..1.0 (Chebyshev)"
+    @test repr(HalfLine()) == "0.0..Inf (closed–open) (HalfLine)"
+
+    using DomainSets: ×
+    @test repr((-1..1) × (0..3) × (4.0..5.0)) == "(-1.0..1.0) × (0.0..3.0) × (4.0..5.0)"
+    @test SVector(1,2) in (-1..1) × (0..3)
 
     @test SVector(0,0,1.0) in UnitSphere(Val(3))
     @test [0.0,1.0,0.0,0.0] in UnitSphere(4)

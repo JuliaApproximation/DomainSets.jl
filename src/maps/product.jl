@@ -5,7 +5,7 @@ A product map is diagonal and acts on each of the components of x separately:
 """
 abstract type ProductMap{T} <: CompositeLazyMap{T} end
 
-elements(m::ProductMap) = m.maps
+components(m::ProductMap) = m.maps
 
 VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
 
@@ -21,42 +21,47 @@ _TypedProductMap(::Type{SVector{N,T}}, maps...) where {N,T} = VcatMap{N,T}(maps.
 _TypedProductMap(::Type{T}, maps...) where {T<:AbstractVector} = VectorProductMap{T}(maps...)
 
 
-isconstant(m::ProductMap) = mapreduce(isconstant, &, elements(m))
-islinear(m::ProductMap) = mapreduce(islinear, &, elements(m))
-isaffine(m::ProductMap) = mapreduce(isaffine, &, elements(m))
+isconstant(m::ProductMap) = mapreduce(isconstant, &, components(m))
+islinear(m::ProductMap) = mapreduce(islinear, &, components(m))
+isaffine(m::ProductMap) = mapreduce(isaffine, &, components(m))
 
-matrix(m::ProductMap) = toexternalmatrix(m, map(matrix, elements(m)))
-vector(m::ProductMap) = toexternalpoint(m, map(vector, elements(m)))
-constant(m::ProductMap) = toexternalpoint(m, map(constant, elements(m)))
+matrix(m::ProductMap) = toexternalmatrix(m, map(matrix, components(m)))
+vector(m::ProductMap) = toexternalpoint(m, map(vector, components(m)))
+constant(m::ProductMap) = toexternalpoint(m, map(constant, components(m)))
 
 jacobian(m::ProductMap, x) =
-	toexternalmatrix(m, map(jacobian, elements(m), tointernalpoint(m, x)))
+	toexternalmatrix(m, map(jacobian, components(m), tointernalpoint(m, x)))
 jacobian(m::ProductMap) = LazyJacobian(m)
 
-similarmap(m::ProductMap, ::Type{T}) where {T} = ProductMap{T}(elements(m))
+similarmap(m::ProductMap, ::Type{T}) where {T} = ProductMap{T}(components(m))
 
 tointernalpoint(m::ProductMap, x) = x
 toexternalpoint(m::ProductMap, y) = y
 
 applymap(m::ProductMap, x) =
-	toexternalpoint(m, map(applymap, elements(m), tointernalpoint(m, x)))
+	toexternalpoint(m, map(applymap, components(m), tointernalpoint(m, x)))
 
 productmap(map1, map2) = productmap1(map1, map2)
 productmap1(map1, map2) = productmap2(map1, map2)
 productmap2(map1, map2) = ProductMap(map1, map2)
 productmap(map1::ProductMap, map2::ProductMap) =
-	ProductMap(elements(map1)..., elements(map2)...)
-productmap1(map1::ProductMap, map2) = ProductMap(elements(map1)..., map2)
-productmap2(map1, map2::ProductMap) = ProductMap(map1, elements(map2)...)
+	ProductMap(components(map1)..., components(map2)...)
+productmap1(map1::ProductMap, map2) = ProductMap(components(map1)..., map2)
+productmap2(map1, map2::ProductMap) = ProductMap(map1, components(map2)...)
 
 for op in (:inv, :leftinverse, :rightinverse)
-    @eval $op(m::ProductMap) = ProductMap(map($op, elements(m)))
-	@eval $op(m::ProductMap, x) = toexternalpoint(m, map($op, elements(m), tointernalpoint(m, x)))
+    @eval $op(m::ProductMap) = ProductMap(map($op, components(m)))
+	@eval $op(m::ProductMap, x) = toexternalpoint(m, map($op, components(m), tointernalpoint(m, x)))
 end
 
-size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,elements(m)))
+size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,components(m)))
 
-==(m1::ProductMap, m2::ProductMap) = all(map(isequal, elements(m1), elements(m2)))
+==(m1::ProductMap, m2::ProductMap) = all(map(isequal, components(m1), components(m2)))
+
+Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊗')
+Display.displaystencil(m::ProductMap) = composite_displaystencil(m)
+show(io::IO, mime::MIME"text/plain", m::ProductMap) = composite_show(io, mime, m)
+show(io::IO, m::ProductMap) = composite_show_compact(io, m)
 
 """
 A `VcatMap` is a product map with domain and codomain vectors

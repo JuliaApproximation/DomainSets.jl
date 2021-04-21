@@ -1,5 +1,6 @@
-using Test, LinearAlgebra, DomainSets, StaticArrays
-import DomainSets: elements
+using Test, LinearAlgebra, StaticArrays
+
+using DomainSets
 
 include("test_common.jl")
 include("test_maps.jl")

@@ -134,10 +134,14 @@ similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
     StaticUnitBall{T,C}()
 
 
-show(io::IO, d::UnitBall{T,:closed}) where {T} =
-    print(io, "the $(dimension(d))-dimensional closed unit ball")
-show(io::IO, d::UnitBall{T,:open}) where {T} =
-    print(io, "the $(dimension(d))-dimensional open unit ball")
+show(io::IO, d::EuclideanUnitBall{3,Float64,:closed}) = print(io, "UnitBall()")
+show(io::IO, d::EuclideanUnitBall{N,Float64,:closed}) where {N} = print(io, "UnitBall(Val($(N)))")
+show(io::IO, d::EuclideanUnitBall{3,Float64,:open}) = print(io, "UnitBall()  (open)")
+show(io::IO, d::EuclideanUnitBall{N,Float64,:open}) where {N} = print(io, "UnitBall(Val($(N)))  (open)")
+show(io::IO, d::UnitDisk{Float64}) = print(io, "UnitDisk()")
+show(io::IO, d::UnitDisk{T}) where {T} = print(io, "UnitDisk{$(T)}()")
+show(io::IO, d::VectorUnitBall{Float64,:closed}) = print(io, "UnitBall($(dimension(d)))")
+show(io::IO, d::VectorUnitBall{Float64,:open}) = print(io, "UnitBall($(dimension(d)))  (open)")
 
 # We choose the origin here
 point_in_domain(ball::Ball{T}) where {T} = zero(T)
@@ -244,8 +248,11 @@ similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} =
 similardomain(d::DynamicUnitSphere, ::Type{T}) where {T <: StaticTypes} =
     StaticUnitSphere{T}()
 
-show(io::IO, d::UnitSphere) =
-    dimension(d) == 2 ? print(io, "the unit circle") : print(io, "the $(dimension(d))-dimensional unit sphere")
+show(io::IO, d::EuclideanUnitSphere{3,Float64}) = print(io, "UnitSphere()")
+show(io::IO, d::EuclideanUnitSphere{N,Float64}) where {N} = print(io, "UnitSphere(Val($(N)))")
+show(io::IO, d::UnitCircle{Float64}) = print(io, "UnitCircle()")
+show(io::IO, d::UnitCircle{T}) where {T} = print(io, "UnitCircle{$(T)}()")
+show(io::IO, d::VectorUnitSphere{Float64}) = print(io, "UnitSphere($(dimension(d)))")
 
 point_in_domain(d::EuclideanSphere{N,T}) where {N,T} =
     SVector{N,T}(ntuple( i -> i==1, N))
@@ -348,9 +355,8 @@ ComplexUnitCircle() = ComplexUnitCircle{Float64}()
 ComplexUnitDisk() = ComplexUnitDisk{Float64}()
 ComplexUnitDisk{T}() where {T} = ComplexUnitDisk{T,:closed}()
 
-show(io::IO, d::ComplexUnitCircle{T}) where {T} =
-    print(io, "the complex unit circle (T=Complex{$T})")
-show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} =
-    print(io, "the complex unit disk (T=Complex{$T})")
-show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} =
-    print(io, "the complex open unit disk (T=Complex{$T})")
+show(io::IO, d::ComplexUnitCircle{Float64}) = print(io, "ComplexUnitCircle()")
+show(io::IO, d::ComplexUnitDisk{Float64,:closed}) = print(io, "ComplexUnitDisk()")
+show(io::IO, d::ComplexUnitDisk{Float64,:open}) = print(io, "ComplexUnitDisk()  (open)")
+show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} = print(io, "ComplexUnitDisk{$(T)}()")
+show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} = print(io, "ComplexUnitDisk{$(T)}()  (open)")

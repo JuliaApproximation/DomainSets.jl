@@ -12,55 +12,6 @@ euclideandimension(::Type{T}) where {N,T <: StaticVector{N}} = N
 euclideandimension(::Type{T}) where {N,T <: NTuple{N,Any}} = N
 # Does not apply to Vector{T}: we don't know its dimension
 
-#######################
-# Composite structures
-#######################
-
-"""
-Some types have composite structure, e.g. product domains, a union of domains.
-These types contain a list of domains.
-
-It is often undesirable to use `getindex` to access the elements of the composite
-type. For this reason we introduce the `elements` functions. Composite types
-can implement `elements` and provide a generic way to access their components.
-
-`elements(t)`: returns the elements making up the composite type `t`
-
-`element(t, i)`: return the `i`-th element of the composite type `t`
-
-`numelements(t)`: return the number of elements of the composite type `t`
-"""
-elements(t) = ()
-
-"""
-Return the i-th element of a composite structure.
-
-See also: `elements`.
-"""
-element(t, i) = elements(t)[i]
-
-"""
-Return the number of elements of a composite structure.
-
-See also: `elements`.
-"""
-numelements(t) = length(elements(t))
-
-"""
-Is `x` composed of different elements?
-
-See also: `elements`.
-"""
-iscomposite(t) = length(elements(t)) > 0
-
-"Expand all arguments of type C into their components."
-expand(::Type{C}) where {C} = ()
-expand(::Type{C}, domain, domains...) where {C} =
-    (domain, expand(C, domains...)...)
-expand(::Type{C}, domain::C, domains...) where {C} =
-    (elements(domain)..., expand(C, domains...)...)
-
-
 
 #################
 # Precision type
@@ -164,3 +115,5 @@ end
     E = vcat([[:(x[$i][$j]) for j in 1:DIM[i]] for i in 1:length(DIM)]...)
     quote SVector($(E...)) end
 end
+
+Display.displaysymbol(A::StaticArray) = 'A'

@@ -5,10 +5,10 @@ abstract type CompositeLazyMap{T} <: LazyMap{T} end
 abstract type SimpleLazyMap{T} <: LazyMap{T} end
 
 supermap(m::SimpleLazyMap) = m.map
-elements(m::CompositeLazyMap) = m.maps
+components(m::CompositeLazyMap) = m.maps
 
 isreal(m::SimpleLazyMap) = isreal(supermap(m))
-isreal(m::CompositeLazyMap) = all(map(isreal, elements(m)))
+isreal(m::CompositeLazyMap) = all(map(isreal, components(m)))
 
 abstract type DerivedMap{T} <: SimpleLazyMap{T} end
 

@@ -38,8 +38,8 @@
         u45 = (0.0..1.5) ∪ [1.0,3.0]
         @test u45 isa Domain{Float64}
         @test u45 isa UnionDomain
-        @test eltype(element(u45,1)) == Float64
-        @test eltype(element(u45,2)) == Float64
+        @test eltype(component(u45,1)) == Float64
+        @test eltype(component(u45,2)) == Float64
         @test 0.2 ∈ u45
         @test 1.2 ∈ u45
         @test 3 ∈ u45
@@ -48,7 +48,7 @@
 
         u45b = (0.0..1.5) ∪ [1,3]
         @test u45b isa Domain{Float64}
-        @test element(u45b,2) isa AbstractArray{Float64}
+        @test component(u45b,2) isa AbstractArray{Float64}
         @test [1,3] ∪ (0.0..1.5) isa Domain{Float64}
 
         # larger union expressions
@@ -77,8 +77,8 @@
         @test uniondomain(0..1, 2..3) \ uniondomain(0.5..2.5, -2..(-1)) == uniondomain(0..0.5, 2.5..3.0)
 
         @test !isempty(u1)
-        show(io,u1)
-        @test String(take!(io)) == "the union of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.9..0.9 x -0.9..0.9\n"
+        show(io, textmime, u1)
+        @test String(take!(io)) == "UnitDisk() ∪ ((-0.9..0.9) × (-0.9..0.9))"
     end
 
     @testset "intersect" begin
@@ -93,11 +93,11 @@
         i1 = intersectdomain((-.4..0.4)^2, (-.5 .. 0.5) × (-.1.. 0.1))
         @test i1 == productdomain(-0.4..0.4, -0.1..0.1)
         show(io,i1)
-        @test String(take!(io)) == "-0.4..0.4 x -0.1..0.1"
+        @test String(take!(io)) == "(-0.4..0.4) × (-0.1..0.1)"
         @test intersectdomain(productdomain(UnitDisk(),-1..1), productdomain(-1..1, UnitDisk())) isa IntersectDomain
         i2 = UnitDisk() & (-.4..0.4)^2
-        show(io,i2)
-        @test String(take!(io)) == "the intersection of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.4..0.4 x -0.4..0.4\n"
+        show(io, textmime, i2)
+        @test String(take!(io)) == "UnitDisk() ∩ ((-0.4..0.4) × (-0.4..0.4))"
         @test dimension(i1) == 2
         @test dimension(i2) == 2
 
@@ -137,8 +137,8 @@
         @test SVector(0.5, 0.1) ∉ d1
         @test SVector(1.01, 0.1) ∉ d1
         @test approx_in(SVector(1.01, 0.1), d1, 0.1)
-        show(io,d1)
-        @test String(take!(io)) == "the difference of 2 domains:\n\t1.\t: the 2-dimensional closed unit ball\n\t2.\t: -0.5..0.5 x -0.1..0.1\n"
+        show(io, textmime, d1)
+        @test String(take!(io)) == "UnitDisk() \\ ((-0.5..0.5) × (-0.1..0.1))"
         @test setdiff(d1, ProductDomain(-0.5..0.5, -.1..0.1)) == d1
 
         d2 = SetdiffDomain(0.0..3.0, [1.0, 2.5])

@@ -5,7 +5,7 @@ other domains.
 
 The `in(x, domain::LazyDomain)` applies three types of transformations:
 1. Point mapping: `y = tointernalpoint(domain, x)`
-2. Distribution of `y` over member domains given by `elements(domain)`
+2. Distribution of `y` over member domains given by `components(domain)`
 3. Combination of the outputs into a single boolean result.
 
 The distribution step is determined by the result of `composition(domain)`,
@@ -26,18 +26,19 @@ A single lazy domain is defined in terms of a single domain.
 
 It has no composition and no combination of its `in` function.
 """
-abstract type SingleLazyDomain{T} <: LazyDomain{T} end
+abstract type SimpleLazyDomain{T} <: LazyDomain{T} end
 
-superdomain(d::SingleLazyDomain) = d.domain
+superdomain(d::SimpleLazyDomain) = d.domain
 
-indomain(x, d::SingleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
-approx_indomain(x, d::SingleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
+components(d::SimpleLazyDomain) = (superdomain(d),)
 
+indomain(x, d::SimpleLazyDomain) = in(tointernalpoint(d, x), superdomain(d))
+approx_indomain(x, d::SimpleLazyDomain, tolerance) = approx_in(tointernalpoint(d, x), superdomain(d), tolerance)
 
 "A composite lazy domain is defined in terms of multiple domains."
-abstract type CompositeLazyDomain{T} <: LazyDomain{T} end
+abstract type CompositeDomain{T} <: LazyDomain{T} end
 
-elements(d::CompositeLazyDomain) = d.domains
+components(d::CompositeDomain) = d.domains
 
 """
 Supertype of all compositions of a lazy domain. The composition determines how
@@ -57,15 +58,15 @@ struct NoComposition <: LazyComposition end
 struct Combination <: LazyComposition end
 struct Product <: LazyComposition end
 
-composition(d::CompositeLazyDomain) = NoComposition()
+composition(d::CompositeDomain) = NoComposition()
 
-indomain(x, d::CompositeLazyDomain) = _indomain(tointernalpoint(d, x), d, composition(d), elements(d))
+indomain(x, d::CompositeDomain) = _indomain(tointernalpoint(d, x), d, composition(d), components(d))
 _indomain(x, d, ::NoComposition, domains) = in(x, domains[1])
 _indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
 _indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
 
-approx_indomain(x, d::CompositeLazyDomain, tolerance) =
-	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), elements(d))
+approx_indomain(x, d::CompositeDomain, tolerance) =
+	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), components(d))
 
 _approx_indomain(x, d, tolerance, ::NoComposition, domains) =
     approx_in(x, domains[1], tolerance)
@@ -74,16 +75,16 @@ _approx_indomain(x, d, tolerance, ::Combination, domains) =
 _approx_indomain(x, d, tolerance, ::Product, domains) =
     mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
 
-point_in_domain(d::SingleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
-point_in_domain(d::CompositeLazyDomain) = toexternalpoint(d, map(point_in_domain, elements(d)))
+point_in_domain(d::SimpleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
+point_in_domain(d::CompositeDomain) = toexternalpoint(d, map(point_in_domain, components(d)))
 
-==(a::D, b::D) where {D<:CompositeLazyDomain} = elements(a) == elements(b)
+==(a::D, b::D) where {D<:CompositeDomain} = components(a) == components(b)
 
 
-dimension(d::SingleLazyDomain{Vector{T}}) where {T} = dimension(superdomain(d))
-function dimension(d::CompositeLazyDomain{Vector{T}}) where {T}
-	dim = dimension(element(d,1))
-	@assert all(isequal(dim), map(dimension, elements(d)))
+dimension(d::SimpleLazyDomain{Vector{T}}) where {T} = dimension(superdomain(d))
+function dimension(d::CompositeDomain{Vector{T}}) where {T}
+	dim = dimension(component(d,1))
+	@assert all(isequal(dim), map(dimension, components(d)))
 	dim
 end
 
@@ -95,7 +96,7 @@ combine
 
 
 "Abstract supertype for domains that wrap another domain."
-abstract type DerivedDomain{T} <: SingleLazyDomain{T} end
+abstract type DerivedDomain{T} <: SimpleLazyDomain{T} end
 
 isempty(d::DerivedDomain) = isempty(superdomain(d))
 
