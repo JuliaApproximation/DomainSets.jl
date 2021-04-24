@@ -39,6 +39,8 @@ Display.displaystencil(d::AbstractMappedDomain) =
     map_stencil_broadcast(forward_map(d), superdomain(d))
 Display.object_parentheses(d::AbstractMappedDomain) =
     Display.object_parentheses(forward_map(d))
+Display.stencil_parentheses(d::AbstractMappedDomain) =
+    Display.stencil_parentheses(forward_map(d))
 
 
 

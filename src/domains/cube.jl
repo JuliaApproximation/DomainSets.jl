@@ -139,6 +139,9 @@ show(io::IO, d::VectorUnitCube{Float64}) = print(io, "UnitCube($(dimension(d)))"
 Display.displaystencil(d::EuclideanUnitCube{N,Float64}) where {N} = []
 Display.displaystencil(d::UnitSquare) = []
 Display.displaystencil(d::VectorUnitCube{Float64}) = []
+Display.object_parentheses(d::EuclideanUnitCube{N,Float64}) where {N} = false
+Display.object_parentheses(d::UnitSquare) = false
+Display.object_parentheses(d::VectorUnitCube{Float64}) = false
 
 
 
