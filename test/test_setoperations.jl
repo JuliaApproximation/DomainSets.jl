@@ -79,6 +79,11 @@
         @test !isempty(u1)
         show(io, textmime, u1)
         @test String(take!(io)) == "UnitDisk() ∪ ((-0.9..0.9) × (-0.9..0.9))"
+
+        # repeated union
+        @test ncomponents(uniondomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
+        @test ncomponents(uniondomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
+        @test ncomponents(uniondomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
     end
 
     @testset "intersect" begin
@@ -126,6 +131,11 @@
         @test intersectdomain(uniondomain(0..1, 2..3), uniondomain(0..0.5, 3.5..4.5)) == 0..0.5
         @test intersectdomain(uniondomain(0..1, 2..3), 2..4) == 2..3
         @test intersectdomain(2..4, uniondomain(0..1, 2..3)) == 2..3
+
+        # repeated intersection
+        @test ncomponents(intersectdomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
+        @test ncomponents(intersectdomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
+        @test ncomponents(intersectdomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
     end
 
     @testset "setdiff" begin

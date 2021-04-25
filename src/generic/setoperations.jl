@@ -197,7 +197,7 @@ intersectdomain2(d1, d2) = issubset(d2, d1) ? d2 : IntersectDomain(d1, d2)
 
 intersectdomain(d1, d2, d3) = _id3(promote_domains(d1, d2, d3)...)
 _id3(d1, d2, d3) =
-	_id3(d1, d2, d3, intersectdomain(d1, d2), intersectdomain(d2, d3), uniondomain(d1, d3))
+	_id3(d1, d2, d3, intersectdomain(d1, d2), intersectdomain(d2, d3), intersectdomain(d1, d3))
 _id3(d1, d2, d3, d12::IntersectDomain, d23::IntersectDomain, d13::IntersectDomain) =
 	intersectdomain(d12, d3)
 _id3(d1, d2, d3, d12, d23::IntersectDomain, d13::IntersectDomain) =

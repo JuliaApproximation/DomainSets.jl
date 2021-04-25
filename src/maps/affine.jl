@@ -447,6 +447,8 @@ ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
 show(io::IO, m::ScalarAffineMap) = print(io, "x -> $(m.A) * x + $(m.b)")
 
+convert(::Type{ScalarAffineMap{T}}, m::ScalarAffineMap) where {T} =
+    ScalarAffineMap{T}(m.A, m.b)
 
 "An affine map with array and vector representation."
 struct VectorAffineMap{T} <: AffineMap{Vector{T}}
@@ -460,6 +462,9 @@ function VectorAffineMap(A::AbstractArray{S}, b::AbstractVector{T}) where {S,T}
     U = promote_type(S,T)
     VectorAffineMap(convert(AbstractArray{U}, A), convert(AbstractVector{U}, b))
 end
+
+convert(::Type{VectorAffineMap{T}}, m::VectorAffineMap) where {T} =
+    VectorAffineMap{T}(m.A, m.b)
 
 
 

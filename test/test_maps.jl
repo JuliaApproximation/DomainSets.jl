@@ -318,6 +318,8 @@ function test_affinemap(T)
     @test isaffine(m1)
     @test m1(2) == 7
 
+    @test convert(ScalarAffineMap{BigFloat}, m1) == m1
+
     @test m1 ∘ m1 isa AffineMap
     @test (m1 ∘ m1)(2) == 2*(2*2+3)+3
 
