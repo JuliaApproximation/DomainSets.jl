@@ -14,6 +14,9 @@ For example, the canonical domain of any interval `[a,b]` is the unit interval
 canonicaldomain(d::Domain) = d
 canonicaldomain(d, args...) = canonicaldomain(d)
 
+"Does the domain have a canonical domain, different from the domain itself?"
+hascanonicaldomain(d, args...) = !(canonicaldomain(d, args...) === d)
+
 identitymap(d) = IdentityMap{eltype(d)}(dimension(d))
 
 "Return a map to a domain from its canonical domain."
@@ -63,6 +66,9 @@ parameterdomain(d::Domain) = canonicaldomain(d, Parameterization())
 
 "Return a parameterization of the given domain."
 parameterization(d::Domain) = fromcanonical(d, Parameterization())
+
+"Does the domain have a parameterization?"
+hasparameterization(d) = hascanonicaldomain(d, Parameterization())
 
 from_parameterdomain(d::Domain) = fromcanonical(d, Parameterization())
 to_parameterdomain(d::Domain) = tocanonical(d, Parameterization())

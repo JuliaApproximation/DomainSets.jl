@@ -17,7 +17,7 @@ applymap(m::Composition, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
 applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
 
-size(m::Composition) = (size(m.maps[end])[1], size(m.maps[1])[2])
+size(m::Composition) = (size(m.maps[end],1), size(m.maps[1],2))
 
 function jacobian(m::Composition, x)
     f, fd = backpropagate(x, reverse(components(m))...)
@@ -29,7 +29,7 @@ function backpropagate(x, m2, ms...)
     m2(f), jacobian(m2, f) * fd
 end
 
-for op in (:inv, :leftinverse, :rightinverse)
+for op in (:inverse, :leftinverse, :rightinverse)
     @eval $op(cmap::Composition) = Composition(reverse(map($op, components(cmap)))...)
 end
 

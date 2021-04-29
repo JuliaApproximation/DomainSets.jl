@@ -1,24 +1,4 @@
 
-"Return a zero vector of the same size as the codomain type of the map."
-zerovector(m::Map) = zerovector(m, codomaintype(m))
-zerovector(m::Map, ::Type{U}) where {U} = zero(U)
-zerovector(m::Map, ::Type{SVector{N,U}}) where {N,U} = zero(SVector{N,U})
-# If the output type is a vector, the map itself should store the size information.
-zerovector(m::Map, ::Type{<:AbstractVector{U}}) where {U} = zeros(U, size(m,1))
-
-"Return an identity matrix with the dimensions of the map."
-identitymatrix(m::Map) = identitymatrix(m, codomaintype(m))
-identitymatrix(m::Map, ::Type{T}) where {T} = one(T)
-identitymatrix(m::Map, ::Type{SVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
-identitymatrix(m::Map, ::Type{<:AbstractVector{T}}) where {T} = Diagonal{T}(ones(size(m,1)))
-
-"Return a zero matrix of the same size as the map."
-zeromatrix(m::Map) = zeromatrix(m, matrixtype(m))
-zeromatrix(m::Map, ::Type{M}) where {M} = zero(M)
-zeromatrix(m::Map, ::Type{M}) where {M <: StaticArray} = zero(M)
-zeromatrix(m::Map, ::Type{M}) where {M <: AbstractArray} = zeros(M, size(m))
-
-
 "Supertype of identity maps."
 abstract type IdentityMap{T} <: Map{T} end
 
@@ -34,7 +14,8 @@ IdentityMap{T}() where {T} = StaticIdentityMap{T}()
 applymap(map::IdentityMap, x) = x
 applymap!(y, map::IdentityMap, x) = y .= x
 
-inv(m::IdentityMap) = m
+inverse(m::IdentityMap) = m
+inverse(m::IdentityMap, x) = x
 
 islinear(::IdentityMap) = true
 isreal(::IdentityMap{T}) where {T} = isreal(T)
@@ -42,7 +23,8 @@ isreal(::IdentityMap{T}) where {T} = isreal(T)
 isidentity(::IdentityMap) = true
 isidentity(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
 
-size(m::IdentityMap) = (dimension(m), dimension(m))
+size(m::IdentityMap{T}) where {T<:Number} = ()
+size(m::IdentityMap{T}) where {T} = (euclideandimension(T),euclideandimension(T))
 
 matrix(m::IdentityMap) = identitymatrix(m)
 vector(m::IdentityMap) = zerovector(m)
@@ -51,6 +33,8 @@ jacobian(m::IdentityMap) = ConstantMap(matrix(m))
 jacobian(m::IdentityMap, x) = matrix(m)
 
 jacdet(m::IdentityMap, x) = 1
+
+determinantmap(m::IdentityMap{T}) where {T} = UnityMap{T,prectype(T)}()
 
 mapcompose(m1::IdentityMap) = m1
 mapcompose(m1::IdentityMap, maps...) = mapcompose(maps...)
@@ -91,14 +75,14 @@ const VectorIdentityMap{T} = DynamicIdentityMap{Vector{T}}
 DynamicIdentityMap(dimension::Int) = VectorIdentityMap(dimension)
 VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
-dimension(m::DynamicIdentityMap) = m.dimension
+size(m::DynamicIdentityMap) = (m.dimension, m.dimension)
 
 similarmap(m::DynamicIdentityMap, ::Type{T}) where {T} =
-    DynamicIdentityMap{T}(dimension(m))
+    DynamicIdentityMap{T}(m.dimension)
 similarmap(m::DynamicIdentityMap, ::Type{T}) where {T<:StaticTypes} =
     StaticIdentityMap{T}()
 
-==(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = dimension(m1) == dimension(m2)
+==(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = m1.dimension == m2.dimension
 
 
 "The supertype of constant maps from `T` to `U`."
@@ -112,9 +96,11 @@ isconstant(m::ConstantMap) = true
 isreal(m::ConstantMap{T,U}) where {T,U} =
     isreal(T) && isreal(U) && isreal(constant(m))
 
-dimension(m::ConstantMap) = length(constant(m))
-size(m::ConstantMap{<:Number}) = (dimension(m), 1)
-size(m::ConstantMap) = (dimension(m), dimension(m))
+size(m::ConstantMap) = _size(m, constant(m))
+_size(m::ConstantMap{T,U}, c) where {T<:Number,U<:Number} = ()
+_size(m::ConstantMap{T,U}, c) where {T<:Number,U} = (length(c),)
+_size(m::ConstantMap{T,U}, c) where {T,U<:Number} = (1,euclideandimension(T))
+_size(m::ConstantMap{T,U}, c) where {T,U} = (length(c), euclideandimension(T))
 
 matrix(m::ConstantMap) = zeromatrix(m)
 vector(m::ConstantMap) = constant(m)
@@ -123,6 +109,9 @@ jacobian(m::ConstantMap{T}) where {T} = ConstantMap{T}(matrix(m))
 jacobian(m::ConstantMap, x) = matrix(m)
 
 jacdet(::ConstantMap, x) = 0
+
+determinantmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(det(constant(m)))
+absmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(abs(constant(m)))
 
 ==(m1::ConstantMap, m2::ConstantMap) = constant(m1)==constant(m2)
 
@@ -152,7 +141,7 @@ similarmap(m::ZeroMap, ::Type{T}, ::Type{U}) where {T,U} = ZeroMap{T,U}()
 "The unity map `f(x) = 1`."
 struct UnityMap{T,U} <: ConstantMap{T,U}
 end
-UnityMap{T}() where {T} = UnityMap{T,T}()
+UnityMap{T}() where {T} = UnityMap{T,real(numtype(T))}()
 constant(m::UnityMap{T,U}) where {T,U} = one(U)
 similarmap(m::UnityMap{S,U}, ::Type{T}) where {T,S,U} = UnityMap{T,U}()
 similarmap(m::UnityMap, ::Type{T}, ::Type{U}) where {T,U} = UnityMap{T,U}()

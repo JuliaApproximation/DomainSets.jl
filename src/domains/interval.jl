@@ -2,6 +2,9 @@
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
 
+isinterval(d::Domain) = false
+isinterval(d::AbstractInterval) = true
+
 Display.object_parentheses(::AbstractInterval) = true
 
 approx_indomain(x, d::AbstractInterval, tolerance) =
@@ -329,7 +332,7 @@ switch_open_closed(d::AbstractInterval) = d
 switch_open_closed(d::Interval{L,R,T}) where {L,R,T} =
     Interval{R,L,T}(leftendpoint(d),rightendpoint(d))
 
-function map_domain(map::AbstractAffineMap, domain::AbstractInterval)
+function map_domain(map::AbstractAffineMap{<:Number}, domain::AbstractInterval)
     le = map(leftendpoint(domain))
     re = map(rightendpoint(domain))
     if le<re
@@ -339,10 +342,10 @@ function map_domain(map::AbstractAffineMap, domain::AbstractInterval)
     end
 end
 
-mapped_domain(invmap::AbstractAffineMap, domain::AbstractInterval) =
-    map_domain(inv(invmap), domain)
+mapped_domain(invmap::AbstractAffineMap{<:Number}, domain::AbstractInterval) =
+    map_domain(inverse(invmap), domain)
 
 # Preserve maps when acting on the half line and negative halfline, because
 # the map may not always preserve the domain type
-map_domain(map::AbstractAffineMap, domain::HalfLine) = MappedDomain(domain, inv(map))
-map_domain(map::AbstractAffineMap, domain::NegativeHalfLine) = MappedDomain(domain, inv(map))
+map_domain(map::AbstractAffineMap{<:Number}, domain::HalfLine) = MappedDomain(inverse(map), domain)
+map_domain(map::AbstractAffineMap{<:Number}, domain::NegativeHalfLine) = MappedDomain(inverse(map), domain)

@@ -41,7 +41,7 @@ function map_domain(map, p::Point)
     Point(x)
 end
 
-mapped_domain(invmap, p::Point) = map_domain(inv(invmap), p)
+mapped_domain(invmap, p::Point) = map_domain(inverse(invmap), p)
 
 for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))

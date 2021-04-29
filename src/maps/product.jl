@@ -20,6 +20,12 @@ _TypedProductMap(::Type{T}, maps...) where {T<:Tuple} = TupleProductMap(maps...)
 _TypedProductMap(::Type{SVector{N,T}}, maps...) where {N,T} = VcatMap{N,T}(maps...)
 _TypedProductMap(::Type{T}, maps...) where {T<:AbstractVector} = VectorProductMap{T}(maps...)
 
+compatibleproductdims(d1::ProductMap, d2::ProductMap) =
+	size(d1) == size(d2) &&
+		all(map(==, map(size, components(d1)), map(size, components(d2))))
+
+compatibleproduct(d1::ProductMap, d2::ProductMap) =
+	compatibleproductdims(d1, d2) && compatible_domaintype(d1, d2)
 
 isconstant(m::ProductMap) = mapreduce(isconstant, &, components(m))
 islinear(m::ProductMap) = mapreduce(islinear, &, components(m))
@@ -31,7 +37,14 @@ constant(m::ProductMap) = toexternalpoint(m, map(constant, components(m)))
 
 jacobian(m::ProductMap, x) =
 	toexternalmatrix(m, map(jacobian, components(m), tointernalpoint(m, x)))
-jacobian(m::ProductMap) = LazyJacobian(m)
+function jacobian(m::ProductMap{T}) where {T}
+	if isaffine(m)
+		ConstantMap{T}(matrix(m))
+	else
+		ProductMap(map(jacobian, components(m)))
+	end
+end
+# function jacdet(m::ProductMap, x)
 
 similarmap(m::ProductMap, ::Type{T}) where {T} = ProductMap{T}(components(m))
 
@@ -49,16 +62,24 @@ productmap(map1::ProductMap, map2::ProductMap) =
 productmap1(map1::ProductMap, map2) = ProductMap(components(map1)..., map2)
 productmap2(map1, map2::ProductMap) = ProductMap(map1, components(map2)...)
 
-for op in (:inv, :leftinverse, :rightinverse)
+for op in (:inverse, :leftinverse, :rightinverse)
     @eval $op(m::ProductMap) = ProductMap(map($op, components(m)))
 	@eval $op(m::ProductMap, x) = toexternalpoint(m, map($op, components(m), tointernalpoint(m, x)))
 end
 
-size(m::ProductMap) = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,components(m)))
+function compose_map(m1::ProductMap, m2::ProductMap)
+	if compatibleproduct(m1, m2)
+		ProductMap(map(compose_map, components(m1), components(m2)))
+	else
+		Composition(m1,m2)
+	end
+end
+
+size(m::ProductMap) = (sum(t->size(t,1), components(m)), sum(t->size(t,2), components(m)))
 
 ==(m1::ProductMap, m2::ProductMap) = all(map(isequal, components(m1), components(m2)))
 
-Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊕')
+Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊗')
 Display.displaystencil(m::ProductMap) = composite_displaystencil(m)
 show(io::IO, mime::MIME"text/plain", m::ProductMap) = composite_show(io, mime, m)
 show(io::IO, m::ProductMap) = composite_show_compact(io, m)
@@ -74,7 +95,9 @@ end
 VcatMap(maps::Union{Tuple,Vector}) = VcatMap(maps...)
 function VcatMap(maps...)
 	T = numtype(maps...)
-	M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,maps))
+	M = sum(t->size(t,1), maps)
+	N = sum(t->size(t,2), maps)
+	# M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,maps))
 	@assert M==N
 	VcatMap{N,T}(maps...)
 end
@@ -138,6 +161,7 @@ end
 # the Jacobian is a diagonal matrix
 toexternalmatrix(m::VectorProductMap, matrices) = Diagonal(matrices)
 
+dimension(m::VectorProductMap) = length(m.maps)
 
 """
 A `TupleProductMap` is a product map with all components collected in a tuple.

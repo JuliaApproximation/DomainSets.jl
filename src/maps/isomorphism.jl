@@ -26,6 +26,9 @@ end
 struct ComplexToVector{T} <: Isomorphism{Complex{T},SVector{2,T}}
 end
 
+size(::VectorToComplex) = (1,2)
+size(::ComplexToVector) = (2,)
+
 applymap(::VectorToComplex, x) = x[1] + im*x[2]
 applymap(::ComplexToVector, x) = SVector(real(x), imag(x))
 

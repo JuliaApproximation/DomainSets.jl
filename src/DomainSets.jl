@@ -76,7 +76,7 @@ export AbstractMap, Map, TypedMap,
     applymap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
-    jacobian, jacdet
+    jacobian, jacdet, diffvolume
 # from maps/composite.jl
 export Composition, ∘
 # from maps/product.jl
@@ -104,9 +104,10 @@ export Domain, EuclideanDomain, VectorDomain,
     interior, closure,
     volume,
     point_in_domain,
-    canonicaldomain, tocanonical, fromcanonical,
+    canonicaldomain, tocanonical, fromcanonical, hascanonicaldomain,
     mapto,
-    parameterdomain, parameterization
+    parameterdomain, parameterization, hasparameterization,
+    from_parameterdomain, to_parameterdomain
 
 # from generic/lazy.jl
 export superdomain
@@ -162,8 +163,7 @@ export UnitBall,
     UnitDisk, VectorUnitDisk,
     UnitCircle, VectorUnitCircle,
     ComplexUnitCircle, ComplexUnitDisk,
-    ellipse, ellipse_shape, cylinder,
-    gradient
+    ellipse, ellipse_shape, cylinder
 # from domains/cube.jl
 export UnitCube,
     StaticUnitCube, DynamicUnitCube,
@@ -188,6 +188,8 @@ include("util/common.jl")
 
 include("maps/map.jl")
 include("maps/lazy.jl")
+include("maps/inverse.jl")
+include("maps/jacobian.jl")
 include("maps/composite.jl")
 include("maps/product.jl")
 include("maps/isomorphism.jl")

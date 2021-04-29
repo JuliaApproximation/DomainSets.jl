@@ -39,7 +39,7 @@ convert(::Type{TypedMap{T,U}}, m::TypedMap) where {T,U} = similarmap(m, T, U)
 convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
 convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
 
-dimension(m::Map{T}) where {T} = euclideandimension(T)
+compatible_domaintype(d1, d2) = isconcretetype(promote_type(domaintype(d1),domaintype(d2)))
 
 # Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)
@@ -74,84 +74,29 @@ promote_map_point_pair(m::EuclideanMap{N,T}, x::AbstractVector{S}) where {N,S,T}
 apply(m::Map, x) = applymap(promote_map_point_pair(m,x)...)
 applymap!(y, m::AbstractMap, x) = y .= m(x)
 
-# There is a difference between a map being invertible, and the map
-# knowing its inverse explicitly and implementing `inv`.
-inv(m::AbstractMap) = error("Map ", m, " does not have a known inverse map.")
 
-# For inverse functions, we supply a two-argument version because finding the
-# inverse for a given point is often cheaper than finding the inverse and then
-# applying it to a point.
+isvectorvalued_type(::Type{T}) where {T<:Number} = true
+isvectorvalued_type(::Type{T}) where {T<:AbstractVector} = true
+isvectorvalued_type(::Type{T}) where {T} = false
 
-"""
-    inverse(m::AbstractMap[, x])
+"Is the map a vector-valued function, i.e., a function from Rn to Rm?"
+isvectorvalued(m::Map{T}) where {T} =
+    isvectorvalued_type(T) && isvectorvalued_type(codomaintype(m))
 
-Return the inverse of `m`. The two-argument function evaluates the inverse
-at the point `x`.
-"""
-inverse(m::AbstractMap) = inv(m)
-inverse(m::AbstractMap, x) = inverse(m)(x)
+# size should be defined for vector valued maps
+# The size of a map equals the size of its jacobian
+# The jacobian can be a number, a vector, an adjoint vector, or a matrix
+size(m::AbstractMap, i) = _map_size(m, i, size(m))
+_map_size(m::AbstractMap, i, size::Tuple{Int,Int}) = i <= 2 ? size[i] : 1
+_map_size(m::AbstractMap, i, size::Tuple{Int}) = i <= 1 ? size[i] : 1
+_map_size(m::AbstractMap, i, size::Tuple{}) = 1
 
-(\)(m::AbstractMap, y) = inverse(m, y)
+"Is the given map a square map?"
+issquare(m::AbstractMap) = isvectorvalued(m) && (size(m,1) == size(m,2))
 
-"""
-    leftinverse(m::AbstractMap[, x])
-
-Return a left inverse of the given map. This left inverse `mli` is not unique,
-but in any case it is such that `(mli ∘ m) * x = x` for each `x` in the domain
-of `m`.
-
-The two-argument function applies the left inverse to the point `x`.
-"""
-leftinverse(m::AbstractMap) = inverse(m)
-leftinverse(m::AbstractMap, x) = leftinverse(m)(x)
-
-"""
-    rightinverse(m::AbstractMap[, x])
-
-Return a right inverse of the given map. This right inverse `mri` is not unique,
-but in any case it is such that `(m ∘ mri) * y = y` for each `y` in the range
-of `m`.
-
-The two-argument function applies the right inverse to the point `x`.
-"""
-rightinverse(m::AbstractMap) = inverse(m)
-rightinverse(m::AbstractMap, x) = rightinverse(m)(x)
-
-
-"""
-    jacobian(m::AbstractMap[, x])
-
-Return the jacobian map. The two-argument version evaluates the jacobian
-at a point `x`.
-"""
-jacobian(m::AbstractMap) = error("Map ", m, " does not have a known Jacobian map.")
-jacobian(m::AbstractMap, x) = jacobian(m)(x)
-
-jacobian!(y, m::AbstractMap, x) = y .= jacobian(m, x)
-
-"""
-    jacdet(m::Map, x)
-
-The Jacobian determinant of the map at a point `x`.
-"""
-jacdet(m::AbstractMap, x) = det(jacobian(m, x))
+isoverdetermined(m::AbstractMap) = size(m,1) >= size(m,2)
+isunderdetermined(m::AbstractMap) = size(m,1) <= size(m,2)
 
 # Display routines
 map_stencil(m::AbstractMap, x) = [SymbolObject(m), '(', x, ')']
 map_stencil_broadcast(m::AbstractMap, x) = [SymbolObject(m), ".(", x, ')']
-
-"Return the expected type of the jacobian matrix of the map"
-matrixtype(m::AbstractMap) = matrixtype(domaintype(m), codomaintype(m))
-
-# We check all combinations of scalars, static vector and abstract vectors
-matrixtype(::Type{T}, ::Type{U}) where {T,U} = promote_type(T,U)
-matrixtype(::Type{T}, ::Type{U}) where {T<:Number,U<:Number} = promote_type(T,U)
-matrixtype(::Type{SVector{N,T}}, ::Type{SVector{M,U}}) where {N,M,T,U} = SMatrix{M,N,promote_type(T,U)}
-matrixtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U<:Number} = SMatrix{1,N,promote_type(T,U)}
-matrixtype(::Type{T}, ::Type{SVector{M,U}}) where {T<:Number,M,U} = SVector{M,promote_type(T,U)}
-matrixtype(::Type{<:AbstractVector{T}}, ::Type{<:AbstractVector{U}}) where {T,U} = Array{promote_type{T,U},2}
-matrixtype(::Type{<:AbstractVector{T}}, ::Type{U}) where {T,U<:Number} = Array{promote_type{T,U},2}
-matrixtype(::Type{T}, ::Type{<:AbstractVector{U}}) where {T<:Number,U} = Array{promote_type(T,U),1}
-
-# size may not be defined for all maps, because not all maps have a fixed size
-size(m::AbstractMap, i) = i <= 2 ? size(m)[i] : 1

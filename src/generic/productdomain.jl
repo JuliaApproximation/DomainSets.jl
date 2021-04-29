@@ -90,6 +90,15 @@ canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain, component
 tocanonical(d::ProductDomain) = ProductMap(map(tocanonical, components(d)))
 fromcanonical(d::ProductDomain) = ProductMap(map(fromcanonical, components(d)))
 
+for CTYPE in (Parameterization, Equal)
+	@eval canonicaldomain(d::ProductDomain, ctype::$CTYPE) =
+		ProductDomain(canonicaldomain.(components(d), Ref(ctype)))
+	@eval tocanonical(d::ProductDomain, ctype::$CTYPE) =
+		ProductMap(tocanonical.(components(d), Ref(ctype)))
+	@eval fromcanonical(d::ProductDomain, ctype::$CTYPE) =
+		ProductMap(fromcanonical.(components(d), Ref(ctype)))
+end
+
 
 """
 A `VcatDomain` concatenates the element types of its member domains in a single

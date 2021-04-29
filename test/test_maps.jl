@@ -43,12 +43,15 @@ issquarematrix(A::AbstractArray) = size(A,1)==size(A,2)
 
 
 function test_generic_inverse(m)
-    M,N = size(m)
+    M = size(m,1)
+    N = size(m,2)
     x = suitable_point_to_map(m)
     y = m(x)
-    if M == N
-        # trigger exception outside of test if inverse does not exist
-        minv = inv(m)
+    # trigger exception outside of test if inverse is not implemented for the map
+    inverse(m, y)
+
+    if M==N
+        minv = inverse(m)
         @test minv(y) ≈ x
         @test inverse(m)(y) ≈ x
         @test inverse(m, y) ≈ x
@@ -68,6 +71,10 @@ end
 
 function test_generic_jacobian(m)
     x = suitable_point_to_map(m)
+    # Trigger exception outside of test if jacobian(m, x) is not implemented.
+    # test_generic_jacobian(m) should be called within a try/catch block
+    jacobian(m, x)
+
     δ = sqrt(eps(prectype(m)))
     x2 = x .+ δ
     # we intentionally test jacobian(m, x) before testing jacobian(m)
@@ -75,10 +82,18 @@ function test_generic_jacobian(m)
         @test norm(m(x2) - m(x) + jacobian(m, x)*(x-x2)) < 100δ
     end
     jac = jacobian(m)
-    @test jac(x) == jacobian(m, x)
-    if issquarematrix(jac(x))
-        @test jacdet(m, x) == det(jacobian(m, x))
+    @test jac(x) ≈ jacobian(m, x)
+    j = jacobian(m, x)
+    @test size(j) == size(m)
+    if j isa AbstractArray{Float64}
+        y = similar(j)
+        DomainSets.jacobian!(y, m, x)
+        @test y ≈ jac(x)
     end
+    if issquarematrix(jac(x))
+        @test jacdet(m, x) ≈ det(jacobian(m, x))
+    end
+    @test diffvolume(m, x) ≈ sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
 end
 
 # Test a map m with dimensions n
@@ -109,6 +124,8 @@ function test_generic_map(m)
     end
 
     if isaffine(m)
+        M = matrix(m)
+        @test size(M) == size(m)
         test_generic_jacobian(m)
     else
         try # jacobian may not be implemented
@@ -162,6 +179,7 @@ function test_maps(T)
 
     # Test special maps
     test_identity_map(T)
+    test_basic_maps(T)
     test_affine_maps(T)
     test_composite_map(T)
     test_product_map(T)
@@ -295,7 +313,7 @@ function test_translation(T)
     m = Translation(v)
     @test !islinear(m)
     @test isaffine(m)
-    @test inv(inv(m)) == m
+    @test inverse(inverse(m)) == m
     @test jacobian(m) isa ConstantMap
     @test vector(jacobian(m)) == [1 0 0; 0 1 0; 0 0 1]
 
@@ -386,6 +404,10 @@ function test_identity_map(T)
     @test IdentityMap() ∘ LinearMap(2) == LinearMap(2.0)
 end
 
+function test_basic_maps(T)
+    @test UnityMap{SVector{2,Float64}}() == UnityMap{SVector{2,Float64},Float64}()
+end
+
 function test_composite_map(T)
     a = T(0)
     b = T(1)
@@ -443,8 +465,20 @@ function test_product_map(T)
 
     m6 = ProductMap([ma,mb])
     @test m6 isa DomainSets.VectorProductMap
+    @test dimension(m6) == 2
     @test convert(Map{SVector{2,T}}, m6) isa DomainSets.VcatMap
     test_generic_map(m6)
+
+    d1 = ProductDomain(T(1)..T(2), T(1)..T(2))
+    d2 = ProductDomain(T(2)..T(4), T(2)..T(4))
+    @test mapto(d1, d2) isa DomainSets.VcatMap
+    @test jacobian(mapto(d1,d2)) isa ConstantMap
+    @test jacdet(mapto(d1,d2)) == ConstantMap{SVector{2,T}}(4)
+    d1v = ProductDomain([T(1)..T(2), T(1)..T(2)])
+    d2v = ProductDomain([T(2)..T(4), T(2)..T(4)])
+    @test mapto(d1v, d2v) isa DomainSets.VectorProductMap
+    @test jacobian(mapto(d1v,d2v)) isa ConstantMap
+    @test jacdet(mapto(d1v,d2v)) == ConstantMap{Vector{T}}(4)
 end
 
 function test_wrapped_maps(T)

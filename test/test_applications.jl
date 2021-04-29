@@ -44,8 +44,8 @@ function test_cart_polar_map(T)
     @test !islinear(m2)
     @test isreal(m2)
 
-    @test inv(m1) == m2
-    @test inv(m2) == m1
+    @test inverse(m1) == m2
+    @test inverse(m2) == m1
 end
 
 

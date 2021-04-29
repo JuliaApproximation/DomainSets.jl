@@ -376,6 +376,9 @@ end
             @test m2(6) ≈ 3
         end
 
+        @test DomainSets.isinterval(0..1)
+        @test !DomainSets.isinterval(UnitBall())
+
         @test typeof(UnitInterval{Float64}(0.0..1.0)) <: UnitInterval
         @test typeof(ChebyshevInterval{Float64}(-1.0..1.0)) <: ChebyshevInterval
 
@@ -822,7 +825,9 @@ end
         @test !isopenset(C)
         p = parameterization(C)
         x = applymap(p, 1/2)
-        @test gradient(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
+        @test jacobian(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
+        @test diffvolume(p, 0.4) ≈ 2*pi
+        @test diffvolume(p)(0.4) ≈ 2*pi
         @test approx_in(x, C)
         q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
@@ -912,8 +917,8 @@ end
     end
 
     @testset "mapped_domain" begin
-        @test MappedDomain(0..1.0, cos) isa MappedDomain{Float64}
-        @test MappedDomain{Float64}(0..1.0, cos) isa MappedDomain{Float64}
+        @test MappedDomain(cos, 0..1.0) isa MappedDomain{Float64}
+        @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
         # Test chaining of maps
         D = UnitCircle()
         D1 = 2 * D
@@ -954,6 +959,15 @@ end
         @test canonicaldomain(B) == VectorUnitBall(10)
         @test fromcanonical(B) == forward_map(B)
         @test tocanonical(B) == inverse_map(B)
+
+        # Test parametric domain
+        m = AffineMap(ones(2,1), [4; 5])
+        pd = DomainSets.ParametricDomain(m, UnitInterval())
+        @test pd isa Domain{Vector{Float64}}
+        @test forward_map(pd) == m
+        @test inverse_map(pd)(m([0.4])) ≈ [0.4]
+        @test fromcanonical(pd) == m
+        @test canonicaldomain(pd) == 0..1
     end
 
     @testset "simplex" begin

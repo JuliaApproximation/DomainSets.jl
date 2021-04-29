@@ -307,18 +307,17 @@ The map `[cos(2πt), sin(2πt)]` from `[0,1]` to the unit circle in `ℝ^2`.
 """
 struct UnitCircleMap{T} <: Map{T} end
 
-applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
-function applymap!(y, m::UnitCircleMap{T}, t) where {T}
-    y[1] = cos(2*T(pi)*t)
-    y[2] = sin(2*T(pi)*t)
-    y
-end
+size(m::UnitCircleMap) = (2,)
 
-function gradient(m::UnitCircleMap{T}, t) where {T}
-    a = 2*convert(T, pi)
+applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
+
+function jacobian(m::UnitCircleMap{T}, t) where {T}
+    a = 2*T(pi)
     SVector(-a*sin(a*t), a*cos(a*t))
 end
 
+# we know that the differential volume is 2*pi
+diffvolume(m::UnitCircleMap{T}) where {T} = ConstantMap{T}(2*T(pi))
 
 """
 `AngleMap` is a left inverse of `UnitCircleMap`. A 2D vector `x` is projected onto
@@ -339,8 +338,21 @@ function applymap(m::AngleMap{T}, x) where {T}
     θ / twopi
 end
 
+size(m::AngleMap) = (1,2)
+
+function jacobian(m::AngleMap{T}, t) where {T}
+    x = t[1]; y = t[2]
+    twopi = 2*convert(T, pi)
+    v = SVector(one(T) / (1+(y/x)^2) * (-y/x^2) * 1/twopi,
+            one(T) / (1+(y/x)^2) * one(T)/x * 1/twopi)
+    transpose(v)
+end
+
+
 leftinverse(m::UnitCircleMap{T}) where {T} = AngleMap{T}()
+leftinverse(m::UnitCircleMap, x) = leftinverse(m)(x)
 rightinverse(m::AngleMap{T}) where {T} = UnitCircleMap{T}()
+rightinverse(m::AngleMap, x) = rightinverse(m)(x)
 
 canonicaldomain(d::UnitCircle{T}, ::Parameterization) where {T} = UnitInterval{T}()
 fromcanonical(d::UnitCircle{T}, ::Parameterization) where {T} = UnitCircleMap{T}()
@@ -360,3 +372,20 @@ show(io::IO, d::ComplexUnitDisk{Float64,:closed}) = print(io, "ComplexUnitDisk()
 show(io::IO, d::ComplexUnitDisk{Float64,:open}) = print(io, "ComplexUnitDisk()  (open)")
 show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} = print(io, "ComplexUnitDisk{$(T)}()")
 show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} = print(io, "ComplexUnitDisk{$(T)}()  (open)")
+
+
+struct ComplexUnitCircleMap{T} <: Map{T} end
+
+size(m::ComplexUnitCircleMap) = ()
+
+function applymap(m::ComplexUnitCircleMap{T}, t) where {T}
+    v = applymap(UnitCircleMap{T}(), t)
+    v[1] + im*v[2]
+end
+function jacobian(m::ComplexUnitCircleMap{T}, t) where {T}
+    v = jacobian(UnitCircleMap{T}(), t)
+    v[1] + im*v[2]
+end
+
+canonicaldomain(d::ComplexUnitCircle{T}, ::Parameterization) where {T} = UnitInterval{T}()
+fromcanonical(d::ComplexUnitCircle{T}, ::Parameterization) where {T} = ComplexUnitCircleMap{T}()

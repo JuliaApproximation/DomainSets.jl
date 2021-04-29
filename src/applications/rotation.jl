@@ -19,6 +19,8 @@ end
 
 CartToPolarMap() = CartToPolarMap{Float64}()
 
+size(m::CartToPolarMap) = (2,2)
+
 applymap(map::CartToPolarMap{T}, x) where {T} =
     SVector{2,T}(sqrt(x[1]^2+x[2]^2)*2-1, atan(x[2],x[1])/pi)
 
@@ -28,7 +30,8 @@ function jacobian(m::CartToPolarMap{T}, x) where {T}
     SMatrix{2,2,T}(2*x[1]/d, 1/pi*r*(-x[2]/x[1]^2), 2*x[2]/d, 1/pi*r*1/x[1])
 end
 
-inv(map::CartToPolarMap{T}) where {T} = PolarToCartMap{T}()
+inverse(m::CartToPolarMap{T}) where {T} = PolarToCartMap{T}()
+inverse(m::CartToPolarMap, x) = inverse(m)(x)
 
 isreal(m::CartToPolarMap) = true
 
@@ -47,12 +50,15 @@ end
 
 PolarToCartMap() = PolarToCartMap{Float64}()
 
+size(m::PolarToCartMap) = (2,2)
+
 applymap(map::PolarToCartMap{T}, x) where {T} = SVector{2,T}((x[1]+1)/2*cos(pi*x[2]), (x[1]+1)/2*sin(pi*x[2]))
 
 jacobian(m::PolarToCartMap{T}, x) where {T} =
     SMatrix{2,2,T}(cos(pi*x[2])/2, sin(pi*x[2])/2, -pi*(x[1]+1)/2*sin(pi*x[2]), pi*(x[1]+1)/2*cos(pi*x[2]))
 
-inv(map::PolarToCartMap{T}) where {T} = CartToPolarMap{T}()
+inverse(m::PolarToCartMap{T}) where {T} = CartToPolarMap{T}()
+inverse(m::PolarToCartMap, x) = inverse(m)(x)
 
 isreal(m::PolarToCartMap) = true
 

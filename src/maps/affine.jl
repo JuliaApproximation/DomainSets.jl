@@ -1,39 +1,6 @@
 
 import Base: convert
 
-const NumberLike = Union{Number,UniformScaling}
-
-"""
-    to_matrix(::Type{T}, A[, b])
-
-Convert the `A` in the affine map `A*x` or `A*x+b` with domaintype `T` to a matrix.
-"""
-to_matrix(::Type{T}, A) where {T} = A
-to_matrix(::Type{T}, A::AbstractMatrix) where {T} = A
-to_matrix(::Type{T}, A::NumberLike) where {T<:Number} = A
-to_matrix(::Type{SVector{N,T}}, A::Number) where {N,T} = A * one(SMatrix{N,N,T})
-to_matrix(::Type{SVector{N,T}}, A::UniformScaling) where {N,T} = A.λ * one(SMatrix{N,N,T})
-to_matrix(::Type{T}, A::Number) where {T<:AbstractVector} = A * I
-to_matrix(::Type{T}, A::UniformScaling) where {T<:AbstractVector} = A
-
-to_matrix(::Type{T}, A, b) where {T} = A
-to_matrix(::Type{T}, A::AbstractMatrix, b) where {T} = A
-to_matrix(::Type{T}, A::Number, b::Number) where {T<:Number} = A
-to_matrix(::Type{T}, A::UniformScaling, b::Number) where {T<:Number} = A.λ
-to_matrix(::Type{SVector{N,T}}, A::NumberLike, b::SVector{N,T}) where {N,T} = A * one(SMatrix{N,N,T})
-to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVector{S}} =
-    A * Array{S,2}(I, length(b), length(b))
-
-"""
-    to_vector(::Type{T}, A[, b])
-
-Convert the `b` in the affine map `A*x` or `A*x+b` with domaintype `T` to a vector.
-"""
-to_vector(::Type{T}, A) where {T} = zero(T)
-to_vector(::Type{T}, A) where {T<:SVector} = zero(T)
-to_vector(::Type{T}, A) where {T<:AbstractVector} = zeros(eltype(T),size(A,1))
-to_vector(::Type{T}, A, b) where {T} = b
-
 
 """
 An affine map has the general form `y = A*x + b`.
@@ -89,11 +56,13 @@ isaffine(m::AbstractAffineMap) = true
     islinear(m1) && matrix(m1) == matrix(m2)
 ==(m1::IdentityMap, m2::AbstractAffineMap) = m2==m1
 
-size(m::AbstractAffineMap) = _size(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
-_size(m, T, A, b) = size(A)
-_size(m, T, A::Number, b::Number) = (1,1)
-_size(m, T, A::Number, b::AbstractVector) = (length(b),length(b))
-_size(m, T, A::UniformScaling, b) = (length(b),length(b))
+size(m::AbstractAffineMap) = affine_size(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
+affine_size(m::AbstractAffineMap, T, A::AbstractArray, b) = size(A)
+affine_size(m::AbstractAffineMap, T, A::AbstractVector, b) = (length(A),)
+affine_size(m::AbstractAffineMap, T, A::Number, b::Number) = ()
+affine_size(m::AbstractAffineMap, T, A::Number, b::AbstractVector) = (length(b),length(b))
+affine_size(m::AbstractAffineMap, T, A::UniformScaling, b::Number) = ()
+affine_size(m::AbstractAffineMap, T, A::UniformScaling, b) = (length(b),length(b))
 
 
 Display.displaystencil(m::AbstractAffineMap) = ["x -> ", unsafe_matrix(m), " * x + ", unsafe_vector(m)]
@@ -118,10 +87,11 @@ Concrete subtypes may differ in how `A` is represented.
 """
 abstract type LinearMap{T} <: AbstractAffineMap{T} end
 
-size(m::LinearMap) = _size(m, domaintype(m), unsafe_matrix(m))
-_size(m, T, A) = size(A)
-_size(m, ::Type{T}, A::Number) where {T<:Number} = (1,1)
-_size(m, ::Type{T}, A::Number) where {N,T<:SVector{N}} = (N,N)
+size(m::LinearMap) = linearmap_size(m, domaintype(m), unsafe_matrix(m))
+linearmap_size(m::LinearMap, T, A) = size(A)
+linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {T<:Number} = ()
+linearmap_size(m::LinearMap, ::Type{T}, A::AbstractVector) where {T<:Number} = (length(A),)
+linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {N,T<:StaticVector{N}} = (N,N)
 
 matrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
 vector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
@@ -153,27 +123,23 @@ _isreal(m::LinearMap, A) = isreal(A)
 
 ==(m1::LinearMap, m2::LinearMap) = matrix(m1) == matrix(m2)
 
-inv(m::LinearMap) = LinearMap(inv(m.A))
+inverse(m::LinearMap) = LinearMap(inv(m.A))
 inverse(m::LinearMap, x) = m.A \ x
 
 function leftinverse(m::LinearMap)
-    M, N = size(m)
-    M < N && error("No left inverse exists for $(m)")
+    @assert isoverdetermined(m)
     LinearMap(pinv(m.A))
 end
 function rightinverse(m::LinearMap)
-    M, N = size(m)
-    M > N && error("No right inverse exists for $(m)")
+    @assert isunderdetermined(m)
     LinearMap(pinv(m.A))
 end
 function leftinverse(m::LinearMap, x)
-    M, N = size(m)
-    @assert M >= N
+    @assert isoverdetermined(m)
     m.A \ x
 end
 function rightinverse(m::LinearMap, x)
-    M, N = size(m)
-    @assert M <= N
+    @assert isunderdetermined(m)
     m.A \ x
 end
 
@@ -217,7 +183,12 @@ GenericLinearMap{T}(A::AbstractMatrix{U}) where {S,T <: AbstractVector{S},U} =
     GenericLinearMap{T}(convert(AbstractMatrix{S}, A))
 
 # Preserve the action on vectors with a number type
-inv(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} = LinearMap{T}(inv(m.A))
+inverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
+    LinearMap{T}(inv(m.A))
+leftinverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
+    LinearMap{T}(inv(m.A))
+rightinverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
+    LinearMap{T}(inv(m.A))
 
 
 "A `ScalarLinearMap` is a linear map `y = A*x` for scalars."
@@ -268,8 +239,9 @@ abstract type Translation{T} <: AbstractAffineMap{T} end
 matrix(m::Translation) = to_matrix(domaintype(m), LinearAlgebra.I, unsafe_vector(m))
 vector(m::Translation) = unsafe_vector(m)
 
-size(m::Translation) = _size(m, domaintype(m), unsafe_vector(m))
-_size(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
+size(m::Translation) = translation_size(m, domaintype(m), unsafe_vector(m))
+translation_size(m::Translation, ::Type{T}, b::Number) where {T} = ()
+translation_size(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
 
 Display.displaystencil(m::Translation) = ["x -> x + ", unsafe_vector(m)]
 
@@ -283,7 +255,9 @@ struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
 end
 
-show(io::IO, m::ScalarTranslation) = print(io, "x -> x + $(m.b)")
+show_scalar_translation(io, b) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
+show(io::IO, m::ScalarTranslation) = show_scalar_translation(io, m.b)
+show(io::IO, ::MIME"text/plain", m::ScalarTranslation) = show_scalar_translation(io, m.b)
 
 "Translation by a static vector."
 struct StaticTranslation{T,N} <: Translation{SVector{N,T}}
@@ -310,6 +284,7 @@ Translation{T}(b::AbstractVector) where {N,S,T<:SVector{N,S}} = StaticTranslatio
 Translation{T}(b::Vector) where {S,T<:Vector{S}} = VectorTranslation{S}(b)
 Translation{T}(b) where {T} = GenericTranslation{T}(b)
 
+jacdet(m::Translation{T}) where {T} = UnityMap{T,Int}()
 jacdet(m::Translation, x) = 1
 
 isreal(m::Translation) = isreal(unsafe_vector(m))
@@ -324,10 +299,8 @@ _applymap(m::Translation, x, b) = x + b
 applymap!(y, m::Translation, x) = _applymap!(y, m, x, unsafe_vector(m))
 _applymap!(y, m::Translation, x, b) = y .= x .+ m.b
 
-inv(m::Translation{T}) where {T} = Translation{T}(-m.b)
-
+inverse(m::Translation{T}) where {T} = Translation{T}(-m.b)
 inverse(m::Translation, x) = x - m.b
-
 
 ScalarTranslation(b::Number) = ScalarTranslation{typeof(b)}(b)
 
@@ -370,8 +343,8 @@ AffineMap{T}(A, b) where {T} = GenericAffineMap{T}(A, b)
 
 similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
-# If y = a*x+b, then x = inv(a)*(y-b) = inv(a)*y - inv(A)*b
-inv(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
+# If y = A*x+b, then x = inv(A)*(y-b) = inv(A)*y - inv(A)*b
+inverse(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
 inverse(m::AffineMap, x) = m.A \ (x-m.b)
 
 # we use matrix_pinv rather than pinv to preserve static matrices
@@ -379,25 +352,21 @@ matrix_pinv(A) = pinv(A)
 matrix_pinv(A::SMatrix{M,N}) where {M,N} = SMatrix{N,M}(pinv(A))
 
 function leftinverse(m::AffineMap)
-    M, N = size(m)
-    M < N && error("No left inverse exists for $(m)")
+    @assert isoverdetermined(m)
     pA = matrix_pinv(m.A)
     AffineMap(pA, -pA*m.b)
 end
 function rightinverse(m::AffineMap)
-    M, N = size(m)
-    M > N && error("No right inverse exists for $(m)")
+    @assert isunderdetermined(m)
     pA = matrix_pinv(m.A)
     AffineMap(pA, -pA*m.b)
 end
 function leftinverse(m::AffineMap, x)
-    M, N = size(m)
-    @assert M >= N
+    @assert isoverdetermined(m)
     m.A \ (x-m.b)
 end
 function rightinverse(m::AffineMap, x)
-    M, N = size(m)
-    @assert M <= N
+    @assert isunderdetermined(m)
     m.A \ (x-m.b)
 end
 
@@ -445,7 +414,10 @@ end
 
 ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
-show(io::IO, m::ScalarAffineMap) = print(io, "x -> $(m.A) * x + $(m.b)")
+show_scalar_affine_map(io, a, b) = print(io, "x -> $(a) * x", b < 0 ? " - " : " + ", abs(b))
+show(io::IO, m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
+show(io::IO, mime::MIME"text/plain", m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
+
 
 convert(::Type{ScalarAffineMap{T}}, m::ScalarAffineMap) where {T} =
     ScalarAffineMap{T}(m.A, m.b)

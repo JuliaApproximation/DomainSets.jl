@@ -4,7 +4,7 @@ A `MappedDomain` represents the mapping of a domain.
 
 The map of a domain `d` under the mapping `y=f(x)` consists of all points `f(x)`
 with `x ∈ d`. The characteristic function of a mapped domain is defined in
-terms of the inverse map `g = inv(f)`:
+terms of the inverse map `g = inverse(f)`:
 ```
 x ∈ m ⟺ g(x) ∈ d
 ```
@@ -18,9 +18,16 @@ const MappedVectorDomain{T} = AbstractMappedDomain{Vector{T}}
 tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
 toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
 
-canonicaldomain(d::AbstractMappedDomain) = superdomain(d)
-fromcanonical(d::AbstractMappedDomain) = forward_map(d)
-tocanonical(d::AbstractMappedDomain) = inverse_map(d)
+canonicaldomain(d::AbstractMappedDomain) = canonicaldomain(superdomain(d))
+fromcanonical(d::AbstractMappedDomain) = forward_map(d) ∘ fromcanonical(superdomain(d))
+tocanonical(d::AbstractMappedDomain) = tocanonical(superdomain(d)) ∘ inverse_map(d)
+
+canonicaldomain(d::AbstractMappedDomain, ::Parameterization) =
+    canonicaldomain(superdomain(d), Parameterization())
+fromcanonical(d::AbstractMappedDomain, ::Parameterization) =
+    forward_map(d) ∘ fromcanonical(superdomain(d), Parameterization())
+tocanonical(d::AbstractMappedDomain, ::Parameterization) =
+    tocanonical(superdomain(d), Parameterization()) ∘ inverse_map(d)
 
 
 # TODO: check whether the map alters the dimension
@@ -45,30 +52,30 @@ Display.stencil_parentheses(d::AbstractMappedDomain) =
 
 
 "A `MappedDomain` stores the inverse map of a mapped domain."
-struct MappedDomain{T,D,F} <: AbstractMappedDomain{T}
-    domain  ::  D
+struct MappedDomain{T,F,D} <: AbstractMappedDomain{T}
     invmap  ::  F
+    domain  ::  D
 end
 
 # In the constructor, we have to decide which T to use for the MappedDomain.
 # - we don't know anything about invmap: deduce T from the given domain
-MappedDomain(domain::Domain{T}, invmap) where {T} = MappedDomain{T}(domain, invmap)
+MappedDomain(invmap, domain::Domain{T}) where {T} = MappedDomain{T}(invmap, domain)
 # - if the map is a Map{T}, use that T for the MappedDomain
-MappedDomain(domain::Domain{S}, invmap::Map{T}) where {S,T} = MappedDomain{T}(domain, invmap)
+MappedDomain(invmap::Map{T}, domain::Domain{S}) where {S,T} = MappedDomain{T}(invmap, domain)
 # - if T is given in the constructor, by all means we use that
-MappedDomain{T}(domain::Domain, invmap) where {T} =
-    MappedDomain{T,typeof(domain),typeof(invmap)}(domain, invmap)
+MappedDomain{T}(invmap, domain::Domain) where {T} =
+    MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
 # - in that case, if the map is a Map{S}, make sure that S matches T
-MappedDomain{T}(domain::Domain, invmap::Map{T}) where {T} =
-    MappedDomain{T,typeof(domain),typeof(invmap)}(domain, invmap)
-MappedDomain{T}(domain::Domain, invmap::Map{S}) where {S,T} =
-    MappedDomain{T}(domain, convert(Map{T}, invmap))
+MappedDomain{T}(invmap::Map{T}, domain::Domain) where {T} =
+    MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
+MappedDomain{T}(invmap::Map{S}, domain::Domain) where {S,T} =
+    MappedDomain{T}(convert(Map{T}, invmap), domain)
 
 similardomain(d::MappedDomain, ::Type{T}) where {T} =
-    MappedDomain{T}(d.domain, d.invmap)
+    MappedDomain{T}(d.invmap, d.domain)
 
-forward_map(d::MappedDomain) = inv(d.invmap)
-forward_map(d::MappedDomain, x) = inverse(d.invmap, x)
+forward_map(d::MappedDomain) = rightinverse(d.invmap)
+forward_map(d::MappedDomain, x) = rightinverse(d.invmap, x)
 
 inverse_map(d::MappedDomain) = d.invmap
 inverse_map(d::MappedDomain, y) = d.invmap(y)
@@ -77,7 +84,7 @@ inverse_map(d::MappedDomain, y) = d.invmap(y)
 map_domain(map, domain::Domain) = _map_domain(map, domain)
 
 # Fallback: we don't know anything about map, just try to invert
-_map_domain(map, domain) = mapped_domain(inv(map), domain)
+_map_domain(map, domain) = mapped_domain(inverse(map), domain)
 _map_domain(map::Map{T}, domain::Domain{T}) where {T} =
     mapped_domain(inverse(map), domain)
 # If map is a Map{T}, then verify and if necessary update T
@@ -86,7 +93,7 @@ function _map_domain(map::Map, domain)
     if U == Union{}
         error("incompatible types of $(map) and $(domain)")
     end
-    mapped_domain(inv(convert(Map{U}, map)), domain)
+    mapped_domain(inverse(convert(Map{U}, map)), domain)
 end
 
 ==(a::MappedDomain, b::MappedDomain) = (a.invmap == b.invmap) && (superdomain(a) == superdomain(b))
@@ -101,7 +108,7 @@ mapped_domain(invmap, domain::Domain) = _mapped_domain(invmap, domain)
 # but users invoking mapped_domain just expect it to work.
 
 # - we don't know anything about invmap, just pass it on
-_mapped_domain(invmap, domain) = MappedDomain(domain, invmap)
+_mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
 # - invmap is a Map{T}: its codomaintype should match the eltype of the domain
 # -- first, update the numtype
 _mapped_domain(invmap::Map, domain) =
@@ -112,11 +119,11 @@ _mapped_domain(invmap::Map{T}, domain::Domain{S}, ::Type{U}) where {S,T,U} =
 _mapped_domain2(invmap, domain) = _mapped_domain2(invmap, domain, codomaintype(invmap), eltype(domain))
 # --- it's okay
 _mapped_domain2(invmap, domain, ::Type{T}, ::Type{T}) where {T} =
-    MappedDomain(domain, invmap)
+    MappedDomain(invmap, domain)
 # --- it's not okay: attempt to convert the map (triggers e.g. when combining a scalar
 #        LinearMap with a vector domain)
 _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
-    MappedDomain(domain, convert(Map{T}, invmap))
+    MappedDomain(convert(Map{T}, invmap), domain)
 
 
 (∘)(domain::Domain, invmap::Union{Function,AbstractMap}) = mapped_domain(invmap, domain)
@@ -126,39 +133,39 @@ _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
 mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
 
 boundary(d::MappedDomain) = _boundary(d, superdomain(d), inverse_map(d))
-_boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(boundary(superdomain), invmap)
+_boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, boundary(superdomain))
 interior(d::MappedDomain) = _interior(d, superdomain(d), inverse_map(d))
-_interior(d::MappedDomain, superdomain, invmap) = MappedDomain(interior(superdomain), invmap)
+_interior(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, interior(superdomain))
 closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
-_closure(d::MappedDomain, superdomain, invmap) = MappedDomain(closure(superdomain), invmap)
+_closure(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, closure(superdomain))
 
 
 
 "A `ParametricDomain` stores the forward map of a mapped domain."
-struct ParametricDomain{T,D,F} <: AbstractMappedDomain{T}
-    domain  ::  D
+struct ParametricDomain{T,F,D} <: AbstractMappedDomain{T}
     fmap    ::  F
+    domain  ::  D
 end
 
-ParametricDomain(domain::Domain, fmap) = ParametricDomain{codomaintype(fmap)}(domain, fmap)
-ParametricDomain{T}(domain::Domain, fmap) where {T} =
-    ParametricDomain{T,typeof(domain),typeof(fmap)}(domain, fmap)
+ParametricDomain(fmap, domain::Domain) = ParametricDomain{codomaintype(fmap)}(fmap, domain)
+ParametricDomain{T}(fmap, domain::Domain) where {T} =
+    ParametricDomain{T,typeof(fmap),typeof(domain)}(fmap, domain)
 
 similardomain(d::ParametricDomain, ::Type{T}) where {T} =
-    ParametricDomain{T}(d.domain, d.fmap)
+    ParametricDomain{T}(d.fmap, d.domain)
 
 forward_map(d::ParametricDomain) = d.fmap
 forward_map(d::ParametricDomain, x) = d.fmap(x)
 
-inverse_map(d::ParametricDomain) = inverse(d.fmap)
-inverse_map(d::ParametricDomain, y) = inverse(d.fmap, y)
+inverse_map(d::ParametricDomain) = leftinverse(d.fmap)
+inverse_map(d::ParametricDomain, y) = leftinverse(d.fmap, y)
 
 "Return the domain that results from mapping the given domain."
-parametric_domain(domain::Domain, fmap) = ParametricDomain(domain, fmap)
+parametric_domain(fmap, domain::Domain) = ParametricDomain(fmap, domain)
 
 boundary(d::ParametricDomain) = _boundary(d, superdomain(d), forward_map(d))
-_boundary(d::ParametricDomain, superdomain, fmap) = ParametricDomain(boundary(superdomain), fmap)
+_boundary(d::ParametricDomain, superdomain, fmap) = ParametricDomain(fmap, boundary(superdomain))
 interior(d::ParametricDomain) = _interior(d, superdomain(d), forward_map(d))
-_interior(d::ParametricDomain, superdomain, fmap) = ParametricDomain(interior(superdomain), fmap)
+_interior(d::ParametricDomain, superdomain, fmap) = ParametricDomain(fmap, interior(superdomain))
 closure(d::ParametricDomain) = _closure(d, superdomain(d), forward_map(d))
-_closure(d::ParametricDomain, superdomain, fmap) = ParametricDomain(closure(superdomain), fmap)
+_closure(d::ParametricDomain, superdomain, fmap) = ParametricDomain(fmap, closure(superdomain))
