@@ -13,6 +13,31 @@ using DomainSets: ScalarAffineMap,
     GenericTranslation
 
 
+maps_to_test(T) = [
+    StaticIdentityMap{T}(),
+    VectorIdentityMap{T}(10),
+    ConstantMap{T}(one(T)),
+    ConstantMap{T}(SVector{2,T}(1,2)),
+    ZeroMap{T}(),
+    UnityMap{T}(),
+    AffineMap(T(1.2), T(2.4)), # scalar map
+    AffineMap(-T(1.2), T(2.4)), # scalar map with negative A
+    AffineMap(randvec(T, 2, 2), randvec(T, 2)), # static map
+    AffineMap(randvec(T, 3, 2), randvec(T, 3)), # static map, rectangular
+    AffineMap(rand(T, 2, 2), rand(T, 2)), # vector map
+    AffineMap(rand(T, 3, 2), rand(T, 3)), # vector map, rectangular
+    AffineMap(LinearAlgebra.I, one(T)/2),  # use UniformScaling object as A
+    AffineMap(LinearAlgebra.I, randvec(T,2)),  # use UniformScaling object as A
+    DomainSets.GenericAffineMap(randvec(T, 2, 2), randvec(T, 2)),
+    DomainSets.GenericAffineMap(T(1.2), randvec(T, 2)),
+    DomainSets.GenericAffineMap(randvec(T, 3, 2), randvec(T, 3)),
+    Translation(randvec(T, 3)),
+    LinearMap(randvec(T, 2, 2)),
+    LinearMap(randvec(T, 2)),
+    LinearMap(randvec(T, 2, 2)) ∘ AffineMap(T(1.2), randvec(T, 2)),
+    from_parameterdomain(T(5) * ComplexUnitCircle{T}() .+ T(2))
+]
+
 randvec(T,n) = SVector{n,T}(rand(n))
 randvec(T,m,n) = SMatrix{m,n,T}(rand(m,n))
 
@@ -47,6 +72,7 @@ function test_generic_inverse(m)
     N = size(m,2)
     x = suitable_point_to_map(m)
     y = m(x)
+
     # trigger exception outside of test if inverse is not implemented for the map
     inverse(m, y)
 
@@ -93,27 +119,30 @@ function test_generic_jacobian(m)
     if issquarematrix(jac(x))
         @test jacdet(m, x) ≈ det(jacobian(m, x))
     end
-    @test diffvolume(m, x) ≈ sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
+    if size(m) == ()
+        d = diffvolume(m, x)
+        s = sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
+        @test d ≈ s || d ≈ -s
+    else
+        @test diffvolume(m, x) ≈ sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
+    end
 end
 
 # Test a map m with dimensions n
 function test_generic_map(m)
-    T = prectype(m)
-
-    isreal(zero(T)) && (@test isreal(m))
-
     @test convert(Map{domaintype(m)}, m) == m
 
     x = suitable_point_to_map(m)
     @test applymap(m, x) == m(x)
+    y = m(x)
+    @test isreal(m) == (isreal(x) && isreal(y))
 
-    x = suitable_point_to_map(m)
     S = domaintype(m)
     U = codomaintype(m)
     @test x isa S
-    @test m(x) isa U
+    @test y isa U
 
-    if isaffine(m) && !isconstant(m)
+    if isaffine(m) && !isconstant(m) && !(prectype(m) == BigFloat)
         test_generic_inverse(m)
     else
         try
@@ -138,7 +167,7 @@ function test_generic_map(m)
         @test convert(Map{BigFloat}, m) isa Map{BigFloat}
         @test convert(Map{BigFloat}, m) == m
     end
-    if eltype(T) == Float64
+    if prectype(m) == Float64
         U = widertype(domaintype(m))
         @test convert(Map{U}, m) isa Map{U}
         @test convert(Map{U}, m) == m
@@ -158,6 +187,12 @@ function test_isomorphisms(T)
     @test inverse(m1) == m1b
     @test inverse(m1b) == m1
     @test m1b(1.0) == SA[1.0]
+    @test size(m1) == (1,1)
+    @test size(m1b) == (1,)
+    @test size(m1 ∘ inverse(m1)) == ()
+    @test size(inverse(m1) ∘ m1) == (1,1)
+    @test jacobian(m1 ∘ inverse(m1), 1) == one(T)
+    @test jacobian(inverse(m1) ∘ m1, [1]) == ones(T,1,1)
 
     m2 = DomainSets.VectorToComplex{T}()
     @test m2(SA[one(T), one(T)]) == 1 + im
@@ -165,6 +200,10 @@ function test_isomorphisms(T)
     @test inverse(m2) == m2b
     @test inverse(m2b) == m2
     @test m2b(one(T)+one(T)*im) == SA[one(T),one(T)]
+    @test size(m2) == (1,2)
+    @test size(m2b) == (2,)
+    @test size(m2 ∘ m2b) == ()
+    @test size(m2b ∘ m2) == (2,2)
 
     m3 = DomainSets.VectorToTuple{2,T}()
     @test m3(SA[one(T), one(T)]) == (one(T),one(T))
@@ -189,26 +228,7 @@ function test_maps(T)
 end
 
 function generic_tests(T)
-    maps = [
-        StaticIdentityMap{T}(),
-        VectorIdentityMap{T}(10),
-        ConstantMap{T}(one(T)),
-        ConstantMap{T}(SVector{2,T}(1,2)),
-        ZeroMap{T}(),
-        UnityMap{T}(),
-        AffineMap(T(1.2), T(2.4)), # scalar map
-        AffineMap(randvec(T, 2, 2), randvec(T, 2)), # static map
-        AffineMap(randvec(T, 3, 2), randvec(T, 3)), # static map, rectangular
-        AffineMap(rand(T, 2, 2), rand(T, 2)), # vector map
-        AffineMap(rand(T, 3, 2), rand(T, 3)), # vector map, rectangular
-        DomainSets.GenericAffineMap(randvec(T, 2, 2), randvec(T, 2)),
-        DomainSets.GenericAffineMap(T(1.2), randvec(T, 2)),
-        DomainSets.GenericAffineMap(randvec(T, 3, 2), randvec(T, 3)),
-        Translation(randvec(T, 3)),
-        LinearMap(randvec(T, 2, 2)),
-        LinearMap(randvec(T, 2, 2)) ∘ AffineMap(T(1.2), randvec(T, 2))
-    ]
-    for map in maps
+    for map in maps_to_test(T)
         @test prectype(map) == T
         test_generic_map(map)
     end
@@ -304,6 +324,7 @@ function test_linearmap(T)
     @test LinearMap{SVector{2,T}}(2) isa GenericLinearMap{SVector{2,T},T}
 
     @test convert(Map{SVector{2,T}}, LinearMap(rand(T,2,2))) isa StaticLinearMap{T,2,2,4}
+    @test convert(Map{T}, 1) isa LinearMap{T}
 end
 
 
@@ -491,7 +512,6 @@ function test_wrapped_maps(T)
 
     @test convert(Map{T}, cos) isa DomainSets.WrappedMap{T,typeof(cos)}
 end
-
 
 
 @testset "maps" begin

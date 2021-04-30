@@ -7,6 +7,8 @@ end
 LazyJacobian(m::Map{T}) where {T} = LazyJacobian{T,typeof(m)}(m)
 applymap(m::LazyJacobian, x) = jacobian(supermap(m), x)
 
+size(m::LazyJacobian) = size(supermap(m))
+
 Display.displaystencil(m::LazyJacobian) = ["LazyJacobian(", supermap(m), ")"]
 show(io::IO, mime::MIME"text/plain", m::LazyJacobian) = composite_show(io, mime, m)
 
@@ -138,8 +140,9 @@ to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVecto
 Convert the `b` in the affine map `A*x` or `A*x+b` with domaintype `T` to a vector.
 """
 to_vector(::Type{T}, A) where {T} = zero(T)
-to_vector(::Type{T}, A) where {T<:SVector} = zero(T)
-to_vector(::Type{T}, A) where {T<:AbstractVector} = zeros(eltype(T),size(A,1))
+to_vector(::Type{T}, A::SVector{M,S}) where {T,M,S} = zero(SVector{M,S})
+to_vector(::Type{T}, A::SMatrix{M,N,S}) where {T<:AbstractVector,M,N,S} = zero(SVector{M,S})
+to_vector(::Type{T}, A::AbstractArray) where {T<:AbstractVector} = zeros(eltype(T),size(A,1))
 to_vector(::Type{T}, A, b) where {T} = b
 
 

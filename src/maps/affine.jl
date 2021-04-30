@@ -58,7 +58,7 @@ isaffine(m::AbstractAffineMap) = true
 
 size(m::AbstractAffineMap) = affine_size(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 affine_size(m::AbstractAffineMap, T, A::AbstractArray, b) = size(A)
-affine_size(m::AbstractAffineMap, T, A::AbstractVector, b) = (length(A),)
+affine_size(m::AbstractAffineMap, T, A::AbstractVector, b::AbstractVector) = (length(A),)
 affine_size(m::AbstractAffineMap, T, A::Number, b::Number) = ()
 affine_size(m::AbstractAffineMap, T, A::Number, b::AbstractVector) = (length(b),length(b))
 affine_size(m::AbstractAffineMap, T, A::UniformScaling, b::Number) = ()
@@ -171,6 +171,8 @@ GenericLinearMap(A::AbstractMatrix{T}) where {T} =
     GenericLinearMap{Vector{T}}(A)
 GenericLinearMap(A::SMatrix{M,N,T}) where {M,N,T} =
     GenericLinearMap{SVector{N,T}}(A)
+GenericLinearMap(A::AbstractVector{T}) where {T} =
+    GenericLinearMap{T}(A)
 
 # Allow any A
 GenericLinearMap{T}(A) where {T} = GenericLinearMap{T,typeof(A)}(A)
@@ -181,6 +183,10 @@ GenericLinearMap{T}(A::AbstractMatrix{S}) where {S,T <: AbstractVector{S}} =
     GenericLinearMap{T,typeof(A)}(A)
 GenericLinearMap{T}(A::AbstractMatrix{U}) where {S,T <: AbstractVector{S},U} =
     GenericLinearMap{T}(convert(AbstractMatrix{S}, A))
+GenericLinearMap{T}(A::AbstractVector{T}) where {T} =
+    GenericLinearMap{T,typeof(A)}(A)
+GenericLinearMap{T}(A::AbstractVector{S}) where {S,T} =
+    GenericLinearMap{T}(convert(AbstractVector{T}, A))
 
 # Preserve the action on vectors with a number type
 inverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
@@ -255,7 +261,8 @@ struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
 end
 
-show_scalar_translation(io, b) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
+show_scalar_translation(io, b::Real) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
+show_scalar_translation(io, b) = print(io, "x -> x + ", b)
 show(io::IO, m::ScalarTranslation) = show_scalar_translation(io, m.b)
 show(io::IO, ::MIME"text/plain", m::ScalarTranslation) = show_scalar_translation(io, m.b)
 
@@ -334,11 +341,13 @@ abstract type AffineMap{T} <: AbstractAffineMap{T} end
 AffineMap(A::Number, b::Number) = ScalarAffineMap(A, b)
 AffineMap(A::SMatrix, b::SVector) = StaticAffineMap(A, b)
 AffineMap(A::Matrix, b::Vector) = VectorAffineMap(A, b)
+AffineMap(A::UniformScaling{Bool}, b::Number) = ScalarAffineMap(one(b), b)
 AffineMap(A, b) = GenericAffineMap(A, b)
 
 AffineMap{T}(A::Number, b::Number) where {T<:Number} = ScalarAffineMap{T}(A, b)
 AffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {N,S,T<:SVector{N,S}} = StaticAffineMap{S,N}(A, b)
 AffineMap{T}(A::Matrix, b::Vector) where {S,T<:Vector{S}} = VectorAffineMap{S}(A, b)
+AffineMap{T}(A::UniformScaling{Bool}, b::Number) where {T} = ScalarAffineMap{T}(one(T), b)
 AffineMap{T}(A, b) where {T} = GenericAffineMap{T}(A, b)
 
 similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
@@ -377,12 +386,16 @@ struct GenericAffineMap{T,AA,B} <: AffineMap{T}
     b   ::  B
 end
 
-GenericAffineMap(A, b) = GenericAffineMap{promote_type(eltype(A),eltype(b))}(A, b)
+GenericAffineMap(A, b) = GenericAffineMap{typeof(b)}(A, b)
 GenericAffineMap(A::AbstractArray{S}, b::AbstractVector{T}) where {S,T} =
     GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
+GenericAffineMap(A::SMatrix{M,N,S}, b::StaticVector{M,T}) where {M,N,S,T} =
+    GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
+GenericAffineMap(A::SMatrix{M,N,S}, b::AbstractVector{T}) where {M,N,S,T} =
+    GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
 GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:NumberLike,T} =
     GenericAffineMap{Vector{promote_type(eltype(S),T)}}(A, b)
-GenericAffineMap(A::S, b::SVector{N,T}) where {S<:Number,N,T} =
+GenericAffineMap(A::S, b::StaticVector{N,T}) where {S<:Number,N,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
 
 
@@ -393,9 +406,13 @@ GenericAffineMap{T}(A::Number, b) where {T} = GenericAffineMap{T,eltype(T),typeo
 GenericAffineMap{T}(A::Number, b::AbstractVector) where {N,S,T <: SVector{N,S}} =
     GenericAffineMap{T,S,SVector{N,S}}(convert(S,A), SVector{N,S}(b))
 # Promote element types of abstract arrays
-GenericAffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {S,T<:AbstractVector{S}} =
-    GenericAffineMap{T}(convert(AbstractMatrix{eltype(T)},A), convert(AbstractVector{eltype(T)}, b))
-GenericAffineMap{T}(A::AbstractMatrix{S}, b::AbstractVector{S}) where {S,T<:AbstractVector{S}} =
+GenericAffineMap{T}(A::AbstractArray, b::AbstractVector) where {S,T<:AbstractVector{S}} =
+    GenericAffineMap{T}(convert(AbstractArray{eltype(T)},A), convert(AbstractVector{eltype(T)}, b))
+GenericAffineMap{T}(A::AbstractArray{S}, b::AbstractVector{S}) where {S,T<:AbstractVector{S}} =
+    GenericAffineMap{T,typeof(A),typeof(b)}(A, b)
+GenericAffineMap{T}(A::UniformScaling{Bool}, b::AbstractVector) where {S,T<:AbstractVector{S}} =
+    GenericAffineMap{T}(A*one(S), convert(AbstractVector{S}, b))
+GenericAffineMap{T}(A::UniformScaling{S}, b::AbstractVector{S}) where {S,T<:AbstractVector{S}} =
     GenericAffineMap{T,typeof(A),typeof(b)}(A, b)
 
 
@@ -414,7 +431,8 @@ end
 
 ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
-show_scalar_affine_map(io, a, b) = print(io, "x -> $(a) * x", b < 0 ? " - " : " + ", abs(b))
+show_scalar_affine_map(io, a::Real, b::Real) = print(io, "x -> $(a) * x", b < 0 ? " - " : " + ", abs(b))
+show_scalar_affine_map(io, a::Complex, b::Complex) = print(io, "x -> ($(a)) * x + ", b)
 show(io::IO, m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
 show(io::IO, mime::MIME"text/plain", m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
 

@@ -373,19 +373,7 @@ show(io::IO, d::ComplexUnitDisk{Float64,:open}) = print(io, "ComplexUnitDisk()  
 show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} = print(io, "ComplexUnitDisk{$(T)}()")
 show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} = print(io, "ComplexUnitDisk{$(T)}()  (open)")
 
-
-struct ComplexUnitCircleMap{T} <: Map{T} end
-
-size(m::ComplexUnitCircleMap) = ()
-
-function applymap(m::ComplexUnitCircleMap{T}, t) where {T}
-    v = applymap(UnitCircleMap{T}(), t)
-    v[1] + im*v[2]
-end
-function jacobian(m::ComplexUnitCircleMap{T}, t) where {T}
-    v = jacobian(UnitCircleMap{T}(), t)
-    v[1] + im*v[2]
-end
-
-canonicaldomain(d::ComplexUnitCircle{T}, ::Parameterization) where {T} = UnitInterval{T}()
-fromcanonical(d::ComplexUnitCircle{T}, ::Parameterization) where {T} = ComplexUnitCircleMap{T}()
+canonicaldomain(d::ComplexUnitCircle{T}, ::Parameterization) where {T} =
+    UnitInterval{T}()
+fromcanonical(d::ComplexUnitCircle{T}, ::Parameterization) where {T} =
+    VectorToComplex{T}() ∘ UnitCircleMap{T}()

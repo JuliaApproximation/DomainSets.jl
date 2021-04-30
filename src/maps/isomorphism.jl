@@ -12,11 +12,22 @@ end
 struct NumberToVector{T} <: Isomorphism{T,SVector{1,T}}
 end
 
+size(::VectorToNumber) = (1,1)
+size(::NumberToVector) = (1,)
+
 inverse(::VectorToNumber{T}) where {T} = NumberToVector{T}()
 inverse(::NumberToVector{T}) where {T} = VectorToNumber{T}()
+inverse(m::VectorToNumber, x) = inverse(m)(x)
+inverse(m::NumberToVector, x) = inverse(m)(x)
 
 applymap(::VectorToNumber, x) = x[1]
 applymap(::NumberToVector, x) = SVector(x)
+
+jacobian(::VectorToNumber{T}, x) where {T} = transpose(SVector(one(T)))
+jacobian(::VectorToNumber{T}) where {T} = ConstantMap{SVector{1,T}}(transpose(SVector(one(T))))
+
+jacobian(::NumberToVector{T}, x) where {T} = SVector(one(T))
+jacobian(::NumberToVector{T}) where {T} = ConstantMap{T}(SVector(one(T)))
 
 
 "Map a length 2 vector `x` to `x[1] + im*x[2]`."
@@ -34,6 +45,11 @@ applymap(::ComplexToVector, x) = SVector(real(x), imag(x))
 
 inverse(::VectorToComplex{T}) where {T} = ComplexToVector{T}()
 inverse(::ComplexToVector{T}) where {T} = VectorToComplex{T}()
+inverse(m::VectorToComplex, x) = inverse(m)(x)
+inverse(m::ComplexToVector, x) = inverse(m)(x)
+
+jacobian(::VectorToComplex{T}, x) where {T} = transpose(SVector(one(T),one(T)*im))
+jacobian(::VectorToComplex{T}) where {T} = ConstantMap{SVector{2,T}}(transpose(SVector(one(T),one(T)*im)))
 
 
 "Map a static vector to a tuple."
@@ -45,6 +61,8 @@ end
 
 inverse(::VectorToTuple{N,T}) where {N,T} = TupleToVector{N,T}()
 inverse(::TupleToVector{N,T}) where {N,T} = VectorToTuple{N,T}()
+inverse(m::VectorToTuple, x) = inverse(m)(x)
+inverse(m::TupleToVector, x) = inverse(m)(x)
 
 applymap(::VectorToTuple, x) = tuple(x...)
 applymap(::TupleToVector, x) = SVector(x)

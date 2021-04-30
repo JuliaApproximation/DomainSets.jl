@@ -27,6 +27,10 @@ codomaintype(m::AbstractMap, ::Type{S}) where {S} = codomaintype(typeof(m), S)
 codomaintype(M::Type{<:AbstractMap}, ::Type{S}) where {S} = Base.promote_op(applymap, M, S)
 codomaintype(::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
 
+isreal(m::Map) = isreal(domaintype(m)) && isreal(codomaintype(m))
+isreal(::UniformScaling{T}) where {T} = isreal(T)
+isreal(::Type{UniformScaling{T}}) where {T} = isreal(T)
+
 numtype(::Type{<:Map{T}}) where {T} = numtype(T)
 prectype(::Type{<:Map{T}}) where {T} = prectype(T)
 
@@ -96,6 +100,12 @@ issquare(m::AbstractMap) = isvectorvalued(m) && (size(m,1) == size(m,2))
 
 isoverdetermined(m::AbstractMap) = size(m,1) >= size(m,2)
 isunderdetermined(m::AbstractMap) = size(m,1) <= size(m,2)
+
+is_scalar_to_vector(m::Map) = size(m) isa Tuple{Int}
+is_vector_to_scalar(m::Map) = size(m) isa Tuple{Int,Int} && codomaintype(m)<:Number
+is_scalar_to_scalar(m::Map) = size(m) == ()
+is_vector_to_vector(m::Map) = size(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m)
+
 
 # Display routines
 map_stencil(m::AbstractMap, x) = [SymbolObject(m), '(', x, ')']

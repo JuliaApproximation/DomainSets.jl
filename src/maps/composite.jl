@@ -17,7 +17,21 @@ applymap(m::Composition, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
 applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
 
-size(m::Composition) = (size(m.maps[end],1), size(m.maps[1],2))
+# The size of a composite map depends on the first and the last map to be applied
+# We check whether they are scalar_to_vector, vector_to_vector, etcetera
+size(m::Composition) = composition_size(m, m.maps[end], m.maps[1], size(m.maps[end]), size(m.maps[1]))
+composition_size(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{Int,Int}) = (S_end[1],S1[2])
+composition_size(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{Int}) =
+    is_vector_to_scalar(m_end) ? () : (S_end[1],)
+composition_size(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{}) =
+    is_vector_to_scalar(m_end) ? () : (S_end[1],)
+composition_size(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{Int,Int}) = (S_end[1],S1[2])
+composition_size(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{Int}) = (S_end[1],)
+composition_size(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{}) = (S_end[1],)
+composition_size(m, m_end, m1, S_end::Tuple{}, S1::Tuple{Int,Int}) = (1,S1[2])
+composition_size(m, m_end, m1, S_end::Tuple{}, S1::Tuple{Int}) = ()
+composition_size(m, m_end, m1, S_end::Tuple{}, S1::Tuple{}) = ()
+
 
 function jacobian(m::Composition, x)
     f, fd = backpropagate(x, reverse(components(m))...)
@@ -35,7 +49,7 @@ end
 
 inverse(m::Composition, x) = inverse_rec(x, reverse(components(m))...)
 inverse_rec(x) = x
-inverse_rec(x, map1, maps...) = inverse_rec(leftinverse(map1, x), maps...)
+inverse_rec(x, map1, maps...) = inverse_rec(inverse(map1, x), maps...)
 
 leftinverse(m::Composition, x) = leftinverse_rec(x, reverse(components(m))...)
 leftinverse_rec(x) = x
@@ -165,7 +179,7 @@ jacobian(m::Composition) = composite_jacobian(reverse(components(m))...)
 composite_jacobian(map1) = jacobian(map1)
 composite_jacobian(map1, map2) = multiply_map(jacobian(map1) ∘ map2, jacobian(map2))
 function composite_jacobian(map1, map2, maps...)
-    rest = Composition(map2, maps...)
+    rest = Composition(reverse(maps)..., map2)
     f1 = jacobian(map1) ∘ rest
     f2 = composite_jacobian(map2, maps...)
     multiply_map(f1, f2)
