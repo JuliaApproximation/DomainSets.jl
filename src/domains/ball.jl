@@ -222,6 +222,11 @@ dimension(d::GenericBall) = length(d.center)
 canonicaldomain(d::GenericBall{T,C}) where {T,C} = UnitBall{T,C}(dimension(d))
 fromcanonical(d::GenericBall) = AffineMap(radius(d), center(d))
 
+canonicaldomain(d::GenericBall, ::Parameterization) =
+    canonicaldomain(canonicaldomain(d), Parameterization())
+fromcanonical(d::GenericBall, ::Parameterization) =
+    fromcanonical(d) ∘ fromcanonical(canonicaldomain(d), Parameterization())
+
 boundingbox(d::GenericBall) =
     map_boundingbox(boundingbox(canonicaldomain(d)), fromcanonical(d))
 
@@ -409,6 +414,14 @@ dimension(d::GenericSphere) = length(d.center)
 
 canonicaldomain(d::GenericSphere{T}) where {T} = UnitSphere{T}(dimension(d))
 fromcanonical(d::GenericSphere) = AffineMap(radius(d), center(d))
+
+canonicaldomain(d::GenericSphere, ::Parameterization) =
+    canonicaldomain(canonicaldomain(d), Parameterization())
+fromcanonical(d::GenericSphere, ::Parameterization) =
+    fromcanonical(d) ∘ fromcanonical(canonicaldomain(d), Parameterization())
+
+boundingbox(d::GenericSphere) =
+    map_boundingbox(boundingbox(canonicaldomain(d)), fromcanonical(d))
 
 # Preserve the `Sphere` type under affine maps which preserve shape
 map_domain(m::GenericAffineMap{T,S}, d::Sphere{U}) where {T<:AbstractVector,S<:Number,U<:AbstractVector} =
