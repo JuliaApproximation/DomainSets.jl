@@ -91,7 +91,7 @@ struct MulMap{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-MulMap(maps::Map{T}...) where {T} = MulMap{T,typeof(maps)}(maps)
+MulMap(maps::Map{T}...) where {T} = MulMap{T}(maps...)
 MulMap{T}(maps::Map{T}...) where {T} = MulMap{T,typeof(maps)}(maps)
 MulMap{T}(maps...) where {T} = _mulmap(T, convert.(Map{T}, maps)...)
 _mulmap(::Type{T}, maps...) where {T} = MulMap{T,typeof(maps)}(maps)
@@ -193,8 +193,16 @@ function mul_jacobian(map1, map2, maps...)
     rest = multiply_map(map2, maps...)
     mul_jacobian(map1, rest)
 end
+function jacobian(m::MulMap, x)
+    z = map(t -> applymap(t,x), components(m))
+    zd = map(t -> jacobian(t, x), components(m))
+    sum(prod(z[1:i-1]) * zd[i] * prod(z[i+1:end]) for i in 1:ncomponents(m))
+end
+
 
 jacobian(m::SumMap) = sum_jacobian(components(m)...)
 sum_jacobian() = ()
 sum_jacobian(map1) = jacobian(map1)
 sum_jacobian(maps...) = sum_map(map(jacobian, maps)...)
+
+jacobian(m::SumMap, x) = sum(jacobian(mc, x) for mc in components(m))

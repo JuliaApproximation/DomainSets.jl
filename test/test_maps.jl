@@ -82,6 +82,7 @@ function test_generic_inverse(m)
         @test inverse(m)(y) ≈ x
         @test inverse(m, y) ≈ x
         @test m\y ≈ x
+        @test DomainSets.LazyInverse(m)(y) ≈ inverse(m, y)
     end
     if M >= N && numtype(m)!=BigFloat
         mli = leftinverse(m)
@@ -148,7 +149,9 @@ function test_generic_map(m)
         try
             # The map may not support an inverse, let's try
             test_generic_inverse(m)
-        catch
+        catch e
+            # make sure it failed because the inverse is not defined
+            @test e isa MethodError || prectype(m) == BigFloat
         end
     end
 
@@ -159,7 +162,7 @@ function test_generic_map(m)
     else
         try # jacobian may not be implemented
             test_generic_jacobian(m)
-        catch
+        catch e
         end
     end
 
@@ -317,11 +320,22 @@ function test_linearmap(T)
     @test m5([1,2]) ==  2 * [1,2]
     @test jacobian(m5, [1,2]) == UniformScaling(2)
 
+    m6 = LinearMap{SVector{2,T}}(2)
+    @test m6 isa GenericLinearMap{SVector{2,T},T}
+    @test m6(SA[one(T),one(T)]) == [2,2]
+    @test leftinverse(m6) isa LinearMap{SVector{2,T}}
+    @test leftinverse(m6)([2,2]) == [1,1]
+
     # Test construction and conversion
     @test LinearMap{T}(1) isa ScalarLinearMap{T}
     @test LinearMap{Vector{T}}(rand(Int,5,5)) isa VectorLinearMap{T}
     @test LinearMap{SVector{2,T}}(SMatrix{2,2}(1, 2, 3, 4)) isa StaticLinearMap{T,2,2,4}
-    @test LinearMap{SVector{2,T}}(2) isa GenericLinearMap{SVector{2,T},T}
+
+    @test GenericLinearMap(one(T)) isa GenericLinearMap{T,T}
+    @test GenericLinearMap(SMatrix{2,2,T}(1,1,1,1)) isa GenericLinearMap{SVector{2,T},SMatrix{2,2,T,4}}
+
+    @test VectorLinearMap(rand(T,3,3)) isa VectorLinearMap{T}
+    @test StaticLinearMap(SMatrix{2,2,T}(1,2,3,4)) isa StaticLinearMap{T,2,2,4}
 
     @test convert(Map{SVector{2,T}}, LinearMap(rand(T,2,2))) isa StaticLinearMap{T,2,2,4}
     @test convert(Map{T}, 1) isa LinearMap{T}
@@ -337,6 +351,9 @@ function test_translation(T)
     @test inverse(inverse(m)) == m
     @test jacobian(m) isa ConstantMap
     @test vector(jacobian(m)) == [1 0 0; 0 1 0; 0 0 1]
+    @test jacdet(m) isa UnityMap{SVector{3,T},T}
+
+    @test size(Translation(one(T))) == ()
 
     # Test construction and conversion
     @test Translation(one(T)) isa ScalarTranslation{T}
@@ -345,6 +362,21 @@ function test_translation(T)
     @test Translation{SVector{2,T}}(rand(T,2)) isa StaticTranslation{T,2}
     @test Translation(rand(Int,2)) isa VectorTranslation{Int}
     @test Translation{Vector{T}}(rand(Int,2)) isa VectorTranslation{T}
+    @test Translation(1:10) isa GenericTranslation{Vector{Int}}
+    @test Translation{Vector{T}}(1:10) isa GenericTranslation{Vector{T}}
+
+    @test StaticTranslation(MVector(one(T),2)) isa StaticTranslation{T,2}
+    @test StaticTranslation{T}(SVector(1,2)) isa StaticTranslation{T,2}
+
+    @test VectorTranslation(1:10) isa VectorTranslation{Int}
+    @test VectorTranslation{T}(1:10) isa VectorTranslation{T}
+
+    @test GenericTranslation(1:10) isa GenericTranslation{Vector{Int}}
+    @test GenericTranslation{Vector{T}}(1:10) isa GenericTranslation{Vector{T}}
+
+    @test GenericTranslation(one(T)) isa GenericTranslation{T,T}
+    @test GenericTranslation{T}(1) isa GenericTranslation{T,T}
+    @test_throws InexactError GenericTranslation{Int}(one(T)/2)
 
     @test convert(Map{SVector{2,T}}, Translation(rand(T,2))) isa StaticTranslation{T,2}
 end
@@ -376,6 +408,13 @@ function test_affinemap(T)
     @test jacobian(m3, [1,2]) == [2 0; 0 2]
     @test jacdet(m3, [1,2]) == 4
 
+    @test AffineMap(LinearAlgebra.I, 2.0) isa ScalarAffineMap
+    m4 = GenericAffineMap(LinearAlgebra.I, 2.0)
+    @test m4.A isa UniformScaling{Float64}
+    @test jacdet(m4, 3.0) == 1.0
+
+    @test size(AffineMap(rand(3),rand(3))) == (3,)
+    @test size(AffineMap(LinearAlgebra.I,2)) == ()
 
     # Test construction and conversion
     @test AffineMap(1, 2*one(T)) isa ScalarAffineMap{T}
@@ -387,6 +426,23 @@ function test_affinemap(T)
     @test AffineMap{SVector{2,T}}(rand(Int,2,2),rand(Int,2)) isa StaticAffineMap{T,2,2,4}
     @test AffineMap{SVector{2,T}}(1,rand(Int,2)) isa GenericAffineMap{SVector{2,T},T,SVector{2,T}}
     @test AffineMap{SVector{2,T}}(SMatrix{3,2}(3,2,1,4,5,6),SVector(1,2,3)) isa StaticAffineMap{T,2,3,6}
+
+    @test GenericAffineMap(SMatrix{2,2,T}(1,2,3,4), [1,2]) isa GenericAffineMap{SVector{2,T},SMatrix{2,2,T,4}}
+    @test GenericAffineMap(SMatrix{1,1,Int}(1),SVector{1,T}(1)) isa GenericAffineMap{SVector{1,T}}
+    @test GenericAffineMap(rand(T,2,2),rand(Int,2)) isa GenericAffineMap{Vector{T},Matrix{T},Vector{T}}
+    @test GenericAffineMap{Vector{T}}(1, [1,2]) isa GenericAffineMap{Vector{T},T,Vector{Int}}
+    @test GenericAffineMap{Vector{T}}(rand(Int,2,2), rand(Int,2)) isa GenericAffineMap{Vector{T},Matrix{T},Vector{T}}
+    @test convert(GenericAffineMap{Vector{T}}, GenericAffineMap(rand(Int,2,2), rand(Int,2))) isa GenericAffineMap{Vector{T}}
+
+    @test VectorAffineMap(rand(T,2,2),rand(T,2)) isa VectorAffineMap{T}
+
+    @test StaticAffineMap(SMatrix{1,1,T}(1),SVector{1,T}(1)) isa StaticAffineMap{T}
+    @test StaticAffineMap(SMatrix{1,1,T}(1),SVector{1,Int}(1)) isa StaticAffineMap{T}
+
+    @test StaticAffineMap(rand(T,2,2),SVector{2,T}(1,1)) isa StaticAffineMap{T}
+    @test_throws AssertionError StaticAffineMap(rand(T,3,2),SVector{2,T}(1,1))
+    @test StaticAffineMap(SMatrix{2,2,T}(1,2,3,4),[1,1]) isa StaticAffineMap{T,2}
+    @test StaticAffineMap(SMatrix{3,2,T}(1,2,3,4,5,6),SVector{3,T}(1,2,3)) isa StaticAffineMap{T,2,3,6}
 
     @test convert(Map{SVector{2,T}}, AffineMap(rand(2,2),rand(2))) isa StaticAffineMap{T,2,2,4}
 end
@@ -413,6 +469,7 @@ function test_identity_map(T)
     m1 = convert(DomainSets.AbstractAffineMap{T}, i1)
     @test m1 isa LinearMap{T}
     @test jacdet(m1, 1) == 1
+    @test convert(DomainSets.AbstractAffineMap, i1) isa LinearMap{T}
     m2 = convert(DomainSets.LinearMap{T}, i1)
     @test m2 isa LinearMap{T}
     @test jacdet(m2, 1) == 1
@@ -454,6 +511,37 @@ function test_composite_map(T)
     m5 = Composition(LinearMap(rand(T,2,2)), AffineMap(rand(T,2,2),rand(T,2)))
     test_generic_map(m5)
     @test jacobian(m5) isa ConstantMap
+
+    m6 = DomainSets.multiply_map(ma,ma)
+    @test m6(one(T)/2) == one(T)/4
+    @test jacobian(m6) isa DomainSets.SumMap
+    @test jacobian(m6)(one(T)) == 2
+    @test jacobian(m6, one(T)) == 2
+
+    m7 = DomainSets.sum_map(ma,ma)
+    @test m7(one(T)) == 2
+    @test jacobian(m7) isa ConstantMap
+    @test jacobian(m7, one(T)) == 2
+
+    @test size(Composition(LinearMap(2),LinearMap(rand(T,2)),LinearMap(rand(T,2,2)))) == (2,)
+    @test size(Composition(LinearMap(rand(T,2)),LinearMap(rand(T,2)'),LinearMap(rand(T,2)))) == (2,)
+    @test size(Composition(LinearMap(rand(T,2,2)),LinearMap(rand(T,2)'),LinearMap(2))) == (1,2)
+    @test size(Composition(LinearMap(one(T)),LinearMap(one(T)))) == ()
+
+    @test DomainSets.compose_map() == ()
+    @test DomainSets.compose_map(ma) == ma
+    @test DomainSets.compose_map(ma,ma) == ma
+    @test DomainSets.compose_map(ma,ma,ma) == ma
+
+    @test DomainSets.composite_jacobian(ma) == jacobian(ma)
+
+    @test DomainSets.multiply_map() == ()
+    @test DomainSets.multiply_map(ma) == ma
+    @test DomainSets.multiply_map(ma,ma)(2*one(T)) == 4
+    @test DomainSets.multiply_map(ma,ma,ma)(2*one(T)) == 8
+
+    @test DomainSets.sum_jacobian() == ()
+    @test DomainSets.sum_jacobian(ma) == jacobian(ma)
 end
 
 function test_product_map(T)

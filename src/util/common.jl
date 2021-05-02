@@ -12,6 +12,13 @@ euclideandimension(::Type{T}) where {N,T <: StaticVector{N}} = N
 euclideandimension(::Type{T}) where {N,T <: NTuple{N,Any}} = N
 # Does not apply to Vector{T}: we don't know its dimension
 
+unitvector(d::Domain{T}) where {N,S,T<:SVector{N,S}} = SVector{N,S}(ntuple(i -> i==1, N))
+function unitvector(d::Domain{T}) where {T<:AbstractVector}
+    p = zeros(eltype(T), dimension(d))
+    p[1] = 1
+    p
+end
+unitvector(d::Domain{T}) where {T<:Number} = one(T)
 
 #################
 # Precision type

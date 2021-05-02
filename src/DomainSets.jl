@@ -150,14 +150,15 @@ export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
 export UnitSimplex,
     StaticUnitSimplex, DynamicUnitSimplex,
     EuclideanUnitSimplex, VectorUnitSimplex,
-    center, corners
+    corners
 # from domains/point.jl
 export Point
 # from domains/ball.jl
-export UnitBall,
+export Ball, UnitBall,
+    center, radius,
     StaticUnitBall, DynamicUnitBall,
     EuclideanUnitBall, VectorUnitBall,
-    UnitSphere,
+    Sphere, UnitSphere,
     StaticUnitSphere, DynamicUnitSphere,
     VectorUnitSphere, EuclideanUnitSphere,
     UnitDisk, VectorUnitDisk,

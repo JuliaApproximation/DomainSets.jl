@@ -4,6 +4,8 @@
 # |-> abstract UnitBall: radius is 1
 #     |-> StaticUnitBall: dimension is part of type
 #     |-> DynamicUnitBall: dimension is specified by int field
+# |-> GenericBall: stores center and radius. Here, the dimension can be
+#     obtained from the center, so there is only one type.
 # There are aliases for SVector{N,T} and Vector{T}:
 #   EuclideanBall, VectorBall,
 #   EuclideanUnitBall (StaticUnitBall), VectorUnitBall (DynamicUnitBall).
@@ -27,29 +29,69 @@ const OpenBall{T} = Ball{T,:open}
 
 isclosedset(::ClosedBall) = true
 isclosedset(::OpenBall) = false
-isopenset(ball::Ball) = !isclosedset(ball)
+isopenset(d::Ball) = !isclosedset(d)
 
-indomain(x, ball::OpenBall) = norm(x) < radius(ball)
-indomain(x, ball::ClosedBall) = norm(x) <= radius(ball)
-approx_indomain(x, ball::OpenBall, tolerance) = norm(x) < radius(ball)+tolerance
-approx_indomain(x, ball::ClosedBall, tolerance) = norm(x) <= radius(ball)+tolerance
+# Convenience constructors for the abstract type
+Ball() = UnitBall()
+Ball{T}() where {T} = UnitBall{T}()
+Ball{T,C}() where {T,C} = UnitBall{T,C}()
+Ball(radius::Number) = GenericBall(radius)
+Ball{T}(radius::Number) where {T} = GenericBall{T}(radius)
+Ball{T,C}(radius::Number) where {T,C} = GenericBall{T,C}(radius)
+Ball(radius::Number, center) = GenericBall(radius, center)
+Ball{T}(radius::Number, center) where {T} = GenericBall{T}(radius, center)
+Ball{T,C}(radius::Number, center) where {T,C} = GenericBall{T,C}(radius, center)
 
-# A closed ball always contains at least the origin.
-isempty(ball::ClosedBall) = false
-isempty(ball::OpenBall) = radius(ball) == 0
+
+indomain(x, d::OpenBall) = norm(x-center(d)) < radius(d)
+indomain(x, d::ClosedBall) = norm(x-center(d)) <= radius(d)
+approx_indomain(x, d::OpenBall, tolerance) = norm(x-center(d)) < radius(d)+tolerance
+approx_indomain(x, d::ClosedBall, tolerance) = norm(x-center(d)) <= radius(d)+tolerance
+
+# A closed ball always contains at least its center point.
+isempty(d::ClosedBall) = false
+isempty(d::OpenBall) = radius(d) == 0
 
 ==(d1::Ball, d2::Ball) = isclosedset(d1)==isclosedset(d2) &&
-    radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
+    radius(d1)==radius(d2) && center(d1)==center(d2)
+
+function issubset(d1::Ball, d2::Ball)
+    if dimension(d1) == dimension(d2)
+        if center(d1) == center(d2)
+            if radius(d1) < radius(d2)
+                true
+            elseif radius(d1) == radius(d2)
+                isclosedset(d2) || isopenset(d1)
+            else
+                false
+            end
+        else
+            dist = norm(center(d1)-center(d2))
+            if dist + radius(d1) < radius(d2)
+                true
+            else
+                false
+            end
+        end
+    else
+        false
+    end
+end
+
+# We choose the center of the ball here. Concrete types should implement 'center'
+point_in_domain(d::Ball) = center(d)
 
 convert(::Type{SublevelSet}, d::Ball{T,C}) where {T,C} =
     SublevelSet{T,C}(norm, radius(d))
 convert(::Type{SublevelSet{T}}, d::Ball{S,C}) where {T,S,C} =
     SublevelSet{T,C}(norm, radius(d))
 
+
 "The unit ball."
 abstract type UnitBall{T,C} <: Ball{T,C} end
 
 radius(::UnitBall) = 1
+center(d::UnitBall{T}) where {T<:StaticTypes} = zero(T)
 
 UnitBall(n::Int) = DynamicUnitBall(n)
 UnitBall(::Val{N} = Val(3)) where {N} = EuclideanUnitBall{N}()
@@ -63,6 +105,21 @@ UnitBall{T,C}(n::Int) where {T <: StaticTypes,C} = StaticUnitBall{T,C}(n)
 UnitBall{T,C}(::Val{N}) where {N,T,C} = StaticUnitBall{T,C}(Val(N))
 UnitBall{T,C}() where {T <: StaticTypes,C} = StaticUnitBall{T,C}()
 UnitBall{T,C}(n::Int) where {T,C} = DynamicUnitBall{T,C}(n)
+
+const ClosedUnitBall{T} = UnitBall{T,:closed}
+const OpenUnitBall{T} = UnitBall{T,:open}
+
+indomain(x, d::OpenUnitBall) = norm(x) < 1
+indomain(x, d::ClosedUnitBall) = norm(x) <= 1
+approx_indomain(x, d::OpenUnitBall, tolerance) = norm(x) < 1+tolerance
+approx_indomain(x, d::ClosedUnitBall, tolerance) = norm(x) <= 1+tolerance
+
+
+==(d1::UnitBall, d2::UnitBall) = isclosedset(d1)==isclosedset(d2) &&
+    dimension(d1) == dimension(d2)
+
+issubset(d1::UnitBall, d2::UnitBall) =
+    dimension(d1) == dimension(d2) && (isclosedset(d2) || isopenset(d1))
 
 
 "The unit ball with fixed dimension(s) specified by the element type."
@@ -84,6 +141,7 @@ StaticUnitBall{T,C}(n::Int) where {T,C} =
 StaticUnitBall{T,C}(::Val{N}) where {N,T,C} =
     (@assert N == euclideandimension(T); StaticUnitBall{T,C}())
 
+
 "The unit ball in a fixed N-dimensional space."
 const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
 
@@ -94,7 +152,7 @@ similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
 similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T} =
     DynamicUnitBall{T,C}(dimension(d))
 
-const UnitDisk{T} = EuclideanUnitBall{2,T,:closed}
+const UnitDisk{T} = UnitBall{SVector{2,T},:closed}
 UnitDisk() = UnitDisk{Float64}()
 
 ## A StaticUnitBall{<:Number} equals the interval [-1,1]  (open or closed)
@@ -105,8 +163,6 @@ convert(::Type{Interval}, d::StaticUnitBall{T,:open}) where {T <: Number} =
 
 canonicaldomain(d::StaticUnitBall{T}, ::Equal) where {T<:Number} = convert(Interval, d)
 
-# canonicaldomain(d::StaticUnitBall{SVector{1,T}}, ::Isomorphic) where {T} =
-    # convert(Interval, convert(Domain{T}, d))
 
 "The unit ball with variable dimension stored in a data field."
 struct DynamicUnitBall{T,C} <: UnitBall{T,C}
@@ -120,7 +176,9 @@ end
 DynamicUnitBall(n::Int) = DynamicUnitBall{Vector{Float64}}(n)
 DynamicUnitBall{T}(n::Int) where {T} = DynamicUnitBall{T,:closed}(n)
 
-dimension(ball::DynamicUnitBall) = ball.dimension
+dimension(d::DynamicUnitBall) = d.dimension
+
+center(d::DynamicUnitBall{T}) where {T} = zeros(eltype(T), dimension(d))
 
 "The unit ball with vector elements of a given dimension."
 const VectorUnitBall{T,C} = DynamicUnitBall{Vector{T},C}
@@ -134,18 +192,69 @@ similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
     StaticUnitBall{T,C}()
 
 
+"A `GenericBall` is a ball with a given radius and center."
+struct GenericBall{T,C,S} <: Ball{T,C}
+    radius  ::  S
+    center  ::  T
+end
+
+GenericBall() = GenericBall(1.0)
+GenericBall(radius::S) where {S<:Number} = GenericBall(radius, zero(SVector{3,float(S)}))
+GenericBall(radius::S, center::T) where {S<:Number,U,T<:Vector{U}} =
+    GenericBall{Vector{promote_type(S,U)}}(radius, center)
+GenericBall(radius::S, center::T) where {S<:Number,N,U,T<:SVector{N,U}} =
+    GenericBall{SVector{N,promote_type(S,U)}}(radius, center)
+GenericBall(radius::S, center::T) where {S<:Number,T<:AbstractVector} =
+    GenericBall{T}(radius, center)
+GenericBall(radius::S, center::T) where {S<:Number,T<:Number} =
+    GenericBall{promote_type(S,T)}(radius, center)
+GenericBall(radius::S, center::T) where {S<:Number,U,T<:AbstractVector{S}} = GenericBall{T}(radius, center)
+GenericBall{T}(radius) where {T} = GenericBall{T,:closed}(radius)
+GenericBall{T}(radius, center) where {T} = GenericBall{T,:closed}(radius, center)
+GenericBall{T,C}(radius) where {T,C} = GenericBall{T,C}(radius, zero(T))
+GenericBall{T,C}(radius, center) where {T,C} = GenericBall{T,C,eltype(T)}(radius, center)
+
+radius(d::GenericBall) = d.radius
+center(d::GenericBall) = d.center
+
+dimension(d::GenericBall) = length(d.center)
+
+canonicaldomain(d::GenericBall{T,C}) where {T,C} = UnitBall{T,C}(dimension(d))
+fromcanonical(d::GenericBall) = AffineMap(radius(d), center(d))
+
+boundingbox(d::GenericBall) =
+    map_boundingbox(boundingbox(canonicaldomain(d)), fromcanonical(d))
+
+# Preserve the `Ball` type under affine maps which preserve shape
+map_domain(m::GenericAffineMap{T,S}, d::Ball{U,C}) where {T<:AbstractVector,S<:Number,U<:AbstractVector,C} =
+    Ball{U,C}(m.A * radius(d), m.A * center(d) + m.b)
+map_domain(m::AffineMap{T}, d::Ball{U,C}) where {T<:Number,U<:Number,C} =
+    Ball{promote_type(U,T),C}(m.A * radius(d), m.A * center(d) + m.b)
+map_domain(m::GenericLinearMap{T,S}, d::Ball{U,C}) where {S<:Number,T<:AbstractVector,U<:AbstractVector,C} =
+    Ball{promote_type(T,U),C}(m.A * radius(d), m.A * center(d))
+map_domain(m::LinearMap{T}, d::Ball{U,C}) where {T<:Number,U<:Number,C} =
+    Ball{promote_type(T,U),C}(m.A * radius(d), m.A * center(d))
+map_domain(m::LinearMap{T}, d::Ball{U,C}) where {T<:Number,U,C} =
+    Ball{U,C}(m.A * radius(d), m.A * center(d))
+map_domain(m::Translation{T}, d::Ball{S,C}) where {T<:AbstractVector,S<:AbstractVector,C} =
+    Ball{S,C}(radius(d), center(d) + m.b)
+map_domain(m::Translation{T}, d::Ball{S,C}) where {T<:Number,S<:Number,C} =
+    Ball{S,C}(radius(d), center(d) + m.b)
+
+
 show(io::IO, d::EuclideanUnitBall{3,Float64,:closed}) = print(io, "UnitBall()")
 show(io::IO, d::EuclideanUnitBall{N,Float64,:closed}) where {N} = print(io, "UnitBall(Val($(N)))")
 show(io::IO, d::EuclideanUnitBall{3,Float64,:open}) = print(io, "UnitBall()  (open)")
 show(io::IO, d::EuclideanUnitBall{N,Float64,:open}) where {N} = print(io, "UnitBall(Val($(N)))  (open)")
-show(io::IO, d::UnitDisk{Float64}) = print(io, "UnitDisk()")
+Display.object_parentheses(d::EuclideanUnitBall{N,Float64,:open}) where {N} = true
+show(io::IO, d::EuclideanUnitBall{2,Float64,:closed}) = print(io, "UnitDisk()")
 show(io::IO, d::UnitDisk{T}) where {T} = print(io, "UnitDisk{$(T)}()")
+show(io::IO, d::UnitBall{T}) where {T<:Number} = print(io, "UnitBall{$(T)}()")
+show(io::IO, d::UnitBall{T,:open}) where {T<:Number} = print(io, "UnitBall{$(T)}()  (open)")
+Display.object_parentheses(d::UnitBall{T,:open}) where {T<:Number} = true
 show(io::IO, d::VectorUnitBall{Float64,:closed}) = print(io, "UnitBall($(dimension(d)))")
 show(io::IO, d::VectorUnitBall{Float64,:open}) = print(io, "UnitBall($(dimension(d)))  (open)")
-
-# We choose the origin here
-point_in_domain(ball::Ball{T}) where {T} = zero(T)
-point_in_domain(ball::VectorBall{T}) where {T} = zeros(T, dimension(ball))
+show(io::IO, d::Ball) = print(io, "Ball($(radius(d)), $(center(d)))")
 
 
 # The type hierarchy of spheres parallels that of Ball above:
@@ -153,27 +262,33 @@ point_in_domain(ball::VectorBall{T}) where {T} = zeros(T, dimension(ball))
 # |-> abstract UnitSphere: radius is 1
 #     |-> StaticUnitSphere: dimension is part of type
 #     |-> DynamicUnitSphere: dimension is specified by int field
+# |-> GenericSphere: stores center and radius. Here, the dimension can be
+#     obtained from the center, so there is only one type.
 # There are aliases for SVector{N,T} and Vector{T}.
 
 "Supertype of spherical domains for which elements satisfy `norm(x) == radius(sphere)`."
 abstract type Sphere{T} <: Domain{T} end
 
-indomain(x, d::Sphere) = norm(x) == radius(d)
+indomain(x, d::Sphere) = norm(x-center(d)) == radius(d)
 approx_indomain(x, d::Sphere, tolerance) =
-    radius(d)-tolerance <= norm(x) <= radius(d)+tolerance
+    radius(d)-tolerance <= norm(x-center(d)) <= radius(d)+tolerance
+
+# Convenience constructors for the abstract type
+Sphere() = UnitSphere()
+Sphere{T}() where {T} = UnitSphere{T}()
+Sphere(radius::Number) = GenericSphere(radius)
+Sphere{T}(radius::Number) where {T} = GenericSphere{T}(radius)
+Sphere(radius::Number, center) = GenericSphere(radius, center)
+Sphere{T}(radius::Number, center) where {T} = GenericSphere{T}(radius, center)
 
 isempty(::Sphere) = false
 
 isclosedset(::Sphere) = true
 isopenset(::Sphere) = false
 
-==(d1::Sphere, d2::Sphere) =
-    radius(d1)==radius(d2) && dimension(d1)==dimension(d2)
+point_in_domain(d::Sphere) = center(d) + unitvector(d)
 
-convert(::Type{LevelSet}, d::Sphere{T}) where {T} =
-    LevelSet{T}(norm, radius(d))
-convert(::Type{LevelSet{T}}, d::Sphere) where {T} =
-    LevelSet{T}(norm, radius(d))
+==(d1::Sphere, d2::Sphere) = radius(d1)==radius(d2) && center(d1)==center(d2)
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
 const EuclideanSphere{N,T} = Sphere{SVector{N,T}}
@@ -186,6 +301,12 @@ const VectorSphere{T} = Sphere{Vector{T}}
 abstract type UnitSphere{T} <: Sphere{T} end
 
 radius(::UnitSphere) = 1
+center(d::UnitSphere{T}) where {T<:StaticTypes} = zero(T)
+
+indomain(x, d::UnitSphere) = norm(x) == 1
+approx_indomain(x, d::UnitSphere, tolerance) =
+    1-tolerance <= norm(x) <= 1+tolerance
+
 
 UnitSphere(n::Int) = DynamicUnitSphere(n)
 UnitSphere(::Val{N} = Val(3)) where {N} = EuclideanUnitSphere{N}()
@@ -195,7 +316,14 @@ UnitSphere{T}(::Val{N}) where {N,T} = StaticUnitSphere{T}(Val(N))
 UnitSphere{T}() where {T <: StaticTypes} = StaticUnitSphere{T}()
 UnitSphere{T}(n::Int) where {T} = DynamicUnitSphere{T}(n)
 
-issubset1(d1::UnitSphere, d2::UnitBall) = dimension(d1) == dimension(d2)
+==(d1::UnitSphere, d2::UnitSphere) = dimension(d1)==dimension(d2)
+
+issubset1(d1::UnitSphere, d2::UnitBall) =
+    dimension(d1) == dimension(d2) && isclosedset(d2)
+
+convert(::Type{LevelSet}, d::UnitSphere{T}) where {T} = LevelSet{T}(norm, radius(d))
+convert(::Type{LevelSet{T}}, d::UnitSphere) where {T} = LevelSet{T}(norm, radius(d))
+
 
 "The unit sphere with fixed dimension(s) specified by the element type."
 struct StaticUnitSphere{T} <: UnitSphere{T}
@@ -222,7 +350,8 @@ EuclideanUnitSphere{N}() where {N} = EuclideanUnitSphere{N,Float64}()
 
 
 "The unit circle in 2D."
-const UnitCircle{T} = EuclideanUnitSphere{2,T}
+const UnitCircle{T} = UnitSphere{SVector{2,T}}
+UnitCircle() = UnitCircle{Float64}()
 
 "The unit sphere with variable dimension."
 struct DynamicUnitSphere{T} <: UnitSphere{T}
@@ -237,6 +366,8 @@ DynamicUnitSphere(n::Int) = DynamicUnitSphere{Vector{Float64}}(n)
 
 dimension(d::DynamicUnitSphere) = d.dimension
 
+center(d::DynamicUnitSphere{T}) where {T} = zeros(eltype(T), dimension(d))
+
 "The unit sphere with vector elements of a given dimension."
 const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
 
@@ -248,40 +379,86 @@ similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} =
 similardomain(d::DynamicUnitSphere, ::Type{T}) where {T <: StaticTypes} =
     StaticUnitSphere{T}()
 
+
+
+"A `GenericSphere` is a sphere with a given radius and center."
+struct GenericSphere{T,S} <: Sphere{T}
+    radius  ::  S
+    center  ::  T
+end
+
+GenericSphere() = GenericSphere(1.0)
+GenericSphere(radius::S) where {S<:Number} =
+    GenericSphere(radius, zero(SVector{3,float(S)}))
+GenericSphere(radius::S, center::T) where {S<:Number,U,T<:Vector{U}} =
+    GenericSphere{Vector{promote_type(S,U)}}(radius, center)
+GenericSphere(radius::S, center::T) where {S<:Number,N,U,T<:SVector{N,U}} =
+    GenericSphere{SVector{N,promote_type(S,U)}}(radius, center)
+GenericSphere(radius::S, center::T) where {S<:Number,T<:AbstractVector} =
+    GenericSphere{T}(radius, center)
+GenericSphere(radius::S, center::T) where {S<:Number,U,T<:AbstractVector{S}} =
+    GenericSphere{T}(radius, center)
+GenericSphere{T}(radius) where {T} = GenericSphere{T}(radius, zero(T))
+GenericSphere{T}(radius, center) where {T} =
+    GenericSphere{T,eltype(T)}(radius, center)
+
+radius(d::GenericSphere) = d.radius
+center(d::GenericSphere) = d.center
+
+dimension(d::GenericSphere) = length(d.center)
+
+canonicaldomain(d::GenericSphere{T}) where {T} = UnitSphere{T}(dimension(d))
+fromcanonical(d::GenericSphere) = AffineMap(radius(d), center(d))
+
+# Preserve the `Sphere` type under affine maps which preserve shape
+map_domain(m::GenericAffineMap{T,S}, d::Sphere{U}) where {T<:AbstractVector,S<:Number,U<:AbstractVector} =
+    Sphere{U}(m.A * radius(d), m.A * center(d) + m.b)
+map_domain(m::AffineMap{T}, d::Sphere{U}) where {T<:Number,U<:Number} =
+    Sphere{promote_type(U,T)}(m.A * radius(d), m.A * center(d) + m.b)
+map_domain(m::GenericLinearMap{T,S}, d::Sphere{U}) where {S<:Number,T<:AbstractVector,U<:AbstractVector} =
+    Sphere{promote_type(T,U)}(m.A * radius(d), m.A * center(d))
+map_domain(m::LinearMap{T}, d::Sphere{U}) where {T<:Number,U<:Number} =
+    Sphere{promote_type(T,U)}(m.A * radius(d), m.A * center(d))
+map_domain(m::LinearMap{T}, d::Sphere{U}) where {T<:Number,U} =
+    Sphere{U}(m.A * radius(d), m.A * center(d))
+map_domain(m::Translation{T}, d::Sphere{S}) where {T<:AbstractVector,S<:AbstractVector} =
+    Sphere{S}(radius(d), center(d) + m.b)
+map_domain(m::Translation{T}, d::Sphere{S}) where {T<:Number,S<:Number} =
+    Sphere{S}(radius(d), center(d) + m.b)
+
 show(io::IO, d::EuclideanUnitSphere{3,Float64}) = print(io, "UnitSphere()")
 show(io::IO, d::EuclideanUnitSphere{N,Float64}) where {N} = print(io, "UnitSphere(Val($(N)))")
+show(io::IO, d::EuclideanUnitSphere{2,Float64}) = print(io, "UnitCircle()")
 show(io::IO, d::UnitCircle{Float64}) = print(io, "UnitCircle()")
 show(io::IO, d::UnitCircle{T}) where {T} = print(io, "UnitCircle{$(T)}()")
 show(io::IO, d::VectorUnitSphere{Float64}) = print(io, "UnitSphere($(dimension(d)))")
+show(io::IO, d::UnitSphere{T}) where {T<:Number} = print(io, "UnitSphere{$(T)}()")
+show(io::IO, d::Sphere) = print(io, "Sphere($(radius(d)), $(center(d)))")
 
-point_in_domain(d::EuclideanSphere{N,T}) where {N,T} =
-    SVector{N,T}(ntuple( i -> i==1, N))
 
-function point_in_domain(d::VectorSphere{T}) where {T}
-    p = zeros(T, dimension(d))
-    p[1] = 1
-    p
-end
-
-boundary(d::StaticUnitBall{T}) where {T} = StaticUnitSphere{T}()
-boundary(d::DynamicUnitBall{T}) where {T} = DynamicUnitSphere{T}(dimension(d))
+boundary(d::UnitBall{T}) where {T} = UnitSphere{T}(dimension(d))
+boundary(d::Ball{T}) where {T} = Sphere{T}(radius(d), center(d))
 
 interior(d::StaticUnitBall{T}) where {T} = StaticUnitBall{T,:open}()
 interior(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:open}(dimension(d))
+interior(d::Ball{T}) where {T} = Ball{T,:open}(radius(d), center(d))
+
 closure(d::StaticUnitBall{T}) where {T} = StaticUnitBall{T,:closed}()
 closure(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:closed}(dimension(d))
+closure(d::Ball{T}) where {T} = Ball{T,:closed}(radius(d), center(d))
 
 boundingbox(d::UnitBall{T}) where {T<:Number} = ChebyshevInterval{T}()
 boundingbox(d::UnitBall{SVector{N,T}}) where {N,T} =
     ChebyshevProductDomain{N,T}()
 boundingbox(d::UnitBall{T}) where {T} =
-    ProductDomain{T}((ChebyshevInterval{eltype(T)}() for i in 1:dimension(d))...)
+    Rectangle{T}(-ones(eltype(T), dimension(d)), ones(eltype(T), dimension(d)))
 
 boundingbox(d::UnitSphere{T}) where {T<:Number} = ChebyshevInterval{T}()
 boundingbox(d::UnitSphere{SVector{N,T}}) where {N,T} =
     ChebyshevProductDomain{N,T}()
 boundingbox(d::UnitSphere{T}) where {T} =
-    ProductDomain{T}((ChebyshevInterval{eltype(T)}() for i in 1:dimension(d))...)
+    Rectangle{T}(-ones(eltype(T), dimension(d)), ones(eltype(T), dimension(d)))
+
 
 
 ################

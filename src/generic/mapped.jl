@@ -93,7 +93,7 @@ function _map_domain(map::Map, domain)
     if U == Union{}
         error("incompatible types of $(map) and $(domain)")
     end
-    mapped_domain(inverse(convert(Map{U}, map)), domain)
+    mapped_domain(inverse(convert(Map{U}, map)), convert(Domain{U}, domain))
 end
 
 ==(a::MappedDomain, b::MappedDomain) = (a.invmap == b.invmap) && (superdomain(a) == superdomain(b))

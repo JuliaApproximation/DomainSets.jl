@@ -72,7 +72,6 @@ map_stencil(m::AbstractAffineMap, x) = [unsafe_matrix(m), " * ", x, " + ", unsaf
 map_stencil_broadcast(m::AbstractAffineMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m), unsafe_vector(m))
 _map_stencil_broadcast(m::AbstractAffineMap, x, A, b) = [A, " .* ", x, " .+ ", b]
 _map_stencil_broadcast(m::AbstractAffineMap, x, A::Number, b) = [A, " * ", x, " .+ ", b]
-_map_stencil_broadcast(m::AbstractAffineMap, x, A::Number, b::Number) = [A, " * ", x, " + ", b]
 
 Display.object_parentheses(m::AbstractAffineMap) = true
 Display.stencil_parentheses(m::AbstractAffineMap) = true
@@ -157,8 +156,8 @@ Display.displaystencil(m::LinearMap) = ["x -> ", unsafe_matrix(m), " * x"]
 
 map_stencil(m::LinearMap, x) = [unsafe_matrix(m), " * ", x]
 map_stencil_broadcast(m::LinearMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m))
-_map_stencil_broadcast(m::AbstractAffineMap, x, A) = [A, " .* ", x]
-_map_stencil_broadcast(m::AbstractAffineMap, x, A::Number) = [A, " * ", x]
+_map_stencil_broadcast(m::LinearMap, x, A) = [A, " .* ", x]
+_map_stencil_broadcast(m::LinearMap, x, A::Number) = [A, " * ", x]
 
 
 "A `GenericLinearMap` is a linear map `y = A*x` for any type of `A`."
@@ -203,6 +202,8 @@ struct ScalarLinearMap{T} <: LinearMap{T}
 end
 
 ScalarLinearMap(A::Number) = ScalarLinearMap{typeof(A)}(A)
+
+isreal(m::ScalarLinearMap{T}) where {T} = isreal(T)
 
 show(io::IO, m::ScalarLinearMap) = print(io, "x -> $(m.A) * x")
 
@@ -253,13 +254,14 @@ Display.displaystencil(m::Translation) = ["x -> x + ", unsafe_vector(m)]
 
 map_stencil(m::Translation, x) = [x, " + ", unsafe_vector(m)]
 map_stencil_broadcast(m::Translation, x) = _map_stencil_broadcast(m, x, unsafe_vector(m))
-_map_stencil_broadcast(m::Translation, x, b::Number) = [x, " + ", b]
 _map_stencil_broadcast(m::Translation, x, b) = [x, " .+ ", b]
 
 "Translation by a scalar value."
 struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
 end
+
+isreal(m::ScalarTranslation{T}) where {T} = isreal(T)
 
 show_scalar_translation(io, b::Real) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
 show_scalar_translation(io, b) = print(io, "x -> x + ", b)
@@ -282,7 +284,7 @@ struct GenericTranslation{T,B} <: Translation{T}
 end
 
 Translation(b::Number) = ScalarTranslation(b)
-Translation(b::SVector) = StaticTranslation(b)
+Translation(b::StaticVector) = StaticTranslation(b)
 Translation(b::Vector) = VectorTranslation(b)
 Translation(b) = GenericTranslation(b)
 
@@ -291,8 +293,8 @@ Translation{T}(b::AbstractVector) where {N,S,T<:SVector{N,S}} = StaticTranslatio
 Translation{T}(b::Vector) where {S,T<:Vector{S}} = VectorTranslation{S}(b)
 Translation{T}(b) where {T} = GenericTranslation{T}(b)
 
-jacdet(m::Translation{T}) where {T} = UnityMap{T,Int}()
-jacdet(m::Translation, x) = 1
+jacdet(m::Translation{T}) where {T} = UnityMap{T,eltype(T)}()
+jacdet(m::Translation{T}, x) where {T} = one(eltype(T))
 
 isreal(m::Translation) = isreal(unsafe_vector(m))
 
@@ -313,14 +315,18 @@ ScalarTranslation(b::Number) = ScalarTranslation{typeof(b)}(b)
 
 StaticTranslation(b::AbstractVector{T}) where {T} = StaticTranslation{T}(b)
 
-StaticTranslation{T}(b::AbstractVector) where {T} =
-    StaticTranslation{T}(convert(AbstractVector{T}, b))
+StaticTranslation{T}(b::StaticVector{N}) where {N,T} =
+    StaticTranslation{T,N}(b)
 StaticTranslation{T}(b::SVector{N,T}) where {N,T} =
     StaticTranslation{T,N}(b)
 
 VectorTranslation(b::AbstractVector{T}) where {T} = VectorTranslation{T}(b)
 
 GenericTranslation(b) = GenericTranslation{typeof(b)}(b)
+GenericTranslation(b::AbstractVector{T}) where {T} =
+    GenericTranslation{Vector{T}}(b)
+GenericTranslation(b::StaticVector{N,T}) where {N,T} =
+    GenericTranslation{SVector{N,T}}(b)
 
 GenericTranslation{T}(b) where {T} = GenericTranslation{T,typeof(b)}(b)
 GenericTranslation{T}(b::Number) where {T<:Number} =
@@ -393,10 +399,12 @@ GenericAffineMap(A::SMatrix{M,N,S}, b::StaticVector{M,T}) where {M,N,S,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
 GenericAffineMap(A::SMatrix{M,N,S}, b::AbstractVector{T}) where {M,N,S,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
-GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:NumberLike,T} =
-    GenericAffineMap{Vector{promote_type(eltype(S),T)}}(A, b)
+GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:Number,T} =
+    GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
 GenericAffineMap(A::S, b::StaticVector{N,T}) where {S<:Number,N,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
+GenericAffineMap(A::UniformScaling{Bool}, b) =
+    GenericAffineMap(UniformScaling{eltype(b)}(1), b)
 
 
 # Fallback routine for generic A and b, special cases follow
@@ -430,6 +438,8 @@ struct ScalarAffineMap{T} <: AffineMap{T}
 end
 
 ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
+
+isreal(m::ScalarAffineMap{T}) where {T} = isreal(T)
 
 show_scalar_affine_map(io, a::Real, b::Real) = print(io, "x -> $(a) * x", b < 0 ? " - " : " + ", abs(b))
 show_scalar_affine_map(io, a::Complex, b::Complex) = print(io, "x -> ($(a)) * x + ", b)
@@ -477,8 +487,10 @@ StaticAffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {T} =
     StaticAffineMap{T}(convert(AbstractMatrix{T}, A), convert(AbstractVector{T}, b))
 
 # - then, we determine N and/or M, from the arguments
-StaticAffineMap{T}(A::AbstractMatrix{T}, b::SVector{M,T}) where {T,M} =
+function StaticAffineMap{T}(A::AbstractMatrix{T}, b::SVector{M,T}) where {T,M}
+    @assert size(A) == (M,M)
     StaticAffineMap{T,M,M}(A, b)
+end
 StaticAffineMap{T}(A::SMatrix{M,N,T}, b::AbstractVector) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
 StaticAffineMap{T}(A::SMatrix{M,N,T}, b::SVector{M,T}) where {T,N,M} =

@@ -24,13 +24,13 @@ broadcasted(::DomainSetStyle, ::typeof(-), a::Union{Number,AbstractArray}, d::Do
     map_domain(AffineMap(-1, a), d)
 broadcasted(::DomainSetStyle, ::typeof(-), d::Domain, a::Union{Number,AbstractArray}) =
     map_domain(Translation(-a), d)
-broadcasted(::DomainSetStyle, ::typeof(-), d::Domain) =
-    map_domain(LinearMap(-1), d)
+broadcasted(::DomainSetStyle, ::typeof(-), d::Domain{T}) where {T} =
+    map_domain(LinearMap{T}(-1), d)
 
-broadcasted(::DomainSetStyle, ::typeof(*), a::Number, d::Domain) =
-    map_domain(LinearMap(a), d)
-broadcasted(::DomainSetStyle, ::typeof(*), d::Domain, a::Number) =
-    map_domain(LinearMap(a), d)
+broadcasted(::DomainSetStyle, ::typeof(*), a::Number, d::Domain{T}) where {T} =
+    map_domain(LinearMap{T}(a), d)
+broadcasted(::DomainSetStyle, ::typeof(*), d::Domain{T}, a::Number) where {T} =
+    map_domain(LinearMap{T}(a), d)
 
 
 broadcasted(::DomainSetStyle, ::typeof(/), d::Domain, a::Number) =

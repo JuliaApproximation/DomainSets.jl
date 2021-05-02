@@ -612,7 +612,7 @@ end
         end
     end
 
-    @testset "unit ball" begin
+    @testset "balls" begin
         # Test UnitBall constructor
         @test UnitBall(2) isa VectorUnitBall{Float64}
         @test UnitBall(Val(2)) isa EuclideanUnitBall{2,Float64}
@@ -640,6 +640,26 @@ end
 
         @test DynamicUnitBall{Float64}(1) isa DynamicUnitBall{Float64}
         @test_throws AssertionError DynamicUnitBall{Float64}(2)
+
+        # and then the Ball constructor
+        @test Ball() isa UnitBall
+        @test Ball(1.0, 2.0) isa DomainSets.GenericBall{Float64}
+        @test Ball{Float64}() isa UnitBall{Float64}
+        @test Ball{Float64,:open}() isa UnitBall{Float64,:open}
+        @test Ball(1.0) == DomainSets.GenericBall{SVector{3,Float64},:closed}(1.0)
+        @test Ball{BigFloat}(1) == DomainSets.GenericBall{BigFloat,:closed}(big(1))
+        @test Ball{BigFloat,:open}(1) == DomainSets.GenericBall{BigFloat,:open}(big(1))
+        @test_throws MethodError Ball{Vector{Float64}}(1.0)
+        @test Ball(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
+        @test Ball{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
+
+        @test map_domain(AffineMap(2, [1,2,3]), UnitBall()) isa DomainSets.GenericBall
+        @test map_domain(AffineMap(2, 3), UnitBall{Float64}()) isa DomainSets.GenericBall
+        @test map_domain(LinearMap{SVector{3,Float64}}(2), UnitBall()) isa DomainSets.GenericBall
+        @test map_domain(LinearMap(2), UnitBall{Float64}()) isa DomainSets.GenericBall
+        @test map_domain(LinearMap(2), UnitBall()) isa DomainSets.GenericBall
+        @test map_domain(Translation([1,2,3]), UnitBall()) isa DomainSets.GenericBall
+        @test map_domain(Translation(1), UnitBall{Float64}()) isa DomainSets.GenericBall
 
         D = UnitDisk()
         @test SA[1.,0.] ∈ D
@@ -677,6 +697,7 @@ end
         @test boundary(D) == UnitCircle()
 
         D = 2UnitDisk()
+        @test D isa DomainSets.GenericBall
         @test SA[1.4, 1.4] ∈ D
         @test SA[1.5, 1.5] ∉ D
         @test typeof(1.2 * D)==typeof(D * 1.2)
@@ -686,9 +707,11 @@ end
         # TODO: implement and test isclosedset and isopenset for mapped domains
 
         D = 2UnitDisk() .+ SA[1.0,1.0]
+        @test D isa DomainSets.GenericBall
         @test SA[2.4, 2.4] ∈ D
         @test SA[3.5, 2.5] ∉ D
         @test !isempty(D)
+        @test canonicaldomain(D) isa UnitDisk
 
         B = UnitBall()
         @test SA[1.,0.0,0.] ∈ B
@@ -700,6 +723,7 @@ end
         @test isopenset(interior(B))
 
         B = 2UnitBall()
+        @test D isa DomainSets.GenericBall
         @test SA[1.9,0.0,0.0] ∈ B
         @test SA[0,-1.9,0.0] ∈ B
         @test SA[0.0,0.0,-1.9] ∈ B
@@ -707,6 +731,7 @@ end
         @test !isempty(B)
 
         B = 2.0UnitBall() .+ SA[1.0,1.0,1.0]
+        @test D isa DomainSets.GenericBall
         @test SA[2.9,1.0,1.0] ∈ B
         @test SA[1.0,-0.9,1.0] ∈ B
         @test SA[1.0,1.0,-0.9] ∈ B
@@ -797,7 +822,7 @@ end
         @test 1.1+0.2im ∉ p
     end
 
-    @testset "unit sphere" begin
+    @testset "spheres" begin
         # test UnitSphere constructor
         @test UnitSphere(2) isa VectorUnitSphere{Float64}
         @test UnitSphere(Val(2)) isa EuclideanUnitSphere{2,Float64}
@@ -814,6 +839,24 @@ end
 
         @test DynamicUnitSphere{Float64}(1) isa DynamicUnitSphere{Float64}
         @test_throws AssertionError DynamicUnitSphere{Float64}(2)
+
+        # and the generic sphere constructor
+        @test Sphere() isa UnitSphere
+        @test Sphere(1.0, 2.0) isa DomainSets.GenericSphere{Float64}
+        @test Sphere{Float64}() isa UnitSphere{Float64}
+        @test Sphere(1.0) == DomainSets.GenericSphere{SVector{3,Float64}}(1.0)
+        @test Sphere{BigFloat}(1) == DomainSets.GenericSphere{BigFloat}(big(1))
+        @test_throws MethodError Sphere{Vector{Float64}}(1.0)
+        @test Sphere(1.0, [1,2,3]) isa DomainSets.GenericSphere{Vector{Float64},Float64}
+        @test Sphere{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericSphere{Vector{Float64},Float64}
+
+        @test map_domain(AffineMap(2, [1,2,3]), UnitSphere()) isa DomainSets.GenericSphere
+        @test map_domain(AffineMap(2, 3), UnitSphere{Float64}()) isa DomainSets.GenericSphere
+        @test map_domain(LinearMap{SVector{3,Float64}}(2), UnitSphere()) isa DomainSets.GenericSphere
+        @test map_domain(LinearMap(2), UnitSphere{Float64}()) isa DomainSets.GenericSphere
+        @test map_domain(LinearMap(2), UnitSphere()) isa DomainSets.GenericSphere
+        @test map_domain(Translation([1,2,3]), UnitSphere()) isa DomainSets.GenericSphere
+        @test map_domain(Translation(1), UnitSphere{Float64}()) isa DomainSets.GenericSphere
 
         C = UnitCircle()
         @test SA[1.,0.] ∈ C
@@ -850,9 +893,12 @@ end
         @test convert(Domain{Vector{Float64}}, UnitSphere(Val(2))) isa DynamicUnitSphere
 
         C = 2UnitCircle() .+ SA[1.,1.]
+        @test C isa DomainSets.GenericSphere
         @test approx_in(SA[3.,1.], C)
+        @test canonicaldomain(C) isa UnitSphere
 
         C = UnitCircle() .+ SA[1,1]
+        @test C isa DomainSets.GenericSphere
         @test approx_in(SA[2,1], C)
 
         S = UnitSphere()
@@ -868,6 +914,7 @@ end
         @test issubset(UnitSphere(), UnitBall())
 
         S = 2 * UnitSphere() .+ SA[1.,1.,1.]
+        @test S isa DomainSets.GenericSphere
         @test approx_in(SA[1. + 2*cos(1.),1. + 2*sin(1.),1.], S)
         @test !approx_in(SA[4.,1.,5.], S)
 
@@ -921,7 +968,7 @@ end
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
         # Test chaining of maps
         D = UnitCircle()
-        D1 = 2 * D
+        D1 = MappedDomain(inverse(LinearMap(2)), D)
         @test typeof(D1) <: MappedDomain
         @test typeof(superdomain(D1)) <: UnitSphere
         @test isclosedset(D1)
@@ -950,7 +997,7 @@ end
         @test SA[0.9, 0.6, -2.5] ∈ D
         @test SA[0.0, 0.6, 0.0] ∉ D
 
-        B = 2 * VectorUnitBall(10)
+        B = mapped_domain(inverse(LinearMap(2.0)), VectorUnitBall(10))
         @test dimension(B) == 10
         @test superdomain(B) ∘ inverse_map(B) == B
         @test isopenset(interior(B))

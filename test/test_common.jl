@@ -33,6 +33,7 @@ function test_prectype()
     @test prectype((1.0, 2.0)) == Float64
     @test prectype((1.0, 2.0, 3.0)) == Float64
     @test prectype((1.0, big(2.0), 3.0+im)) == BigFloat
+    @test prectype(NTuple{4,Int}) == Float64
     @test @inferred(prectype(1, 2.0)) == Float64
     @test @inferred(prectype((1, 2.0, 3, 40+im))) == Float64
 
@@ -75,7 +76,7 @@ function test_numtype()
     @test convert_numtype(2, Float64) isa Float64
     @test convert_numtype(SA[1,2], Float64) == SA[1,2]
     @test convert_numtype(SA[1,2], Float64) isa SVector{2,Float64}
-    @test_throws ErrorException convert_prectype("a", BigFloat)
+    @test_throws ErrorException convert_numtype("a", BigFloat)
 
     @test promote_numtype(2) == 2
     @test promote_numtype(2, 3.0) isa Tuple{Float64,Float64}
