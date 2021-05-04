@@ -125,7 +125,7 @@ function test_generic_jacobian(m)
         s = sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
         @test d ≈ s || d ≈ -s
     else
-        @test diffvolume(m, x) ≈ sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
+        @test abs(diffvolume(m, x) - sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))) < 1e-7
     end
 end
 
