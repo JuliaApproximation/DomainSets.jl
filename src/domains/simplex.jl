@@ -49,7 +49,6 @@ boundingbox(d::UnitSimplex{T}) where {T} = UnitCube{T}(dimension(d))
 struct StaticUnitSimplex{T,C} <: UnitSimplex{T,C}
 end
 
-StaticUnitSimplex() = StaticUnitSimplex{Float64}()
 StaticUnitSimplex(::Val{N}) where {N} = StaticUnitSimplex{SVector{N,Float64}}()
 
 StaticUnitSimplex{T}() where {T} = StaticUnitSimplex{T,:closed}()

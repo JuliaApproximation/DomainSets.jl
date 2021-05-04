@@ -393,6 +393,8 @@ struct GenericAffineMap{T,AA,B} <: AffineMap{T}
 end
 
 GenericAffineMap(A, b) = GenericAffineMap{typeof(b)}(A, b)
+GenericAffineMap(A::AbstractVector{S}, b::AbstractVector{T}) where {S,T} =
+    GenericAffineMap{promote_type(S,T)}(A, b)
 GenericAffineMap(A::AbstractArray{S}, b::AbstractVector{T}) where {S,T} =
     GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
 GenericAffineMap(A::SMatrix{M,N,S}, b::StaticVector{M,T}) where {M,N,S,T} =
@@ -410,6 +412,10 @@ GenericAffineMap(A::UniformScaling{Bool}, b) =
 # Fallback routine for generic A and b, special cases follow
 GenericAffineMap{T}(A, b) where {T} = GenericAffineMap{T,typeof(A),typeof(b)}(A, b)
 
+GenericAffineMap{T}(A::AbstractVector{S}, b::AbstractVector{U}) where {T<:Number,S,U} =
+    GenericAffineMap{T}(convert(AbstractVector{T}, A), convert(AbstractVector{T}, b))
+GenericAffineMap{T}(A::AbstractVector{T}, b::AbstractVector{T}) where {T<:Number} =
+    GenericAffineMap{T,typeof(A),typeof(b)}(A, b)
 GenericAffineMap{T}(A::Number, b) where {T} = GenericAffineMap{T,eltype(T),typeof(b)}(A, b)
 GenericAffineMap{T}(A::Number, b::AbstractVector) where {N,S,T <: SVector{N,S}} =
     GenericAffineMap{T,S,SVector{N,S}}(convert(S,A), SVector{N,S}(b))

@@ -419,6 +419,7 @@ function test_affinemap(T)
     # Test construction and conversion
     @test AffineMap(1, 2*one(T)) isa ScalarAffineMap{T}
     @test AffineMap{BigFloat}(1, 2.0) isa ScalarAffineMap{BigFloat}
+    @test AffineMap(rand(T,2),rand(T,2)) isa GenericAffineMap{T}
     @test AffineMap(rand(T,2,2),rand(T,2)) isa VectorAffineMap{T}
     @test AffineMap{Vector{T}}(rand(Int,2,2),rand(Int,2)) isa VectorAffineMap{T}
     @test AffineMap{SVector{2,T}}(rand(T,2,2),rand(T,2)) isa StaticAffineMap{T,2,2,4}
@@ -433,6 +434,8 @@ function test_affinemap(T)
     @test GenericAffineMap{Vector{T}}(1, [1,2]) isa GenericAffineMap{Vector{T},T,Vector{Int}}
     @test GenericAffineMap{Vector{T}}(rand(Int,2,2), rand(Int,2)) isa GenericAffineMap{Vector{T},Matrix{T},Vector{T}}
     @test convert(GenericAffineMap{Vector{T}}, GenericAffineMap(rand(Int,2,2), rand(Int,2))) isa GenericAffineMap{Vector{T}}
+    @test GenericAffineMap(rand(T,2),rand(T,2)) isa GenericAffineMap{T}
+    @test GenericAffineMap{T}(rand(Int,2),rand(Int,2)) isa GenericAffineMap{T}
 
     @test VectorAffineMap(rand(T,2,2),rand(T,2)) isa VectorAffineMap{T}
 

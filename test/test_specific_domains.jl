@@ -37,6 +37,9 @@ end
         @test isopenset(d1)
         @test interior(d1) == d1
         @test closure(d1) == d1
+        @test boundingbox(d1) == d1
+        @test d1 == 2..1
+        @test 2..1 == d1
         d2 = 0..1
         @test d1 ∩ d2 == d1
         @test d2 ∩ d1 == d1
@@ -86,6 +89,8 @@ end
         @test interior(d1) == d1
         @test closure(d1) == d1
         @test dimension(d1) == 1
+        @test DomainSets.isequal1(d1, d1)
+        @test DomainSets.isequal2(d1, d1)
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2
@@ -931,6 +936,7 @@ end
         @test isclosedset(C)
         @test !isopenset(C)
         @test parameterdomain(C) == UnitInterval()
+        @test hasparameterization(C)
         p = parameterization(C)
         @test size(p) == (2,)
         x = applymap(p, 1/2)
@@ -1043,6 +1049,8 @@ end
     @testset "mapped_domain" begin
         @test MappedDomain(cos, 0..1.0) isa MappedDomain{Float64}
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
+        @test isempty(MappedDomain(LinearMap(2.0), EmptySpace()))
+
         # Test chaining of maps
         D = UnitCircle()
         D1 = MappedDomain(inverse(LinearMap(2)), D)
@@ -1061,6 +1069,9 @@ end
         D = rotate(UnitInterval()^2, π)
         @test SA[-0.9, -0.9] ∈ D
         @test SA[-1.1, -1.1] ∉ D
+        x = point_in_domain(D)
+        @test forward_map(D)(x) ≈ forward_map(D, x)
+        @test DomainSets.toexternalpoint(D, x) ≈ forward_map(D, x)
 
         D = rotate(UnitInterval()^2, π, SA[-.5,-.5])
         @test SA[-1.5, -1.5] ∈ D
@@ -1083,15 +1094,24 @@ end
         @test canonicaldomain(B) == VectorUnitBall(10)
         @test fromcanonical(B) == forward_map(B)
         @test tocanonical(B) == inverse_map(B)
+        @test parameterdomain(B) == canonicaldomain(B)
+        @test from_parameterdomain(B) == fromcanonical(B)
+        @test to_parameterdomain(B) == tocanonical(B)
 
         # Test parametric domain
-        m = AffineMap(ones(2,1), [4; 5])
-        pd = DomainSets.ParametricDomain(m, UnitInterval())
+        using DomainSets: ParametricDomain
+        m = AffineMap(ones(2), [4; 5])
+        pd = ParametricDomain(m, UnitInterval())
         @test pd isa Domain{Vector{Float64}}
         @test forward_map(pd) == m
-        @test inverse_map(pd)(m([0.4])) ≈ [0.4]
+        @test forward_map(pd, 0.4) ≈ m(0.4)
+        @test inverse_map(pd)(m(0.4)) ≈ 0.4
+        @test inverse_map(pd, m(0.4)) ≈ 0.4
         @test fromcanonical(pd) == m
         @test canonicaldomain(pd) == 0..1
+        @test boundary(pd) isa ParametricDomain
+        @test interior(pd) isa ParametricDomain
+        @test closure(pd) isa ParametricDomain
     end
 
     @testset "simplex" begin
@@ -1119,8 +1139,12 @@ end
         @test UnitSimplex{Vector{Float64},:closed}(2) isa VectorUnitSimplex{Float64,:closed}
         @test_throws MethodError UnitSimplex{Vector{Float64},:open}()
 
+        @test StaticUnitSimplex(Val(3)) isa StaticUnitSimplex{SVector{3,Float64}}
         @test DynamicUnitSimplex{Float64}(1) isa DynamicUnitSimplex{Float64}
         @test_throws AssertionError DynamicUnitSimplex{Float64}(2)
+
+        @test repr(UnitSimplex(Val(2))) == "UnitSimplex(Val(2))"
+        @test repr(UnitSimplex(3)) == "UnitSimplex(3)"
 
         d = UnitSimplex(Val(2))
         # We test a point in the interior, a point on each of the boundaries and
@@ -1240,7 +1264,6 @@ end
         @test convert(Domain{BigFloat}, d3) isa SublevelSet{BigFloat,:closed}
         @test convert(Domain{BigFloat}, d3_open) isa SublevelSet{BigFloat,:open}
 
-
         d4 = SubzeroSet{SVector{2,Float64}}(prod)
         d4_open = SubzeroSet{SVector{2,Float64},:open}(prod)
         @test d4 isa SubzeroSet{SVector{2,Float64},:closed}
@@ -1255,6 +1278,7 @@ end
         @test SA[-0.1,0.3] ∈ d4_open
         convert(Domain{SVector{2,BigFloat}}, d4) isa SubzeroSet{SVector{2,BigFloat},:closed}
         convert(Domain{SVector{2,BigFloat}}, d4_open) isa SubzeroSet{SVector{2,BigFloat},:open}
+        @test SubzeroSet(cos) == SubzeroSet{Float64}(cos)
 
         d5 = SuperlevelSet(cos, 0.5)
         d5_open = SuperlevelSet{Float64,:open}(cos, 0.5)
@@ -1267,6 +1291,7 @@ end
         @test 3.0 ∉ d5
         @test 0.0 ∈ d5
         @test 0.0 ∈ d5
+        @test 0.0 ∈ d5_open
         show(io, d5)
         @test String(take!(io)) == "superlevel set f(x) >= 0.5 with f = cos"
         show(io, d5_open)
