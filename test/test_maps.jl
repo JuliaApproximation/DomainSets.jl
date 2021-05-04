@@ -188,7 +188,9 @@ function test_isomorphisms(T)
     @test m1(SA[1.0]) == 1.0
     m1b = DomainSets.NumberToVector{T}()
     @test inverse(m1) == m1b
+    @test inverse(m1, 0.4) == m1b(0.4)
     @test inverse(m1b) == m1
+    @test inverse(m1b, SA[0.4]) == m1(SA[0.4])
     @test m1b(1.0) == SA[1.0]
     @test size(m1) == (1,1)
     @test size(m1b) == (1,)
@@ -196,12 +198,16 @@ function test_isomorphisms(T)
     @test size(inverse(m1) ∘ m1) == (1,1)
     @test jacobian(m1 ∘ inverse(m1), 1) == one(T)
     @test jacobian(inverse(m1) ∘ m1, [1]) == ones(T,1,1)
+    @test jacobian(m1) isa ConstantMap
+    @test jacobian(m1b) isa ConstantMap
 
     m2 = DomainSets.VectorToComplex{T}()
     @test m2(SA[one(T), one(T)]) == 1 + im
     m2b = DomainSets.ComplexToVector{T}()
     @test inverse(m2) == m2b
+    @test inverse(m2, zero(T)+0im) == m2b(zero(T)+0im)
     @test inverse(m2b) == m2
+    @test inverse(m2b, SA[one(T),one(T)]) == one(T)+one(T)*im
     @test m2b(one(T)+one(T)*im) == SA[one(T),one(T)]
     @test size(m2) == (1,2)
     @test size(m2b) == (2,)
@@ -209,11 +215,24 @@ function test_isomorphisms(T)
     @test size(m2b ∘ m2) == (2,2)
 
     m3 = DomainSets.VectorToTuple{2,T}()
-    @test m3(SA[one(T), one(T)]) == (one(T),one(T))
     m3b = DomainSets.TupleToVector{2,T}()
+    @test m3(SA[one(T), one(T)]) == (one(T),one(T))
+    @test inverse(m3b, SA[one(T), one(T)]) == (one(T),one(T))
     @test inverse(m3) == m3b
     @test inverse(m3b) == m3
     @test m3b( (one(T),one(T)) ) == SA[one(T),one(T)]
+    @test inverse(m3, (one(T),one(T)) ) == SA[one(T),one(T)]
+
+    m4 = DomainSets.NestedToFlat{3,T,Tuple{Tuple{T,T},T},(2,1)}()
+    m4b = DomainSets.FlatToNested{3,T,Tuple{Tuple{T,T},T},(2,1)}()
+    x4 = ([T(1),T(2)],T(3))
+    y4 = T[1,2,3]
+    @test m4(x4) == y4
+    @test m4b(y4) == x4
+    @test inverse(m4) == m4b
+    @test inverse(m4b) == m4
+    @test inverse(m4, y4) == x4
+    @test inverse(m4b, x4) == y4
 end
 
 function test_maps(T)
@@ -593,13 +612,18 @@ function test_product_map(T)
     @test jacdet(mapto(d1v,d2v)) == ConstantMap{Vector{T}}(4)
 end
 
+using DomainSets: WrappedMap
 function test_wrapped_maps(T)
-    m1 = DomainSets.WrappedMap{T}(cos)
-    m2 = DomainSets.WrappedMap{T}(sin)
+    m1 = WrappedMap{T}(cos)
+    m2 = WrappedMap{T}(sin)
     @test m1(one(T)) ≈ cos(one(T))
     @test m2(one(T)) ≈ sin(one(T))
     m3 = m1 ∘ m2
     @test m3(one(T)) ≈ cos(sin(one(T)))
+
+    @test WrappedMap(cos) isa WrappedMap{Float64}
+    @test convert(Map, cos) isa WrappedMap
+    @test convert(Map{BigFloat}, m1) isa WrappedMap{BigFloat}
 
     @test convert(Map{T}, cos) isa DomainSets.WrappedMap{T,typeof(cos)}
 end

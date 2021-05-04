@@ -77,6 +77,8 @@ end
 
 inverse(::NestedToFlat{N,T,U,DIM}) where {N,T,U,DIM} = FlatToNested{N,T,U,DIM}()
 inverse(::FlatToNested{N,T,U,DIM}) where {N,T,U,DIM} = NestedToFlat{N,T,U,DIM}()
+inverse(m::NestedToFlat, x) = inverse(m)(x)
+inverse(m::FlatToNested, x) = inverse(m)(x)
 
 applymap(::NestedToFlat{N,T,U,DIM}, x) where {N,T,U,DIM} = convert_tocartesian(x, Val{DIM}())
 applymap(::FlatToNested{N,T,U,DIM}, x) where {N,T,U,DIM} = convert_fromcartesian(x, Val{DIM}())

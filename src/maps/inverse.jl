@@ -12,6 +12,8 @@ end
 LazyInverse(m::AbstractMap) = LazyInverse{codomaintype(m)}(m)
 LazyInverse{T}(m) where {T} = LazyInverse{T,typeof(m)}(m)
 
+LazyInverse(m::LazyInverse) = supermap(m)
+
 applymap(m::LazyInverse, x) = inverse(supermap(m), x)
 
 Display.displaystencil(m::LazyInverse) = ["LazyInverse(", supermap(m), ")"]

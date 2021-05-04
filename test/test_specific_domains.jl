@@ -89,6 +89,7 @@ end
         @test interior(d1) == d1
         @test closure(d1) == d1
         @test dimension(d1) == 1
+        @test boundingbox(d1) == d1
         @test DomainSets.isequal1(d1, d1)
         @test DomainSets.isequal2(d1, d1)
         d2 = 0..1
@@ -1049,6 +1050,7 @@ end
     @testset "mapped_domain" begin
         @test MappedDomain(cos, 0..1.0) isa MappedDomain{Float64}
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
+        @test cos.(0..1.0) isa MappedDomain
         @test isempty(MappedDomain(LinearMap(2.0), EmptySpace()))
 
         # Test chaining of maps

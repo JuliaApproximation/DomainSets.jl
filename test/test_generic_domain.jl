@@ -103,6 +103,8 @@ end
         s2 = Set([0..1,2..3,3..4.0, Point(2)])
         @test s2 isa Set{Domain}
         @test DomainSets.promote_domains(s2) isa Set{<:Domain{Float64}}
+        @test DomainSets.promote(0..1.0, [1,2,3]) isa Tuple{Interval,Vector{Float64}}
+        @test DomainSets.promote([1,2,3], 0..1.0) isa Tuple{Vector{Float64},Interval}
 
         # compatible point-domain pairs
         @test DomainSets.iscompatiblepair(0.5, 0..1)

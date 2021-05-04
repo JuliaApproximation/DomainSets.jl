@@ -33,8 +33,7 @@ end
 WrappedMap{T}(map) where {T} = WrappedMap{T,typeof(map)}(map)
 WrappedMap(map) = WrappedMap{Float64}(map)
 
-convert(::Type{Map{T}}, m::WrappedMap{T}) where {T} = m
-convert(::Type{Map{T}}, m::WrappedMap) where {T} = WrappedMap{T}(m.map)
+similarmap(m::WrappedMap, ::Type{T}) where {T} = WrappedMap{T}(m)
 
 convert(::Type{Map}, m::Map) = m
 convert(::Type{Map}, m) = WrappedMap(m)
