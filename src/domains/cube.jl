@@ -46,7 +46,7 @@ volume(d::UnitCube) = 1
 struct StaticUnitCube{T} <: UnitCube{T}
 end
 
-StaticUnitCube() = StaticUnitCube{Float64}()
+StaticUnitCube() = StaticUnitCube{SVector{3,Float64}}()
 StaticUnitCube(::Val{N}) where {N} = StaticUnitCube{SVector{N,Float64}}()
 
 StaticUnitCube{T}(n::Int) where {T} =
@@ -123,10 +123,14 @@ ProductDomain(domains::NTuple{N,<:UnitInterval}) where {N} = UnitCube(domains)
 ProductDomain(domains::SVector{N,<:UnitInterval}) where {N} = UnitCube(domains)
 ProductDomain(domains::AbstractVector{<:UnitInterval{T}}) where {T} =
     VectorUnitCube{T}(length(domains))
-ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains...)
-ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains)
-ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} = UnitCube{T}(domains)
-ProductDomain{T}(domains::AbstractVector{<:UnitInterval{T}}) where {T} = VectorUnitCube{T}(domains)
+ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:SVector{N,S}} =
+	UnitCube{T}(domains...)
+ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} =
+	UnitCube{T}(domains)
+ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} =
+	UnitCube{T}(domains)
+ProductDomain{T}(domains::AbstractVector{<:UnitInterval}) where {S,T<:Vector{S}} =
+	VectorUnitCube{S}(length(domains))
 
 ## Display:
 show(io::IO, d::EuclideanUnitCube{3,Float64}) = print(io, "UnitCube()")

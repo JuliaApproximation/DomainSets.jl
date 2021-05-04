@@ -47,7 +47,6 @@ struct BoundedIndicatorFunction{F,D,T} <: AbstractIndicatorFunction{T}
     domain  ::  D
 end
 
-BoundedIndicatorFunction(f, a, b) = BoundedIndicatorFunction(f, Rectangle(a, b))
 BoundedIndicatorFunction(f::F, domain::D) where {F,T,D<:Domain{T}} =
     BoundedIndicatorFunction{F,D,T}(f, domain)
 
