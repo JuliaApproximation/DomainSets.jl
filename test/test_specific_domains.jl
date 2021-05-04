@@ -1,6 +1,9 @@
 using StaticArrays, DomainSets, Test
 
-import DomainSets: MappedDomain, similar_interval
+using DomainSets:
+    MappedDomain,
+    similar_interval,
+    GenericBall, GenericSphere
 
 struct Basis3Vector <: StaticVector{3,Float64} end
 
@@ -661,6 +664,13 @@ end
         @test map_domain(Translation([1,2,3]), UnitBall()) isa DomainSets.GenericBall
         @test map_domain(Translation(1), UnitBall{Float64}()) isa DomainSets.GenericBall
 
+        @test StaticUnitBall() isa StaticUnitBall{Float64}
+        @test StaticUnitBall(Val(2)) isa StaticUnitBall{SVector{2,Float64}}
+
+        @test GenericBall() == GenericBall(1.0)
+        @test GenericBall(2.0, 1:5) isa GenericBall{Vector{Float64},:closed,Float64}
+        @test GenericBall(2, 1.0:5.0) isa GenericBall{Vector{Float64},:closed,Float64}
+
         D = UnitDisk()
         @test SA[1.,0.] ∈ D
         @test SA[1.,1.] ∉ D
@@ -677,6 +687,7 @@ end
         @test boundingbox(UnitBall{Float64}()) == ChebyshevInterval()
 
         @test convert(SublevelSet, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
+        @test convert(SublevelSet{SVector{2,Float64}}, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
         @test convert(SublevelSet, EuclideanUnitBall{2,Float64,:open}()) isa SublevelSet{SVector{2,Float64},:open}
 
         @test convert(Interval, UnitBall{Float64}()) === ChebyshevInterval()
@@ -685,6 +696,18 @@ end
 
         @test convert(Domain{SVector{2,Float64}}, UnitBall(2)) isa StaticUnitBall
         @test convert(Domain{Vector{Float64}}, UnitBall(Val(2))) isa DynamicUnitBall
+
+        @test repr(UnitBall()) == "UnitBall()"
+        @test repr(UnitBall(Val(4))) == "UnitBall(Val(4))"
+        @test repr(EuclideanUnitBall{3,Float64,:open}()) == "UnitBall()  (open)"
+        @test repr(EuclideanUnitBall{4,Float64,:open}()) == "UnitBall(Val(4))  (open)"
+        @test repr(UnitDisk()) == "UnitDisk()"
+        @test repr(UnitDisk{BigFloat}()) == "UnitDisk{BigFloat}()"
+        @test repr(UnitBall{Float64}()) == "UnitBall{Float64}()"
+        @test repr(UnitBall{Float64,:open}()) == "UnitBall{Float64}()  (open)"
+        @test repr(VectorUnitBall{Float64}(4)) == "UnitBall(4)"
+        @test repr(VectorUnitBall{Float64,:open}(4)) == "UnitBall(4)  (open)"
+        @test repr(Ball(1.0,2.0)) == "Ball(1.0, 2.0)"
 
         D = EuclideanUnitBall{2,Float64,:open}()
         @test !in(SA[1.0,0.0], D)
@@ -704,13 +727,22 @@ end
         @test SA[1.5,1.5] ∈ 1.2 * D
         @test SA[1.5,1.5] ∈ D * 1.2
         @test !isempty(D)
-        # TODO: implement and test isclosedset and isopenset for mapped domains
+
+        @test canonicaldomain(D) == UnitDisk()
+        @test matrix(fromcanonical(D)) == [2 0; 0 2]
+        @test vector(fromcanonical(D)) == [0; 0]
+        @test parameterdomain(D) == canonicaldomain(D)
+        @test from_parameterdomain(D) == fromcanonical(D)
+        @test boundingbox(D) == (-2.0..2.0)^2
 
         D = 2UnitDisk() .+ SA[1.0,1.0]
         @test D isa DomainSets.GenericBall
+        @test boundary(D) isa DomainSets.GenericSphere
         @test SA[2.4, 2.4] ∈ D
         @test SA[3.5, 2.5] ∉ D
         @test !isempty(D)
+        @test isopenset(interior(D))
+        @test isclosedset(closure(D))
         @test canonicaldomain(D) isa UnitDisk
 
         B = UnitBall()
@@ -721,6 +753,7 @@ end
         @test !isopenset(B)
         @test boundary(B) == UnitSphere()
         @test isopenset(interior(B))
+        @test isclosedset(closure(B))
 
         B = 2UnitBall()
         @test D isa DomainSets.GenericBall
@@ -761,6 +794,10 @@ end
         @test !isempty(D)
         @test approx_in(SA[1.01,0.0,0.0,0.0], D, 0.05)
 
+        E = Ball{Float64,:open}(2.0)
+        @test 0.5 ∈ E
+        @test approx_in(0.5, E)
+        @test approx_in(0.5, closure(E))
         @test isclosedset(StaticUnitBall{SVector{2,Float64}}())
         @test EuclideanUnitBall{2}() isa EuclideanUnitBall{2,Float64}
 
@@ -790,6 +827,7 @@ end
         @test 1.1im ∉ C
         @test 0.2+0.5im ∉ C
         @test 1.2+0.5im ∉ C
+        @test parameterdomain(C) == UnitInterval()
 
         D = ComplexUnitDisk()
         @test eltype(D) == Complex{Float64}
@@ -807,12 +845,11 @@ end
         @test 1im ∉ D2
         @test 0.999 ∈ D2
 
-        show(io,C)
-        @test String(take!(io)) == "ComplexUnitCircle()"
-        show(io,D)
-        @test String(take!(io)) == "ComplexUnitDisk()"
-        show(io,D2)
-        @test String(take!(io)) == "ComplexUnitDisk{BigFloat}()  (open)"
+        @test repr(ComplexUnitCircle()) == "ComplexUnitCircle()"
+        @test repr(ComplexUnitDisk()) == "ComplexUnitDisk()"
+        @test repr(ComplexUnitDisk{Float64,:open}()) == "ComplexUnitDisk()  (open)"
+        @test repr(ComplexUnitDisk{BigFloat}()) == "ComplexUnitDisk{BigFloat}()"
+        @test repr(ComplexUnitDisk{BigFloat,:open}()) == "ComplexUnitDisk{BigFloat}()  (open)"
 
         @test pseudolevel(ComplexUnitCircle(), 0.1) isa SublevelSet{Complex{Float64},:open}
         p = pseudolevel(ComplexUnitCircle(), 0.1)
@@ -858,6 +895,21 @@ end
         @test map_domain(Translation([1,2,3]), UnitSphere()) isa DomainSets.GenericSphere
         @test map_domain(Translation(1), UnitSphere{Float64}()) isa DomainSets.GenericSphere
 
+        @test StaticUnitSphere() isa StaticUnitSphere{Float64}
+        @test StaticUnitSphere(Val(2)) isa StaticUnitSphere{SVector{2,Float64}}
+
+        @test GenericSphere() == GenericSphere(1.0)
+        @test GenericSphere(2.0, 1:5) isa GenericSphere{Vector{Float64},Float64}
+        @test GenericSphere(2, 1.0:5.0) isa GenericSphere{Vector{Float64},Float64}
+
+        @test repr(UnitSphere()) == "UnitSphere()"
+        @test repr(UnitSphere(Val(4))) == "UnitSphere(Val(4))"
+        @test repr(UnitCircle()) == "UnitCircle()"
+        @test repr(UnitCircle{BigFloat}()) == "UnitCircle{BigFloat}()"
+        @test repr(VectorUnitSphere{Float64}(4)) == "UnitSphere(4)"
+        @test repr(UnitSphere{Float64}()) == "UnitSphere{Float64}()"
+        @test repr(Sphere(1.0,2.0)) == "Sphere(1.0, 2.0)"
+
         C = UnitCircle()
         @test SA[1.,0.] ∈ C
         @test SA[1.,1.] ∉ C
@@ -866,7 +918,9 @@ end
         @test !isempty(C)
         @test isclosedset(C)
         @test !isopenset(C)
+        @test parameterdomain(C) == UnitInterval()
         p = parameterization(C)
+        @test size(p) == (2,)
         x = applymap(p, 1/2)
         @test jacobian(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
         @test diffvolume(p, 0.4) ≈ 2*pi
@@ -874,8 +928,12 @@ end
         @test approx_in(x, C)
         q = leftinverse(p)
         @test applymap(q, x) ≈ 1/2
+        @test applymap(q, x) ≈ leftinverse(p, x)
         @test applymap(q, -x) ≈ 1
         @test rightinverse(q) == p
+        @test rightinverse(q)(0) ≈ rightinverse(q, 0)
+        @test jacobian(q) isa DomainSets.LazyJacobian
+        @test jacobian(q, x) isa LinearAlgebra.Transpose{Float64,SVector{2,Float64}}
 
         @test boundingbox(C) == ProductDomain(ChebyshevInterval(), ChebyshevInterval())
         @test boundingbox(UnitSphere{Float64}()) == ChebyshevInterval()
@@ -895,7 +953,14 @@ end
         C = 2UnitCircle() .+ SA[1.,1.]
         @test C isa DomainSets.GenericSphere
         @test approx_in(SA[3.,1.], C)
-        @test canonicaldomain(C) isa UnitSphere
+
+        @test canonicaldomain(C) == UnitCircle()
+        @test matrix(fromcanonical(C)) == [2 0; 0 2]
+        @test vector(fromcanonical(C)) == [1; 1]
+        @test parameterdomain(C) == UnitInterval()
+        @test from_parameterdomain(C) isa Composition
+        @test from_parameterdomain(C)(0.5) ≈ [-1; 1]
+        @test boundingbox(C) == (-1.0..3.0)^2
 
         C = UnitCircle() .+ SA[1,1]
         @test C isa DomainSets.GenericSphere

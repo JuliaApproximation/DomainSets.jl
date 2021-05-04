@@ -81,11 +81,6 @@ end
 # We choose the center of the ball here. Concrete types should implement 'center'
 point_in_domain(d::Ball) = center(d)
 
-convert(::Type{SublevelSet}, d::Ball{T,C}) where {T,C} =
-    SublevelSet{T,C}(norm, radius(d))
-convert(::Type{SublevelSet{T}}, d::Ball{S,C}) where {T,S,C} =
-    SublevelSet{T,C}(norm, radius(d))
-
 
 "The unit ball."
 abstract type UnitBall{T,C} <: Ball{T,C} end
@@ -120,6 +115,11 @@ approx_indomain(x, d::ClosedUnitBall, tolerance) = norm(x) <= 1+tolerance
 
 issubset(d1::UnitBall, d2::UnitBall) =
     dimension(d1) == dimension(d2) && (isclosedset(d2) || isopenset(d1))
+
+convert(::Type{SublevelSet}, d::UnitBall{T,C}) where {T,C} =
+    SublevelSet{T,C}(norm, radius(d))
+convert(::Type{SublevelSet{T}}, d::UnitBall{S,C}) where {T,S,C} =
+    SublevelSet{T,C}(norm, radius(d))
 
 
 "The unit ball with fixed dimension(s) specified by the element type."
@@ -205,10 +205,9 @@ GenericBall(radius::S, center::T) where {S<:Number,U,T<:Vector{U}} =
 GenericBall(radius::S, center::T) where {S<:Number,N,U,T<:SVector{N,U}} =
     GenericBall{SVector{N,promote_type(S,U)}}(radius, center)
 GenericBall(radius::S, center::T) where {S<:Number,T<:AbstractVector} =
-    GenericBall{T}(radius, center)
+    GenericBall{Vector{promote_type(S,eltype(T))}}(radius, center)
 GenericBall(radius::S, center::T) where {S<:Number,T<:Number} =
     GenericBall{promote_type(S,T)}(radius, center)
-GenericBall(radius::S, center::T) where {S<:Number,U,T<:AbstractVector{S}} = GenericBall{T}(radius, center)
 GenericBall{T}(radius) where {T} = GenericBall{T,:closed}(radius)
 GenericBall{T}(radius, center) where {T} = GenericBall{T,:closed}(radius, center)
 GenericBall{T,C}(radius) where {T,C} = GenericBall{T,C}(radius, zero(T))
@@ -400,9 +399,7 @@ GenericSphere(radius::S, center::T) where {S<:Number,U,T<:Vector{U}} =
 GenericSphere(radius::S, center::T) where {S<:Number,N,U,T<:SVector{N,U}} =
     GenericSphere{SVector{N,promote_type(S,U)}}(radius, center)
 GenericSphere(radius::S, center::T) where {S<:Number,T<:AbstractVector} =
-    GenericSphere{T}(radius, center)
-GenericSphere(radius::S, center::T) where {S<:Number,U,T<:AbstractVector{S}} =
-    GenericSphere{T}(radius, center)
+    GenericSphere{Vector{promote_type(S,eltype(T))}}(radius, center)
 GenericSphere{T}(radius) where {T} = GenericSphere{T}(radius, zero(T))
 GenericSphere{T}(radius, center) where {T} =
     GenericSphere{T,eltype(T)}(radius, center)
@@ -442,7 +439,6 @@ map_domain(m::Translation{T}, d::Sphere{S}) where {T<:Number,S<:Number} =
 show(io::IO, d::EuclideanUnitSphere{3,Float64}) = print(io, "UnitSphere()")
 show(io::IO, d::EuclideanUnitSphere{N,Float64}) where {N} = print(io, "UnitSphere(Val($(N)))")
 show(io::IO, d::EuclideanUnitSphere{2,Float64}) = print(io, "UnitCircle()")
-show(io::IO, d::UnitCircle{Float64}) = print(io, "UnitCircle()")
 show(io::IO, d::UnitCircle{T}) where {T} = print(io, "UnitCircle{$(T)}()")
 show(io::IO, d::VectorUnitSphere{Float64}) = print(io, "UnitSphere($(dimension(d)))")
 show(io::IO, d::UnitSphere{T}) where {T<:Number} = print(io, "UnitSphere{$(T)}()")
