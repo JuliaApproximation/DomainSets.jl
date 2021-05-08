@@ -134,6 +134,8 @@ end
         @test dimension(d) == 1
         @test isempty(interior(d))
         @test closure(d) == d
+        @test canonicaldomain(d) == Point(0.0)
+        @test mapfrom_canonical(d) == Translation(1.0)
 
         @test d .+ 1 == Domain(2.0)
         @test 1 .+ d == Domain(2.0)
@@ -168,7 +170,10 @@ end
         @test Point(0.5) \ (0..1) == EmptySpace{Float64}()
         @test Point(0.5) \ (1..2) == Point(0.5)
 
-        @test dimension(Point([1,2,3]))==3
+        pv = Point([1,2,3])
+        @test dimension(pv)==3
+        @test canonicaldomain(pv) == Point([0,0,0])
+        @test mapfrom_canonical(pv) == Translation(pv.x)
     end
 
     @testset "intervals" begin
@@ -747,10 +752,10 @@ end
         @test !isempty(D)
 
         @test canonicaldomain(D) == UnitDisk()
-        @test matrix(fromcanonical(D)) == [2 0; 0 2]
-        @test vector(fromcanonical(D)) == [0; 0]
+        @test matrix(mapfrom_canonical(D)) == [2 0; 0 2]
+        @test vector(mapfrom_canonical(D)) == [0; 0]
         @test parameterdomain(D) == canonicaldomain(D)
-        @test from_parameterdomain(D) == fromcanonical(D)
+        @test mapfrom_parameterdomain(D) == mapfrom_canonical(D)
         @test boundingbox(D) == (-2.0..2.0)^2
 
         D = 2UnitDisk() .+ SA[1.0,1.0]
@@ -928,6 +933,9 @@ end
         @test repr(UnitSphere{Float64}()) == "UnitSphere{Float64}()"
         @test repr(Sphere(1.0,2.0)) == "Sphere(1.0, 2.0)"
 
+        @test DomainSets.UnitCircleMap() == DomainSets.UnitCircleMap{Float64}()
+        @test DomainSets.AngleMap() == DomainSets.AngleMap{Float64}()
+
         C = UnitCircle()
         @test SA[1.,0.] ∈ C
         @test SA[1.,1.] ∉ C
@@ -974,11 +982,11 @@ end
         @test approx_in(SA[3.,1.], C)
 
         @test canonicaldomain(C) == UnitCircle()
-        @test matrix(fromcanonical(C)) == [2 0; 0 2]
-        @test vector(fromcanonical(C)) == [1; 1]
+        @test matrix(mapfrom_canonical(C)) == [2 0; 0 2]
+        @test vector(mapfrom_canonical(C)) == [1; 1]
         @test parameterdomain(C) == UnitInterval()
-        @test from_parameterdomain(C) isa Composition
-        @test from_parameterdomain(C)(0.5) ≈ [-1; 1]
+        @test mapfrom_parameterdomain(C) isa Composition
+        @test mapfrom_parameterdomain(C)(0.5) ≈ [-1; 1]
         @test boundingbox(C) == (-1.0..3.0)^2
 
         C = UnitCircle() .+ SA[1,1]
@@ -1094,11 +1102,11 @@ end
         @test B == closure(interior(B))
         @test DomainSets.superdomain(boundary(B)) isa UnitSphere
         @test canonicaldomain(B) == VectorUnitBall(10)
-        @test fromcanonical(B) == forward_map(B)
-        @test tocanonical(B) == inverse_map(B)
+        @test mapfrom_canonical(B) == forward_map(B)
+        @test mapto_canonical(B) == inverse_map(B)
         @test parameterdomain(B) == canonicaldomain(B)
-        @test from_parameterdomain(B) == fromcanonical(B)
-        @test to_parameterdomain(B) == tocanonical(B)
+        @test mapfrom_parameterdomain(B) == mapfrom_canonical(B)
+        @test mapto_parameterdomain(B) == mapto_canonical(B)
 
         # Test parametric domain
         using DomainSets: ParametricDomain
@@ -1109,7 +1117,7 @@ end
         @test forward_map(pd, 0.4) ≈ m(0.4)
         @test inverse_map(pd)(m(0.4)) ≈ 0.4
         @test inverse_map(pd, m(0.4)) ≈ 0.4
-        @test fromcanonical(pd) == m
+        @test mapfrom_canonical(pd) == m
         @test canonicaldomain(pd) == 0..1
         @test boundary(pd) isa ParametricDomain
         @test interior(pd) isa ParametricDomain

@@ -19,15 +19,8 @@ tointernalpoint(d::AbstractMappedDomain, x) = inverse_map(d, x)
 toexternalpoint(d::AbstractMappedDomain, y) = forward_map(d, y)
 
 canonicaldomain(d::AbstractMappedDomain) = canonicaldomain(superdomain(d))
-fromcanonical(d::AbstractMappedDomain) = forward_map(d) ∘ fromcanonical(superdomain(d))
-tocanonical(d::AbstractMappedDomain) = tocanonical(superdomain(d)) ∘ inverse_map(d)
-
-canonicaldomain(d::AbstractMappedDomain, ::Parameterization) =
-    canonicaldomain(superdomain(d), Parameterization())
-fromcanonical(d::AbstractMappedDomain, ::Parameterization) =
-    forward_map(d) ∘ fromcanonical(superdomain(d), Parameterization())
-tocanonical(d::AbstractMappedDomain, ::Parameterization) =
-    tocanonical(superdomain(d), Parameterization()) ∘ inverse_map(d)
+mapfrom_canonical(d::AbstractMappedDomain) = forward_map(d) ∘ mapfrom_canonical(superdomain(d))
+mapto_canonical(d::AbstractMappedDomain) = mapto_canonical(superdomain(d)) ∘ inverse_map(d)
 
 
 # TODO: check whether the map alters the dimension

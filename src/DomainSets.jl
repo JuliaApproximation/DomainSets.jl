@@ -104,10 +104,10 @@ export Domain, EuclideanDomain, VectorDomain,
     interior, closure,
     volume,
     point_in_domain,
-    canonicaldomain, tocanonical, fromcanonical, hascanonicaldomain,
+    canonicaldomain, mapto_canonical, mapfrom_canonical, hascanonicaldomain,
     mapto,
     parameterdomain, parameterization, hasparameterization,
-    from_parameterdomain, to_parameterdomain
+    mapfrom_parameterdomain, mapto_parameterdomain
 
 # from generic/lazy.jl
 export superdomain

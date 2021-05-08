@@ -87,16 +87,16 @@ similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(componen
 
 canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain, components(d)))
 
-tocanonical(d::ProductDomain) = ProductMap(map(tocanonical, components(d)))
-fromcanonical(d::ProductDomain) = ProductMap(map(fromcanonical, components(d)))
+mapto_canonical(d::ProductDomain) = ProductMap(map(mapto_canonical, components(d)))
+mapfrom_canonical(d::ProductDomain) = ProductMap(map(mapfrom_canonical, components(d)))
 
 for CTYPE in (Parameterization, Equal)
-	@eval canonicaldomain(d::ProductDomain, ctype::$CTYPE) =
-		ProductDomain(canonicaldomain.(components(d), Ref(ctype)))
-	@eval tocanonical(d::ProductDomain, ctype::$CTYPE) =
-		ProductMap(tocanonical.(components(d), Ref(ctype)))
-	@eval fromcanonical(d::ProductDomain, ctype::$CTYPE) =
-		ProductMap(fromcanonical.(components(d), Ref(ctype)))
+	@eval canonicaldomain(ctype::$CTYPE, d::ProductDomain) =
+		ProductDomain(canonicaldomain.(Ref(ctype), components(d)))
+	@eval mapto_canonical(ctype::$CTYPE, d::ProductDomain) =
+		ProductMap(mapto_canonical.(Ref(ctype), components(d)))
+	@eval mapfrom_canonical(ctype::$CTYPE, d::ProductDomain) =
+		ProductMap(mapfrom_canonical.(Ref(ctype), components(d)))
 end
 
 

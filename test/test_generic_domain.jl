@@ -29,14 +29,14 @@ function test_generic_domain(d::Domain)
         catch
         end
     end
-    @test canonicaldomain(d, DomainSets.Equal()) == d
+    @test canonicaldomain(DomainSets.Equal(), d) == d
     if canonicaldomain(d) == d
-        @test tocanonical(d) == IdentityMap{eltype(d)}(dimension(d))
-        @test fromcanonical(d) == IdentityMap{eltype(d)}(dimension(d))
+        @test mapto_canonical(d) == IdentityMap{eltype(d)}(dimension(d))
+        @test mapfrom_canonical(d) == IdentityMap{eltype(d)}(dimension(d))
     else
         cd = canonicaldomain(d)
-        @test fromcanonical(d) == mapto(cd, d)
-        @test tocanonical(d) == mapto(d, cd)
+        @test mapfrom_canonical(d) == mapto(cd, d)
+        @test mapto_canonical(d) == mapto(d, cd)
     end
     if iscomposite(d)
         @test ncomponents(d) == length(components(d))

@@ -65,10 +65,14 @@ affine_size(m::AbstractAffineMap, T, A::UniformScaling, b::Number) = ()
 affine_size(m::AbstractAffineMap, T, A::UniformScaling, b) = (length(b),length(b))
 
 
-Display.displaystencil(m::AbstractAffineMap) = ["x -> ", unsafe_matrix(m), " * x + ", unsafe_vector(m)]
+Display.displaystencil(m::AbstractAffineMap) = vcat(["x -> "], map_stencil(m, 'x'))
 show(io::IO, mime::MIME"text/plain", m::AbstractAffineMap) = composite_show(io, mime, m)
 
-map_stencil(m::AbstractAffineMap, x) = [unsafe_matrix(m), " * ", x, " + ", unsafe_vector(m)]
+map_stencil(m::AbstractAffineMap, x) = _map_stencil(m, x, unsafe_matrix(m), unsafe_vector(m))
+_map_stencil(m::AbstractAffineMap, x, A, b) = [A, " * ", x, " + ", b]
+_map_stencil(m::AbstractAffineMap, x, A, b::Real) =
+    b >= 0 ? [A, " * ", x, " + ", b] :  [A, " * ", x, " - ", abs(b)]
+
 map_stencil_broadcast(m::AbstractAffineMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m), unsafe_vector(m))
 _map_stencil_broadcast(m::AbstractAffineMap, x, A, b) = [A, " .* ", x, " .+ ", b]
 _map_stencil_broadcast(m::AbstractAffineMap, x, A::Number, b) = [A, " * ", x, " .+ ", b]
@@ -152,7 +156,6 @@ convert(::Type{LinearMap{T}}, ::StaticIdentityMap) where {T} = LinearMap{T}(1)
 convert(::Type{AbstractAffineMap}, m::StaticIdentityMap) = convert(LinearMap, m)
 convert(::Type{AbstractAffineMap{T}}, m::StaticIdentityMap) where {T} = convert(LinearMap, m)
 
-Display.displaystencil(m::LinearMap) = ["x -> ", unsafe_matrix(m), " * x"]
 
 map_stencil(m::LinearMap, x) = [unsafe_matrix(m), " * ", x]
 map_stencil_broadcast(m::LinearMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m))
@@ -205,7 +208,10 @@ ScalarLinearMap(A::Number) = ScalarLinearMap{typeof(A)}(A)
 
 isreal(m::ScalarLinearMap{T}) where {T} = isreal(T)
 
-show(io::IO, m::ScalarLinearMap) = print(io, "x -> $(m.A) * x")
+show(io::IO, m::ScalarLinearMap) = show_scalar_linear_map(io, m.A)
+show_scalar_linear_map(io, A::Real) = print(io, "x -> $(A) * x")
+show_scalar_linear_map(io, A::Complex) = print(io, "x -> ($(A)) * x")
+
 
 "A `VectorLinearMap` is a linear map `y = A*x` using vectors and matrices."
 struct VectorLinearMap{T} <: LinearMap{Vector{T}}
@@ -250,9 +256,10 @@ size(m::Translation) = translation_size(m, domaintype(m), unsafe_vector(m))
 translation_size(m::Translation, ::Type{T}, b::Number) where {T} = ()
 translation_size(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
 
-Display.displaystencil(m::Translation) = ["x -> x + ", unsafe_vector(m)]
-
-map_stencil(m::Translation, x) = [x, " + ", unsafe_vector(m)]
+map_stencil(m::Translation, x) = _map_stencil(m, x, unsafe_vector(m))
+_map_stencil(m::Translation, x, b) = [x, " + ", b]
+_map_stencil(m::Translation, x, b::Real) =
+    b >= 0 ? [x, " + ", b] : [x, " - ", abs(b)]
 map_stencil_broadcast(m::Translation, x) = _map_stencil_broadcast(m, x, unsafe_vector(m))
 _map_stencil_broadcast(m::Translation, x, b) = [x, " .+ ", b]
 
@@ -263,10 +270,10 @@ end
 
 isreal(m::ScalarTranslation{T}) where {T} = isreal(T)
 
+show(io::IO, m::ScalarTranslation) = show_scalar_translation(io, m.b)
 show_scalar_translation(io, b::Real) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
 show_scalar_translation(io, b) = print(io, "x -> x + ", b)
-show(io::IO, m::ScalarTranslation) = show_scalar_translation(io, m.b)
-show(io::IO, ::MIME"text/plain", m::ScalarTranslation) = show_scalar_translation(io, m.b)
+
 
 "Translation by a static vector."
 struct StaticTranslation{T,N} <: Translation{SVector{N,T}}
@@ -447,10 +454,10 @@ ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
 isreal(m::ScalarAffineMap{T}) where {T} = isreal(T)
 
-show_scalar_affine_map(io, a::Real, b::Real) = print(io, "x -> $(a) * x", b < 0 ? " - " : " + ", abs(b))
-show_scalar_affine_map(io, a::Complex, b::Complex) = print(io, "x -> ($(a)) * x + ", b)
 show(io::IO, m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
-show(io::IO, mime::MIME"text/plain", m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
+show_scalar_affine_map(io, A::Real, b::Real) = print(io, "x -> $(A) * x", b < 0 ? " - " : " + ", abs(b))
+show_scalar_affine_map(io, A::Complex, b::Complex) = print(io, "x -> ($(A)) * x + ", b)
+show_scalar_affine_map(io, A, b) = print(io, "x -> ($(A)) * x + $(b)")
 
 
 convert(::Type{ScalarAffineMap{T}}, m::ScalarAffineMap) where {T} =

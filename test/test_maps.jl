@@ -35,7 +35,7 @@ maps_to_test(T) = [
     LinearMap(randvec(T, 2, 2)),
     LinearMap(randvec(T, 2)),
     LinearMap(randvec(T, 2, 2)) ∘ AffineMap(T(1.2), randvec(T, 2)),
-    from_parameterdomain(T(5) * ComplexUnitCircle{T}() .+ T(2))
+    mapfrom_parameterdomain(T(5) * ComplexUnitCircle{T}() .+ T(2))
 ]
 
 randvec(T,n) = SVector{n,T}(rand(n))

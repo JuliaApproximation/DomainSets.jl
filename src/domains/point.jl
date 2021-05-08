@@ -23,6 +23,14 @@ isempty(::Point) = false
 
 approx_indomain(x, d::Point, tolerance) = norm(x-d.x) <= tolerance
 
+dimension(d::Point{Vector{T}}) where {T} = length(d.x)
+
+canonicaldomain(d::Point{T}) where {T<:StaticTypes} = Point(zero(T))
+canonicaldomain(d::Point{T}) where {T<:AbstractVector} =
+    Point(zeros(eltype(T),dimension(d)))
+
+mapfrom_canonical(d::Point) = Translation(d.x)
+
 isopenset(d::Point) = false
 isclosedset(d::Point) = true
 
@@ -33,8 +41,6 @@ interior(d::Point{T}) where {T} = EmptySpace{T}()
 closure(d::Point) = d
 
 point_in_domain(d::Point) = d.x
-
-dimension(d::Point{Vector{T}}) where {T} = length(d.x)
 
 function map_domain(map, p::Point)
     x = applymap(map, p.x)

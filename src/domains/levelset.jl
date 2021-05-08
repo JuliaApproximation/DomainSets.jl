@@ -16,6 +16,8 @@ indomain(x, d::AbstractLevelSet) = levelfun(d, x) == level(d)
 show(io::IO, d::AbstractLevelSet) =
     print(io, "level set f(x) = $(level(d)) with f = $(levelfun(d))")
 
+==(d1::AbstractLevelSet, d2::AbstractLevelSet) = levelfun(d1)==levelfun(d2) &&
+    level(d1)==level(d2)
 
 "The domain defined by `f(x)=0` for a given function `f`."
 struct ZeroSet{T,F} <: AbstractLevelSet{T}
@@ -55,6 +57,9 @@ show(io::IO, d::AbstractSublevelSet{T,:closed}) where {T} =
     print(io, "sublevel set f(x) <= $(level(d)) with f = $(levelfun(d))")
 show(io::IO, d::AbstractSublevelSet{T,:open}) where {T} =
     print(io, "sublevel set f(x) < $(level(d)) with f = $(levelfun(d))")
+
+==(d1::AbstractSublevelSet, d2::AbstractSublevelSet) = levelfun(d1)==levelfun(d2) &&
+    level(d1)==level(d2)
 
 "The domain where `f(x) <= 0` (or `f(x) < 0`)."
 struct SubzeroSet{T,C,F} <: AbstractSublevelSet{T,C}
@@ -104,6 +109,9 @@ show(io::IO, d::AbstractSuperlevelSet{T,:closed}) where {T} =
     print(io, "superlevel set f(x) >= $(level(d)) with f = $(levelfun(d))")
 show(io::IO, d::AbstractSuperlevelSet{T,:open}) where {T} =
     print(io, "superlevel set f(x) > $(level(d)) with f = $(levelfun(d))")
+
+==(d1::AbstractSuperlevelSet, d2::AbstractSuperlevelSet) = levelfun(d1)==levelfun(d2) &&
+    level(d1)==level(d2)
 
 "The domain where `f(x) >= 0` (or `f(x) > 0`)."
 struct SuperzeroSet{T,C,F} <: AbstractSuperlevelSet{T,C}

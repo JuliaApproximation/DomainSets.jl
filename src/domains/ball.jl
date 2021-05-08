@@ -161,7 +161,7 @@ convert(::Type{Interval}, d::StaticUnitBall{T,:closed}) where {T <: Number} =
 convert(::Type{Interval}, d::StaticUnitBall{T,:open}) where {T <: Number} =
     OpenInterval{T}(-1, 1)
 
-canonicaldomain(d::StaticUnitBall{T}, ::Equal) where {T<:Number} = convert(Interval, d)
+canonicaldomain(::Equal, d::StaticUnitBall{T}) where {T<:Number} = convert(Interval, d)
 
 
 "The unit ball with variable dimension stored in a data field."
@@ -219,15 +219,10 @@ center(d::GenericBall) = d.center
 dimension(d::GenericBall) = length(d.center)
 
 canonicaldomain(d::GenericBall{T,C}) where {T,C} = UnitBall{T,C}(dimension(d))
-fromcanonical(d::GenericBall) = AffineMap(radius(d), center(d))
-
-canonicaldomain(d::GenericBall, ::Parameterization) =
-    canonicaldomain(canonicaldomain(d), Parameterization())
-fromcanonical(d::GenericBall, ::Parameterization) =
-    fromcanonical(d) ∘ fromcanonical(canonicaldomain(d), Parameterization())
+mapfrom_canonical(d::GenericBall) = AffineMap(radius(d), center(d))
 
 boundingbox(d::GenericBall) =
-    map_boundingbox(boundingbox(canonicaldomain(d)), fromcanonical(d))
+    map_boundingbox(boundingbox(canonicaldomain(d)), mapfrom_canonical(d))
 
 # Preserve the `Ball` type under affine maps which preserve shape
 map_domain(m::GenericAffineMap{T,S}, d::Ball{U,C}) where {T<:AbstractVector,S<:Number,U<:AbstractVector,C} =
@@ -410,15 +405,10 @@ center(d::GenericSphere) = d.center
 dimension(d::GenericSphere) = length(d.center)
 
 canonicaldomain(d::GenericSphere{T}) where {T} = UnitSphere{T}(dimension(d))
-fromcanonical(d::GenericSphere) = AffineMap(radius(d), center(d))
-
-canonicaldomain(d::GenericSphere, ::Parameterization) =
-    canonicaldomain(canonicaldomain(d), Parameterization())
-fromcanonical(d::GenericSphere, ::Parameterization) =
-    fromcanonical(d) ∘ fromcanonical(canonicaldomain(d), Parameterization())
+mapfrom_canonical(d::GenericSphere) = AffineMap(radius(d), center(d))
 
 boundingbox(d::GenericSphere) =
-    map_boundingbox(boundingbox(canonicaldomain(d)), fromcanonical(d))
+    map_boundingbox(boundingbox(canonicaldomain(d)), mapfrom_canonical(d))
 
 # Preserve the `Sphere` type under affine maps which preserve shape
 map_domain(m::GenericAffineMap{T,S}, d::Sphere{U}) where {T<:AbstractVector,S<:Number,U<:AbstractVector} =
@@ -493,6 +483,8 @@ The map `[cos(2πt), sin(2πt)]` from `[0,1]` to the unit circle in `ℝ^2`.
 """
 struct UnitCircleMap{T} <: Map{T} end
 
+UnitCircleMap() = UnitCircleMap{Float64}()
+
 size(m::UnitCircleMap) = (2,)
 
 applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
@@ -512,6 +504,8 @@ origin. The angle of this point, scaled to the interval `[0,1)`, is the result.
 """
 struct AngleMap{T} <: Map{SVector{2,T}}
 end
+
+AngleMap() = AngleMap{Float64}()
 
 function applymap(m::AngleMap{T}, x) where {T}
     twopi = 2*convert(T, pi)
@@ -540,8 +534,8 @@ leftinverse(m::UnitCircleMap, x) = leftinverse(m)(x)
 rightinverse(m::AngleMap{T}) where {T} = UnitCircleMap{T}()
 rightinverse(m::AngleMap, x) = rightinverse(m)(x)
 
-canonicaldomain(d::UnitCircle{T}, ::Parameterization) where {T} = UnitInterval{T}()
-fromcanonical(d::UnitCircle{T}, ::Parameterization) where {T} = UnitCircleMap{T}()
+canonicaldomain(::Parameterization, d::UnitCircle{T}) where {T} = UnitInterval{T}()
+mapfrom_canonical(::Parameterization, d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
 
 
 ## The complex plane
@@ -559,7 +553,7 @@ show(io::IO, d::ComplexUnitDisk{Float64,:open}) = print(io, "ComplexUnitDisk()  
 show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} = print(io, "ComplexUnitDisk{$(T)}()")
 show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} = print(io, "ComplexUnitDisk{$(T)}()  (open)")
 
-canonicaldomain(d::ComplexUnitCircle{T}, ::Parameterization) where {T} =
+canonicaldomain(::Parameterization, d::ComplexUnitCircle{T}) where {T} =
     UnitInterval{T}()
-fromcanonical(d::ComplexUnitCircle{T}, ::Parameterization) where {T} =
+mapfrom_canonical(::Parameterization, d::ComplexUnitCircle{T}) where {T} =
     VectorToComplex{T}() ∘ UnitCircleMap{T}()

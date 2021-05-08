@@ -196,20 +196,22 @@ ProductDomain{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
 
 
 "The N-fold cartesian product of a fixed interval."
-struct FixedIntervalProduct{D,N,T} <: Cube{SVector{N,T}}
+struct FixedIntervalProduct{N,T,D} <: Cube{SVector{N,T}}
 end
 
-component(d::FixedIntervalProduct{D}, i::Int) where {D} =
+component(d::FixedIntervalProduct{N,T,D}, i::Int) where {N,T,D} =
     (1 <= i <= dimension(d) || throw(BoundsError); D())
-components(d::FixedIntervalProduct{D,N}) where {D,N} =
+components(d::FixedIntervalProduct{N,T,D}) where {N,T,D} =
     ntuple(x->D(), Val(N))
 
-volume(d::FixedIntervalProduct{D,N}) where {D,N} = volume(D())^N
+volume(d::FixedIntervalProduct{N,T,D}) where {N,T,D} = volume(D())^N
 
 FixedIntervalProduct(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
-	FixedIntervalProduct{D,N,eltype(D)}()
+	FixedIntervalProduct{N,eltype(D),D}()
+FixedIntervalProduct(domains::SVector{N,D}) where {N,D <: FixedInterval} =
+	FixedIntervalProduct{N,eltype(D),D}()
 
-const ChebyshevProductDomain{N,T} = FixedIntervalProduct{ChebyshevInterval{T},N,T}
+const ChebyshevProductDomain{N,T} = FixedIntervalProduct{N,T,ChebyshevInterval{T}}
 ChebyshevProductDomain(::Val{N}) where {N} = ChebyshevProductDomain{N}()
 ChebyshevProductDomain{N}() where {N} = ChebyshevProductDomain{N,Float64}()
 
@@ -217,7 +219,11 @@ ProductDomain(domains::D...) where {D <: FixedInterval} =
 	FixedIntervalProduct(domains)
 ProductDomain(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
 	FixedIntervalProduct(domains)
+ProductDomain(domains::SVector{N,<:FixedInterval}) where {N} =
+	FixedIntervalProduct(domains)
 ProductDomain{T}(domains::D...) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
 	FixedIntervalProduct(convert.(Ref(Domain{S}), domains))
 ProductDomain{T}(domains::NTuple{N,D}) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
 	FixedIntervalProduct(convert.(Ref(Domain{S}), domains))
+ProductDomain{T}(domains::SVector{N,<:FixedInterval}) where {N,S,T<:SVector{N}} =
+	FixedIntervalProduct(domains)
