@@ -19,7 +19,7 @@ end
 
 CartToPolarMap() = CartToPolarMap{Float64}()
 
-size(m::CartToPolarMap) = (2,2)
+mapsize(m::CartToPolarMap) = (2,2)
 
 applymap(map::CartToPolarMap{T}, x) where {T} =
     SVector{2,T}(sqrt(x[1]^2+x[2]^2)*2-1, atan(x[2],x[1])/pi)
@@ -50,7 +50,7 @@ end
 
 PolarToCartMap() = PolarToCartMap{Float64}()
 
-size(m::PolarToCartMap) = (2,2)
+mapsize(m::PolarToCartMap) = (2,2)
 
 applymap(map::PolarToCartMap{T}, x) where {T} = SVector{2,T}((x[1]+1)/2*cos(pi*x[2]), (x[1]+1)/2*sin(pi*x[2]))
 

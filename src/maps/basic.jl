@@ -23,8 +23,8 @@ isreal(::IdentityMap{T}) where {T} = isreal(T)
 isidentity(::IdentityMap) = true
 isidentity(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
 
-size(m::IdentityMap{T}) where {T<:Number} = ()
-size(m::IdentityMap{T}) where {T} = (euclideandimension(T),euclideandimension(T))
+mapsize(m::IdentityMap{T}) where {T<:Number} = ()
+mapsize(m::IdentityMap{T}) where {T} = (euclideandimension(T),euclideandimension(T))
 
 matrix(m::IdentityMap) = identitymatrix(m)
 vector(m::IdentityMap) = zerovector(m)
@@ -75,7 +75,7 @@ const VectorIdentityMap{T} = DynamicIdentityMap{Vector{T}}
 DynamicIdentityMap(dimension::Int) = VectorIdentityMap(dimension)
 VectorIdentityMap(dimension::Int) = VectorIdentityMap{Float64}(dimension)
 
-size(m::DynamicIdentityMap) = (m.dimension, m.dimension)
+mapsize(m::DynamicIdentityMap) = (m.dimension, m.dimension)
 
 similarmap(m::DynamicIdentityMap, ::Type{T}) where {T} =
     DynamicIdentityMap{T}(m.dimension)
@@ -96,11 +96,11 @@ isconstant(m::ConstantMap) = true
 isreal(m::ConstantMap{T,U}) where {T,U} =
     isreal(T) && isreal(U) && isreal(constant(m))
 
-size(m::ConstantMap) = _size(m, constant(m))
-_size(m::ConstantMap{T,U}, c) where {T<:Number,U<:Number} = ()
-_size(m::ConstantMap{T,U}, c) where {T<:Number,U} = (length(c),)
-_size(m::ConstantMap{T,U}, c) where {T,U<:Number} = (1,euclideandimension(T))
-_size(m::ConstantMap{T,U}, c) where {T,U} = (length(c), euclideandimension(T))
+mapsize(m::ConstantMap) = _constant_mapsize(m, constant(m))
+_constant_mapsize(m::ConstantMap{T,U}, c) where {T<:Number,U<:Number} = ()
+_constant_mapsize(m::ConstantMap{T,U}, c) where {T<:Number,U} = (length(c),)
+_constant_mapsize(m::ConstantMap{T,U}, c) where {T,U<:Number} = (1,euclideandimension(T))
+_constant_mapsize(m::ConstantMap{T,U}, c) where {T,U} = (length(c), euclideandimension(T))
 
 matrix(m::ConstantMap) = zeromatrix(m)
 vector(m::ConstantMap) = constant(m)

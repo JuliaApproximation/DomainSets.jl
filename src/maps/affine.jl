@@ -56,13 +56,13 @@ isaffine(m::AbstractAffineMap) = true
     islinear(m1) && matrix(m1) == matrix(m2)
 ==(m1::IdentityMap, m2::AbstractAffineMap) = m2==m1
 
-size(m::AbstractAffineMap) = affine_size(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
-affine_size(m::AbstractAffineMap, T, A::AbstractArray, b) = size(A)
-affine_size(m::AbstractAffineMap, T, A::AbstractVector, b::AbstractVector) = (length(A),)
-affine_size(m::AbstractAffineMap, T, A::Number, b::Number) = ()
-affine_size(m::AbstractAffineMap, T, A::Number, b::AbstractVector) = (length(b),length(b))
-affine_size(m::AbstractAffineMap, T, A::UniformScaling, b::Number) = ()
-affine_size(m::AbstractAffineMap, T, A::UniformScaling, b) = (length(b),length(b))
+mapsize(m::AbstractAffineMap) = _affine_mapsize(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
+_affine_mapsize(m::AbstractAffineMap, T, A::AbstractArray, b) = size(A)
+_affine_mapsize(m::AbstractAffineMap, T, A::AbstractVector, b::AbstractVector) = (length(A),)
+_affine_mapsize(m::AbstractAffineMap, T, A::Number, b::Number) = ()
+_affine_mapsize(m::AbstractAffineMap, T, A::Number, b::AbstractVector) = (length(b),length(b))
+_affine_mapsize(m::AbstractAffineMap, T, A::UniformScaling, b::Number) = ()
+_affine_mapsize(m::AbstractAffineMap, T, A::UniformScaling, b) = (length(b),length(b))
 
 
 Display.displaystencil(m::AbstractAffineMap) = vcat(["x -> "], map_stencil(m, 'x'))
@@ -90,11 +90,11 @@ Concrete subtypes may differ in how `A` is represented.
 """
 abstract type LinearMap{T} <: AbstractAffineMap{T} end
 
-size(m::LinearMap) = linearmap_size(m, domaintype(m), unsafe_matrix(m))
-linearmap_size(m::LinearMap, T, A) = size(A)
-linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {T<:Number} = ()
-linearmap_size(m::LinearMap, ::Type{T}, A::AbstractVector) where {T<:Number} = (length(A),)
-linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {N,T<:StaticVector{N}} = (N,N)
+mapsize(m::LinearMap) = _linearmap_size(m, domaintype(m), unsafe_matrix(m))
+_linearmap_size(m::LinearMap, T, A) = size(A)
+_linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {T<:Number} = ()
+_linearmap_size(m::LinearMap, ::Type{T}, A::AbstractVector) where {T<:Number} = (length(A),)
+_linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {N,T<:StaticVector{N}} = (N,N)
 
 matrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
 vector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
@@ -252,9 +252,9 @@ abstract type Translation{T} <: AbstractAffineMap{T} end
 matrix(m::Translation) = to_matrix(domaintype(m), LinearAlgebra.I, unsafe_vector(m))
 vector(m::Translation) = unsafe_vector(m)
 
-size(m::Translation) = translation_size(m, domaintype(m), unsafe_vector(m))
-translation_size(m::Translation, ::Type{T}, b::Number) where {T} = ()
-translation_size(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
+mapsize(m::Translation) = _translation_mapsize(m, domaintype(m), unsafe_vector(m))
+_translation_mapsize(m::Translation, ::Type{T}, b::Number) where {T} = ()
+_translation_mapsize(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
 
 map_stencil(m::Translation, x) = _map_stencil(m, x, unsafe_vector(m))
 _map_stencil(m::Translation, x, b) = [x, " + ", b]

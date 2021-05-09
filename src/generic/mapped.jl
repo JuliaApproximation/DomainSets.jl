@@ -118,8 +118,9 @@ _mapped_domain2(invmap, domain, ::Type{T}, ::Type{T}) where {T} =
 _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
     MappedDomain(convert(Map{T}, invmap), domain)
 
-
-(∘)(domain::Domain, invmap::Union{Function,AbstractMap}) = mapped_domain(invmap, domain)
+# TODO: deprecate this syntax, it is confusing
+(∘)(domain::Domain, invmap::Function) = mapped_domain(invmap, domain)
+(∘)(domain::Domain, invmap::AbstractMap) = mapped_domain(invmap, domain)
 
 # Avoid nested mapping domains, construct a composite map instead
 # This assumes that the map types can be combined using \circ
@@ -132,6 +133,10 @@ _interior(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, interior(
 closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
 _closure(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, closure(superdomain))
 
+convert(::Type{MappedDomain}, d::Domain{T}) where {T} =
+    MappedDomain{T}(mapto_canonical(d), canonicaldomain(d))
+convert(::Type{MappedDomain{T}}, d::Domain) where {T} =
+    MappedDomain{T}(mapto_canonical(d), canonicaldomain(d))
 
 
 "A `ParametricDomain` stores the forward map of a mapped domain."

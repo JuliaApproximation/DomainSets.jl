@@ -13,21 +13,20 @@ const VectorMap{T} = Map{Vector{T}}
 
 CompositeTypes.Display.displaysymbol(m::Map) = 'F'
 
-domaintype(m::AbstractMap) = domaintype(typeof(m))
-domaintype(::Type{<:AbstractMap}) = Any
+domaintype(m) = domaintype(typeof(m))
+domaintype(::Type{<:Any}) = Any
 domaintype(::Type{<:Map{T}}) where {T} = T
 
-codomaintype(m::AbstractMap) = codomaintype(typeof(m))
-codomaintype(::Type{<:AbstractMap}) = Any
-codomaintype(M::Type{<:Map{T}}) where {T} = Base.promote_op(applymap, M, T)
-codomaintype(::Type{<:TypedMap{T,U}}) where {T,U} = U
+codomaintype(m) = codomaintype(typeof(m))
+codomaintype(M::Type{<:Any}) = Base.promote_op(applymap, M, domaintype(M))
+codomaintype(M::Type{<:TypedMap{T,U}}) where {T,U} = U
 
 # What is the output type given an argument of type S?
-codomaintype(m::AbstractMap, ::Type{S}) where {S} = codomaintype(typeof(m), S)
-codomaintype(M::Type{<:AbstractMap}, ::Type{S}) where {S} = Base.promote_op(applymap, M, S)
-codomaintype(::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
+codomaintype(m, ::Type{S}) where {S} = codomaintype(typeof(m), S)
+codomaintype(M::Type{<:Any}, ::Type{S}) where {S} = Base.promote_op(applymap, M, S)
+codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
 
-isreal(m::Map) = isreal(domaintype(m)) && isreal(codomaintype(m))
+isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(codomaintype(m))
 isreal(::UniformScaling{T}) where {T} = isreal(T)
 isreal(::Type{UniformScaling{T}}) where {T} = isreal(T)
 
@@ -49,8 +48,8 @@ compatible_domaintype(d1, d2) = isconcretetype(promote_type(domaintype(d1),domai
 (m::AbstractMap)(x) = applymap(m, x)
 
 # For Map{T}, we allow invocation with multiple arguments by conversion to T
-(m::Map{T})(x) where {T} = apply(m, x)
-(m::Map{T})(x...) where {T} = apply(m, convert(T, x))
+(m::Map{T})(x) where {T} = promote_and_apply(m, x)
+(m::Map{T})(x...) where {T} = promote_and_apply(m, convert(T, x))
 
 "Promote map and point to compatible types."
 promote_map_point_pair(m, x) = (m, x)
@@ -75,36 +74,45 @@ promote_map_point_pair(m::EuclideanMap{N,T}, x::AbstractVector{S}) where {N,S,T}
     _promote_map_point_pair(m, x, SVector{N,promote_type(S,T)})
 
 # For maps of type Map{T}, we call promote_map_point_pair and then applymap
-apply(m::Map, x) = applymap(promote_map_point_pair(m,x)...)
-applymap!(y, m::AbstractMap, x) = y .= m(x)
+promote_and_apply(m::Map, x) = applymap(promote_map_point_pair(m,x)...)
 
+applymap!(y, m, x) = y .= m(x)
+
+# Fallback for functions that are not of type AbstractMap
+applymap(m, x) = m(x)
+applymap(m::AbstractMap, x) = error("Please implement applymap for map $(m)")
 
 isvectorvalued_type(::Type{T}) where {T<:Number} = true
 isvectorvalued_type(::Type{T}) where {T<:AbstractVector} = true
 isvectorvalued_type(::Type{T}) where {T} = false
 
 "Is the map a vector-valued function, i.e., a function from Rn to Rm?"
-isvectorvalued(m::Map{T}) where {T} =
-    isvectorvalued_type(T) && isvectorvalued_type(codomaintype(m))
+isvectorvalued(m) =
+    isvectorvalued_type(domaintype(m)) && isvectorvalued_type(codomaintype(m))
 
-# size should be defined for vector valued maps
+import Base: size
+@deprecate size(m::AbstractMap) mapsize(m)
+@deprecate size(m::AbstractMap, i) mapsize(m, i)
+@deprecate issquare(m::AbstractMap) issquaremap(m)
+
+# mapsize should be defined for vector valued maps
 # The size of a map equals the size of its jacobian
 # The jacobian can be a number, a vector, an adjoint vector, or a matrix
-size(m::AbstractMap, i) = _map_size(m, i, size(m))
-_map_size(m::AbstractMap, i, size::Tuple{Int,Int}) = i <= 2 ? size[i] : 1
-_map_size(m::AbstractMap, i, size::Tuple{Int}) = i <= 1 ? size[i] : 1
-_map_size(m::AbstractMap, i, size::Tuple{}) = 1
+mapsize(m, i) = _mapsize(m, i, mapsize(m))
+_mapsize(m, i, size::Tuple{Int,Int}) = i <= 2 ? size[i] : 1
+_mapsize(m, i, size::Tuple{Int}) = i <= 1 ? size[i] : 1
+_mapsize(m, i, size::Tuple{}) = 1
 
 "Is the given map a square map?"
-issquare(m::AbstractMap) = isvectorvalued(m) && (size(m,1) == size(m,2))
+issquaremap(m) = isvectorvalued(m) && (mapsize(m,1) == mapsize(m,2))
 
-isoverdetermined(m::AbstractMap) = size(m,1) >= size(m,2)
-isunderdetermined(m::AbstractMap) = size(m,1) <= size(m,2)
+isoverdetermined(m::AbstractMap) = mapsize(m,1) >= mapsize(m,2)
+isunderdetermined(m::AbstractMap) = mapsize(m,1) <= mapsize(m,2)
 
-is_scalar_to_vector(m::Map) = size(m) isa Tuple{Int}
-is_vector_to_scalar(m::Map) = size(m) isa Tuple{Int,Int} && codomaintype(m)<:Number
-is_scalar_to_scalar(m::Map) = size(m) == ()
-is_vector_to_vector(m::Map) = size(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m)
+is_scalar_to_vector(m) = mapsize(m) isa Tuple{Int}
+is_vector_to_scalar(m) = mapsize(m) isa Tuple{Int,Int} && codomaintype(m)<:Number
+is_scalar_to_scalar(m) = mapsize(m) == ()
+is_vector_to_vector(m) = mapsize(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m)
 
 
 # Display routines

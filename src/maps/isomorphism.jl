@@ -12,8 +12,8 @@ end
 struct NumberToVector{T} <: Isomorphism{T,SVector{1,T}}
 end
 
-size(::VectorToNumber) = (1,1)
-size(::NumberToVector) = (1,)
+mapsize(::VectorToNumber) = (1,1)
+mapsize(::NumberToVector) = (1,)
 
 inverse(::VectorToNumber{T}) where {T} = NumberToVector{T}()
 inverse(::NumberToVector{T}) where {T} = VectorToNumber{T}()
@@ -37,8 +37,8 @@ end
 struct ComplexToVector{T} <: Isomorphism{Complex{T},SVector{2,T}}
 end
 
-size(::VectorToComplex) = (1,2)
-size(::ComplexToVector) = (2,)
+mapsize(::VectorToComplex) = (1,2)
+mapsize(::ComplexToVector) = (2,)
 
 applymap(::VectorToComplex, x) = x[1] + im*x[2]
 applymap(::ComplexToVector, x) = SVector(real(x), imag(x))

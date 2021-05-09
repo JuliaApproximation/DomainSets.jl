@@ -1,39 +1,57 @@
 
-"The composition of several maps."
-struct Composition{T,MAPS} <: CompositeLazyMap{T}
+"""
+Return a suitable domaintype for the composition of the given maps. These maps
+are the arguments to the `ComposedMap(...)` constructor. The result should
+be the domaintype of the first map. However, if the given maps do not inherit
+from `AbstractMap`, then we do not assume that the map supports `domaintype` and
+we guess the domaintype from the next map in the composition.
+
+If this results in the wrong domaintype, the solution is to invoke the
+`ComposedMap{T}(...)` constructor, rather than `ComposedMap(...)`.
+"""
+composedmap_domaintype(map1::AbstractMap, maps...) = domaintype(map1)
+composedmap_domaintype(map1, maps...) = composemap_domaintype(maps...)
+composedmap_domaintype(map) = Any
+
+
+"""
+The composition of several maps. Like `ComposedFunction` in Base, but with
+a domaintype `T`.
+"""
+struct ComposedMap{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-Composition(map1, maps...) = Composition{domaintype(map1)}(map1, maps...)
-Composition{T}(maps...) where {T} = Composition{T,typeof(maps)}(maps)
+ComposedMap(maps...) = ComposedMap{composedmap_domaintype(maps...)}(maps...)
+ComposedMap{T}(maps...) where {T} = ComposedMap{T,typeof(maps)}(maps)
 
 # TODO: make proper conversion
-similarmap(m::Composition, ::Type{T}) where {T} = Composition{T}(m.maps...)
+similarmap(m::ComposedMap, ::Type{T}) where {T} = ComposedMap{T}(m.maps...)
 
-codomaintype(m::Composition) = codomaintype(m.maps[end])
+codomaintype(m::ComposedMap) = codomaintype(m.maps[end])
 
 # Maps are applied in the order that they appear in m.maps
-applymap(m::Composition, x) = applymap_rec(x, m.maps...)
+applymap(m::ComposedMap, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
 applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
 
 # The size of a composite map depends on the first and the last map to be applied
 # We check whether they are scalar_to_vector, vector_to_vector, etcetera
-size(m::Composition) = composition_size(m, m.maps[end], m.maps[1], size(m.maps[end]), size(m.maps[1]))
-composition_size(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{Int,Int}) = (S_end[1],S1[2])
-composition_size(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{Int}) =
+mapsize(m::ComposedMap) = _composition_mapsize(m, m.maps[end], m.maps[1], mapsize(m.maps[end]), mapsize(m.maps[1]))
+_composition_mapsize(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{Int,Int}) = (S_end[1],S1[2])
+_composition_mapsize(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{Int}) =
     is_vector_to_scalar(m_end) ? () : (S_end[1],)
-composition_size(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{}) =
+_composition_mapsize(m, m_end, m1, S_end::Tuple{Int,Int}, S1::Tuple{}) =
     is_vector_to_scalar(m_end) ? () : (S_end[1],)
-composition_size(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{Int,Int}) = (S_end[1],S1[2])
-composition_size(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{Int}) = (S_end[1],)
-composition_size(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{}) = (S_end[1],)
-composition_size(m, m_end, m1, S_end::Tuple{}, S1::Tuple{Int,Int}) = (1,S1[2])
-composition_size(m, m_end, m1, S_end::Tuple{}, S1::Tuple{Int}) = ()
-composition_size(m, m_end, m1, S_end::Tuple{}, S1::Tuple{}) = ()
+_composition_mapsize(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{Int,Int}) = (S_end[1],S1[2])
+_composition_mapsize(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{Int}) = (S_end[1],)
+_composition_mapsize(m, m_end, m1, S_end::Tuple{Int}, S1::Tuple{}) = (S_end[1],)
+_composition_mapsize(m, m_end, m1, S_end::Tuple{}, S1::Tuple{Int,Int}) = (1,S1[2])
+_composition_mapsize(m, m_end, m1, S_end::Tuple{}, S1::Tuple{Int}) = ()
+_composition_mapsize(m, m_end, m1, S_end::Tuple{}, S1::Tuple{}) = ()
 
 
-function jacobian(m::Composition, x)
+function jacobian(m::ComposedMap, x)
     f, fd = backpropagate(x, reverse(components(m))...)
     fd
 end
@@ -44,18 +62,18 @@ function backpropagate(x, m2, ms...)
 end
 
 for op in (:inverse, :leftinverse, :rightinverse)
-    @eval $op(cmap::Composition) = Composition(reverse(map($op, components(cmap)))...)
+    @eval $op(cmap::ComposedMap) = ComposedMap(reverse(map($op, components(cmap)))...)
 end
 
-inverse(m::Composition, x) = inverse_rec(x, reverse(components(m))...)
+inverse(m::ComposedMap, x) = inverse_rec(x, reverse(components(m))...)
 inverse_rec(x) = x
 inverse_rec(x, map1, maps...) = inverse_rec(inverse(map1, x), maps...)
 
-leftinverse(m::Composition, x) = leftinverse_rec(x, reverse(components(m))...)
+leftinverse(m::ComposedMap, x) = leftinverse_rec(x, reverse(components(m))...)
 leftinverse_rec(x) = x
 leftinverse_rec(x, map1, maps...) = leftinverse_rec(leftinverse(map1, x), maps...)
 
-rightinverse(m::Composition, x) = rightinverse_rec(x, reverse(components(m))...)
+rightinverse(m::ComposedMap, x) = rightinverse_rec(x, reverse(components(m))...)
 rightinverse_rec(x) = x
 rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), maps...)
 
@@ -63,26 +81,29 @@ compose_map() = ()
 compose_map(m) = m
 compose_map(m1, m2) = compose_map1(m1, m2)
 compose_map1(m1, m2) = compose_map2(m1, m2)
-compose_map2(m1, m2) = Composition(m1, m2)
+compose_map2(m1, m2) = ComposedMap(m1, m2)
 
 compose_map(m1, m2, maps...) = compose_map(compose_map(m1, m2), maps...)
 
-compose_map(m1::Composition, m2::Composition) =
-    Composition(components(m1)..., components(m2)...)
-compose_map1(m1::Composition, m2) = Composition(components(m1)..., m2)
-compose_map2(m1, m2::Composition) = Composition(m1, components(m2)...)
+compose_map(m1::ComposedMap, m2::ComposedMap) =
+    ComposedMap(components(m1)..., components(m2)...)
+compose_map1(m1::ComposedMap, m2) = ComposedMap(components(m1)..., m2)
+compose_map2(m1, m2::ComposedMap) = ComposedMap(m1, components(m2)...)
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
-(∘)(map1::Map, map2::Map) = compose_map(map2, map1)
+(∘)(map1::AbstractMap, map2::AbstractMap) = compose_map(map2, map1)
+# invoke compose_map if at least one of the arguments is an AbstractMap
+(∘)(map1::AbstractMap, map2) = compose_map(map2, map1)
+(∘)(map1, map2::AbstractMap) = compose_map(map2, map1)
 
 
-==(m1::Composition, m2::Composition) =
+==(m1::ComposedMap, m2::ComposedMap) =
     ncomponents(m1) == ncomponents(m2) && all(map(isequal, components(m1), components(m2)))
 
-Display.combinationsymbol(m::Composition) = Display.Symbol('∘')
-Display.displaystencil(m::Composition) =
+Display.combinationsymbol(m::ComposedMap) = Display.Symbol('∘')
+Display.displaystencil(m::ComposedMap) =
     composite_displaystencil(m; reversecomponents=true)
-show(io::IO, mime::MIME"text/plain", m::Composition) = composite_show(io, mime, m)
+show(io::IO, mime::MIME"text/plain", m::ComposedMap) = composite_show(io, mime, m)
 
 ## Lazy multiplication
 
@@ -175,11 +196,11 @@ show(io::IO, mime::MIME"text/plain", m::SumMap) = composite_show(io, mime, m)
 
 
 # Define the jacobian of a composite map
-jacobian(m::Composition) = composite_jacobian(reverse(components(m))...)
+jacobian(m::ComposedMap) = composite_jacobian(reverse(components(m))...)
 composite_jacobian(map1) = jacobian(map1)
 composite_jacobian(map1, map2) = multiply_map(jacobian(map1) ∘ map2, jacobian(map2))
 function composite_jacobian(map1, map2, maps...)
-    rest = Composition(reverse(maps)..., map2)
+    rest = ComposedMap(reverse(maps)..., map2)
     f1 = jacobian(map1) ∘ rest
     f2 = composite_jacobian(map2, maps...)
     multiply_map(f1, f2)

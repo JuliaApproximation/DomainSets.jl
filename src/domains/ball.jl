@@ -485,7 +485,7 @@ struct UnitCircleMap{T} <: Map{T} end
 
 UnitCircleMap() = UnitCircleMap{Float64}()
 
-size(m::UnitCircleMap) = (2,)
+mapsize(m::UnitCircleMap) = (2,)
 
 applymap(m::UnitCircleMap{T}, t) where {T} = SVector(cos(2*T(pi)*t), sin(2*T(pi)*t))
 
@@ -518,7 +518,7 @@ function applymap(m::AngleMap{T}, x) where {T}
     θ / twopi
 end
 
-size(m::AngleMap) = (1,2)
+mapsize(m::AngleMap) = (1,2)
 
 function jacobian(m::AngleMap{T}, t) where {T}
     x = t[1]; y = t[2]

@@ -947,7 +947,7 @@ end
         @test parameterdomain(C) == UnitInterval()
         @test hasparameterization(C)
         p = parameterization(C)
-        @test size(p) == (2,)
+        @test mapsize(p) == (2,)
         x = applymap(p, 1/2)
         @test jacobian(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
         @test diffvolume(p, 0.4) ≈ 2*pi
@@ -985,7 +985,7 @@ end
         @test matrix(mapfrom_canonical(C)) == [2 0; 0 2]
         @test vector(mapfrom_canonical(C)) == [1; 1]
         @test parameterdomain(C) == UnitInterval()
-        @test mapfrom_parameterdomain(C) isa Composition
+        @test mapfrom_parameterdomain(C) isa ComposedMap
         @test mapfrom_parameterdomain(C)(0.5) ≈ [-1; 1]
         @test boundingbox(C) == (-1.0..3.0)^2
 

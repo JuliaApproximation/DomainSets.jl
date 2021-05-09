@@ -21,8 +21,8 @@ _TypedProductMap(::Type{SVector{N,T}}, maps...) where {N,T} = VcatMap{N,T}(maps.
 _TypedProductMap(::Type{T}, maps...) where {T<:AbstractVector} = VectorProductMap{T}(maps...)
 
 compatibleproductdims(d1::ProductMap, d2::ProductMap) =
-	size(d1) == size(d2) &&
-		all(map(==, map(size, components(d1)), map(size, components(d2))))
+	mapsize(d1) == mapsize(d2) &&
+		all(map(==, map(mapsize, components(d1)), map(mapsize, components(d2))))
 
 compatibleproduct(d1::ProductMap, d2::ProductMap) =
 	compatibleproductdims(d1, d2) && compatible_domaintype(d1, d2)
@@ -75,7 +75,7 @@ function compose_map(m1::ProductMap, m2::ProductMap)
 	end
 end
 
-size(m::ProductMap) = (sum(t->size(t,1), components(m)), sum(t->size(t,2), components(m)))
+mapsize(m::ProductMap) = (sum(t->mapsize(t,1), components(m)), sum(t->mapsize(t,2), components(m)))
 
 ==(m1::ProductMap, m2::ProductMap) = all(map(isequal, components(m1), components(m2)))
 
@@ -95,14 +95,14 @@ end
 VcatMap(maps::Union{Tuple,Vector}) = VcatMap(maps...)
 function VcatMap(maps...)
 	T = numtype(maps...)
-	M = sum(t->size(t,1), maps)
-	N = sum(t->size(t,2), maps)
-	# M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(size,maps))
+	M = sum(t->mapsize(t,1), maps)
+	N = sum(t->mapsize(t,2), maps)
+	# M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(mapsize,maps))
 	@assert M==N
 	VcatMap{N,T}(maps...)
 end
 
-mapdim(map) = size(map,2)
+mapdim(map) = mapsize(map,2)
 
 VcatMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatMap{N,T}(maps...)
 function VcatMap{N,T}(maps...) where {N,T}
@@ -112,22 +112,22 @@ end
 
 VcatMap{N,T,DIM}(maps...) where {N,T,DIM} = VcatMap{N,T,DIM,typeof(maps)}(maps)
 
-size(m::VcatMap{N}) where {N} = (N,N)
+mapsize(m::VcatMap{N}) where {N} = (N,N)
 
 tointernalpoint(m::VcatMap{N,T,DIM}, x) where {N,T,DIM} =
 	convert_fromcartesian(x, Val{DIM}())
 toexternalpoint(m::VcatMap{N,T,DIM}, y) where {N,T,DIM} =
 	convert_tocartesian(y, Val{DIM}())
 
-matsize(A::AbstractArray) = size(A)
-matsize(A::Number) = (1,1)
+size_as_matrix(A::AbstractArray) = size(A)
+size_as_matrix(A::Number) = (1,1)
 
 # The Jacobian is block-diagonal
 function toexternalmatrix(m::VcatMap{N,T}, matrices) where {N,T}
 	A = zeros(T, N, N)
 	l = 0
 	for el in matrices
-		m,n = matsize(el)
+		m,n = size_as_matrix(el)
 		@assert m==n
 		A[l+1:l+m,l+1:l+n] .= el
 		l += n
@@ -144,14 +144,14 @@ struct VectorProductMap{T<:AbstractVector,M} <: ProductMap{T}
     maps    ::  Vector{M}
 end
 
-VectorProductMap(maps::Map...) = VectorProductMap(maps)
+VectorProductMap(maps::AbstractMap...) = VectorProductMap(maps)
 VectorProductMap(maps) = VectorProductMap(collect(maps))
 function VectorProductMap(maps::Vector)
 	T = mapreduce(numtype, promote_type, maps)
 	VectorProductMap{Vector{T}}(maps)
 end
 
-VectorProductMap{T}(maps::Map...) where {T} = VectorProductMap{T}(maps)
+VectorProductMap{T}(maps::AbstractMap...) where {T} = VectorProductMap{T}(maps)
 VectorProductMap{T}(maps) where {T} = VectorProductMap{T}(collect(maps))
 function VectorProductMap{T}(maps::Vector) where {T}
 	Tmaps = convert.(Map{eltype(T)}, maps)
@@ -172,16 +172,16 @@ struct TupleProductMap{T,MM} <: ProductMap{T}
 end
 
 TupleProductMap(maps::Vector) = TupleProductMap(maps...)
-TupleProductMap(maps::Map...) = TupleProductMap(maps)
+TupleProductMap(maps::AbstractMap...) = TupleProductMap(maps)
 TupleProductMap(maps...) = TupleProductMap(map(Map, maps)...)
-TupleProductMap(map::Map) = TupleProductMap((map,))
+TupleProductMap(map::AbstractMap) = TupleProductMap((map,))
 function TupleProductMap(maps::Tuple)
 	T = Tuple{map(eltype, maps)...}
 	TupleProductMap{T}(maps)
 end
 
 TupleProductMap{T}(maps::Vector) where {T} = TupleProductMap{T}(maps...)
-TupleProductMap{T}(maps::Map...) where {T} = TupleProductMap{T}(maps)
+TupleProductMap{T}(maps::AbstractMap...) where {T} = TupleProductMap{T}(maps)
 TupleProductMap{T}(maps...) where {T} = TupleProductMap{T}(maps)
 function TupleProductMap{T}(maps) where {T <: Tuple}
 	Tmaps = map((t,d) -> convert(Map{t},d), tuple(T.parameters...), maps)

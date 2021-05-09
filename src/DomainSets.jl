@@ -14,6 +14,7 @@ const Display = CompositeTypes.Display
 @deprecate FlexibleUnitCube DynamicUnitCube
 @deprecate FlexibleUnitSphere DynamicUnitSphere
 @deprecate FlexibleUnitBall DynamicUnitBall
+@deprecate Composition ComposedMap
 
 @deprecate element component
 @deprecate elements components
@@ -37,14 +38,11 @@ import Base: *, +, -, /, \, ^,
     intersect, union, setdiff, in, isempty, minimum, maximum,
     issubset,
     # Arrays
-    size, length, ndims, getindex, eltype, ndims, hash,
-    inv, isreal, zero,
+    eltype, hash, isreal,
     # Types, promotions and conversions
-    convert, widen, promote,
+    convert, promote,
     # Display
-    show,
-    # Various
-    Bool
+    show
 
 # IntervalSets
 import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
@@ -76,9 +74,9 @@ export AbstractMap, Map, TypedMap,
     applymap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
-    jacobian, jacdet, diffvolume
+    mapsize, jacobian, jacdet, diffvolume
 # from maps/composite.jl
-export Composition, ∘
+export ComposedMap, ∘
 # from maps/product.jl
 export ProductMap, productmap
 # from maps/basic.jl
@@ -185,7 +183,6 @@ export rotation_map,
     CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
-# include("util/products.jl")
 
 include("maps/map.jl")
 include("maps/lazy.jl")

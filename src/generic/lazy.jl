@@ -45,30 +45,30 @@ Supertype of all compositions of a lazy domain. The composition determines how
 the point `x` is distributed to the member domains of a lazy domain.
 
 Three compositions implemented in the package are:
-- `NoComposition`: the lazy domain encapsulates a single domain and `x` is passed
+- `NoComposedMap`: the lazy domain encapsulates a single domain and `x` is passed
 	through unaltered
 - `Combination`: the lazy domain has several members and `x` is passed to the `in`
 	method of all members
 - `Product`: the lazy domain has several members and the components of `x` are
 	passed to the components of the lazy domain
 """
-abstract type LazyComposition end
+abstract type LazyComposedMap end
 
-struct NoComposition <: LazyComposition end
-struct Combination <: LazyComposition end
-struct Product <: LazyComposition end
+struct NoComposedMap <: LazyComposedMap end
+struct Combination <: LazyComposedMap end
+struct Product <: LazyComposedMap end
 
-composition(d::CompositeDomain) = NoComposition()
+composition(d::CompositeDomain) = NoComposedMap()
 
 indomain(x, d::CompositeDomain) = _indomain(tointernalpoint(d, x), d, composition(d), components(d))
-_indomain(x, d, ::NoComposition, domains) = in(x, domains[1])
+_indomain(x, d, ::NoComposedMap, domains) = in(x, domains[1])
 _indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
 _indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
 
 approx_indomain(x, d::CompositeDomain, tolerance) =
 	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), components(d))
 
-_approx_indomain(x, d, tolerance, ::NoComposition, domains) =
+_approx_indomain(x, d, tolerance, ::NoComposedMap, domains) =
     approx_in(x, domains[1], tolerance)
 _approx_indomain(x, d, tolerance, ::Combination, domains) =
     combine(d, map(d -> approx_in(x, d, tolerance), domains))

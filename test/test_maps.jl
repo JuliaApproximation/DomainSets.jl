@@ -45,7 +45,7 @@ suitable_point_to_map(m::Map) = suitable_point_to_map(m, domaintype(m))
 
 suitable_point_to_map(m::Map, ::Type{SVector{N,T}}) where {N,T} = SVector{N,T}(rand(N))
 suitable_point_to_map(m::Map, ::Type{T}) where {T<:Number} = rand(T)
-suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, size(m,2))
+suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, mapsize(m,2))
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
     map(suitable_point_to_map, components(m))
@@ -68,8 +68,8 @@ issquarematrix(A::AbstractArray) = size(A,1)==size(A,2)
 
 
 function test_generic_inverse(m)
-    M = size(m,1)
-    N = size(m,2)
+    M = mapsize(m,1)
+    N = mapsize(m,2)
     x = suitable_point_to_map(m)
     y = m(x)
 
@@ -111,7 +111,7 @@ function test_generic_jacobian(m)
     jac = jacobian(m)
     @test jac(x) ≈ jacobian(m, x)
     j = jacobian(m, x)
-    @test size(j) == size(m)
+    @test size(j) == mapsize(m)
     if j isa AbstractArray{Float64}
         y = similar(j)
         DomainSets.jacobian!(y, m, x)
@@ -120,7 +120,7 @@ function test_generic_jacobian(m)
     if issquarematrix(jac(x))
         @test jacdet(m, x) ≈ det(jacobian(m, x))
     end
-    if size(m) == ()
+    if mapsize(m) == ()
         d = diffvolume(m, x)
         s = sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))
         @test d ≈ s || d ≈ -s
@@ -157,7 +157,7 @@ function test_generic_map(m)
 
     if isaffine(m)
         M = matrix(m)
-        @test size(M) == size(m)
+        @test size(M) == mapsize(m)
         test_generic_jacobian(m)
     else
         try # jacobian may not be implemented
@@ -192,10 +192,10 @@ function test_isomorphisms(T)
     @test inverse(m1b) == m1
     @test inverse(m1b, SA[0.4]) == m1(SA[0.4])
     @test m1b(1.0) == SA[1.0]
-    @test size(m1) == (1,1)
-    @test size(m1b) == (1,)
-    @test size(m1 ∘ inverse(m1)) == ()
-    @test size(inverse(m1) ∘ m1) == (1,1)
+    @test mapsize(m1) == (1,1)
+    @test mapsize(m1b) == (1,)
+    @test mapsize(m1 ∘ inverse(m1)) == ()
+    @test mapsize(inverse(m1) ∘ m1) == (1,1)
     @test jacobian(m1 ∘ inverse(m1), 1) == one(T)
     @test jacobian(inverse(m1) ∘ m1, [1]) == ones(T,1,1)
     @test jacobian(m1) isa ConstantMap
@@ -209,10 +209,10 @@ function test_isomorphisms(T)
     @test inverse(m2b) == m2
     @test inverse(m2b, SA[one(T),one(T)]) == one(T)+one(T)*im
     @test m2b(one(T)+one(T)*im) == SA[one(T),one(T)]
-    @test size(m2) == (1,2)
-    @test size(m2b) == (2,)
-    @test size(m2 ∘ m2b) == ()
-    @test size(m2b ∘ m2) == (2,2)
+    @test mapsize(m2) == (1,2)
+    @test mapsize(m2b) == (2,)
+    @test mapsize(m2 ∘ m2b) == ()
+    @test mapsize(m2b ∘ m2) == (2,2)
 
     m3 = DomainSets.VectorToTuple{2,T}()
     m3b = DomainSets.TupleToVector{2,T}()
@@ -372,7 +372,7 @@ function test_translation(T)
     @test vector(jacobian(m)) == [1 0 0; 0 1 0; 0 0 1]
     @test jacdet(m) isa UnityMap{SVector{3,T},T}
 
-    @test size(Translation(one(T))) == ()
+    @test mapsize(Translation(one(T))) == ()
 
     # Test construction and conversion
     @test Translation(one(T)) isa ScalarTranslation{T}
@@ -416,11 +416,11 @@ function test_affinemap(T)
     m2 = AffineMap(T(2), SVector{2,T}(1,2))
     @test m2 isa GenericAffineMap{SVector{2,T}}
     @test m2(SVector(1,2)) == SVector(3,6)
-    @test size(m2) == (2,2)
+    @test mapsize(m2) == (2,2)
 
     m3 = AffineMap(UniformScaling(2*one(T)), [one(T),2*one(T)])
     @test m3 isa AffineMap{Vector{T}}
-    @test size(m3) == (2,2)
+    @test mapsize(m3) == (2,2)
     @test m3([1,2]) ==  2 * [1,2] + [1,2]
     y = zeros(T,2)
     @test (DomainSets.applymap!(y, m3, [1,2]); y == m3([1,2]))
@@ -432,8 +432,8 @@ function test_affinemap(T)
     @test m4.A isa UniformScaling{Float64}
     @test jacdet(m4, 3.0) == 1.0
 
-    @test size(AffineMap(rand(3),rand(3))) == (3,)
-    @test size(AffineMap(LinearAlgebra.I,2)) == ()
+    @test mapsize(AffineMap(rand(3),rand(3))) == (3,)
+    @test mapsize(AffineMap(LinearAlgebra.I,2)) == ()
 
     # Test construction and conversion
     @test AffineMap(1, 2*one(T)) isa ScalarAffineMap{T}
@@ -530,7 +530,7 @@ function test_composite_map(T)
     test_generic_map(m)
     @test m(r) ≈ m2(m3(r))
 
-    m5 = Composition(LinearMap(rand(T,2,2)), AffineMap(rand(T,2,2),rand(T,2)))
+    m5 = ComposedMap(LinearMap(rand(T,2,2)), AffineMap(rand(T,2,2),rand(T,2)))
     test_generic_map(m5)
     @test jacobian(m5) isa ConstantMap
 
@@ -545,10 +545,10 @@ function test_composite_map(T)
     @test jacobian(m7) isa ConstantMap
     @test jacobian(m7, one(T)) == 2
 
-    @test size(Composition(LinearMap(2),LinearMap(rand(T,2)),LinearMap(rand(T,2,2)))) == (2,)
-    @test size(Composition(LinearMap(rand(T,2)),LinearMap(rand(T,2)'),LinearMap(rand(T,2)))) == (2,)
-    @test size(Composition(LinearMap(rand(T,2,2)),LinearMap(rand(T,2)'),LinearMap(2))) == (1,2)
-    @test size(Composition(LinearMap(one(T)),LinearMap(one(T)))) == ()
+    @test mapsize(ComposedMap(LinearMap(2),LinearMap(rand(T,2)),LinearMap(rand(T,2,2)))) == (2,)
+    @test mapsize(ComposedMap(LinearMap(rand(T,2)),LinearMap(rand(T,2)'),LinearMap(rand(T,2)))) == (2,)
+    @test mapsize(ComposedMap(LinearMap(rand(T,2,2)),LinearMap(rand(T,2)'),LinearMap(2))) == (1,2)
+    @test mapsize(ComposedMap(LinearMap(one(T)),LinearMap(one(T)))) == ()
 
     @test DomainSets.compose_map() == ()
     @test DomainSets.compose_map(ma) == ma
