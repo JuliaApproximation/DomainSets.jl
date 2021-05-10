@@ -534,6 +534,10 @@ function test_composite_map(T)
     m5 = ComposedMap(LinearMap(rand(T,2,2)), AffineMap(rand(T,2,2),rand(T,2)))
     test_generic_map(m5)
     @test jacobian(m5) isa ConstantMap
+    @test m5[Component(1)] isa LinearMap
+    @test m5[Component(2)] isa AffineMap
+    @test ComposedMap(m5[Component(1:2)]...) == m5
+    @test_throws BoundsError m5[Component(3)]
 
     m6 = DomainSets.multiply_map(ma,ma)
     @test m6(one(T)/2) == one(T)/4

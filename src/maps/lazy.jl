@@ -6,6 +6,7 @@ when invoked.
 """
 abstract type LazyMap{T} <: Map{T} end
 
+
 "A composite lazy map is defined in terms of several other maps."
 abstract type CompositeLazyMap{T} <: LazyMap{T} end
 "A simple lazy map derives from a single other map."
@@ -13,6 +14,8 @@ abstract type SimpleLazyMap{T} <: LazyMap{T} end
 
 supermap(m::SimpleLazyMap) = m.map
 components(m::CompositeLazyMap) = m.maps
+
+Base.getindex(m::CompositeLazyMap, I::ComponentIndex...) = component(m, map(Indexing.to_index, I)...)
 
 isreal(m::SimpleLazyMap) = isreal(supermap(m))
 isreal(m::CompositeLazyMap) = all(map(isreal, components(m)))

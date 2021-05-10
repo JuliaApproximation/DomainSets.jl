@@ -1594,6 +1594,10 @@ end
         @test SA[-1.1,0.3,0.1] ∉ d4
         @test point_in_domain(d4) ∈ d4
 
+        @test d1[Component(1)] == -1..1
+        @test d1[Component(2)] == -1..1
+        @test_throws BoundsError d1[Component(3)]
+
         d5 = (-1.0..1.)×d1
         @test d5 isa Rectangle
         @test SA[0.,0.5,0.5] ∈ d5

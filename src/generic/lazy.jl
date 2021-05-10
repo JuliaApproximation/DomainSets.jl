@@ -20,6 +20,8 @@ tointernalpoint(d::LazyDomain, x) = x
 "Inverse of `tointernalpoint`."
 toexternalpoint(d::LazyDomain{T}, y) where {T} = T(y)
 
+Base.getindex(d::LazyDomain, I::ComponentIndex...) =
+    component(d, map(Indexing.to_index, I)...)
 
 """
 A single lazy domain is defined in terms of a single domain.

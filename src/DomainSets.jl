@@ -5,8 +5,7 @@ using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
 
 using IntervalSets
-using CompositeTypes, CompositeTypes.Display
-const Display = CompositeTypes.Display
+using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
 
 # deprecations in v0.5
 @deprecate IntersectionDomain IntersectDomain

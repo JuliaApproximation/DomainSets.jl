@@ -1,6 +1,7 @@
 using Test, LinearAlgebra, StaticArrays
 
 using DomainSets
+using CompositeTypes.Indexing
 
 include("test_common.jl")
 include("test_maps.jl")
