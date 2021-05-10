@@ -39,6 +39,9 @@ convert(::Type{Map}, m::Map) = m
 convert(::Type{Map}, m) = WrappedMap(m)
 convert(::Type{Map{T}}, m) where {T} = WrappedMap{T}(m)
 
+==(m1::WrappedMap, m2::Function) = m1.map == m2
+==(m1::Function, m2::WrappedMap) = m1 == m2.map
+
 Display.displaystencil(m::WrappedMap{T}) where {T} =
 	["WrappedMap{$T}(", supermap(m), ")"]
 show(io::IO, mime::MIME"text/plain", m::WrappedMap) = composite_show(io, mime, m)

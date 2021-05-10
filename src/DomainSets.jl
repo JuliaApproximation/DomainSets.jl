@@ -76,7 +76,7 @@ export AbstractMap, Map, TypedMap,
     inverse, leftinverse, rightinverse,
     mapsize, jacobian, jacdet, diffvolume
 # from maps/composite.jl
-export ComposedMap, ∘
+export ComposedMap, composedmap, ∘
 # from maps/product.jl
 export ProductMap, productmap
 # from maps/basic.jl

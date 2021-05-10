@@ -67,9 +67,9 @@ for op in (:inverse, :leftinverse, :rightinverse)
 	@eval $op(m::ProductMap, x) = toexternalpoint(m, map($op, components(m), tointernalpoint(m, x)))
 end
 
-function compose_map(m1::ProductMap, m2::ProductMap)
+function composedmap(m1::ProductMap, m2::ProductMap)
 	if compatibleproduct(m1, m2)
-		ProductMap(map(compose_map, components(m1), components(m2)))
+		ProductMap(map(composedmap, components(m1), components(m2)))
 	else
 		Composition(m1,m2)
 	end
@@ -105,7 +105,8 @@ end
 mapdim(map) = mapsize(map,2)
 
 VcatMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatMap{N,T}(maps...)
-function VcatMap{N,T}(maps...) where {N,T}
+VcatMap{N,T}(maps...) where {N,T} = VcatMap{N,T}(map(Map{T}, maps)...)
+function VcatMap{N,T}(maps::Map{T}...) where {N,T}
 	DIM = map(mapdim,maps)
 	VcatMap{N,T,DIM}(maps...)
 end
@@ -172,18 +173,16 @@ struct TupleProductMap{T,MM} <: ProductMap{T}
 end
 
 TupleProductMap(maps::Vector) = TupleProductMap(maps...)
-TupleProductMap(maps::AbstractMap...) = TupleProductMap(maps)
-TupleProductMap(maps...) = TupleProductMap(map(Map, maps)...)
-TupleProductMap(map::AbstractMap) = TupleProductMap((map,))
+TupleProductMap(maps...) = TupleProductMap(maps)
 function TupleProductMap(maps::Tuple)
 	T = Tuple{map(eltype, maps)...}
 	TupleProductMap{T}(maps)
 end
 
 TupleProductMap{T}(maps::Vector) where {T} = TupleProductMap{T}(maps...)
-TupleProductMap{T}(maps::AbstractMap...) where {T} = TupleProductMap{T}(maps)
 TupleProductMap{T}(maps...) where {T} = TupleProductMap{T}(maps)
-function TupleProductMap{T}(maps) where {T <: Tuple}
+function TupleProductMap{T}(maps::NTuple{N,<:AbstractMap}) where {N,T <: Tuple}
 	Tmaps = map((t,d) -> convert(Map{t},d), tuple(T.parameters...), maps)
 	TupleProductMap{T,typeof(Tmaps)}(Tmaps)
 end
+TupleProductMap{T}(maps) where {T <: Tuple} = TupleProductMap{T,typeof(maps)}(maps)

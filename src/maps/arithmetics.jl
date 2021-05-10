@@ -3,21 +3,21 @@
 
 # Basic maps
 
-compose_map1(m1::IdentityMap, m2) = m2
-compose_map1(m1::IdentityMap{T}, m2::Map{T}) where {T} = m2
-compose_map1(m1::IdentityMap{T}, m2::Map{S}) where {S,T} = convert(Map{T}, m2)
+composedmap1(m1::IdentityMap, m2) = m2
+composedmap1(m1::IdentityMap{T}, m2::Map{T}) where {T} = m2
+composedmap1(m1::IdentityMap{T}, m2::Map{S}) where {S,T} = convert(Map{T}, m2)
 
-compose_map2(m1, m2::IdentityMap) = m1
-compose_map2(m1::Map{T}, m2::IdentityMap{T}) where {T} = m1
-compose_map2(m1::Map{S}, m2::IdentityMap{T}) where {S,T} = convert(Map{T}, m1)
+composedmap2(m1, m2::IdentityMap) = m1
+composedmap2(m1::Map{T}, m2::IdentityMap{T}) where {T} = m1
+composedmap2(m1::Map{S}, m2::IdentityMap{T}) where {S,T} = convert(Map{T}, m1)
 
-compose_map2(m1, m2::ConstantMap) = m2
-compose_map2(m1::Map{T}, m2::ConstantMap) where {T} = ConstantMap{T}(constant(m2))
-compose_map1(m1::ConstantMap{T}, m2) where {T} = ConstantMap{T}(m2(constant(m1)))
+composedmap2(m1, m2::ConstantMap) = m2
+composedmap2(m1::Map{T}, m2::ConstantMap) where {T} = ConstantMap{T}(constant(m2))
+composedmap1(m1::ConstantMap{T}, m2) where {T} = ConstantMap{T}(m2(constant(m1)))
 
-compose_map2(m1, m2::ZeroMap) = m2
-compose_map2(m1::Map{T}, m2::ZeroMap{S,U}) where {S,T,U} = ZeroMap{T,U}()
-compose_map1(m1::ConstantMap{T}, m2::ZeroMap{S,U}) where {S,T,U} = ZeroMap{T,U}()
+composedmap2(m1, m2::ZeroMap) = m2
+composedmap2(m1::Map{T}, m2::ZeroMap{S,U}) where {S,T,U} = ZeroMap{T,U}()
+composedmap1(m1::ConstantMap{T}, m2::ZeroMap{S,U}) where {S,T,U} = ZeroMap{T,U}()
 
 multiply_map1(m1::ZeroMap, m2) = m1
 multiply_map2(m1, m2::ZeroMap) = m2
@@ -31,7 +31,7 @@ sum_map2(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =
 
 ## Affine maps
 
-compose_map(m1::AbstractAffineMap, m2::AbstractAffineMap) = affine_composition(m1, m2)
+composedmap(m1::AbstractAffineMap, m2::AbstractAffineMap) = affine_composition(m1, m2)
 
 """
 Compute the affine map that represents map2 after map1, that is:

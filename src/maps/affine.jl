@@ -168,6 +168,7 @@ struct GenericLinearMap{T,AA} <: LinearMap{T}
     A   ::  AA
 end
 
+GenericLinearMap(A) = GenericLinearMap{Any}(A)
 GenericLinearMap(A::Number) = GenericLinearMap{typeof(A)}(A)
 GenericLinearMap(A::AbstractMatrix{T}) where {T} =
     GenericLinearMap{Vector{T}}(A)
@@ -198,6 +199,8 @@ leftinverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
 rightinverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
     LinearMap{T}(inv(m.A))
 
+convert(::Type{Map}, A::UniformScaling) = GenericLinearMap{Vector{Any}}(A)
+convert(::Type{Map{T}}, A::UniformScaling) where {T} = GenericLinearMap{T}(A)
 
 "A `ScalarLinearMap` is a linear map `y = A*x` for scalars."
 struct ScalarLinearMap{T} <: LinearMap{T}

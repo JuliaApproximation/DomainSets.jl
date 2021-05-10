@@ -10,7 +10,8 @@ using DomainSets: ScalarAffineMap,
     ScalarTranslation,
     VectorTranslation,
     StaticTranslation,
-    GenericTranslation
+    GenericTranslation,
+    TupleProductMap
 
 
 maps_to_test(T) = [
@@ -550,10 +551,10 @@ function test_composite_map(T)
     @test mapsize(ComposedMap(LinearMap(rand(T,2,2)),LinearMap(rand(T,2)'),LinearMap(2))) == (1,2)
     @test mapsize(ComposedMap(LinearMap(one(T)),LinearMap(one(T)))) == ()
 
-    @test DomainSets.compose_map() == ()
-    @test DomainSets.compose_map(ma) == ma
-    @test DomainSets.compose_map(ma,ma) == ma
-    @test DomainSets.compose_map(ma,ma,ma) == ma
+    @test DomainSets.composedmap() == ()
+    @test DomainSets.composedmap(ma) == ma
+    @test DomainSets.composedmap(ma,ma) == ma
+    @test DomainSets.composedmap(ma,ma,ma) == ma
 
     @test DomainSets.composite_jacobian(ma) == jacobian(ma)
 
@@ -610,6 +611,8 @@ function test_product_map(T)
     @test mapto(d1v, d2v) isa DomainSets.VectorProductMap
     @test jacobian(mapto(d1v,d2v)) isa ConstantMap
     @test jacdet(mapto(d1v,d2v)) == ConstantMap{Vector{T}}(4)
+
+    @test components(productmap(LinearMap(1), LinearMap(one(T)))) isa Tuple{<:Map{T},<:Map{T}}
 end
 
 using DomainSets: WrappedMap
@@ -618,6 +621,8 @@ function test_wrapped_maps(T)
     m2 = WrappedMap{T}(sin)
     @test m1(one(T)) ≈ cos(one(T))
     @test m2(one(T)) ≈ sin(one(T))
+    @test m1 == cos
+    @test sin == m2
     m3 = m1 ∘ m2
     @test m3(one(T)) ≈ cos(sin(one(T)))
 
@@ -626,10 +631,36 @@ function test_wrapped_maps(T)
     @test convert(Map{BigFloat}, m1) isa WrappedMap{BigFloat}
 
     @test convert(Map{T}, cos) isa DomainSets.WrappedMap{T,typeof(cos)}
+
+    @test convert(Map, LinearAlgebra.I) isa GenericLinearMap{Vector{Any}}
+    @test convert(Map{Vector{T}}, LinearAlgebra.I) isa GenericLinearMap{Vector{T}}
 end
 
+function test_mixed_maps()
+    m1 = composedmap(cos, sin)
+    @test domaintype(m1) == Any
+    @test m1(0.4) == sin(cos(0.4))
+
+    m2 = composedmap(AffineMap(2.0, 3.0), cos)
+    @test domaintype(m2) == Float64
+    @test m2(0.4) ≈ cos(2*0.4+3)
+    @inferred m2(0.4)
+    @test repr(m2) == "cos ∘ (x -> 2.0 * x + 3.0)"
+
+    m3 = composedmap(sin, AffineMap(2.0, 3.0), cos)
+    @test m3(0.5) ≈ cos(2*sin(0.5)+3)
+    @test repr(m3) == "cos ∘ (x -> 2.0 * x + 3.0) ∘ sin"
+    @test domaintype(m3) == Any
+    @inferred m3(0.5)
+
+    m4 = productmap(sin, cos)
+    @test m4 isa TupleProductMap
+    @test domaintype(m4) == Tuple{Any,Any}
+    @test m4(0.3,0.5) == (sin(0.3), cos(0.5))
+end
 
 @testset "maps" begin
     test_maps(Float64)
     test_maps(BigFloat)
+    test_mixed_maps()
 end

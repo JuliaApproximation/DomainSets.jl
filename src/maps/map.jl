@@ -5,6 +5,9 @@ abstract type AbstractMap end
 "A `Map{T}` is a map of a single variable of type `T`."
 abstract type Map{T} <: AbstractMap end
 
+Map(m) = convert(Map, m)
+Map{T}(m) where {T} = convert(Map{T}, m)
+
 "A `TypedMap{T,U}` maps a variable of type `T` to a variable of type `U`."
 abstract type TypedMap{T,U} <: Map{T} end
 
