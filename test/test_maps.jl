@@ -93,7 +93,7 @@ function test_generic_inverse(m)
     end
     if M <= N && numtype(m)!=BigFloat
         rightinverse(m, y)      # trigger exception outside test if not implemented
-        
+
         mri = rightinverse(m)
         @test m(mri(y)) ≈ y
         @test m(rightinverse(m, y)) ≈ y
@@ -598,6 +598,8 @@ function test_product_map(T)
     @test m4(SVector(r1,r2,r3,r4,r5)) ≈ SVector(m1(SVector(r1,r2))...,m2(SVector(r3,r4,r5))...)
 
     m5 = productmap(AffineMap(SMatrix{2,2,T}(1.0,2,3,4), SVector{2,T}(1,3)), LinearMap{T}(2.0))
+    @test domaintype(component(m5,1)) == SVector{2,T}
+    @test domaintype(component(m5,2)) == T
     test_generic_map(m5)
     x = SVector{3,T}(rand(T,3))
     @test m5(x) ≈ SVector(component(m5,1)(SVector(x[1],x[2]))...,component(m5,2)(x[3]))

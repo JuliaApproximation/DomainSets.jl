@@ -1,6 +1,6 @@
 # Make sure the examples in the README continue to function
 
-@testset "$(rpad("examples",80))" begin
+@testset "examples" begin
     using DomainSets, StaticArrays
     @test repr(UnitInterval()) == "0.0..1.0 (Unit)"
     @test repr(ChebyshevInterval()) == "-1.0..1.0 (Chebyshev)"

@@ -139,8 +139,14 @@ function rightinverse(m::LinearMap)
     @assert isunderdetermined(m)
     LinearMap(matrix_pinv(m.A))
 end
-leftinverse(m::LinearMap, x) = leftinverse(m)(x)
-rightinverse(m::LinearMap, x) = rightinverse(m)(x)
+function leftinverse(m::LinearMap, x)
+    @assert isoverdetermined(m)
+    m.A \ x
+end
+function rightinverse(m::LinearMap, x)
+    @assert isunderdetermined(m)
+    m.A \ x
+end
 
 similarmap(m::LinearMap, ::Type{T}) where {T} = LinearMap{T}(m.A)
 
@@ -378,8 +384,14 @@ function rightinverse(m::AffineMap)
     pA = matrix_pinv(m.A)
     AffineMap(pA, -pA*m.b)
 end
-leftinverse(m::AffineMap, x) = leftinverse(m)(x)
-rightinverse(m::AffineMap, x) = rightinverse(m)(x)
+function leftinverse(m::AffineMap, x)
+    @assert isoverdetermined(m)
+    m.A \ (x-m.b)
+end
+function rightinverse(m::AffineMap, x)
+    @assert isunderdetermined(m)
+    m.A \ (x-m.b)
+end
 
 
 "An affine map for any combination of types of `A` and `b`."
