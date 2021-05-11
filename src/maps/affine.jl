@@ -126,25 +126,21 @@ _isreal(m::LinearMap, A) = isreal(A)
 
 ==(m1::LinearMap, m2::LinearMap) = matrix(m1) == matrix(m2)
 
-inverse(m::LinearMap) = LinearMap(inv(m.A))
-inverse(m::LinearMap, x) = m.A \ x
+# inverse should be called only on square maps, otherwise use
+# leftinverse or rightinverse in order to use pinv instead of inv
+inverse(m::LinearMap) = (@assert issquaremap(m); LinearMap(inv(m.A)))
+inverse(m::LinearMap, x) = (@assert issquaremap(m); m.A \ x)
 
 function leftinverse(m::LinearMap)
     @assert isoverdetermined(m)
-    LinearMap(pinv(m.A))
+    LinearMap(matrix_pinv(m.A))
 end
 function rightinverse(m::LinearMap)
     @assert isunderdetermined(m)
-    LinearMap(pinv(m.A))
+    LinearMap(matrix_pinv(m.A))
 end
-function leftinverse(m::LinearMap, x)
-    @assert isoverdetermined(m)
-    m.A \ x
-end
-function rightinverse(m::LinearMap, x)
-    @assert isunderdetermined(m)
-    m.A \ x
-end
+leftinverse(m::LinearMap, x) = leftinverse(m)(x)
+rightinverse(m::LinearMap, x) = rightinverse(m)(x)
 
 similarmap(m::LinearMap, ::Type{T}) where {T} = LinearMap{T}(m.A)
 
@@ -369,12 +365,8 @@ AffineMap{T}(A, b) where {T} = GenericAffineMap{T}(A, b)
 similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
 # If y = A*x+b, then x = inv(A)*(y-b) = inv(A)*y - inv(A)*b
-inverse(m::AffineMap) = AffineMap(inv(m.A), -inv(m.A)*m.b)
-inverse(m::AffineMap, x) = m.A \ (x-m.b)
-
-# we use matrix_pinv rather than pinv to preserve static matrices
-matrix_pinv(A) = pinv(A)
-matrix_pinv(A::SMatrix{M,N}) where {M,N} = SMatrix{N,M}(pinv(A))
+inverse(m::AffineMap) = (@assert issquaremap(m); AffineMap(inv(m.A), -inv(m.A)*m.b))
+inverse(m::AffineMap, x) = (@assert issquaremap(m); m.A \ (x-m.b))
 
 function leftinverse(m::AffineMap)
     @assert isoverdetermined(m)
@@ -386,14 +378,8 @@ function rightinverse(m::AffineMap)
     pA = matrix_pinv(m.A)
     AffineMap(pA, -pA*m.b)
 end
-function leftinverse(m::AffineMap, x)
-    @assert isoverdetermined(m)
-    m.A \ (x-m.b)
-end
-function rightinverse(m::AffineMap, x)
-    @assert isunderdetermined(m)
-    m.A \ (x-m.b)
-end
+leftinverse(m::AffineMap, x) = leftinverse(m)(x)
+rightinverse(m::AffineMap, x) = rightinverse(m)(x)
 
 
 "An affine map for any combination of types of `A` and `b`."

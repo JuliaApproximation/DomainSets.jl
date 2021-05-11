@@ -122,3 +122,8 @@ end
     E = vcat([[:(x[$i][$j]) for j in 1:DIM[i]] for i in 1:length(DIM)]...)
     quote SVector($(E...)) end
 end
+
+
+# we use matrix_pinv rather than pinv to preserve static matrices
+matrix_pinv(A) = pinv(A)
+matrix_pinv(A::SMatrix{M,N}) where {M,N} = SMatrix{N,M}(pinv(A))

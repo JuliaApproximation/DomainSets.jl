@@ -105,10 +105,9 @@ end
 mapdim(map) = mapsize(map,2)
 
 VcatMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatMap{N,T}(maps...)
-VcatMap{N,T}(maps...) where {N,T} = VcatMap{N,T}(map(Map{T}, maps)...)
-function VcatMap{N,T}(maps::Map{T}...) where {N,T}
+function VcatMap{N,T}(maps...) where {N,T}
 	DIM = map(mapdim,maps)
-	VcatMap{N,T,DIM}(maps...)
+	VcatMap{N,T,DIM}(convert_numtype.(maps, Ref(T))...)
 end
 
 VcatMap{N,T,DIM}(maps...) where {N,T,DIM} = VcatMap{N,T,DIM,typeof(maps)}(maps)

@@ -74,10 +74,9 @@ function test_generic_inverse(m)
     x = suitable_point_to_map(m)
     y = m(x)
 
-    # trigger exception outside of test if inverse is not implemented for the map
-    inverse(m, y)
-
     if M==N
+        inverse(m, y)      # trigger exception outside test if not implemented
+
         minv = inverse(m)
         @test minv(y) ≈ x
         @test inverse(m)(y) ≈ x
@@ -86,11 +85,15 @@ function test_generic_inverse(m)
         @test DomainSets.LazyInverse(m)(y) ≈ inverse(m, y)
     end
     if M >= N && numtype(m)!=BigFloat
+        leftinverse(m, y)      # trigger exception outside test if not implemented
+
         mli = leftinverse(m)
         @test mli(y) ≈ x
         @test leftinverse(m, y) ≈ x
     end
     if M <= N && numtype(m)!=BigFloat
+        rightinverse(m, y)      # trigger exception outside test if not implemented
+        
         mri = rightinverse(m)
         @test m(mri(y)) ≈ y
         @test m(rightinverse(m, y)) ≈ y
