@@ -199,6 +199,9 @@ end
             @test boundingbox(d) == d
 
             @test similar_interval(0..1, 0, big(1.0)) isa ClosedInterval{BigFloat}
+
+            @test canonicaldomain(d) isa ChebyshevInterval{Float64}
+            @test canonicaldomain(0..1) isa ChebyshevInterval{Float64}
         end
         @testset "UnitInterval{$T}" begin
             d = UnitInterval{T}()
@@ -224,6 +227,8 @@ end
             @test convert(Domain{Float64}, d) ≡ UnitInterval()
             @test convert(AbstractInterval{Float64}, d) ≡ UnitInterval()
             @test convert(UnitInterval{Float64}, d) ≡ UnitInterval()
+
+            @test canonicaldomain(d) === d
         end
         @testset "ChebyshevInterval{$T}" begin
             d = ChebyshevInterval{T}()
@@ -258,6 +263,8 @@ end
             @test convert(Domain{Float64}, d) ≡ ChebyshevInterval()
             @test convert(AbstractInterval{Float64}, d) ≡ ChebyshevInterval()
             @test convert(ChebyshevInterval{Float64}, d) ≡ ChebyshevInterval()
+
+            @test canonicaldomain(d) === d
 
             show(io, ChebyshevInterval())
             @test String(take!(io)) == "-1.0..1.0 (Chebyshev)"

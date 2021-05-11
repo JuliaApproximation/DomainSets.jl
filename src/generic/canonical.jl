@@ -8,13 +8,16 @@ Optionally, a canonical type argument may specify an alternative canonical domai
 Canonical domains help with establishing equality between domains, with finding
 maps between domains and with finding parameterizations.
 
-For example, the canonical domain of any interval `[a,b]` is the unit interval
-`[0,1]`.
+For example, the canonical domain of an Interval `[a,b]` is the interval `[-1,1]`.
 """
 canonicaldomain(d::Domain) = d
 
-"Does the domain have a canonical domain, different from the domain itself?"
-hascanonicaldomain(d) = !(canonicaldomain(d) === d)
+"Does the domain have a canonical domain?"
+hascanonicaldomain(d) = _hascanonicaldomain(d, canonicaldomain(d))
+# the domain and the canonical domain have the same type: check equality
+_hascanonicaldomain(d::D, cd::D) where {D} = !(d==cd)
+# they have a different type: result is true even if the domains are equal
+_hascanonicaldomain(d, cd) = true
 
 identitymap(d) = IdentityMap{eltype(d)}(dimension(d))
 
@@ -31,7 +34,7 @@ mapto_canonical(d, x) = mapto_canonical(d)(x)
 abstract type CanonicalType end
 
 canonicaldomain(ctype::CanonicalType, d) = d
-hascanonicaldomain(ctype::CanonicalType, d) = !(canonicaldomain(ctype, d) === d)
+hascanonicaldomain(ctype::CanonicalType, d) = _hascanonicaldomain(d, canonicaldomain(ctype, d))
 
 mapfrom_canonical(ctype::CanonicalType, d, x) = mapfrom_canonical(ctype, d)(x)
 mapto_canonical(ctype::CanonicalType, d, x) = mapto_canonical(ctype, d)(x)

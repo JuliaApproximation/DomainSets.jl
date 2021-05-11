@@ -74,16 +74,6 @@ endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 
 similardomain(::UnitInterval, ::Type{T}) where {T} = UnitInterval{T}()
 
-canonicaldomain(d::AbstractInterval{T}) where {T} = isclosedset(d) ? UnitInterval{T}() : d
-
-mapfrom_canonical(d::UnitInterval{T}) where {T} = StaticIdentityMap{T}()
-
-"Map the interval [a,b] to the interval [c,d]."
-interval_map(a, b, c, d) = AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
-
-mapfrom_canonical(d::AbstractInterval{T}) where {T} =
-    isclosedset(d) ? interval_map(0, 1, endpoints(d)...) : StaticIdentityMap{T}()
-
 
 "The closed interval [-1,1]."
 struct ChebyshevInterval{T} <: ClosedFixedInterval{T}
@@ -96,6 +86,17 @@ endpoints(d::ChebyshevInterval{T}) where {T} = (-one(T),one(T))
 similardomain(::ChebyshevInterval, ::Type{T}) where {T} = ChebyshevInterval{T}()
 
 -(d::ChebyshevInterval) = d
+
+
+"Map the interval [a,b] to the interval [c,d]."
+interval_map(a, b, c, d) = AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
+
+canonicaldomain(d::ClosedInterval{T}) where {T} = ChebyshevInterval{float(T)}()
+canonicaldomain(d::Interval{L,R,T}) where {L,R,T} = Interval{L,R,float(T)}(-1, 1)
+canonicaldomain(d::FixedInterval) = d
+
+mapfrom_canonical(d::Interval{L,R,T}) where {L,R,T} = interval_map(-one(T), one(T), endpoints(d)...)
+mapfrom_canonical(d::FixedInterval{L,R,T}) where {L,R,T} = StaticIdentityMap{T}()
 
 
 "The half-open positive halfline `[0,∞)`."

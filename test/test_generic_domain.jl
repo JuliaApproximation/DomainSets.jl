@@ -37,6 +37,9 @@ function test_generic_domain(d::Domain)
         cd = canonicaldomain(d)
         @test mapfrom_canonical(d) == mapto(cd, d)
         @test mapto_canonical(d) == mapto(d, cd)
+        x1 = point_in_domain(cd)
+        @test mapfrom_canonical(d, x1) ∈ d
+        @test mapto_canonical(d, x) ∈ cd
     end
     if iscomposite(d)
         @test ncomponents(d) == length(components(d))
