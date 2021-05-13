@@ -98,6 +98,9 @@ canonicaldomain(d::FixedInterval) = d
 mapfrom_canonical(d::Interval{L,R,T}) where {L,R,T} = interval_map(-one(T), one(T), endpoints(d)...)
 mapfrom_canonical(d::FixedInterval{L,R,T}) where {L,R,T} = StaticIdentityMap{T}()
 
+mapto(d1::D, d2::D) where {D <: FixedInterval} = identitymap(d1)
+mapto(d1::D1, d2::D2) where {D1 <: FixedInterval,D2 <: FixedInterval} =
+    interval_map(infimum(d1), supremum(d1), infimum(d2), supremum(d2))
 
 "The half-open positive halfline `[0,∞)`."
 struct HalfLine{T} <: FixedInterval{:closed,:open,T} end

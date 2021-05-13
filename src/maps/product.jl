@@ -24,9 +24,6 @@ compatibleproductdims(d1::ProductMap, d2::ProductMap) =
 	mapsize(d1) == mapsize(d2) &&
 		all(map(==, map(mapsize, components(d1)), map(mapsize, components(d2))))
 
-compatibleproduct(d1::ProductMap, d2::ProductMap) =
-	compatibleproductdims(d1, d2) && compatible_domaintype(d1, d2)
-
 isconstant(m::ProductMap) = mapreduce(isconstant, &, components(m))
 islinear(m::ProductMap) = mapreduce(islinear, &, components(m))
 isaffine(m::ProductMap) = mapreduce(isaffine, &, components(m))
@@ -68,10 +65,10 @@ for op in (:inverse, :leftinverse, :rightinverse)
 end
 
 function composedmap(m1::ProductMap, m2::ProductMap)
-	if compatibleproduct(m1, m2)
+	if compatibleproductdims(m1, m2)
 		ProductMap(map(composedmap, components(m1), components(m2)))
 	else
-		Composition(m1,m2)
+		ComposedMap(m1,m2)
 	end
 end
 

@@ -235,7 +235,7 @@ intersectdomain(d1::Domain, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(
 (&)(d1::Domain, d2::Domain) = intersectdomain(d1,d2)
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
-	if compatibleproduct(d1, d2)
+	if compatibleproductdims(d1, d2)
         ProductDomain(map(intersectdomain, components(d1), components(d2)))
     else
         IntersectDomain(d1, d2)

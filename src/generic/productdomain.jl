@@ -21,9 +21,6 @@ compatibleproductdims(d1::ProductDomain, d2::ProductDomain) =
 	dimension(d1) == dimension(d2) &&
 		all(map(==, map(dimension, components(d1)), map(dimension, components(d2))))
 
-compatibleproduct(d1::ProductDomain, d2::ProductDomain) =
-	compatibleproductdims(d1, d2) && compatible_eltype(d1, d2)
-
 Display.combinationsymbol(d::ProductDomain) = Display.Times()
 Display.displaystencil(d::ProductDomain) = composite_displaystencil(d)
 show(io::IO, mime::MIME"text/plain", d::ProductDomain) = composite_show(io, mime, d)

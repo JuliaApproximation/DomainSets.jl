@@ -16,17 +16,21 @@ const VectorMap{T} = Map{Vector{T}}
 
 CompositeTypes.Display.displaysymbol(m::Map) = 'F'
 
+"What is the expected type of a point in the domain of the function map `m`?"
 domaintype(m) = domaintype(typeof(m))
-domaintype(::Type{<:Any}) = Any
+domaintype(::Type{M}) where {M} = Any
 domaintype(::Type{<:Map{T}}) where {T} = T
 
-codomaintype(m) = codomaintype(typeof(m))
-codomaintype(M::Type{<:Any}) = Base.promote_op(applymap, M, domaintype(M))
-codomaintype(M::Type{<:TypedMap{T,U}}) where {T,U} = U
+"""
+    codomaintype(m[, S])
 
-# What is the output type given an argument of type S?
-codomaintype(m, ::Type{S}) where {S} = codomaintype(typeof(m), S)
-codomaintype(M::Type{<:Any}, ::Type{S}) where {S} = Base.promote_op(applymap, M, S)
+What is the codomain type of the function map `m`, given that `S` is its domain type?
+"""
+codomaintype(m) = codomaintype(m, domaintype(m))
+codomaintype(m, ::Type{T}) where {T} = codomaintype(typeof(m), T)
+
+codomaintype(::Type{M}, ::Type{T}) where {M,T} = Any
+codomaintype(M::Type{<:AbstractMap}, ::Type{T}) where {T} = Base.promote_op(applymap, M, T)
 codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
 
 isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(codomaintype(m))
@@ -45,8 +49,6 @@ convert(::Type{TypedMap{T,U}}, m::TypedMap) where {T,U} = similarmap(m, T, U)
 convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
 convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
 
-compatible_domaintype(d1, d2) = isconcretetype(promote_type(domaintype(d1),domaintype(d2)))
-
 # Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)
 
@@ -56,7 +58,6 @@ compatible_domaintype(d1, d2) = isconcretetype(promote_type(domaintype(d1),domai
 
 "Promote map and point to compatible types."
 promote_map_point_pair(m, x) = (m, x)
-promote_map_point_pair(m::AbstractMap, x) = (m, x)
 promote_map_point_pair(m::Map, x) = _promote_map_point_pair(m, x, promote_type(domaintype(m), typeof(x)))
 # This is the line where we promote both the map and the point:
 _promote_map_point_pair(m, x, ::Type{T}) where {T} =
@@ -109,8 +110,8 @@ _mapsize(m, i, size::Tuple{}) = 1
 "Is the given map a square map?"
 issquaremap(m) = isvectorvalued(m) && (mapsize(m,1) == mapsize(m,2))
 
-isoverdetermined(m::AbstractMap) = mapsize(m,1) >= mapsize(m,2)
-isunderdetermined(m::AbstractMap) = mapsize(m,1) <= mapsize(m,2)
+isoverdetermined(m) = mapsize(m,1) >= mapsize(m,2)
+isunderdetermined(m) = mapsize(m,1) <= mapsize(m,2)
 
 is_scalar_to_vector(m) = mapsize(m) isa Tuple{Int}
 is_vector_to_scalar(m) = mapsize(m) isa Tuple{Int,Int} && codomaintype(m)<:Number

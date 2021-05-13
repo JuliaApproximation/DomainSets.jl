@@ -33,6 +33,7 @@ _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
 convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 
+# TODO: rename and clarify this function
 compatible_eltype(d1, d2) = isconcretetype(promote_type(eltype(d1),eltype(d2)))
 
 promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
