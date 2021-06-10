@@ -37,17 +37,17 @@ isclosedset(d::Point) = true
 boundary(d::Point) = d
 boundingbox(d::Point) = d.x..d.x
 
+infimum(d::Point) = d.x
+supremum(d::Point) = d.x
+
 interior(d::Point{T}) where {T} = EmptySpace{T}()
 closure(d::Point) = d
 
 point_in_domain(d::Point) = d.x
 
-function map_domain(map, p::Point)
-    x = applymap(map, p.x)
-    Point(x)
-end
-
-mapped_domain(invmap, p::Point) = map_domain(inverse(invmap), p)
+mapped_domain(invmap, p::Point) = Point(inverse(invmap, p.x))
+map_domain(map, p::Point) = Point(applymap(map, p.x))
+parametric_domain(map, p::Point) = Point(applymap(map, p.x))
 
 for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))

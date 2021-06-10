@@ -31,6 +31,7 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval) =
 
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
+corners(d::AbstractInterval) = [leftendpoint(d), rightendpoint(d)]
 
 boundingbox(d::AbstractInterval) = d
 

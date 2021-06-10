@@ -212,6 +212,7 @@ include("domains/cube.jl")
 include("domains/indicator.jl")
 include("domains/boundingbox.jl")
 
+include("applications/coordinates.jl")
 include("applications/rotation.jl")
 
 end # module

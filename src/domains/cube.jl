@@ -2,6 +2,9 @@
 "A `HyperRectangle` is the cartesian product of intervals."
 abstract type HyperRectangle{T} <: ProductDomain{T} end
 
+convert(::Type{HyperRectangle}, d::ProductDomain) =
+	ProductDomain(map(t->convert(AbstractInterval, t), components(d)))
+
 boundingbox(d::HyperRectangle) = d
 
 "Compute all corners of the hyperrectangle."
@@ -17,6 +20,64 @@ function corners(d::HyperRectangle)
         end
     end
     corners
+end
+
+# map the interval [a,b] to a rectangle defined by c (bottom-left) and d (top-right)
+rectangle_map(a::Number, b::Number, c::SVector{2}, d::SVector{2}) = AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
+
+# map the rectangle defined by a and b, to the rectangle defined by c and d,
+# where the dimension of c/d is one larger, and one of the coordinates (dim) is fixed to dimval.
+function rectangle_map(a::SVector{M}, b::SVector{M}, c::SVector{N}, d::SVector{N}, dim, dimval) where {N,M}
+	@assert N == M+1
+	T = promote_type(eltype(a),eltype(c))
+	A = MMatrix{N,M,T}(undef)
+	B = MVector{N,T}(undef)
+	fill!(A, 0)
+	fill!(B, 0)
+	B[dim] = dimval
+	for m = 1:dim-1
+		# scalar map along the dimension "m"
+		mapdim = interval_map(a[m], b[m], c[m], d[m])
+		A[m,m] = mapdim.A
+		B[m] = mapdim.b
+	end
+	for m = dim+1:N
+		mapdim = interval_map(a[m-1], b[m-1], c[m], d[m])
+		A[m,m-1] = mapdim.A
+		B[m] = mapdim.b
+	end
+	AffineMap(SMatrix{N,M}(A), SVector{N}(B))
+end
+
+function boundary(d::HyperRectangle{SVector{2,T}}) where {T}
+	left = infimum(d)
+	right = supremum(d)
+	x1 = left[1]; y1 = left[1]; x2 = right[1]; y2 = right[2]
+	d_unit = UnitInterval{T}()
+	faces = [
+		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x1,y1), SVector(x2,y1)), d_unit),
+		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x2,y1), SVector(x2,y2)), d_unit),
+		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x2,y2), SVector(x1,y2)), d_unit),
+		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x1,y2), SVector(x1,y1)), d_unit)
+	]
+	UnionDomain(faces)
+end
+
+function boundary(d::HyperRectangle{SVector{N,T}}) where {N,T}
+	left2 = infimum(d)
+	right2 = supremum(d)
+	d_unit = UnitCube{SVector{N-1,T}}()
+	left1 = infimum(d_unit)
+	right1 = supremum(d_unit)
+
+	face1 = ParametricDomain(rectangle_map(left1, right1, left2, right2, 1, left2[1]), d_unit)
+	D = typeof(face1)
+	faces = D[]
+	for dim in 1:N
+		push!(faces, ParametricDomain(rectangle_map(left1, right1, left2, right2, dim, left2[dim]), d_unit))
+		push!(faces, ParametricDomain(rectangle_map(left1, right1, left2, right2, dim, right2[dim]), d_unit))
+	end
+	UnionDomain(faces)
 end
 
 

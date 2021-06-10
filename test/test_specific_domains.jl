@@ -129,6 +129,8 @@ end
         @test !isempty(d)
         @test boundary(d) == d
         @test boundingbox(d) == 1.0..1.0
+        @test infimum(d) == d.x
+        @test supremum(d) == d.x
         @test isclosedset(d)
         @test !isopenset(d)
         @test dimension(d) == 1
@@ -196,6 +198,8 @@ end
             @test leftendpoint(d) ∈ ∂(d)
             @test rightendpoint(d) ∈ ∂(d)
 
+            @test boundary(d) == uniondomain(Point(zero(T)), Point(one(T)))
+            @test corners(d) == [0,1]
             @test boundingbox(d) == d
 
             @test similar_interval(0..1, 0, big(1.0)) isa ClosedInterval{BigFloat}
@@ -1126,7 +1130,7 @@ end
         @test inverse_map(pd, m(0.4)) ≈ 0.4
         @test mapfrom_canonical(pd) == m
         @test canonicaldomain(pd) == 0..1
-        @test boundary(pd) isa ParametricDomain
+        @test boundary(pd) isa UnionDomain
         @test interior(pd) isa ParametricDomain
         @test closure(pd) isa ParametricDomain
     end
@@ -1538,6 +1542,9 @@ end
         @test UnitCube{SVector{2,BigFloat}}(Val(2)) isa EuclideanUnitCube{2,BigFloat}
 
         @test Set(corners((0..1)^2)) == Set([ [1,0], [0,1], [1,1], [0,0]])
+        @test Set(corners(UnitCube())) == Set([ [0,0,0], [1,0,0], [0,1,0], [0,0,1], [1,1,0], [1,0,1], [0,1,1], [1,1,1]])
+        @test boundary(boundary(UnitSquare())) == UnionDomain(map(t->Point(SVector{2}(t)), corners(UnitSquare())))
+        @test boundary(boundary(boundary(UnitCube()))) == UnionDomain(map(t->Point(SVector{3}(t)), corners(UnitCube())))
 
         @test StaticUnitCube() == UnitCube()
         @test StaticUnitCube(Val(3)) == UnitCube()
@@ -1579,6 +1586,7 @@ end
         @test !isempty(D)
         @test isclosedset(D)
         @test !isopenset(D)
+        @test convert(DomainSets.HyperRectangle, VcatDomain(UnitInterval(), UnitInterval())) isa StaticUnitCube
 
         @test approx_in(SA[-0.1,-0.1], D, 0.1)
         @test !approx_in(SA[-0.1,-0.1], D, 0.09)

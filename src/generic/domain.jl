@@ -145,7 +145,29 @@ isreal(d::Domain) = isreal(eltype(d))
 infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
 supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
 
+
+"""
+Return a bounding box of the given domain.
+
+A bounding box is an interval, a hyperrectangle or the full space. It is such that
+each point in the domain also lies in the bounding box.
+"""
+boundingbox(d) = FullSpace{eltype(d)}()
+
 function boundary end
 const ∂ = boundary
 
-boundingbox(d) = FullSpace{eltype(d)}()
+
+# "Lazy representation of the boundary of a domain."
+# struct Boundary{T,D} <: Domain{T}
+#     domain  :: D
+# end
+#
+# domain(d::Boundary) = d.domain
+#
+# Boundary(domain) = Boundary{eltype(domain)}(domain)
+# Boundary{T}(domain) where {T} = Boundary{T,typeof(domain)}(domain)
+# Boundary{T}(domain::Domain{T}) where {T} = Boundary{T,typeof(domain)}(domain)
+# Boundary{T}(domain::Domain{S}) where {S,T} = Boundary{T}(convert(Domain{T}, domain))
+#
+# indomain(x, d::Boundary) = in(x, boundary(domain(d)))

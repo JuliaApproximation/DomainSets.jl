@@ -287,6 +287,11 @@ function test_affine_maps(T)
     @test DomainSets.to_vector(Vector{T}, A) == [0,0]
     @test DomainSets.to_vector(T, 2, 3) == 3
 
+    if T != BigFloat    # BigFloat's make pinv fail for StaticArrays
+        @test DomainSets.matrix_pinv(SMatrix{2,2}(rand(T),rand(T),rand(T),rand(T))) isa SMatrix{2,2}
+        @test DomainSets.matrix_pinv(SVector(rand(T),rand(T))) isa Transpose{T,SVector{2,T}}
+    end
+
     test_linearmap(T)
     test_translation(T)
     test_affinemap(T)

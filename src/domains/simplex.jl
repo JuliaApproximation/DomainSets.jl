@@ -3,6 +3,7 @@
 # An n-dimensional simplex
 ###########################
 
+"Supertype of an N-dimensional simplex."
 abstract type Simplex{T,C} <: Domain{T} end
 
 isclosedset(::Simplex{T,:closed}) where {T} = true
@@ -10,7 +11,9 @@ isclosedset(::Simplex{T,:open}) where {T} = false
 
 isopenset(d::Simplex) = !isclosedset(d)
 
+"The unit simplex is a polytope with the origin and all unit vectors as vertices."
 abstract type UnitSimplex{T,C} <: Simplex{T,C} end
+
 const ClosedUnitSimplex{T} = UnitSimplex{T,:closed}
 const OpenUnitSimplex{T} = UnitSimplex{T,:open}
 

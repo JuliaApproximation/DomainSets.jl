@@ -76,7 +76,7 @@ _ud(d1, d2, d3, domains...) = uniondomain(uniondomain(d1, d2, d3), domains...)
 
 # avoid nested union domains
 uniondomain(d1::UnionDomain, d2::UnionDomain) =
-	d1 == d2 ? d1 : UnionDomain(components(d1)..., components(d2)...)
+	d1 == d2 ? d1 : UnionDomain(collect(Set(components(d1)) ∪ Set(components(d2))))
 uniondomain1(d1::UnionDomain, d2) = UnionDomain(components(d1)..., d2)
 uniondomain2(d1, d2::UnionDomain) = UnionDomain(d1, components(d2)...)
 
@@ -104,6 +104,8 @@ interior(d::UnionDomain) = UnionDomain(map(interior, components(d)))
 closure(d::UnionDomain) = UnionDomain(map(closure, components(d)))
 
 boundingbox(d::UnionDomain) = unionbox(map(boundingbox, components(d))...)
+
+boundary(d::UnionDomain) = uniondomain(map(boundary, components(d))...)
 
 Display.combinationsymbol(d::UnionDomain) = Display.Symbol('∪')
 Display.displaystencil(d::UnionDomain) = composite_displaystencil(d)

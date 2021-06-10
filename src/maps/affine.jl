@@ -370,6 +370,9 @@ AffineMap{T}(A, b) where {T} = GenericAffineMap{T}(A, b)
 
 similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
+convert(::Type{AffineMap}, m) = (@assert isaffine(m); AffineMap(matrix(m), vector(m)))
+convert(::Type{AffineMap{T}}, m) where {T} = (@assert isaffine(m); AffineMap{T}(matrix(m), vector(m)))
+
 # If y = A*x+b, then x = inv(A)*(y-b) = inv(A)*y - inv(A)*b
 inverse(m::AffineMap) = (@assert issquaremap(m); AffineMap(inv(m.A), -inv(m.A)*m.b))
 inverse(m::AffineMap, x) = (@assert issquaremap(m); m.A \ (x-m.b))

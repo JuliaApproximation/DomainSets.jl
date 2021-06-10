@@ -31,6 +31,7 @@ isempty(d::AbstractMappedDomain) = isempty(superdomain(d))
 isopenset(d::AbstractMappedDomain) = isopenset(superdomain(d))
 isclosedset(d::AbstractMappedDomain) = isclosedset(superdomain(d))
 
+corners(d::AbstractMappedDomain) = [forward_map(d, x) for x in corners(superdomain(d))]
 
 ## I/O functionality
 
@@ -126,8 +127,11 @@ _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
 # This assumes that the map types can be combined using \circ
 mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
 
-boundary(d::MappedDomain) = _boundary(d, superdomain(d), inverse_map(d))
-_boundary(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, boundary(superdomain))
+boundary(d::MappedDomain) = _boundary(d, boundary(superdomain(d)), inverse_map(d))
+_boundary(d::MappedDomain, superbnd, invmap) = MappedDomain(invmap, superbnd)
+_boundary(d::MappedDomain, superbnd::UnionDomain, invmap) =
+    UnionDomain(map(t->mapped_domain(invmap, t), components(superbnd)))
+
 interior(d::MappedDomain) = _interior(d, superdomain(d), inverse_map(d))
 _interior(d::MappedDomain, superdomain, invmap) = MappedDomain(invmap, interior(superdomain))
 closure(d::MappedDomain) = _closure(d, superdomain(d), inverse_map(d))
@@ -161,8 +165,11 @@ inverse_map(d::ParametricDomain, y) = leftinverse(d.fmap, y)
 "Return the domain that results from mapping the given domain."
 parametric_domain(fmap, domain::Domain) = ParametricDomain(fmap, domain)
 
-boundary(d::ParametricDomain) = _boundary(d, superdomain(d), forward_map(d))
-_boundary(d::ParametricDomain, superdomain, fmap) = ParametricDomain(fmap, boundary(superdomain))
+boundary(d::ParametricDomain) = _boundary(d, boundary(superdomain(d)), forward_map(d))
+_boundary(d::ParametricDomain, superbnd, fmap) = ParametricDomain(fmap, superbnd)
+_boundary(d::ParametricDomain, superbnd::UnionDomain, fmap) =
+    UnionDomain(map(t -> parametric_domain(fmap, t), components(superbnd)))
+
 interior(d::ParametricDomain) = _interior(d, superdomain(d), forward_map(d))
 _interior(d::ParametricDomain, superdomain, fmap) = ParametricDomain(fmap, interior(superdomain))
 closure(d::ParametricDomain) = _closure(d, superdomain(d), forward_map(d))
