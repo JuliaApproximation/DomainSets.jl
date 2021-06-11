@@ -22,12 +22,16 @@ function corners(d::HyperRectangle)
     corners
 end
 
-# map the interval [a,b] to a rectangle defined by c (bottom-left) and d (top-right)
-rectangle_map(a::Number, b::Number, c::SVector{2}, d::SVector{2}) = AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
+# map the interval [a,b] to a cube defined by c (bottom-left) and d (top-right)
+cube_face_map(a::Number, b::Number, c::SVector{2}, d::SVector{2}) = AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
+function cube_face_map(a::Number, b::Number, c::Vector, d::Vector)
+	@assert length(c) == length(d) == 2
+	AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
+end
 
-# map the rectangle defined by a and b, to the rectangle defined by c and d,
-# where the dimension of c/d is one larger, and one of the coordinates (dim) is fixed to dimval.
-function rectangle_map(a::SVector{M}, b::SVector{M}, c::SVector{N}, d::SVector{N}, dim, dimval) where {N,M}
+# map the cube defined by a and b, to the cube defined by c and d,
+# where the dimension of c and d is one larger, and one of the coordinates (dim) is fixed to dimval.
+function cube_face_map(a::SVector{M}, b::SVector{M}, c::SVector{N}, d::SVector{N}, dim, dimval) where {N,M}
 	@assert N == M+1
 	T = promote_type(eltype(a),eltype(c))
 	A = MMatrix{N,M,T}(undef)
@@ -49,16 +53,42 @@ function rectangle_map(a::SVector{M}, b::SVector{M}, c::SVector{N}, d::SVector{N
 	AffineMap(SMatrix{N,M}(A), SVector{N}(B))
 end
 
+function cube_face_map(a::Vector, b::Vector, c::Vector, d::Vector, dim, dimval)
+	M = length(a)
+	N = length(c)
+	@assert length(a)==length(b)
+	@assert length(c)==length(d)
+	@assert N == M+1
+	T = promote_type(eltype(a),eltype(c))
+	A = Matrix{T}(undef, N, M)
+	B = Vector{T}(undef, N)
+	fill!(A, 0)
+	fill!(B, 0)
+	B[dim] = dimval
+	for m = 1:dim-1
+		# scalar map along the dimension "m"
+		mapdim = interval_map(a[m], b[m], c[m], d[m])
+		A[m,m] = mapdim.A
+		B[m] = mapdim.b
+	end
+	for m = dim+1:N
+		mapdim = interval_map(a[m-1], b[m-1], c[m], d[m])
+		A[m,m-1] = mapdim.A
+		B[m] = mapdim.b
+	end
+	AffineMap(A, B)
+end
+
 function boundary(d::HyperRectangle{SVector{2,T}}) where {T}
 	left = infimum(d)
 	right = supremum(d)
-	x1 = left[1]; y1 = left[1]; x2 = right[1]; y2 = right[2]
+	x1 = left[1]; y1 = left[2]; x2 = right[1]; y2 = right[2]
 	d_unit = UnitInterval{T}()
 	faces = [
-		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x1,y1), SVector(x2,y1)), d_unit),
-		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x2,y1), SVector(x2,y2)), d_unit),
-		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x2,y2), SVector(x1,y2)), d_unit),
-		ParametricDomain(rectangle_map(zero(T), one(T), SVector(x1,y2), SVector(x1,y1)), d_unit)
+		ParametricDomain(cube_face_map(zero(T), one(T), SVector(x1,y1), SVector(x2,y1)), d_unit),
+		ParametricDomain(cube_face_map(zero(T), one(T), SVector(x2,y1), SVector(x2,y2)), d_unit),
+		ParametricDomain(cube_face_map(zero(T), one(T), SVector(x2,y2), SVector(x1,y2)), d_unit),
+		ParametricDomain(cube_face_map(zero(T), one(T), SVector(x1,y2), SVector(x1,y1)), d_unit)
 	]
 	UnionDomain(faces)
 end
@@ -70,14 +100,45 @@ function boundary(d::HyperRectangle{SVector{N,T}}) where {N,T}
 	left1 = infimum(d_unit)
 	right1 = supremum(d_unit)
 
-	face1 = ParametricDomain(rectangle_map(left1, right1, left2, right2, 1, left2[1]), d_unit)
+	face1 = ParametricDomain(cube_face_map(left1, right1, left2, right2, 1, left2[1]), d_unit)
 	D = typeof(face1)
 	faces = D[]
 	for dim in 1:N
-		push!(faces, ParametricDomain(rectangle_map(left1, right1, left2, right2, dim, left2[dim]), d_unit))
-		push!(faces, ParametricDomain(rectangle_map(left1, right1, left2, right2, dim, right2[dim]), d_unit))
+		push!(faces, ParametricDomain(cube_face_map(left1, right1, left2, right2, dim, left2[dim]), d_unit))
+		push!(faces, ParametricDomain(cube_face_map(left1, right1, left2, right2, dim, right2[dim]), d_unit))
 	end
 	UnionDomain(faces)
+end
+
+function boundary(d::HyperRectangle{Vector{T}}) where {T}
+	if dimension(d) == 2
+		left = infimum(d)
+		right = supremum(d)
+		x1 = left[1]; y1 = left[2]; x2 = right[1]; y2 = right[2]
+		d_unit = UnitInterval{T}()
+		faces = [
+			ParametricDomain(cube_face_map(zero(T), one(T), [x1,y1], [x2,y1]), d_unit),
+			ParametricDomain(cube_face_map(zero(T), one(T), [x2,y1], [x2,y2]), d_unit),
+			ParametricDomain(cube_face_map(zero(T), one(T), [x2,y2], [x1,y2]), d_unit),
+			ParametricDomain(cube_face_map(zero(T), one(T), [x1,y2], [x1,y1]), d_unit)
+		]
+		UnionDomain(faces)
+	else
+		left2 = infimum(d)
+		right2 = supremum(d)
+		d_unit = UnitCube(dimension(d)-1)
+		left1 = infimum(d_unit)
+		right1 = supremum(d_unit)
+
+		face1 = ParametricDomain(cube_face_map(left1, right1, left2, right2, 1, left2[1]), d_unit)
+		D = typeof(face1)
+		faces = D[]
+		for dim in 1:dimension(d)
+			push!(faces, ParametricDomain(cube_face_map(left1, right1, left2, right2, dim, left2[dim]), d_unit))
+			push!(faces, ParametricDomain(cube_face_map(left1, right1, left2, right2, dim, right2[dim]), d_unit))
+		end
+		UnionDomain(faces)
+	end
 end
 
 

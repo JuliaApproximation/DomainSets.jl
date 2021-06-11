@@ -16,6 +16,13 @@ Domain(d) = convert(Domain, d)
 convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
 convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
 
+"Can the domains be promoted without throwing an error?"
+promotable_domains(d1, d2) = promotable_eltypes(eltype(d1),eltype(d2))
+promotable_eltypes(::Type{S}, ::Type{T}) where {S,T} =
+    isconcretetype(promote_type(S, T))
+promotable_eltypes(::Type{S}, ::Type{T}) where {S<:AbstractVector,T<:AbstractVector} =
+    promotable_eltypes(eltype(S), eltype(T))
+
 "Promote the given domains to have a common element type."
 promote_domains() = ()
 promote_domains(domains...) = promote_domains(domains)
@@ -32,9 +39,6 @@ _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
 # Some standard cases
 convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
-
-# TODO: rename and clarify this function
-compatible_eltype(d1, d2) = isconcretetype(promote_type(eltype(d1),eltype(d2)))
 
 promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
 promote(d1::Domain, d2) = promote_domains((d1,d2))
@@ -154,9 +158,22 @@ each point in the domain also lies in the bounding box.
 """
 boundingbox(d) = FullSpace{eltype(d)}()
 
+"Return the boundary of the given domain as a domain."
 function boundary end
 const ∂ = boundary
 
+"""
+Return the normal of the domain at the point `x`.
+
+It is assumed that `x` is a point on the boundary of the domain.
+"""
+function normal end
+
+"""
+Return the tangents of the domain at the point `x`. The tangents form a
+basis for the tangent plane, perpendicular to the normal direction at `x`.
+"""
+function tangents end
 
 # "Lazy representation of the boundary of a domain."
 # struct Boundary{T,D} <: Domain{T}

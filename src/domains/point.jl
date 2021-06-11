@@ -17,7 +17,9 @@ Number(d::Point) = convert(Number, d)
 convert(::Type{Domain}, c::Number) = Point(c)
 convert(::Type{Domain{T}}, c::Number) where T = Point{T}(c)
 
-==(a::Point,b::Point) = a.x == b.x
+==(d1::Point,d2::Point) = d1.x == d2.x
+hash(d::Point, h::UInt) = hashrec("Point", d.x, h)
+
 indomain(x, d::Point) = x == d.x
 isempty(::Point) = false
 
@@ -44,6 +46,8 @@ interior(d::Point{T}) where {T} = EmptySpace{T}()
 closure(d::Point) = d
 
 point_in_domain(d::Point) = d.x
+
+distance_to(d::Point, x) = norm(x-d.x)
 
 mapped_domain(invmap, p::Point) = Point(inverse(invmap, p.x))
 map_domain(map, p::Point) = Point(applymap(map, p.x))

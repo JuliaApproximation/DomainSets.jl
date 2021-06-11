@@ -159,11 +159,23 @@ similardomain(d::ParametricDomain, ::Type{T}) where {T} =
 forward_map(d::ParametricDomain) = d.fmap
 forward_map(d::ParametricDomain, x) = d.fmap(x)
 
-inverse_map(d::ParametricDomain) = leftinverse(d.fmap)
-inverse_map(d::ParametricDomain, y) = leftinverse(d.fmap, y)
+function indomain(x, d::ParametricDomain)
+    # To check for membership, we can't use the inverse map because it may not exist
+    # We assume a left inverse exists, but the left inverse may be many-to-one.
+    # So we also have to check whether the left-inverse-point maps back to x
+    y = leftinverse(d.fmap, x)
+    x2 = forward_map(d, y)
+    isapprox(x, x2)
+end
+
+==(d1::ParametricDomain, d2::ParametricDomain) =
+    forward_map(d1) == forward_map(d2) && superdomain(d1) == superdomain(d2)
+hash(d::ParametricDomain, h::UInt) = hashrec(forward_map(d), superdomain(d), h)
 
 "Return the domain that results from mapping the given domain."
 parametric_domain(fmap, domain::Domain) = ParametricDomain(fmap, domain)
+parametric_domain(fmap, domain::ParametricDomain) =
+    parametric_domain(fmap ∘ forward_map(domain), superdomain(domain))
 
 boundary(d::ParametricDomain) = _boundary(d, boundary(superdomain(d)), forward_map(d))
 _boundary(d::ParametricDomain, superbnd, fmap) = ParametricDomain(fmap, superbnd)

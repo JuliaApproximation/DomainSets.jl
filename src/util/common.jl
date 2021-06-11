@@ -20,6 +20,10 @@ function unitvector(d::Domain{T}) where {T<:AbstractVector}
 end
 unitvector(d::Domain{T}) where {T<:Number} = one(T)
 
+"Apply the `hash` function recursively to the given arguments."
+hashrec(h) = hash(h)
+hashrec(h, args...) = hash(h, hashrec(args...))
+
 #################
 # Precision type
 #################

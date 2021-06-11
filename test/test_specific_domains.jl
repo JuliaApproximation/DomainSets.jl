@@ -717,6 +717,7 @@ end
         @test boundary(D) == UnitCircle()
         @test dimension(D) == 2
         @test boundingbox(D) == ProductDomain(ChebyshevInterval(), ChebyshevInterval())
+        @test normal(UnitDisk(), [sqrt(2)/2, sqrt(2)/2]) ≈ [sqrt(2)/2, sqrt(2)/2]
 
         @test boundingbox(UnitBall{Float64}()) == ChebyshevInterval()
 
@@ -1126,8 +1127,6 @@ end
         @test pd isa Domain{Vector{Float64}}
         @test forward_map(pd) == m
         @test forward_map(pd, 0.4) ≈ m(0.4)
-        @test inverse_map(pd)(m(0.4)) ≈ 0.4
-        @test inverse_map(pd, m(0.4)) ≈ 0.4
         @test mapfrom_canonical(pd) == m
         @test canonicaldomain(pd) == 0..1
         @test boundary(pd) isa UnionDomain
@@ -1545,6 +1544,13 @@ end
         @test Set(corners(UnitCube())) == Set([ [0,0,0], [1,0,0], [0,1,0], [0,0,1], [1,1,0], [1,0,1], [0,1,1], [1,1,1]])
         @test boundary(boundary(UnitSquare())) == UnionDomain(map(t->Point(SVector{2}(t)), corners(UnitSquare())))
         @test boundary(boundary(boundary(UnitCube()))) == UnionDomain(map(t->Point(SVector{3}(t)), corners(UnitCube())))
+        @test UnitCube() == UnitCube(3)
+        @test boundary(UnitCube()) == boundary(UnitCube(3))
+        @test boundary(boundary(UnitCube())) == boundary(boundary(UnitCube(3)))
+        @test boundary(boundary(boundary(UnitCube()))) == boundary(boundary(boundary(UnitCube(3))))
+        @test UnitSquare() == UnitCube(2)
+        @test boundary(UnitSquare()) == boundary(UnitCube(2))
+        @test boundary(boundary(UnitSquare())) == boundary(boundary(UnitCube(2)))
 
         @test StaticUnitCube() == UnitCube()
         @test StaticUnitCube(Val(3)) == UnitCube()

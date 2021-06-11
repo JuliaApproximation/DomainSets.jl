@@ -5,6 +5,9 @@ iscompact(d::TypedEndpointsInterval) = false
 isinterval(d::Domain) = false
 isinterval(d::AbstractInterval) = true
 
+hash(d::AbstractInterval, h::UInt) =
+    hashrec(isleftopen(d), isrightopen(d), leftendpoint(d), rightendpoint(d), h)
+
 Display.object_parentheses(::AbstractInterval) = true
 
 approx_indomain(x, d::AbstractInterval, tolerance) =
@@ -32,6 +35,10 @@ isapprox(d1::AbstractInterval, d2::AbstractInterval) =
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 corners(d::AbstractInterval) = [leftendpoint(d), rightendpoint(d)]
+
+normal(d::AbstractInterval, x) = (abs(minimum(d)-x) < abs(maximum(d)-x)) ? -one(eltype(d)) : one(eltype(d))
+
+distance_to(d::AbstractInterval, x) = x ∈ d ? zero(eltype(d)) : min(abs(x-supremum(d)), abs(x-infimum(d)))
 
 boundingbox(d::AbstractInterval) = d
 
