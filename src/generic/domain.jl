@@ -38,6 +38,7 @@ _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
     error("Don't know how to convert the `eltype` of $(d).")
 # Some standard cases
 convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
+convert_eltype(::Type{T}, d::AbstractRange) where {T} = map(T, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 
 promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
