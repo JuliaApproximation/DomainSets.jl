@@ -83,7 +83,7 @@ similarmap(m::DynamicIdentityMap, ::Type{T}) where {T<:StaticTypes} =
     StaticIdentityMap{T}()
 
 ==(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = m1.dimension == m2.dimension
-hash(m::DynamicIdentityMap, h::UInt) = hashrec("DynamicIdentityMap", dimension(m), h)
+hash(m::DynamicIdentityMap, h::UInt) = hashrec("DynamicIdentityMap", m.dimension, h)
 
 
 "The supertype of constant maps from `T` to `U`."

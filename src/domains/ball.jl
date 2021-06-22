@@ -295,7 +295,7 @@ normal(d::Sphere, x) = (x-center(x))/norm(x-center(x))
 
 distance_to(d::Sphere, x) = abs(norm(x-center(d))-radius(d))
 
-point_in_domain(d::Sphere) = center(d) + unitvector(d)
+point_in_domain(d::Sphere) = center(d) + unitvector(d, 1)
 
 ==(d1::Sphere, d2::Sphere) = radius(d1)==radius(d2) && center(d1)==center(d2)
 

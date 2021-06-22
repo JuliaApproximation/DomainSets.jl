@@ -28,6 +28,27 @@ function point_in_domain(d::AbstractInterval)
     mean(d)
 end
 
+# For an interval of integers, try to find an integer point
+function point_in_domain(d::AbstractInterval{T}) where {T<:Integer}
+    isempty(d) && throw(BoundsError())
+    x = round(T, mean(d))
+    if x ∈ d
+        x
+    else
+        # the mean is not inside the interval when rounded, this means
+        # we have to choose an endpoint
+        if isleftclosed(d)
+            leftendpoint(d)
+        elseif isrightclosed(d)
+            rightendpoint(d)
+        else
+            # the interval is open and contains no integers in its interior
+            throw(BoundsError())
+        end
+    end
+end
+
+
 isapprox(d1::AbstractInterval, d2::AbstractInterval) =
     isapprox(leftendpoint(d1), leftendpoint(d2); atol=default_tolerance(d1)) &&
     isapprox(rightendpoint(d1), rightendpoint(d2); atol=default_tolerance(d1))

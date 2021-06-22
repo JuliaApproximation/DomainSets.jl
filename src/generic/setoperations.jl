@@ -248,6 +248,7 @@ similardomain(d::IntersectDomain, ::Type{T}) where {T} =
     IntersectDomain(convert.(Domain{T}, components(d)))
 
 ==(a::IntersectDomain, b::IntersectDomain) = Set(components(a)) == Set(components(b))
+hash(d::IntersectDomain, h::UInt) = hashrec("IntersectDomain", Set(components(d)), h)
 
 boundingbox(d::IntersectDomain) = intersectbox(map(boundingbox, components(d))...)
 

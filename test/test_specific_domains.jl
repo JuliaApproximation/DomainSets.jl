@@ -139,6 +139,8 @@ end
         @test canonicaldomain(d) == Point(0.0)
         @test mapfrom_canonical(d) == Translation(1.0)
 
+        @test distance_to(d, 0.5) == abs(0.5-d.x)
+
         @test d .+ 1 == Domain(2.0)
         @test 1 .+ d == Domain(2.0)
         @test 1 .- d == Domain(0.0)

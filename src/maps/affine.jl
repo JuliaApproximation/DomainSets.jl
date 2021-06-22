@@ -51,12 +51,11 @@ isaffine(m::AbstractAffineMap) = true
 
 ==(m1::AbstractAffineMap, m2::AbstractAffineMap) =
     matrix(m1) == matrix(m2) && vector(m1) == vector(m2)
+hash(m::AbstractAffineMap, h::UInt) = hashrec(h, matrix(m), vector(m))
 
 ==(m1::AbstractAffineMap, m2::IdentityMap) =
     islinear(m1) && matrix(m1) == matrix(m2)
 ==(m1::IdentityMap, m2::AbstractAffineMap) = m2==m1
-
-hash(m::AbstractAffineMap, h::UInt) = hashrec(h, matrix(m), vector(m))
 
 mapsize(m::AbstractAffineMap) = _affine_mapsize(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 _affine_mapsize(m::AbstractAffineMap, T, A::AbstractArray, b) = size(A)
@@ -127,7 +126,6 @@ isreal(m::LinearMap) = _isreal(m, unsafe_matrix(m))
 _isreal(m::LinearMap, A) = isreal(A)
 
 ==(m1::LinearMap, m2::LinearMap) = matrix(m1) == matrix(m2)
-hash(m::LinearMap, h::UInt) = hash(matrix(m), h)
 
 # inverse should be called only on square maps, otherwise use
 # leftinverse or rightinverse in order to use pinv instead of inv
@@ -314,7 +312,6 @@ jacdet(m::Translation{T}, x) where {T} = one(eltype(T))
 isreal(m::Translation) = isreal(unsafe_vector(m))
 
 ==(m1::Translation, m2::Translation) = unsafe_vector(m1)==unsafe_vector(m2)
-hash(m::Translation, h::UInt) = hash(unsafe_vector(m), h)
 
 similarmap(m::Translation, ::Type{T}) where {T} = Translation{T}(m.b)
 
