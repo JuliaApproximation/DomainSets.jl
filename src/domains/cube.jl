@@ -299,26 +299,26 @@ Rectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
 Rectangle(domains::Tuple) = Rectangle(domains...)
 Rectangle(domains::ClosedInterval...) = Rectangle(promote_domains(domains)...)
 Rectangle(domains::ClosedInterval{T}...) where {T} =
-    Rectangle(map(infimum, domains), map(supremum, domains))
+    Rectangle(map(leftendpoint, domains), map(rightendpoint, domains))
 Rectangle(domains::AbstractVector{<:ClosedInterval}) =
-    Rectangle(map(infimum, domains), map(supremum, domains))
+    Rectangle(map(leftendpoint, domains), map(rightendpoint, domains))
 Rectangle(domains::Domain...) =
     error("The Rectangle constructor expects two points or a list of intervals (closed).")
 
 Rectangle{T}(domains::Tuple) where {T} = Rectangle{T}(domains...)
 Rectangle{T}(domains::ClosedInterval...) where {T} =
-	Rectangle{T}(map(infimum, domains), map(supremum, domains))
+	Rectangle{T}(map(leftendpoint, domains), map(rightendpoint, domains))
 Rectangle{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
-    Rectangle{T}(map(infimum, domains), map(supremum, domains))
+    Rectangle{T}(map(leftendpoint, domains), map(rightendpoint, domains))
 Rectangle{T}(domains::Domain...) where {T} =
     error("The Rectangle constructor expects two points or a list of intervals (closed).")
 
 ProductDomain(domains::ClosedInterval...) = Rectangle(domains...)
 ProductDomain(domains::AbstractVector{<:ClosedInterval}) =
-    Rectangle(map(infimum, domains), map(supremum, domains))
+    Rectangle(map(leftendpoint, domains), map(rightendpoint, domains))
 ProductDomain{T}(domains::ClosedInterval...) where {T} = Rectangle{T}(domains...)
 ProductDomain{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
-    Rectangle{T}(map(infimum, domains), map(supremum, domains))
+    Rectangle{T}(map(leftendpoint, domains), map(rightendpoint, domains))
 
 
 
