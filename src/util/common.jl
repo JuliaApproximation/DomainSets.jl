@@ -28,8 +28,18 @@ function origin(d::Domain{T}) where {T <: AbstractVector}
 end
 
 "Apply the `hash` function recursively to the given arguments."
-hashrec(h) = hash(h)
-hashrec(h, args...) = hash(h, hashrec(args...))
+hashrec(x) = hash(x)
+hashrec(x, args...) = hash(x, hashrec(args...))
+
+# Workaround for #88, manually compute the hash of an array using all its elements
+hashrec() = zero(UInt)
+function hashrec(A::AbstractArray, args...)
+	h = hash(size(A))
+	for x in A
+		h = hash(x, h)
+	end
+	hash(h, hashrec(args...))
+end
 
 #################
 # Precision type
