@@ -9,8 +9,8 @@ boundingbox(d::HyperRectangle) = d
 
 "Compute all corners of the hyperrectangle."
 function corners(d::HyperRectangle)
-	left = infimum(d)
-	right = supremum(d)
+	left = leftendpoint(d)
+	right = rightendpoint(d)
     N = length(left)
     corners = [similar(point_in_domain(d)) for i in 1:2^N]
     # All possible permutations of the corners
@@ -83,8 +83,8 @@ end
 # Dimension 2 is a special case, because the lower dimension is 1 where we use
 # scalars instead of vectors
 function boundary(d::HyperRectangle{SVector{2,T}}) where {T}
-	left = infimum(d)
-	right = supremum(d)
+	left = leftendpoint(d)
+	right = rightendpoint(d)
 	x1 = left[1]; y1 = left[2]; x2 = right[1]; y2 = right[2]
 	d_unit = UnitInterval{T}()
 	maps = [
@@ -98,11 +98,11 @@ function boundary(d::HyperRectangle{SVector{2,T}}) where {T}
 end
 
 function boundary(d::HyperRectangle{SVector{N,T}}) where {N,T}
-	left2 = infimum(d)
-	right2 = supremum(d)
+	left2 = leftendpoint(d)
+	right2 = rightendpoint(d)
 	d_unit = UnitCube{SVector{N-1,T}}()
-	left1 = infimum(d_unit)
-	right1 = supremum(d_unit)
+	left1 = leftendpoint(d_unit)
+	right1 = rightendpoint(d_unit)
 
 	map1 = cube_face_map(left1, right1, left2, right2, 1, left2[1])
 	MAP = typeof(map1)
@@ -117,8 +117,8 @@ end
 
 function boundary(d::HyperRectangle{Vector{T}}) where {T}
 	if dimension(d) == 2
-		left = infimum(d)
-		right = supremum(d)
+		left = leftendpoint(d)
+		right = rightendpoint(d)
 		x1 = left[1]; y1 = left[2]; x2 = right[1]; y2 = right[2]
 		d_unit = UnitInterval{T}()
 		maps = [
@@ -128,11 +128,11 @@ function boundary(d::HyperRectangle{Vector{T}}) where {T}
 			cube_face_map(zero(T), one(T), [x1,y2], [x1,y1])
 		]
 	else
-		left2 = infimum(d)
-		right2 = supremum(d)
+		left2 = leftendpoint(d)
+		right2 = rightendpoint(d)
 		d_unit = UnitCube(dimension(d)-1)
-		left1 = infimum(d_unit)
-		right1 = supremum(d_unit)
+		left1 = leftendpoint(d_unit)
+		right1 = rightendpoint(d_unit)
 
 		map1 = cube_face_map(left1, right1, left2, right2, 1, left2[1])
 		MAP = typeof(map1)

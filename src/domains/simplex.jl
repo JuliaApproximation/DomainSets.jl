@@ -59,7 +59,7 @@ function normal(d::UnitSimplex, x)
     if sum(x) ≈ 1
         fill!(z, one(eltype(z))/sqrt(length(z)))
     else
-        index = findmax(x)[2]
+        index = findmin(x)[2]
         z[index] = -1
     end
     return convert(eltype(d), z/norm(z))

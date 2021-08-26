@@ -291,7 +291,7 @@ isempty(::Sphere) = false
 isclosedset(::Sphere) = true
 isopenset(::Sphere) = false
 
-normal(d::Sphere, x) = (x-center(x))/norm(x-center(x))
+normal(d::Sphere, x) = (x-center(d))/norm(x-center(d))
 
 distance_to(d::Sphere, x) = abs(norm(x-center(d))-radius(d))
 

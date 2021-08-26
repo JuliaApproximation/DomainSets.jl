@@ -56,7 +56,7 @@ end
 boundingbox(d::AbstractMappedDomain) = map_boundingbox(boundingbox(superdomain(d)), forward_map(d))
 
 function map_boundingbox(box::Interval, fmap)
-    l,r = (infimum(box),supremum(box))
+    l,r = (leftendpoint(box),rightendpoint(box))
     ml = fmap(l); mr = fmap(r)
     min(ml,mr)..max(ml,mr)
 end

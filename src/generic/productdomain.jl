@@ -43,6 +43,8 @@ boundingbox(d::ProductDomain{T}) where {T} = ProductDomain{T}(map(boundingbox, c
 
 infimum(d::ProductDomain) = toexternalpoint(d, map(infimum, components(d)))
 supremum(d::ProductDomain) = toexternalpoint(d, map(supremum, components(d)))
+leftendpoint(d::ProductDomain) = toexternalpoint(d, map(leftendpoint, components(d)))
+rightendpoint(d::ProductDomain) = toexternalpoint(d, map(rightendpoint, components(d)))
 
 interior(d::ProductDomain) = ProductDomain(map(interior, components(d)))
 closure(d::ProductDomain) = ProductDomain(map(closure, components(d)))
