@@ -142,6 +142,7 @@ export EmptySpace, FullSpace,
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     OpenInterval, ClosedInterval,
     leftendpoint, rightendpoint, isleftopen, isrightopen,
+    cardinality,
     HalfLine, NegativeHalfLine
 # from domains/simplex.jl
 export UnitSimplex,
