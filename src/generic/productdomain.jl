@@ -40,7 +40,7 @@ boundary_part(d::ProductDomain{T}, domains, i) where {T} =
 	ProductDomain{T}(domains[1:i-1]..., boundary(domains[i]), domains[i+1:end]...)
 
 boundary(d::ProductDomain) = productboundary(d)
-productboundary(d) = productboundary(d, components(d))
+productboundary(d) = productboundary(d, factors(d))
 productboundary(d, domains) =
 	UnionDomain(boundary_part(d, domains, i) for i in 1:length(domains))
 productboundary(d, domains::Tuple) =
@@ -83,9 +83,9 @@ productdomain1(d1, d2) = productdomain2(d1, d2)
 productdomain2(d1, d2) = ProductDomain(d1, d2)
 
 productdomain(d1::ProductDomain, d2::ProductDomain) =
-	ProductDomain(components(d1)..., components(d2)...)
-productdomain1(d1::ProductDomain, d2) = ProductDomain(components(d1)..., d2)
-productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, components(d2)...)
+	ProductDomain(factors(d1)..., factors(d2)...)
+productdomain1(d1::ProductDomain, d2) = ProductDomain(factors(d1)..., d2)
+productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, factors(d2)...)
 
 # Only override cross for variables of type Domain, it may have a different
 # meaning for other variables (like the vector cross product)
