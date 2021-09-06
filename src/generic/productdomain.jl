@@ -6,12 +6,12 @@ composition(d::ProductDomain) = Product()
 
 components(d::ProductDomain) = d.domains
 
-"The number of factors of a product domain (equivalent to `ncomponents(d)`)."
-nfactors(d::ProductDomain) = ncomponents(d)
 "The factors of a product domain (equivalent to `components(d)`)."
 factors(d::ProductDomain) = components(d)
-"Factor `I...` of a domain (equivalent to `component(d, I...)`)."
-factor(d::ProductDomain, I...) = component(d, I...)
+"The number of factors of a product domain."
+nfactors(d) = length(factors(d))
+"Factor `I...` of a domain."
+factor(d::ProductDomain, I...) = getindex(factors(d), I...)
 
 ==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, components(d1), components(d2))
 hash(d::ProductDomain, h::UInt) = hashrec("ProductDomain", collect(components(d)), h)
