@@ -42,6 +42,10 @@ abstract type CompositeDomain{T} <: LazyDomain{T} end
 
 components(d::CompositeDomain) = d.domains
 
+# (daanhb) Note: upon revisiting this code, abstracting away the nature of
+# the composition may have been a step too far - it makes the concrete composite
+# domains harder to understand
+
 """
 Supertype of all compositions of a lazy domain. The composition determines how
 the point `x` is distributed to the member domains of a lazy domain.

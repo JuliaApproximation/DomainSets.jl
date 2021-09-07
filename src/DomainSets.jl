@@ -77,7 +77,8 @@ export AbstractMap, Map, TypedMap,
 # from maps/composite.jl
 export ComposedMap, composedmap, ∘
 # from maps/product.jl
-export ProductMap, productmap
+export ProductMap, productmap,
+    nfactors, factors, factor
 # from maps/basic.jl
 export IdentityMap,
     StaticIdentityMap, VectorIdentityMap,
@@ -142,7 +143,6 @@ export EmptySpace, FullSpace,
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     OpenInterval, ClosedInterval,
     leftendpoint, rightendpoint, isleftopen, isrightopen,
-    cardinality,
     HalfLine, NegativeHalfLine
 # from domains/simplex.jl
 export UnitSimplex,

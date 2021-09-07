@@ -45,6 +45,13 @@ function test_generic_domain(d::Domain)
         @test ncomponents(d) == length(components(d))
         els = components(d)
         @test all([component(d,i) == els[i] for i in 1:ncomponents(d)])
+        if d isa ProductDomain
+            @test factors(d) == components(d)
+            @test nfactors(d) == ncomponents(d)
+            if nfactors(d) > 0
+                @test factor(d, 1) == component(d, 1)
+            end
+        end
     end
 end
 
