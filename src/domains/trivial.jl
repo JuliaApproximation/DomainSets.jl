@@ -102,24 +102,3 @@ convert(::Type{Domain{S}}, ::Type{T}) where {T,S} = convert(Domain{S}, convert(D
 
 infimum(d::FullSpace{T}) where {T} = typemin(T)
 supremum(d::FullSpace{T}) where {T} = typemax(T)
-
-
-# Some convenient complete domains
-
-"The set of integers of type Int (ℤ = \\BbbZ)."
-const ℤ = FullSpace{Int}()
-"The set of rational numbers of type Rational{Int} (ℚ = \\BbbQ)."
-const ℚ = FullSpace{Rational{Int}}()
-"The set of reals of type Float64 (ℝ = \\BbbR)."
-const ℝ = FullSpace{Float64}()
-"The complex plane with Float64 real and imaginar parts (ℂ = \\BbbC)."
-const ℂ = FullSpace{Complex{Float64}}()
-
-"The space ℝ^1"
-const ℝ1 = FullSpace{SVector{1,Float64}}()
-"The space ℝ^2"
-const ℝ2 = FullSpace{SVector{2,Float64}}()
-"The space ℝ^3"
-const ℝ3 = FullSpace{SVector{3,Float64}}()
-"The space ℝ^4"
-const ℝ4 = FullSpace{SVector{4,Float64}}()

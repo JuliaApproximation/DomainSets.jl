@@ -137,8 +137,7 @@ export infimum, supremum
 
 # from domains/trivial.jl
 export EmptySpace, FullSpace,
-    emptyspace, fullspace,
-    ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
+    emptyspace, fullspace
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     OpenInterval, ClosedInterval,
