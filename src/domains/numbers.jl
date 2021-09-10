@@ -6,6 +6,9 @@ end
 in(x, d::NaturalNumbers) = isinteger(x) && (x >= 0)
 in(x::AbstractArray, d::NaturalNumbers) = false
 
+approx_in(x::Real, d::NaturalNumbers, tol) =
+    (abs(x-round(x)) < tol) && (round(Int, x) ∈ d)
+
 
 "The set of all integers."
 struct Integers <: Domain{Int}
@@ -14,6 +17,9 @@ end
 in(x, d::Integers) = isinteger(x)
 in(x::AbstractArray, d::Integers) = false
 
+approx_in(x::Real, d::Integers, tol) =
+    (abs(x-round(x)) < tol) && (round(Int, x) ∈ d)
+
 
 "The set of all real numbers."
 struct RealNumbers <: Domain{Float64}
@@ -21,10 +27,9 @@ end
 
 in(x::Number, d::RealNumbers) = isreal(x)
 # isreal also allows real arrays, we want to disallow that here:
-# - for abstract arrays
 in(x::AbstractArray, d::RealNumbers) = false
-# - for anything else that might act like an array
-in(x, d::RealNumbers) = isreal(x) && length(x)==1 && x[1]==x
+
+approx_in(x::Complex, d::RealNumbers, tol) = (imag(x) < tol) && (real(x) ∈ d)
 
 
 "The set of all rationals."

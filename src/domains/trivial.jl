@@ -124,8 +124,6 @@ type `T`.
 """
 struct TypeDomain{T} <: Domain{T} end
 
-TypeDomain(::Type{T}) where {T} = TypeDomain{T}()
-
 "Return the domain for the element type of the given domain."
 typedomain(d) = typedomain(eltype(d))
 typedomain(::Type{T}) where {T} = TypeDomain{T}()
@@ -152,8 +150,6 @@ compatible_or_false(x, domain::TypeDomain) = iscompatiblepair(x, domain)
 
 indomain(x::T, d::TypeDomain{T}) where {T} = true
 approx_indomain(x, d::TypeDomain, tolerance) = in(x, d)
-
-similardomain(::TypeDomain, ::Type{T}) where {T} = TypeDomain{T}()
 
 ==(d1::TypeDomain{S}, d2::TypeDomain{T}) where {S,T} = S==T
 

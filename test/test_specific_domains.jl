@@ -124,6 +124,7 @@ end
         @test 2 ∈ td1
         @test 2.5 ∈ td1
         @test π ∈ td1
+        @test approx_in(π, td1)
         @test π+im ∉ td1
         @test [1,2,3] ∉ td1
         @test 5 ∈ TypeDomain{Any}()
@@ -142,6 +143,9 @@ end
         @test 4//2 ∈ ℕ
         @test (-4)//2 ∉ ℕ
         @test 5//2 ∉ ℕ
+        @test approx_in(1.01, ℕ, 0.05)
+        @test !approx_in(1.01, ℕ, 0.001)
+        @test !approx_in(-1.01, ℕ, 0.05)
         # integers
         @test 2 ∈ ℤ
         @test 0 ∈ ℤ
@@ -153,6 +157,9 @@ end
         @test 4//2 ∈ ℤ
         @test (-4)//2 ∈ ℤ
         @test 5//2 ∉ ℤ
+        @test approx_in(1.01, ℤ, 0.05)
+        @test !approx_in(1.01, ℤ, 0.001)
+        @test approx_in(-1.01, ℤ, 0.05)
         # rationals
         @test 2 ∈ ℚ
         @test 0 ∈ ℚ
@@ -179,6 +186,20 @@ end
         @test [π,exp(1)] ∈ ℝ2
         @test [1,2,3] ∈ ℝ3
         @test [1,2,3,4] ∈ ℝ4
+        @test approx_in(1.0+0.01im, ℝ, 0.05)
+        @test !approx_in(1.0+0.01im, ℝ, 0.005)
+        # complex numbers
+        @test 2 ∈ ℂ
+        @test 0 ∈ ℂ
+        @test -1 ∈ ℂ
+        @test 1.5 ∈ ℂ
+        @test π ∈ ℂ
+        @test [1] ∉ ℂ
+        @test 2+im ∈ ℂ
+        @test 4//2+im ∈ ℂ
+        @test 4//2 ∈ ℂ
+        @test (-4)//2 ∈ ℂ
+        @test 5//2 ∈ ℂ
     end
 
     @testset "point" begin
