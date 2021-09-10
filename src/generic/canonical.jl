@@ -111,6 +111,10 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 
 ## Equality for domains
 
+## Note: here we generically define the equality of Domains, using the framework
+# of canonical domains above. It has the benefit of automatically recognizing
+# equality between some domains, but there is a risk of circular reasoning if
+# `simplifies` below ends up calling `==`. Concrete domains should specialize `==`.
 ==(d1::Domain, d2::Domain) = isequal1(d1, d2)
 # simplify the first argument
 isequal1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequal2(d1, d2)

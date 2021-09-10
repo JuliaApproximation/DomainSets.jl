@@ -117,6 +117,68 @@ end
         @test fullspace([1,2]) == FullSpace{Int}()
 
         @test uniondomain(UnitDisk(), FullSpace{SVector{2,Float64}}()) == FullSpace{SVector{2,Float64}}()
+
+        # type domains
+        @test typedomain(0..1) == TypeDomain{Int}()
+        td1 = TypeDomain{Float64}()
+        @test 2 ∈ td1
+        @test 2.5 ∈ td1
+        @test π ∈ td1
+        @test π+im ∉ td1
+        @test [1,2,3] ∉ td1
+        @test 5 ∈ TypeDomain{Any}()
+        @test TypeDomain{Int}() == TypeDomain{Int}()
+    end
+
+    @testset "number sets" begin
+        # natural numbers
+        @test 2 ∈ ℕ
+        @test 0 ∈ ℕ
+        @test -1 ∉ ℕ
+        @test 1.5 ∉ ℕ
+        @test π ∉ ℕ
+        @test [1] ∉ ℕ
+        @test 2+im ∉ ℕ
+        @test 4//2 ∈ ℕ
+        @test (-4)//2 ∉ ℕ
+        @test 5//2 ∉ ℕ
+        # integers
+        @test 2 ∈ ℤ
+        @test 0 ∈ ℤ
+        @test -1 ∈ ℤ
+        @test 1.5 ∉ ℤ
+        @test π ∉ ℤ
+        @test [1] ∉ ℤ
+        @test 2+im ∉ ℤ
+        @test 4//2 ∈ ℤ
+        @test (-4)//2 ∈ ℤ
+        @test 5//2 ∉ ℤ
+        # rationals
+        @test 2 ∈ ℚ
+        @test 0 ∈ ℚ
+        @test -1 ∈ ℚ
+        @test 1.5 ∉ ℚ
+        @test π ∉ ℚ
+        @test [1] ∉ ℚ
+        @test 2+im ∉ ℚ
+        @test 4//2 ∈ ℚ
+        @test (-4)//2 ∈ ℚ
+        @test 5//2 ∈ ℚ
+        # real numbers
+        @test 2 ∈ ℝ
+        @test 0 ∈ ℝ
+        @test -1 ∈ ℝ
+        @test 1.5 ∈ ℝ
+        @test π ∈ ℝ
+        @test [1] ∉ ℝ
+        @test 2+im ∉ ℝ
+        @test 4//2 ∈ ℝ
+        @test (-4)//2 ∈ ℝ
+        @test 5//2 ∈ ℝ
+        @test [π] ∈ ℝ1
+        @test [π,exp(1)] ∈ ℝ2
+        @test [1,2,3] ∈ ℝ3
+        @test [1,2,3,4] ∈ ℝ4
     end
 
     @testset "point" begin
