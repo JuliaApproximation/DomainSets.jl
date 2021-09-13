@@ -136,9 +136,11 @@ export infimum, supremum
 ## Specific domains
 
 # from domains/trivial.jl
-export EmptySpace, FullSpace,
-    emptyspace, fullspace,
-    ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
+export EmptySpace, FullSpace, TypeDomain,
+    emptyspace, fullspace, typedomain
+# from domains/numbers.jl
+export Integers, RealNumbers, Rationals, ComplexNumbers,
+    ℕ, ℤ, ℚ, ℝ, ℂ, ℝ1, ℝ2, ℝ3, ℝ4
 # from domains/interval.jl
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     OpenInterval, ClosedInterval,
@@ -204,6 +206,7 @@ include("generic/mapped.jl")
 include("generic/broadcast.jl")
 
 include("domains/trivial.jl")
+include("domains/numbers.jl")
 include("domains/levelset.jl")
 include("domains/point.jl")
 include("domains/interval.jl")

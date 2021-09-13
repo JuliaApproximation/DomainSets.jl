@@ -71,6 +71,8 @@ iscompatiblepair(x::SVector{N}, ::EuclideanDomain{N}) where {N} = true
 iscompatiblepair(x::SVector{N}, ::EuclideanDomain{M}) where {N,M} = false
 iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)==N
 
+# Note: there are cases where this warning reveals a bug, and cases where it is
+# annoying. In cases where it is annoying, the domain may want to specialize `in`.
 compatible_or_false(x, domain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(eltype(domain)). Returning false."; false)
 

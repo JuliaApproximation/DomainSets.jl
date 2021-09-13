@@ -1,5 +1,7 @@
 
-"The empty domain with elements of type `T`."
+# The trivial domains include the empty space and the full space.
+
+"The empty space."
 struct EmptySpace{T} <: Domain{T}
 end
 
@@ -10,6 +12,7 @@ EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 
 similardomain(::EmptySpace, ::Type{T}) where {T} = EmptySpace{T}()
 
+"Return the empty space with the same element type as the given domain."
 emptyspace(d) = emptyspace(eltype(d))
 emptyspace(::Type{T}) where {T} = EmptySpace{T}()
 
@@ -46,7 +49,16 @@ isequal2(d1, d2::EmptySpace) = isempty(d1)
 hash(d::EmptySpace, h::UInt) = hash("EmptySpace", h)
 
 
-"The full space of elements of type `T`."
+"""
+A domain that represents the full space.
+
+The element type `T` in `FullSpace{T}` should only be seen as an indication of
+the expected types of the elements in the context where the domain is intended
+to be used. Due to the default, loose interpretation of `T`, any `FullSpace{T}`
+actually contains any `x` regardless of the type of `x`. For a strict domain
+of all elements of type `T`, or elements convertible exactly to `T`, use
+`TypeDomain{T}`.
+"""
 struct FullSpace{T} <: Domain{T} end
 
 const AnyFullSpace = FullSpace{Any}
@@ -54,6 +66,7 @@ const AnyFullSpace = FullSpace{Any}
 FullSpace() = FullSpace{Float64}()
 FullSpace(d) = FullSpace{eltype(d)}()
 
+"Return the full space with the same element type as the given domain."
 fullspace(d) = fullspace(eltype(d))
 fullspace(::Type{T}) where {T} = FullSpace{T}()
 
@@ -104,22 +117,42 @@ infimum(d::FullSpace{T}) where {T} = typemin(T)
 supremum(d::FullSpace{T}) where {T} = typemax(T)
 
 
-# Some convenient complete domains
 
-"The set of integers of type Int (ℤ = \\BbbZ)."
-const ℤ = FullSpace{Int}()
-"The set of rational numbers of type Rational{Int} (ℚ = \\BbbQ)."
-const ℚ = FullSpace{Rational{Int}}()
-"The set of reals of type Float64 (ℝ = \\BbbR)."
-const ℝ = FullSpace{Float64}()
-"The complex plane with Float64 real and imaginar parts (ℂ = \\BbbC)."
-const ℂ = FullSpace{Complex{Float64}}()
+"""
+The domain of all objects of type `T` and all objects convertible exactly to
+type `T`.
+"""
+struct TypeDomain{T} <: Domain{T} end
 
-"The space ℝ^1"
-const ℝ1 = FullSpace{SVector{1,Float64}}()
-"The space ℝ^2"
-const ℝ2 = FullSpace{SVector{2,Float64}}()
-"The space ℝ^3"
-const ℝ3 = FullSpace{SVector{3,Float64}}()
-"The space ℝ^4"
-const ℝ4 = FullSpace{SVector{4,Float64}}()
+"Return the domain for the element type of the given domain."
+typedomain(d) = typedomain(eltype(d))
+typedomain(::Type{T}) where {T} = TypeDomain{T}()
+
+iscompatiblepair(x::T, d::TypeDomain{T}) where {T} = true
+iscompatiblepair(x::T, d::TypeDomain{Any}) where {T} = true
+function iscompatiblepair(x::S, d::TypeDomain{T}) where {S,T}
+    # There is no generic function to check whether x can be converted to T.
+    # A try-catch is not optimal, but it is a failsafe backup.
+    # We can at least efficiently check promotion: if x can be converted to
+    # T, then S and T must have a joined supertype.
+    # For specific T and S, it would be better to specialize this function.
+    promote_type(S,T) != Any &&
+        try
+            convert(T, x) == x
+        catch
+            false
+        end
+end
+
+# Suppress the warning about incompatibility because it is not likely to be
+# relevant for this domain
+compatible_or_false(x, domain::TypeDomain) = iscompatiblepair(x, domain)
+
+indomain(x::T, d::TypeDomain{T}) where {T} = true
+approx_indomain(x, d::TypeDomain, tolerance) = in(x, d)
+
+==(d1::TypeDomain{S}, d2::TypeDomain{T}) where {S,T} = S==T
+
+
+# some special cases
+iscompatiblepair(x::Irrational, d::TypeDomain{<:Real}) = true
