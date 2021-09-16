@@ -5,6 +5,7 @@ end
 
 in(x, d::NaturalNumbers) = isinteger(x) && (x >= 0)
 in(x::AbstractArray, d::NaturalNumbers) = false
+==(::NaturalNumbers, ::NaturalNumbers) = true
 
 approx_in(x::Real, d::NaturalNumbers, tol) =
     (abs(x-round(x)) < tol) && (round(Int, x) ∈ d)
@@ -16,6 +17,7 @@ end
 
 in(x, d::Integers) = isinteger(x)
 in(x::AbstractArray, d::Integers) = false
+==(::Integers, ::Integers) = true
 
 approx_in(x::Real, d::Integers, tol) =
     (abs(x-round(x)) < tol) && (round(Int, x) ∈ d)
@@ -30,7 +32,7 @@ in(x::Number, d::RealNumbers) = isreal(x)
 in(x::AbstractArray, d::RealNumbers) = false
 
 approx_in(x::Complex, d::RealNumbers, tol) = (imag(x) < tol) && (real(x) ∈ d)
-
+==(::RealNumbers, ::RealNumbers) = true
 
 "The set of all rationals."
 struct Rationals <: Domain{Rational{Int}}
@@ -38,7 +40,7 @@ end
 
 in(x, d::Rationals) = x ∈ Integers()
 in(x::Rational, d::Rationals) = true
-
+==(::Rationals, ::Rationals) = true
 
 "The set of all complex numbers whose real and imaginary parts are real numbers."
 struct ComplexNumbers <: Domain{Complex{Float64}}
@@ -48,6 +50,7 @@ in(x::Complex{T}, d::ComplexNumbers) where {T} =
     isreal(real(x)) && isreal(imag(x))
 in(x::Complex{T}, d::ComplexNumbers) where {T<:Real} = true
 in(x, d::ComplexNumbers) = x ∈ RealNumbers()
+==(::ComplexNumbers, ::ComplexNumbers) = true
 
 
 "The set of natural numbers."
