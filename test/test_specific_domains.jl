@@ -146,6 +146,7 @@ end
         @test approx_in(1.01, ℕ, 0.05)
         @test !approx_in(1.01, ℕ, 0.001)
         @test !approx_in(-1.01, ℕ, 0.05)
+        @test ℕ == ℕ
         # integers
         @test 2 ∈ ℤ
         @test 0 ∈ ℤ
@@ -160,6 +161,7 @@ end
         @test approx_in(1.01, ℤ, 0.05)
         @test !approx_in(1.01, ℤ, 0.001)
         @test approx_in(-1.01, ℤ, 0.05)
+        @test ℤ == ℤ
         # rationals
         @test 2 ∈ ℚ
         @test 0 ∈ ℚ
@@ -171,6 +173,7 @@ end
         @test 4//2 ∈ ℚ
         @test (-4)//2 ∈ ℚ
         @test 5//2 ∈ ℚ
+        @test ℚ == ℚ
         # real numbers
         @test 2 ∈ ℝ
         @test 0 ∈ ℝ
@@ -188,6 +191,7 @@ end
         @test [1,2,3,4] ∈ ℝ4
         @test approx_in(1.0+0.01im, ℝ, 0.05)
         @test !approx_in(1.0+0.01im, ℝ, 0.005)
+        @test ℝ == ℝ
         # complex numbers
         @test 2 ∈ ℂ
         @test 0 ∈ ℂ
@@ -200,6 +204,7 @@ end
         @test 4//2 ∈ ℂ
         @test (-4)//2 ∈ ℂ
         @test 5//2 ∈ ℂ
+        @test ℂ == ℂ
     end
 
     @testset "point" begin
