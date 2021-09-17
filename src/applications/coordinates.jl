@@ -2,9 +2,7 @@
 "A `DomainPoint` is a point which is an element of a domain by construction."
 abstract type DomainPoint{T} end
 
-in(x::DomainPoint, d::Domain) = domain(x) == d || in(point(x), d)
-
-convert(::Type{T}, x::DomainPoint) where {T} = convert(T, point(x))
+in(p::DomainPoint, d::Domain) = domain(p) == d || in(point(p), d)
 
 
 ## Points on a sphere
@@ -13,7 +11,7 @@ convert(::Type{T}, x::DomainPoint) where {T} = convert(T, point(x))
 abstract type SpherePoint{T} <: DomainPoint{T} end
 
 domain(p::SpherePoint{T}) where {T<:StaticTypes} = UnitSphere{T}()
-domain(p::SpherePoint{T}) where {T<:AbstractVector} = UnitSphere{eltype(T)}(length(point(x)))
+domain(p::SpherePoint{T}) where {T<:AbstractVector} = UnitSphere{T}(length(point(p)))
 
 "A point on the unit sphere represented by a standard Euclidean vector."
 struct EuclideanSpherePoint{T} <: SpherePoint{T}

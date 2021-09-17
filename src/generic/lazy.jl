@@ -106,7 +106,12 @@ abstract type DerivedDomain{T} <: SimpleLazyDomain{T} end
 
 isempty(d::DerivedDomain) = isempty(superdomain(d))
 
-canonicaldomain(d::DerivedDomain) = superdomain(d)
+# We assume the derived domain and the superdomain are equal
+canonicaldomain(d::DerivedDomain) = canonicaldomain(superdomain(d))
+canonicaldomain(::Equal, d::DerivedDomain) = canonicaldomain(Equal(), superdomain(d))
+canonicaldomain(::Isomorphic, d::DerivedDomain) = canonicaldomain(Isomorphic(), superdomain(d))
+canonicaldomain(::Parameterization, d::DerivedDomain) = canonicaldomain(Parameterization(), superdomain(d))
+
 boundingbox(d::DerivedDomain) = boundingbox(superdomain(d))
 interior(d::DerivedDomain) = interior(superdomain(d))
 closure(d::DerivedDomain) = closure(superdomain(d))

@@ -30,16 +30,22 @@ function test_generic_domain(d::Domain)
         end
     end
     @test canonicaldomain(DomainSets.Equal(), d) == d
-    if canonicaldomain(d) == d
-        @test mapto_canonical(d) == IdentityMap{eltype(d)}(dimension(d))
-        @test mapfrom_canonical(d) == IdentityMap{eltype(d)}(dimension(d))
-    else
+    if hascanonicaldomain(d)
         cd = canonicaldomain(d)
         @test mapfrom_canonical(d) == mapto(cd, d)
         @test mapto_canonical(d) == mapto(d, cd)
         x1 = point_in_domain(cd)
         @test mapfrom_canonical(d, x1) ∈ d
         @test mapto_canonical(d, x) ∈ cd
+    else
+        @test mapto_canonical(d) == IdentityMap{eltype(d)}(dimension(d))
+        @test mapfrom_canonical(d) == IdentityMap{eltype(d)}(dimension(d))
+    end
+    if hasparameterization(d)
+        par = parameterdomain(d)
+        @test mapfrom_parameterdomain(d) == mapto(par, d)
+        xp = point_in_domain(par)
+        @test approx_in(mapfrom_parameterdomain(d, xp), d)
     end
     if iscomposite(d)
         @test ncomponents(d) == length(components(d))
