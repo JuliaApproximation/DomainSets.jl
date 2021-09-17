@@ -957,6 +957,7 @@ end
         @test DomainSets.simplifies(d)
         @test canonicaldomain(DomainSets.Equal(), d) === superdomain(d)
         @test d == superdomain(d)
+        @test canonicaldomain(DomainSets.Isomorphic(), d) === superdomain(d)
     end
 
     @testset "complex unit circle/disk" begin
@@ -1145,6 +1146,25 @@ end
         @test dimension(D4) == 4
         cheb = ChebyshevInterval()
         @test boundingbox(D4) == ProductDomain([cheb, cheb, cheb, cheb])
+
+        ## sphere points
+        x_sphere = [0.1,0.2,1-(0.1)^2-(0.4)^2]
+        p1 = DomainSets.EuclideanSpherePoint(x_sphere)
+        @test DomainSets.domain(p1) == UnitSphere(3)
+        @test DomainSets.point(p1) == x_sphere
+        @test p1 ∈ UnitSphere()
+        @test p1 ∈ UnitSphere(3)
+        @test p1 ∈ DomainSets.domain(p1)
+
+        p2 = DomainSets.EuclideanSpherePoint(SVector{3}(x_sphere))
+        @test DomainSets.domain(p2) === UnitSphere()
+        @test DomainSets.point(p2) == x_sphere
+        @test p2 ∈ UnitSphere()
+
+        p3 = DomainSets.SphericalCoordinate(0.4, 0.5)
+        @test DomainSets.domain(p3) === UnitSphere()
+        @test p3 ∈ UnitSphere()
+        @test approx_in(DomainSets.point(p3), UnitSphere())
     end
 
     @testset "derived types" begin
