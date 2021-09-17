@@ -95,18 +95,20 @@ cross(x::Domain...) = productdomain(x...)
 
 similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(components(d))
 
-canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain, components(d)))
+canonicaldomain(d::ProductDomain) = any(map(hascanonicaldomain, factors(d))) ?
+	ProductDomain(map(canonicaldomain, components(d))) : d
 
 mapto_canonical(d::ProductDomain) = ProductMap(map(mapto_canonical, components(d)))
 mapfrom_canonical(d::ProductDomain) = ProductMap(map(mapfrom_canonical, components(d)))
 
 for CTYPE in (Parameterization, Equal)
 	@eval canonicaldomain(ctype::$CTYPE, d::ProductDomain) =
-		ProductDomain(canonicaldomain.(Ref(ctype), components(d)))
+		any(hascanonicaldomain.(Ref(ctype), factors(d))) ?
+			ProductDomain(canonicaldomain.(Ref(ctype), factors(d))) : d
 	@eval mapto_canonical(ctype::$CTYPE, d::ProductDomain) =
-		ProductMap(mapto_canonical.(Ref(ctype), components(d)))
+		ProductMap(mapto_canonical.(Ref(ctype), factors(d)))
 	@eval mapfrom_canonical(ctype::$CTYPE, d::ProductDomain) =
-		ProductMap(mapfrom_canonical.(Ref(ctype), components(d)))
+		ProductMap(mapfrom_canonical.(Ref(ctype), factors(d)))
 end
 
 

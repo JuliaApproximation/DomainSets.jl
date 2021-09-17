@@ -932,7 +932,7 @@ end
         @test String(take!(io)) == "UnitCircle()"
     end
 
-    @testset "custom named ball" begin
+    @testset "wrapped domains" begin
         B = NamedBall()
         @test SA[1.4, 1.4] ∈ B
         @test SA[1.5, 1.5] ∉ B
@@ -940,6 +940,23 @@ end
         @test SA[1.5,1.5] ∈ 1.2 * B
         @test SA[1.5,1.5] ∈ B * 1.2
         @test eltype(B) == eltype(2UnitDisk())
+
+        @test hascanonicaldomain(B)
+        @test canonicaldomain(B) == UnitDisk()
+        @test DomainSets.simplifies(B)
+        @test canonicaldomain(DomainSets.Equal(), B) === superdomain(B)
+        @test B == superdomain(B)
+
+        @test Domain([1,2,3]) isa DomainSets.WrappedDomain{Int,Vector{Int}}
+        @test Domain([1,2,3]) == Domain([1.0,2.0,3.0])
+        @test canonicaldomain(Domain([1,2,3])) == [1,2,3]
+
+        d = DomainSets.ExampleNamedDomain(UnitBall())
+        @test superdomain(d) == UnitBall()
+        @test hascanonicaldomain(d)
+        @test DomainSets.simplifies(d)
+        @test canonicaldomain(DomainSets.Equal(), d) === superdomain(d)
+        @test d == superdomain(d)
     end
 
     @testset "complex unit circle/disk" begin

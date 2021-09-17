@@ -4,23 +4,19 @@
 
 Return an associated canonical domain, if any, of the given domain.
 
+For example, the canonical domain of an Interval `[a,b]` is the interval `[-1,1]`.
+
 Optionally, a canonical type argument may specify an alternative canonical domain.
 Canonical domains help with establishing equality between domains, with finding
 maps between domains and with finding parameterizations.
 
-For example, the canonical domain of an Interval `[a,b]` is the interval `[-1,1]`.
+If a domain implements a canonical domain, it should also implement
+`mapfrom_canonical` and `mapto_canonical`.
 """
-canonicaldomain(d::Domain) = d
-
-"""
-Check whether the given arguments are different. They are different when
-they have a different type, or if they have the same type but they are not equal.
-"""
-isdifferentfrom(d1::D, d2::D) where D = !(d1==d2)
-isdifferentfrom(d1, d2) = true
+canonicaldomain(d) = d
 
 "Does the domain have a canonical domain?"
-hascanonicaldomain(d) = isdifferentfrom(d, canonicaldomain(d))
+hascanonicaldomain(d) = !(d === canonicaldomain(d))
 
 identitymap(d) = IdentityMap{eltype(d)}(dimension(d))
 
@@ -37,7 +33,7 @@ mapto_canonical(d, x) = mapto_canonical(d)(x)
 abstract type CanonicalType end
 
 canonicaldomain(ctype::CanonicalType, d) = d
-hascanonicaldomain(ctype::CanonicalType, d) = isdifferentfrom(d, canonicaldomain(ctype, d))
+hascanonicaldomain(ctype::CanonicalType, d) = !(d === canonicaldomain(ctype, d))
 
 mapfrom_canonical(ctype::CanonicalType, d, x) = mapfrom_canonical(ctype, d)(x)
 mapto_canonical(ctype::CanonicalType, d, x) = mapto_canonical(ctype, d)(x)
@@ -92,6 +88,8 @@ hasparameterization(d) = hascanonicaldomain(Parameterization(), d)
 
 mapfrom_parameterdomain(d::Domain) = mapfrom_canonical(Parameterization(), d)
 mapto_parameterdomain(d::Domain) = mapto_canonical(Parameterization(), d)
+mapfrom_parameterdomain(d::Domain, x) = mapfrom_canonical(Parameterization(), d, x)
+mapto_parameterdomain(d::Domain, x) = mapto_canonical(Parameterization(), d, x)
 
 
 "Return a map from domain `d1` to domain `d2`."
@@ -113,10 +111,11 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 
 ## Note: here we generically define the equality of Domains, using the framework
 # of canonical domains above. It has the benefit of automatically recognizing
-# equality between some domains, but there is a risk of circular reasoning if
-# `simplifies` below ends up calling `==`. Concrete domains should specialize `==`.
+# equality between some domains, but a side-effect is that the default
+# (implicitly defined) equality for a concrete domain type is overruled.
+# To be safe, concrete domains should specialize `==`.
 ==(d1::Domain, d2::Domain) = isequal1(d1, d2)
 # simplify the first argument
 isequal1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequal2(d1, d2)
 # simplify the second argument
-isequal2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : false
+isequal2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : d1===d2
