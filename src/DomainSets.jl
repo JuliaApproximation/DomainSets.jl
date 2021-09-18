@@ -77,8 +77,7 @@ export AbstractMap, Map, TypedMap,
 # from maps/composite.jl
 export ComposedMap, composedmap, ∘
 # from maps/product.jl
-export ProductMap, productmap,
-    nfactors, factors, factor
+export ProductMap, productmap
 # from maps/basic.jl
 export IdentityMap,
     StaticIdentityMap, VectorIdentityMap,
