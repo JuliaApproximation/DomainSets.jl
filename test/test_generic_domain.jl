@@ -1,3 +1,5 @@
+import DomainSets: factors, nfactors, factor
+
 
 widen_eltype(::Type{T}) where {T<:Number} = widen(T)
 widen_eltype(::Type{SVector{N,T}}) where {N,T<:Number} = SVector{N,widen(T)}
