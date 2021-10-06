@@ -51,6 +51,17 @@
         @test component(u45b,2) isa AbstractArray{Float64}
         @test [1,3] ∪ (0.0..1.5) isa Domain{Float64}
 
+        @test issubset([0,1], 0..1)
+        @test !issubset([0,1,2], 0..1)
+        @test issubset(Set([0,1]), 0..1)
+        @test !issubset(Set([0,2]), 0..1)
+
+        @test uniondomain(0..1, [0,1]) == 0..1
+        @test uniondomain([0,1], 0..1) == 0..1
+
+        @test uniondomain([0,1], [0.0,1.0]) == [0,1]
+        @test uniondomain([0,2], [0.0,1.0]) isa UnionDomain
+
         # larger union expressions
         @test uniondomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa FullSpace
         @test uniondomain(0..1, 1..3, Point(0.4)) == 0..3
@@ -125,6 +136,11 @@
 
         @test (0..1) ∩ [1.5] isa IntersectDomain{Float64}
         @test [0.5] ∩ (1..2) isa IntersectDomain{Float64}
+
+        @test intersectdomain(0..1, [0,1]) == [0,1]
+        @test intersectdomain([0,1], 0..1) == [0,1]
+        @test intersectdomain([0,1], [0.0,1.0]) == [0,1]
+        @test intersectdomain([0,2], [0.0,1.0]) isa IntersectDomain
 
         @test IntersectDomain(UnitDisk(), UnitSquare()) == IntersectDomain(UnitSquare(), UnitDisk())
 

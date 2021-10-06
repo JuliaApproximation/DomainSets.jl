@@ -5,7 +5,15 @@ issubset(d1::Domain, d2) = issubset1(promote_domains(d1, d2)...)
 issubset(d1, d2::Domain) = issubset1(promote_domains(d1, d2)...)
 issubset1(d1, d2) = issubset2(d1, d2)
 issubset2(d1, d2) = d1 == d2
+# this last fallback is only an approximation of the truth: if d1 equals d2, then
+# d1 is a subset of d2, but the reverse is not true. So we might be returning false
+# even when the correct mathematical answer is true.
+# What `issubset` means for the optimizations below is:
+# - if true: we are sure that d1 is a subset of d2
+# - if false: either it really is false, or we don't really know
 
+issubset(d1::AbstractArray, d2::Domain) = all(in.(d1, Ref(d2)))
+issubset(d1::AbstractSet, d2::Domain) = all(in.(d1, Ref(d2)))
 
 ############################
 # The union of two domains
@@ -48,8 +56,13 @@ union(d1, d2::Domain, domains...) = uniondomain(d1, d2, domains...)
 uniondomain() = EmptySpace{Any}()
 uniondomain(d1) = d1
 uniondomain(d1, d2) = uniondomain1(promote_domains(d1, d2)...)
-uniondomain1(d1, d2) = issubset(d1, d2) ? d2 : uniondomain2(d1, d2)
-uniondomain2(d1, d2) = issubset(d2, d1) ? d1 : UnionDomain(d1, d2)
+
+# simplification: in case the domains are equal, we don't create a union
+uniondomain1(d1, d2) = d1 == d2 ? d1 : uniondomain2(d1, d2)
+# if d1 is a Domain, we go one step further and invoke `issubset`
+uniondomain1(d1::Domain, d2) = issubset(d2, d1) ? d1 : uniondomain2(d1, d2)
+uniondomain2(d1, d2) = UnionDomain(d1, d2)
+uniondomain2(d1, d2::Domain) = issubset(d1, d2) ? d2 : UnionDomain(d1, d2)
 
 uniondomain(d1, d2, d3) = _ud3(promote_domains(d1, d2, d3)...)
 _ud3(d1, d2, d3) =
@@ -118,16 +131,8 @@ show(io::IO, d::UnionDomain) = Display.composite_show_compact(io, d)
 map_domain(map, domain::UnionDomain) = UnionDomain(map_domain.(Ref(map), components(domain)))
 mapped_domain(map, domain::UnionDomain) = UnionDomain(mapped_domain.(Ref(map), components(domain)))
 
-# for op in (:+, :-, :*, :/)
-#     @eval begin
-#         $op(domain::UnionDomain, x::Number) = UnionDomain(broadcast($op, components(domain), x))
-#         $op(x::Number, domain::UnionDomain) = UnionDomain(broadcast($op, x, components(domain)))
-#     end
-# end
-#
-# \(x::Number, domain::UnionDomain) = UnionDomain(broadcast(\, x, components(domain)))
 
-
+# TODO: what is the correct semantics for these functions? Should we have them?
 for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:supremum, :max))
     @eval $op(d::UnionDomain) = mapreduce($op, $mop, components(d))
 end
@@ -194,8 +199,11 @@ intersect(d1, d2::Domain, domains...) = intersectdomain(d1, d2, domains...)
 intersectdomain() = EmptySpace{Any}()
 intersectdomain(d1) = d1
 intersectdomain(d1, d2) = intersectdomain1(promote_domains(d1, d2)...)
-intersectdomain1(d1, d2) = issubset(d1, d2) ? d1 : intersectdomain2(d1, d2)
-intersectdomain2(d1, d2) = issubset(d2, d1) ? d2 : IntersectDomain(d1, d2)
+
+intersectdomain1(d1, d2) = d1 == d2 ? d1 : intersectdomain2(d1, d2)
+intersectdomain1(d1::Domain, d2) = issubset(d2, d1) ? d2 : intersectdomain2(d1, d2)
+intersectdomain2(d1, d2) = IntersectDomain(d1, d2)
+intersectdomain2(d1, d2::Domain) = issubset(d1, d2) ? d1 : IntersectDomain(d1, d2)
 
 intersectdomain(d1, d2, d3) = _id3(promote_domains(d1, d2, d3)...)
 _id3(d1, d2, d3) =
@@ -301,7 +309,18 @@ setdiff(d1, d2::Domain) = setdiffdomain(d1, d2)
 
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = setdiffdomain2(d1, d2)
+
 function setdiffdomain2(d1, d2)
+	if isempty(d2)
+		d1
+	elseif d1 == d2
+		EmptySpace{eltype(d1)}()
+	else
+		SetdiffDomain(d1, d2)
+	end
+end
+# similar to uniondomain, if d2 is a Domain we use `issubset` as an optimization
+function setdiffdomain2(d1, d2::Domain)
 	if isempty(d2)
 		d1
 	elseif issubset(d1,d2)
