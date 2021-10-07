@@ -243,9 +243,19 @@ end
 function intersectdomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval)
     # go back to the definition of IntervalSets.jl
     d = intersect(d1, d2)
-    # but avoid returning an interval like 2..1
-    isempty(d) ? EmptySpace{eltype(d)}() : d
+    if isempty(d)
+        # but avoid returning an interval like 2..1
+        EmptySpace{eltype(d)}()
+    elseif leftendpoint(d)==rightendpoint(d)
+        # and avoid an interval like 1..1
+        Point(leftendpoint(d))
+    else
+        d
+    end
 end
+
+==(d1::TypedEndpointsInterval, d2::Point) =
+    isclosedset(d1) && (leftendpoint(d1)==rightendpoint(d1)==d2.x)
 
 # intersectdomain(d1::AbstractInterval, d2::AbstractInterval) = intersect(d1, d2)
 # uniondomain(d1::AbstractInterval, d2::AbstractInterval) = union(d1, d2)
