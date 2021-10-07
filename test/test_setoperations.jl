@@ -56,6 +56,8 @@
         @test issubset(Set([0,1]), 0..1)
         @test !issubset(Set([0,2]), 0..1)
 
+        @test uniondomain() == EmptySpace{Any}()
+        @test uniondomain(0..1) == 0..1
         @test uniondomain(0..1, [0,1]) == 0..1
         @test uniondomain([0,1], 0..1) == 0..1
 
@@ -65,6 +67,8 @@
         # larger union expressions
         @test uniondomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa FullSpace
         @test uniondomain(0..1, 1..3, Point(0.4)) == 0..3
+        @test uniondomain(0..1, Point(0.4), 1..3) == 0..3
+        @test uniondomain(Point(0.4), 0..1, 1..3) == 0..3
 
         # ordering doesn't matter
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
@@ -79,6 +83,7 @@
         @test convert(Domain{Float64}, Set([0..1,2..3,3..4])) isa UnionDomain{Float64}
         @test convert(Domain, Set([1,2,3])) isa UnionDomain{Int}
         @test 2 ∈ convert(Domain, Set([1,2,3]))
+        @test 2 ∈ convert(Domain{Float64}, Set([1,2,3]))
         @test 4 ∉ convert(Domain, Set([1,2,3]))
 
         @test interior(uniondomain(0..1, 2..3)) == uniondomain(OpenInterval(0,1),OpenInterval(2,3))
@@ -101,7 +106,7 @@
         @test IntersectDomain(0..1) == IntersectDomain((0..1))
         @test IntersectDomain{Float64}(0..1) == IntersectDomain(0.0..1.0)
         @test IntersectDomain{Float64}(0..1, 1..2) == IntersectDomain((0..1, 1..2))
-        @test intersectdomain(0..1, 1..2) == 1..1
+        @test intersectdomain(0..1, 1..2) == Point(1)
 
         @test intersectdomain(0..1, 0.5..1.5) == (0..1) & (0.5..1.5)
 
@@ -152,6 +157,13 @@
         @test ncomponents(intersectdomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
         @test ncomponents(intersectdomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
         @test ncomponents(intersectdomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
+        # larger intersection expressions
+        @test intersectdomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa EmptySpace
+        @test intersectdomain(0..1, 1..3, Point(1.0)) == Point(1.0)
+        @test intersectdomain(0..1, Point(1.0), 1..3) == Point(1.0)
+        @test intersectdomain(Point(1.0), 0..1, 1..3) == Point(1.0)
+
+        @test boundingbox(UnitSphere() ∩ 2UnitBall()) == (-1..1)^3
     end
 
     @testset "setdiff" begin
@@ -184,6 +196,9 @@
         @test setdiff(0..1, 2..3) == setdiffdomain(0..1, 2..3)
         @test setdiff(0..1, 0.5) == setdiffdomain(0..1, 0.5)
         @test setdiff(0.5, 0..1) == setdiffdomain(0.5, 0..1)
+
+        @test setdiff(0..1, EmptySpace()) == 0..1
+        @test setdiff(0..1, 0.0..1.0) == EmptySpace()
 
         @test (0..1)^2 \ UnitCircle() == UnitInterval()^2 \ UnitCircle()
     end

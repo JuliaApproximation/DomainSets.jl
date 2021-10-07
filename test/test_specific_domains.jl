@@ -266,6 +266,9 @@ end
         @test dimension(pv)==3
         @test canonicaldomain(pv) == Point([0,0,0])
         @test mapfrom_canonical(pv) == Translation(pv.x)
+
+        @test intersectdomain(Point(1), Point(1.0)) == Point(1)
+        @test isempty(intersectdomain(Point(1), Point(2.0)))
     end
 
     @testset "intervals" begin
@@ -296,6 +299,10 @@ end
 
             @test canonicaldomain(d) isa ChebyshevInterval{Float64}
             @test canonicaldomain(0..1) isa ChebyshevInterval{Float64}
+
+            @test intersectdomain(0..1, 1..3) isa Point{Int}
+            @test 1..1 == Point(1)
+            @test 1..1 != Point(2)
         end
         @testset "UnitInterval{$T}" begin
             d = UnitInterval{T}()

@@ -1,7 +1,6 @@
 # The union, intersection and difference of domains are represented with lazy domains.
 
 issubset(d1::Domain, d2::Domain) = promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
-issubset(d1::Domain, d2) = issubset1(promote_domains(d1, d2)...)
 issubset(d1, d2::Domain) = issubset1(promote_domains(d1, d2)...)
 issubset1(d1, d2) = issubset2(d1, d2)
 issubset2(d1, d2) = d1 == d2
@@ -11,6 +10,9 @@ issubset2(d1, d2) = d1 == d2
 # What `issubset` means for the optimizations below is:
 # - if true: we are sure that d1 is a subset of d2
 # - if false: either it really is false, or we don't really know
+# On top of that, we only invoke issubset(d1,d2) when the arguments are both
+# Domains, or when d2 is a Domain, anticipating that issubset(d1::Domain,d2)
+# is often harder to implement.
 
 issubset(d1::AbstractArray, d2::Domain) = all(in.(d1, Ref(d2)))
 issubset(d1::AbstractSet, d2::Domain) = all(in.(d1, Ref(d2)))
