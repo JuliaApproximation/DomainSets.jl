@@ -35,10 +35,10 @@ insimplex_open(x) = mapreduce( t-> t > 0, &, x) && norm(x,1) < 1
 insimplex_closed(x, tol) = mapreduce( t-> t >= -tol, &, x) && norm(x,1) <= 1+tol
 insimplex_open(x, tol) = mapreduce( t-> t > -tol, &, x) && norm(x,1) < 1+tol
 
-indomain(x, ::ClosedUnitSimplex) = insimplex_closed(x)
-indomain(x, ::OpenUnitSimplex) = insimplex_open(x)
-approx_indomain(x, ::ClosedUnitSimplex, tolerance) = insimplex_closed(x, tolerance)
-approx_indomain(x, ::OpenUnitSimplex, tolerance) = insimplex_open(x, tolerance)
+indomain(x, d::ClosedUnitSimplex) = length(x)==dimension(d) && insimplex_closed(x)
+indomain(x, d::OpenUnitSimplex) = length(x)==dimension(d) && insimplex_open(x)
+approx_indomain(x, d::ClosedUnitSimplex, tolerance) = length(x)==dimension(d) && insimplex_closed(x, tolerance)
+approx_indomain(x, d::OpenUnitSimplex, tolerance) = length(x)==dimension(d) && insimplex_open(x, tolerance)
 
 isempty(::UnitSimplex) = false
 

@@ -1317,6 +1317,13 @@ end
         @test SA[0.2,-0.2] ∉ d
         @test boundingbox(d) == UnitCube{SVector{2,Float64}}()
 
+        # issue #102
+        @test !([0.3,0.4,0.2] ∈ UnitSimplex(2))
+        z1 = @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain 'UnitSimplex(Val(2))' with dimension 2. Returning false.") !([0.3,0.4,0.2] ∈ UnitSimplex(Val(2)))
+        @test z1
+        z2 = @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain 'UnitSimplex(Val(2))' with dimension 2. Returning false.") !(SVector(0.3,0.4,0.2) ∈ UnitSimplex(Val(2)))
+        @test z2
+
         @test approx_in(SA[-0.1,-0.1], d, 0.1)
         @test !approx_in(SA[-0.1,-0.1], d, 0.09)
 
