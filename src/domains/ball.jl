@@ -161,6 +161,12 @@ similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T} =
 const UnitDisk{T} = UnitBall{SVector{2,T},:closed}
 UnitDisk() = UnitDisk{Float64}()
 
+const Disk{T} = Ball{SVector{2,T},:closed}
+Disk() = Disk{Float64}()
+Disk(radius::Number) = Disk(float(radius))
+Disk(radius::AbstractFloat) = Disk{typeof(radius)}(radius)
+Disk(radius,center) = Disk{float(promote_type(typeof(radius),eltype(center)))}(radius, center)
+
 ## A StaticUnitBall{<:Number} equals the interval [-1,1]  (open or closed)
 convert(::Type{Interval}, d::StaticUnitBall{T,:closed}) where {T <: Number} =
     ChebyshevInterval{T}()
@@ -221,6 +227,9 @@ GenericBall{T,C}(radius, center) where {T,C} = GenericBall{T,C,eltype(T)}(radius
 
 radius(d::GenericBall) = d.radius
 center(d::GenericBall) = d.center
+
+similardomain(d::GenericBall{S,C}, ::Type{T}) where {S,T,C} =
+    GenericBall{T,C}(d.radius, d.center)
 
 dimension(d::GenericBall) = length(d.center)
 

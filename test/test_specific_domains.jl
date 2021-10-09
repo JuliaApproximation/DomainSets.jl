@@ -778,6 +778,12 @@ end
         @test Ball(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
         @test Ball{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
 
+        # the Disk constructor
+        @test typeof(Disk()) == EuclideanUnitBall{2,Float64,:closed}
+        @test Disk(2) isa Ball{SVector{2,Float64}}
+        @test Disk(2.0) isa Ball{SVector{2,Float64}}
+        @test Disk(2, SA[0.0,1.0]) isa Ball{SVector{2,Float64}}
+
         @test map_domain(AffineMap(2, [1,2,3]), UnitBall()) isa DomainSets.GenericBall
         @test map_domain(AffineMap(2, 3), UnitBall{Float64}()) isa DomainSets.GenericBall
         @test map_domain(LinearMap{SVector{3,Float64}}(2), UnitBall()) isa DomainSets.GenericBall
@@ -792,6 +798,9 @@ end
         @test GenericBall() == GenericBall(1.0)
         @test GenericBall(2.0, 1:5) isa GenericBall{Vector{Float64},:closed,Float64}
         @test GenericBall(2, 1.0:5.0) isa GenericBall{Vector{Float64},:closed,Float64}
+
+        # set difference with mixed vector types
+        @test eltype(Disk(0.8)\Rectangle([-0.15,-1.0],[0.15,0.0])) == AbstractVector{Float64}
 
         @test issubset(Ball(1.0, 2.0), Ball(1.0, 2.0))
         @test issubset(Ball(1.0, 2.0), Ball(2.0, 2.0))
@@ -1780,6 +1789,7 @@ end
         @test_throws ErrorException Rectangle(UnitCircle(), UnitDisk())
         @test_throws ErrorException Rectangle(OpenInterval(1,2), 3..4)
         @test_throws ErrorException Rectangle{SVector{2,Float64}}(UnitCircle(), UnitDisk())
+        @test_throws ErrorException Rectangle(0.0, 1.0)
 
         bnd = boundary(Rectangle([1,2],[3,4]))
         @test [1,3] ∈ bnd

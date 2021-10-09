@@ -295,6 +295,8 @@ Rectangle(a, b) = Rectangle(promote(a,b)...)
 Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
 Rectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
     Rectangle(SVector{N,T}(a), SVector{N,T}(b))
+Rectangle(a::T, b::T) where {T<:Number} =
+	error("Rectangles have to be constructed from vectors or tuples, not numbers.")
 
 Rectangle(domains::Tuple) = Rectangle(domains...)
 Rectangle(domains::ClosedInterval...) = Rectangle(promote_domains(domains)...)

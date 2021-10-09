@@ -160,7 +160,7 @@ export Ball, UnitBall,
     Sphere, UnitSphere,
     StaticUnitSphere, DynamicUnitSphere,
     VectorUnitSphere, EuclideanUnitSphere,
-    UnitDisk, VectorUnitDisk,
+    Disk, UnitDisk, VectorUnitDisk,
     UnitCircle, VectorUnitCircle,
     ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder
