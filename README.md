@@ -4,10 +4,7 @@
 [![Coverage Status](https://codecov.io/gh/JuliaApproximation/DomainSets.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/DomainSets.jl)
 
 
-DomainSets.jl is a package designed to represent simple infinite sets, that
-can be used to encode domains of functions. For example, the domain of the
-function `log(x::Float64)` is the infinite open interval, which is represented
-by the type `HalfLine{Float64}()`.
+DomainSets.jl is a package designed to represent simple infinite sets. The package makes it easy to represent sets, verify membership of the set, compare sets and construct new sets from existing ones. Domains are considered equivalent if they describe the same set, regardless of their type.
 
 ## Examples
 
