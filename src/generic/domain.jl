@@ -17,9 +17,8 @@ convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
 convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
 
 "Can the domains be promoted without throwing an error?"
-promotable_domains(d1, d2) = promotable_eltypes(eltype(d1),eltype(d2))
-promotable_eltypes(::Type{S}, ::Type{T}) where {S,T} =
-    isconcretetype(promote_type(S, T))
+promotable_domains(domains...) = promotable_eltypes(map(eltype, domains)...)
+promotable_eltypes(types...) = isconcretetype(promote_type(types...))
 promotable_eltypes(::Type{S}, ::Type{T}) where {S<:AbstractVector,T<:AbstractVector} =
     promotable_eltypes(eltype(S), eltype(T))
 

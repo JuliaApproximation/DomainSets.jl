@@ -315,8 +315,8 @@ Rectangle{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
 Rectangle{T}(domains::Domain...) where {T} =
     error("The Rectangle constructor expects two points or a list of intervals (closed).")
 
-ProductDomain(domains::ClosedInterval...) = Rectangle(domains...)
-ProductDomain(domains::AbstractVector{<:ClosedInterval}) =
+ProductDomain(domains::ClosedInterval{<:Number}...) = Rectangle(domains...)
+ProductDomain(domains::AbstractVector{<:ClosedInterval{<:Number}}) =
     Rectangle(map(leftendpoint, domains), map(rightendpoint, domains))
 ProductDomain{T}(domains::ClosedInterval...) where {T} = Rectangle{T}(domains...)
 ProductDomain{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
