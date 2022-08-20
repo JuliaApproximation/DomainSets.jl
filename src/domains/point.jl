@@ -76,3 +76,5 @@ issubset1(d1::Point, d2) = d1.x ∈ d2
 setdiffdomain1(p::Point, d2) = issubset(p, d2) ? EmptySpace{eltype(p)}() : p
 
 intersectdomain(d1::Point, d2::Point) = d1.x ∈ d2 ? d1 : EmptySpace{eltype(d1)}()
+
+show(io::IO,d::Point) = print(io,"Point(", d.x, ")")
