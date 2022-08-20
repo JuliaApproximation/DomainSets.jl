@@ -1,5 +1,5 @@
-using DomainSets: OpenHalfLine, ClosedHalfLine,
-    OpenNegativeHalfLine, ClosedNegativeHalfLine
+using DomainSets: PositiveRealLine, NonnegativeRealLine,
+    NegativeRealLine, NonpositiveRealLine
 
 function test_intervals()
     T = Float64
@@ -239,10 +239,10 @@ function test_intervals()
         @test_throws ArgumentError maximum(d)
         @test interior(d) == d
         @test DomainSets.similardomain(d, widen(T)) isa RealLine{widen(T)}
-        @test setdiffdomain(d, ClosedHalfLine{T}()) === OpenNegativeHalfLine{T}()
-        @test setdiffdomain(d, OpenHalfLine{T}()) === ClosedNegativeHalfLine{T}()
-        @test setdiffdomain(d, ClosedNegativeHalfLine{T}()) === OpenHalfLine{T}()
-        @test setdiffdomain(d, OpenNegativeHalfLine{T}()) === ClosedHalfLine{T}()
+        @test setdiffdomain(d, NonnegativeRealLine{T}()) === NegativeRealLine{T}()
+        @test setdiffdomain(d, PositiveRealLine{T}()) === NonpositiveRealLine{T}()
+        @test setdiffdomain(d, NonpositiveRealLine{T}()) === PositiveRealLine{T}()
+        @test setdiffdomain(d, NegativeRealLine{T}()) === NonnegativeRealLine{T}()
 
         @test similar_interval(d, T(-Inf), T(Inf)) == d
     end
