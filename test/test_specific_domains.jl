@@ -269,6 +269,10 @@ end
 
         @test intersectdomain(Point(1), Point(1.0)) == Point(1)
         @test isempty(intersectdomain(Point(1), Point(2.0)))
+
+        # show
+        @test repr(Point(3)) == "Point(3)"
+        @test repr(Point(3.0)) == "Point(3.0)"
     end
 
     @testset "intervals" begin
