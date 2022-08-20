@@ -312,6 +312,7 @@ include("test_domain_simplex.jl")
         @test canonicaldomain(Domain([1,2,3])) == [1,2,3]
 
         d = DomainSets.ExampleNamedDomain(UnitBall())
+        @test !DomainSets.isinterval(d)
         @test superdomain(d) == UnitBall()
         @test hascanonicaldomain(d)
         @test DomainSets.simplifies(d)

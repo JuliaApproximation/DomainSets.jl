@@ -130,7 +130,7 @@ function canonicaldomain(d::Interval{:open,:open,T}) where {T}
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
         Interval{:open,:open,FT}(-1, 1)
     elseif isfinite(leftendpoint(d)) || isfinite(rightendpoint(d))
-        OpenHalfLine{FT}()
+        PositiveRealLine{FT}()
     elseif leftendpoint(d) < 0 && rightendpoint(d) > 0
         RealLine{FT}()
     elseif leftendpoint(d) > 0 && rightendpoint(d) < 0
@@ -144,7 +144,7 @@ function canonicaldomain(d::Interval{:open,:closed,T}) where {T}
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
         Interval{:open,:closed,FT}(-1, 1)
     elseif isfinite(rightendpoint(d))
-        ClosedHalfLine{FT}()
+        NonnegativeRealLine{FT}()
     else
         throw(ArgumentError("Canonical domains can not be closed at infinity."))
     end
@@ -154,7 +154,7 @@ function canonicaldomain(d::Interval{:closed,:open,T}) where {T}
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
         Interval{:closed,:open,FT}(-1, 1)
     elseif isfinite(leftendpoint(d))
-        ClosedHalfLine{FT}()
+        NonnegativeRealLine{FT}()
     else
         throw(ArgumentError("Canonical domains can not be closed at infinity."))
     end
@@ -209,19 +209,19 @@ struct HalfLine{T,C} <: FixedInterval{C,:open,T} end
 HalfLine() = HalfLine{Float64}()
 HalfLine{T}() where {T} = HalfLine{Float64,:closed}()
 
-const ClosedHalfLine{T} = HalfLine{T,:closed}
-const OpenHalfLine{T} = HalfLine{T,:open}
+const NonnegativeRealLine{T} = HalfLine{T,:closed}
+const PositiveRealLine{T} = HalfLine{T,:open}
 
 endpoints(d::HalfLine{T}) where {T} = (zero(T), T(Inf))
 boundary(d::HalfLine) = Point(leftendpoint(d))
-interior(d::HalfLine{T}) where {T} = OpenHalfLine{T}()
-closure(d::HalfLine{T}) where {T} = ClosedHalfLine{T}()
+interior(d::HalfLine{T}) where {T} = PositiveRealLine{T}()
+closure(d::HalfLine{T}) where {T} = NonnegativeRealLine{T}()
 
 similardomain(::HalfLine{S,C}, ::Type{T}) where {S,T,C} = HalfLine{T,C}()
 
 # intercept and simplify the definition of IntervalSets
-in(x, d::ClosedHalfLine) = x >= 0
-in(x, d::OpenHalfLine) = x > 0
+in(x, d::NonnegativeRealLine) = x >= 0
+in(x, d::PositiveRealLine) = x > 0
 
 approx_indomain(x, d::HalfLine, tolerance) = x >= -tolerance
 
@@ -231,8 +231,8 @@ function similar_interval(d::HalfLine{T,C}, a::S, b::S) where {T,S,C}
     HalfLine{promote_type(float(T),S),C}()
 end
 
-point_in_domain(d::ClosedHalfLine) = zero(eltype(d))
-point_in_domain(d::OpenHalfLine) = one(eltype(d))
+point_in_domain(d::NonnegativeRealLine) = zero(eltype(d))
+point_in_domain(d::PositiveRealLine) = one(eltype(d))
 
 
 "The negative halfline `(-∞,0]` or `(-∞,0)`, right-closed or right-open."
@@ -240,20 +240,20 @@ struct NegativeHalfLine{T,C} <: FixedInterval{:open,C,T} end
 NegativeHalfLine() = NegativeHalfLine{Float64}()
 NegativeHalfLine{T}() where {T} = NegativeHalfLine{T,:open}()
 
-const ClosedNegativeHalfLine{T} = NegativeHalfLine{T,:closed}
-const OpenNegativeHalfLine{T} = NegativeHalfLine{T,:open}
+const NonpositiveRealLine{T} = NegativeHalfLine{T,:closed}
+const NegativeRealLine{T} = NegativeHalfLine{T,:open}
 
 similardomain(::NegativeHalfLine{S,C}, ::Type{T}) where {S,T,C} =
     NegativeHalfLine{T,C}()
 
 endpoints(d::NegativeHalfLine{T}) where {T} = (-T(Inf), zero(T))
 boundary(d::NegativeHalfLine) = Point(rightendpoint(d))
-interior(d::NegativeHalfLine{T}) where {T} = OpenNegativeHalfLine{T}()
-closure(d::NegativeHalfLine{T}) where {T} = ClosedNegativeHalfLine{T}()
+interior(d::NegativeHalfLine{T}) where {T} = NegativeRealLine{T}()
+closure(d::NegativeHalfLine{T}) where {T} = NonpositiveRealLine{T}()
 
 # intercept and simplify the definition of IntervalSets
-in(x, d::ClosedNegativeHalfLine) = x <= 0
-in(x, d::OpenNegativeHalfLine) = x < 0
+in(x, d::NonpositiveRealLine) = x <= 0
+in(x, d::NegativeRealLine) = x < 0
 
 approx_indomain(x, d::NegativeHalfLine, tolerance) = x < tolerance
 
@@ -263,8 +263,8 @@ function similar_interval(d::NegativeHalfLine{T,C}, a::S, b::S) where {S,T,C}
     NegativeHalfLine{promote_type(S,float(T)),C}()
 end
 
-point_in_domain(d::OpenNegativeHalfLine) = -one(eltype(d))
-point_in_domain(d::ClosedNegativeHalfLine) = zero(eltype(d))
+point_in_domain(d::NegativeRealLine) = -one(eltype(d))
+point_in_domain(d::NonpositiveRealLine) = zero(eltype(d))
 
 
 "The real line `(-∞,∞)`."
@@ -385,21 +385,21 @@ setdiffdomain(d1::D, d2::D) where {D <: FixedInterval} = EmptySpace{eltype(D)}()
 intersectdomain(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
 intersectdomain(d1::ChebyshevInterval{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
 # [0,1] ∩ [0,∞) = [0,1]
-intersectdomain(d1::UnitInterval{T}, d2::ClosedHalfLine{T}) where {T} = UnitInterval{T}()
-intersectdomain(d1::ClosedHalfLine{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
+intersectdomain(d1::UnitInterval{T}, d2::NonnegativeRealLine{T}) where {T} = UnitInterval{T}()
+intersectdomain(d1::NonnegativeRealLine{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
 # [0,1] ∩ (-∞,0) = {}
-intersectdomain(d1::UnitInterval{T}, d2::OpenNegativeHalfLine{T}) where {T} = EmptySpace{T}()
-intersectdomain(d1::OpenNegativeHalfLine{T}, d2::UnitInterval{T}) where {T} = EmptySpace{T}()
+intersectdomain(d1::UnitInterval{T}, d2::NegativeRealLine{T}) where {T} = EmptySpace{T}()
+intersectdomain(d1::NegativeRealLine{T}, d2::UnitInterval{T}) where {T} = EmptySpace{T}()
 # [-1,1] ∩ [0,∞) = [0,1]
-intersectdomain(d1::ChebyshevInterval{T}, d2::ClosedHalfLine{T}) where {T} = UnitInterval{T}()
-intersectdomain(d1::ClosedHalfLine{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
+intersectdomain(d1::ChebyshevInterval{T}, d2::NonnegativeRealLine{T}) where {T} = UnitInterval{T}()
+intersectdomain(d1::NonnegativeRealLine{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
 # open and closed halfline
-intersectdomain(d1::HalfLine{T}, d2::OpenNegativeHalfLine{T}) where {T} = EmptySpace{T}()
-intersectdomain(d1::OpenNegativeHalfLine{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
-intersectdomain(d1::ClosedHalfLine{T}, d2::ClosedNegativeHalfLine{T}) where {T} = Point(zero(T))
-intersectdomain(d1::ClosedNegativeHalfLine{T}, d2::ClosedHalfLine{T}) where {T} = Point(zero(T))
-intersectdomain(d1::ClosedHalfLine{T}, d2::OpenHalfLine{T}) where {T} = d2
-intersectdomain(d1::OpenHalfLine{T}, d2::ClosedHalfLine{T}) where {T} = d1
+intersectdomain(d1::HalfLine{T}, d2::NegativeRealLine{T}) where {T} = EmptySpace{T}()
+intersectdomain(d1::NegativeRealLine{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
+intersectdomain(d1::NonnegativeRealLine{T}, d2::NonpositiveRealLine{T}) where {T} = Point(zero(T))
+intersectdomain(d1::NonpositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = Point(zero(T))
+intersectdomain(d1::NonnegativeRealLine{T}, d2::PositiveRealLine{T}) where {T} = d2
+intersectdomain(d1::PositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = d1
 # [a,b] ∩ (-∞,∞) = [a,b]
 intersectdomain(d1::AbstractInterval{T}, d2::RealLine{T}) where {T} = d1
 intersectdomain(d1::TypedEndpointsInterval{L,R,T}, d2::RealLine{T}) where {L,R,T} = d1
@@ -411,19 +411,19 @@ intersectdomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T
 uniondomain(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = ChebyshevInterval{T}()
 uniondomain(d1::ChebyshevInterval{T}, d2::UnitInterval{T}) where {T} = ChebyshevInterval{T}()
 # [0,1] ∪ [0,∞) = [0,∞)
-uniondomain(d1::UnitInterval{T}, d2::ClosedHalfLine{T}) where {T} = d2
-uniondomain(d1::ClosedHalfLine{T}, d2::UnitInterval{T}) where {T} = d1
+uniondomain(d1::UnitInterval{T}, d2::NonnegativeRealLine{T}) where {T} = d2
+uniondomain(d1::NonnegativeRealLine{T}, d2::UnitInterval{T}) where {T} = d1
 # open and closed halflines
-uniondomain(d1::ClosedHalfLine{T}, d2::ClosedNegativeHalfLine{T}) where {T} = RealLine{T}()
-uniondomain(d1::ClosedNegativeHalfLine{T}, d2::ClosedHalfLine{T}) where {T} = RealLine{T}()
-uniondomain(d1::OpenHalfLine{T}, d2::ClosedNegativeHalfLine{T}) where {T} = RealLine{T}()
-uniondomain(d1::ClosedNegativeHalfLine{T}, d2::OpenHalfLine{T}) where {T} = RealLine{T}()
-uniondomain(d1::ClosedHalfLine{T}, d2::OpenNegativeHalfLine{T}) where {T} = RealLine{T}()
-uniondomain(d1::OpenNegativeHalfLine{T}, d2::ClosedHalfLine{T}) where {T} = RealLine{T}()
-uniondomain(d1::ClosedHalfLine{T}, d2::OpenHalfLine{T}) where {T} = d1
-uniondomain(d1::OpenHalfLine{T}, d2::ClosedHalfLine{T}) where {T} = d2
-uniondomain(d1::ClosedNegativeHalfLine{T}, d2::NegativeHalfLine{T}) where {T} = d1
-uniondomain(d1::NegativeHalfLine{T}, d2::ClosedNegativeHalfLine{T}) where {T} = d2
+uniondomain(d1::NonnegativeRealLine{T}, d2::NonpositiveRealLine{T}) where {T} = RealLine{T}()
+uniondomain(d1::NonpositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = RealLine{T}()
+uniondomain(d1::PositiveRealLine{T}, d2::NonpositiveRealLine{T}) where {T} = RealLine{T}()
+uniondomain(d1::NonpositiveRealLine{T}, d2::PositiveRealLine{T}) where {T} = RealLine{T}()
+uniondomain(d1::NonnegativeRealLine{T}, d2::NegativeRealLine{T}) where {T} = RealLine{T}()
+uniondomain(d1::NegativeRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = RealLine{T}()
+uniondomain(d1::NonnegativeRealLine{T}, d2::PositiveRealLine{T}) where {T} = d1
+uniondomain(d1::PositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = d2
+uniondomain(d1::NonpositiveRealLine{T}, d2::NegativeHalfLine{T}) where {T} = d1
+uniondomain(d1::NegativeHalfLine{T}, d2::NonpositiveRealLine{T}) where {T} = d2
 # [a,b] ∪ (-∞,∞) = (-∞,∞)
 uniondomain(d1::AbstractInterval{T}, d2::RealLine{T}) where {T} = d2
 uniondomain(d1::TypedEndpointsInterval{L,R,T}, d2::RealLine{T}) where {L,R,T} = d2
@@ -434,24 +434,24 @@ uniondomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T} = 
 # [0,1] ∖ [-1,1] = {}
 setdiffdomain(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = EmptySpace{T}()
 # [0,1] ∖ [0,∞) = {}
-setdiffdomain(d1::UnitInterval{T}, d2::ClosedHalfLine{T}) where {T} = EmptySpace{T}()
+setdiffdomain(d1::UnitInterval{T}, d2::NonnegativeRealLine{T}) where {T} = EmptySpace{T}()
 # [0,1] ∖ (-∞,0) = [0,1]
-setdiffdomain(d1::UnitInterval{T}, d2::OpenNegativeHalfLine{T}) where {T} = d1
+setdiffdomain(d1::UnitInterval{T}, d2::NegativeRealLine{T}) where {T} = d1
 # [-1,1] ∖ (-∞,0) = [0,1]
-setdiffdomain(d1::ChebyshevInterval{T}, d2::OpenNegativeHalfLine{T}) where {T} = UnitInterval{T}()
+setdiffdomain(d1::ChebyshevInterval{T}, d2::NegativeRealLine{T}) where {T} = UnitInterval{T}()
 # [0,∞) ∖ (-∞,0) = [0,∞)
-setdiffdomain(d1::HalfLine{T}, d2::OpenNegativeHalfLine{T}) where {T} = d1
-setdiffdomain(d1::HalfLine{T}, d2::ClosedNegativeHalfLine{T}) where {T} = HalfLine{T,:open}()
+setdiffdomain(d1::HalfLine{T}, d2::NegativeRealLine{T}) where {T} = d1
+setdiffdomain(d1::HalfLine{T}, d2::NonpositiveRealLine{T}) where {T} = HalfLine{T,:open}()
 # (-∞,0) ∖ [0,1] = (-∞,0)
-setdiffdomain(d1::OpenNegativeHalfLine{T}, d2::UnitInterval{T}) where {T} = d1
+setdiffdomain(d1::NegativeRealLine{T}, d2::UnitInterval{T}) where {T} = d1
 # (-∞,0) ∖ [0,∞) = (-∞,0)
-setdiffdomain(d1::NegativeHalfLine{T}, d2::OpenHalfLine{T}) where {T} = d1
-setdiffdomain(d1::NegativeHalfLine{T}, d2::ClosedHalfLine{T}) where {T} = OpenNegativeHalfLine{T}()
+setdiffdomain(d1::NegativeHalfLine{T}, d2::PositiveRealLine{T}) where {T} = d1
+setdiffdomain(d1::NegativeHalfLine{T}, d2::NonnegativeRealLine{T}) where {T} = NegativeRealLine{T}()
 # (-∞,∞) ∖ [0,∞) = (-∞,0)
-setdiffdomain(d1::RealLine{T}, d2::ClosedHalfLine{T}) where {T} = OpenNegativeHalfLine{T}()
-setdiffdomain(d1::RealLine{T}, d2::OpenHalfLine{T}) where {T} = ClosedNegativeHalfLine{T}()
-setdiffdomain(d1::RealLine{T}, d2::ClosedNegativeHalfLine{T}) where {T} = OpenHalfLine{T}()
-setdiffdomain(d1::RealLine{T}, d2::OpenNegativeHalfLine{T}) where {T} = ClosedHalfLine{T}()
+setdiffdomain(d1::RealLine{T}, d2::NonnegativeRealLine{T}) where {T} = NegativeRealLine{T}()
+setdiffdomain(d1::RealLine{T}, d2::PositiveRealLine{T}) where {T} = NonpositiveRealLine{T}()
+setdiffdomain(d1::RealLine{T}, d2::NonpositiveRealLine{T}) where {T} = PositiveRealLine{T}()
+setdiffdomain(d1::RealLine{T}, d2::NegativeRealLine{T}) where {T} = NonnegativeRealLine{T}()
 
 
 #################################
