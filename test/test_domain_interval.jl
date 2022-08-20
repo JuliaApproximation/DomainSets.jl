@@ -1,3 +1,6 @@
+using DomainSets: OpenHalfLine, ClosedHalfLine,
+    OpenNegativeHalfLine, ClosedNegativeHalfLine
+
 function test_intervals()
     T = Float64
     @testset "ClosedInterval{$T}" begin
@@ -11,6 +14,7 @@ function test_intervals()
         @test similar_interval(d, big(0), big(1)) == Interval{:closed,:closed,BigInt}(0,1)
         @test closure(d) == d
         @test isopenset(interior(d))
+        @test center(d) == one(T)/2
 
         @test iscompact(d)
         @test typeof(similar_interval(d, one(T), 2*one(T))) == typeof(d)
@@ -99,15 +103,28 @@ function test_intervals()
     end
     @testset "HalfLine{$T}" begin
         d = HalfLine{T}()
+        d_open = HalfLine{T,:open}()
         @test leftendpoint(d) == zero(T)
         @test rightendpoint(d) == T(Inf)
+        @test DomainSets.endpoints(d) == DomainSets.endpoints(d_open)
         @test minimum(d) == infimum(d) == leftendpoint(d)
+        @test infimum(d_open) == leftendpoint(d_open)
+        @test_throws ArgumentError minimum(d_open)
         @test supremum(d) == rightendpoint(d)
+        @test supremum(d_open) == rightendpoint(d_open)
         @test_throws ArgumentError maximum(d)
+        @test_throws ArgumentError maximum(d_open)
 
         @test d ∩ d === d
         @test d ∪ d === d
         @test d \ d == EmptySpace{T}()
+        @test d_open ∩ d_open === d_open
+        @test d_open ∪ d_open === d_open
+        @test d_open \ d_open == EmptySpace{T}()
+        @test d ∩ d_open === d_open
+        @test d_open ∩ d === d_open
+        @test d ∪ d_open === d
+        @test d_open ∪ d === d
         unit = UnitInterval{T}()
         cheb = ChebyshevInterval{T}()
         @test d ∩ unit === unit
@@ -133,28 +150,49 @@ function test_intervals()
         @test boundary(d) == Point(0)
         @test leftendpoint(d) ∈ ∂(d)
         @test rightendpoint(d) ∉ ∂(d)
+
+        @test isopenset(d_open)
+        @test !isclosedset(d_open)
+        @test boundary(d_open) == boundary(d)
+        @test 1 ∈ d_open
+        @test 0 ∉ d_open
+        @test interior(d) == d_open
+        @test closure(d_open) == d
     end
     @testset "NegativeHalfLine{$T}" begin
         d = NegativeHalfLine{T}()
+        d_closed = NegativeHalfLine{T,:closed}()
         @test leftendpoint(d) == -T(Inf)
         @test rightendpoint(d) == zero(T)
         @test infimum(d) == leftendpoint(d)
         @test supremum(d) == rightendpoint(d)
         @test_throws ArgumentError minimum(d)
         @test_throws ArgumentError maximum(d)
+        @test_throws ArgumentError minimum(d_closed)
+        @test maximum(d_closed) == supremum(d_closed) == rightendpoint(d_closed)
 
         @test d ∩ d === d
         @test d ∪ d === d
         @test d \ d == EmptySpace{T}()
+        halfline = HalfLine{T}()
+        halfline_open = HalfLine{T,:open}()
+        @test isempty(d ∩ halfline)
+        @test d ∩ halfline === EmptySpace{T}()
+        @test d ∩ halfline_open === EmptySpace{T}()
+        @test d_closed ∩ halfline == Point(zero(T))
+        @test halfline ∩ d === EmptySpace{T}()
+        @test d ∪ halfline === RealLine{T}()
+        @test halfline ∪ d === RealLine{T}()
+        @test d_closed ∪ halfline === RealLine{T}()
+        @test halfline ∪ d_closed === RealLine{T}()
+        @test halfline_open ∪ d_closed === RealLine{T}()
+        @test d_closed ∪ halfline_open === RealLine{T}()
+        @test setdiffdomain(halfline, d) === halfline
+        @test setdiffdomain(halfline, d_closed) === halfline_open
         unit = UnitInterval{T}()
         cheb = ChebyshevInterval{T}()
-        halfline = HalfLine{T}()
         @test unit ∩ d === EmptySpace{T}()
         @test d ∩ unit === EmptySpace{T}()
-        @test d ∩ halfline === EmptySpace{T}()
-        @test halfline ∩ d === EmptySpace{T}()
-        @test d ∪ halfline === FullSpace{T}()
-        @test halfline ∪ d === FullSpace{T}()
         @test unit \ d === unit
         @test cheb \ d === unit
         @test halfline \ d === halfline
@@ -165,6 +203,7 @@ function test_intervals()
         @test isopenset(d)
         @test !iscompact(d)
         @test -1. ∈ d
+        @test 0 ∉ d
         @test 1. ∉ d
         @test approx_in(0.5, d, 1.)
         @test !approx_in(0.5, d, 0.4)
@@ -176,6 +215,36 @@ function test_intervals()
         @test boundary(d) == Point(0)
         @test leftendpoint(d) ∉ ∂(d)
         @test rightendpoint(d) ∈ ∂(d)
+
+        # additional tests for the right-closed negative half line
+        @test !isrightopen(d_closed)
+        @test !isopenset(d_closed)
+        @test boundary(d_closed) == boundary(d)
+        @test -1 ∈ d_closed
+        @test 0 ∈ d_closed
+        @test interior(d_closed) == d
+        @test closure(d) == d_closed
+    end
+
+    @testset "RealLine{$T}" begin
+        @test RealLine() isa RealLine{Float64}
+        d = RealLine{T}()
+        @test isopenset(d)
+        @test DomainSets.isfullspace(d)
+        @test 1 ∈ d
+        @test point_in_domain(d) ∈ d
+        @test point_in_domain(d) isa T
+        @test isempty(boundary(d))
+        @test_throws ArgumentError minimum(d)
+        @test_throws ArgumentError maximum(d)
+        @test interior(d) == d
+        @test DomainSets.similardomain(d, widen(T)) isa RealLine{widen(T)}
+        @test setdiffdomain(d, ClosedHalfLine{T}()) === OpenNegativeHalfLine{T}()
+        @test setdiffdomain(d, OpenHalfLine{T}()) === ClosedNegativeHalfLine{T}()
+        @test setdiffdomain(d, ClosedNegativeHalfLine{T}()) === OpenHalfLine{T}()
+        @test setdiffdomain(d, OpenNegativeHalfLine{T}()) === ClosedHalfLine{T}()
+
+        @test similar_interval(d, T(-Inf), T(Inf)) == d
     end
 
     @testset "OpenInterval{$T}" begin

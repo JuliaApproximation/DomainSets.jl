@@ -144,7 +144,7 @@ export Integers, RealNumbers, Rationals, ComplexNumbers,
 export AbstractInterval, Interval, UnitInterval, ChebyshevInterval,
     OpenInterval, ClosedInterval,
     leftendpoint, rightendpoint, isleftopen, isrightopen,
-    HalfLine, NegativeHalfLine
+    HalfLine, NegativeHalfLine, RealLine
 # from domains/simplex.jl
 export UnitSimplex,
     StaticUnitSimplex, DynamicUnitSimplex,
