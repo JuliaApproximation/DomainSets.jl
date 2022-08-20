@@ -1235,8 +1235,8 @@ end
         show(io, textmime, rotate(D,1.))
         @test String(take!(io))[1:17] == "A .* UnitSquare()"
 
-        D = rotate(UnitInterval()^2, π)
-        @test SA[-0.9, -0.9] ∈ D
+        D = rotate(UnitInterval()^2, π/2)
+        @test SA[-0.9, 0.9] ∈ D
         @test SA[-1.1, -1.1] ∉ D
         x = point_in_domain(D)
         @test forward_map(D)(x) ≈ forward_map(D, x)
