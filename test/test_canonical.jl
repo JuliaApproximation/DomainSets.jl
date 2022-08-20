@@ -28,4 +28,11 @@
     @test_throws ArgumentError mapfrom_canonical(Interval{:closed,:open}(-Inf,Inf))
     @test_throws ArgumentError mapfrom_canonical(Interval{:closed,:open}(-Inf,2.0))
     @test_throws ArgumentError mapfrom_canonical(Interval{:open,:closed}(2.0,Inf))
+
+    @test DomainSets.interval_map(-Inf,Inf,-Inf,Inf) isa StaticIdentityMap
+    @test DomainSets.interval_map(Inf,-Inf,Inf,-Inf) isa StaticIdentityMap
+    @test DomainSets.interval_map(-Inf,Inf,Inf,-Inf) == LinearMap(-1)
+    @test DomainSets.interval_map(Inf,-Inf,-Inf,Inf) == LinearMap(-1)
+    @test DomainSets.interval_map(Inf,Inf,Inf,Inf) isa StaticIdentityMap
+    @test DomainSets.interval_map(-Inf,-Inf,-Inf,-Inf) isa StaticIdentityMap
 end

@@ -114,8 +114,66 @@ similardomain(::ChebyshevInterval, ::Type{T}) where {T} = ChebyshevInterval{T}()
 -(d::ChebyshevInterval) = d
 
 
-"Map the interval [a,b] to the interval [c,d]."
-interval_map(a, b, c, d) = AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
+interval_map(a, b, c, d) = interval_map(promote(a,b,c,d)...)
+
+"""
+Map the interval `[a,b]` to the interval `[c,d]`.
+
+This function deals with infinite intervals, and the type of the
+map returned may depend on the value (finiteness) of the given endpoints.
+"""
+function interval_map(a::T, b::T, c::T, d::T) where {T}
+    FT = float(T)
+    if isfinite(a) && isfinite(b) && isfinite(c) && isfinite(d)
+        bounded_interval_map(a, b, c, d)
+    elseif isfinite(a) && !isfinite(b) && isfinite(c) && !isfinite(d)
+        # (a,Inf) to (c,Inf)
+        AffineMap(one(FT), c-a)
+    elseif isfinite(a) && !isfinite(b) && !isfinite(c) && isfinite(d)
+        # (a,Inf) to (Inf,d)
+        AffineMap(-one(FT), d+a)
+    elseif !isfinite(a) && isfinite(b) && isfinite(c) && !isfinite(d)
+        # (Inf,b) to (c,Inf)
+        AffineMap(-one(FT), c+b)
+    elseif !isfinite(a) && isfinite(b) && !isfinite(c) && isfinite(d)
+        # (Inf,b) to (Inf,d)
+        AffineMap(one(FT), d-b)
+    elseif !isfinite(a) && !isfinite(b) && !isfinite(c) && !isfinite(d)
+        if (a < 0) && (b > 0) && (c < 0) && (d > 0)
+            # (-Inf,Inf) to (-Inf,Inf)
+            StaticIdentityMap{FT}()
+        elseif (a < 0) && (b > 0) && (c > 0) && (d < 0)
+            # (-Inf,Inf) to (Inf,-Inf)
+            LinearMap(-one(FT))
+        elseif (a > 0) && (b < 0) && (c < 0) && (d > 0)
+            # (Inf,-Inf) to (-Inf,Inf)
+            LinearMap(-one(FT))
+        elseif (a > 0) && (b < 0) && (c > 0) && (d < 0)
+            # (Inf,-Inf) to (Inf,-Inf)
+            StaticIdentityMap{FT}()
+        elseif (a > 0) && (b > 0) && (c > 0) && (d > 0)
+            # (Inf,Inf) to (Inf,Inf)
+            StaticIdentityMap{FT}()
+        elseif (a < 0) && (b < 0) && (c < 0) && (d < 0)
+            # (-Inf,-Inf) to (-Inf,-Inf)
+            StaticIdentityMap{FT}()
+        else
+            throw(ArgumentError("Requested affine map is unbounded"))
+        end
+    else
+        throw(ArgumentError("Requested affine map is unbounded"))
+    end
+end
+
+"Like interval_map, but guaranteed to return a scalar affine map."
+bounded_interval_map(a, b, c, d) = bounded_interval_map(promote(a,b,c,d)...)
+bounded_interval_map(a::T, b::T, c::T, d::T) where {T} =
+    AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
+
+mapto(d1::D, d2::D) where {D <: FixedInterval} = identitymap(d1)
+mapto(d1::AbstractInterval, d2::AbstractInterval) =
+    interval_map(leftendpoint(d1), rightendpoint(d1), leftendpoint(d2), rightendpoint(d2))
+
 
 canonicaldomain(d::ClosedInterval{T}) where {T} = ChebyshevInterval{float(T)}()
 canonicaldomain(d::FixedInterval) = d
@@ -155,49 +213,9 @@ function canonicaldomain(d::Interval{:closed,:open,T}) where {T}
     end
 end
 
-mapfrom_canonical(d::ClosedInterval{T}) where {T} = interval_map(-one(T), one(T), endpoints(d)...)
-mapfrom_canonical(d::FixedInterval{L,R,T}) where {L,R,T} = StaticIdentityMap{T}()
+mapfrom_canonical(d::ClosedInterval) = bounded_interval_map(-1, 1, endpoints(d)...)
+mapfrom_canonical(d::Interval) = mapto(canonicaldomain(d), d)
 
-function mapfrom_canonical(d::Interval{:open,:open,T}) where {T}
-    FT = float(T)
-    if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        interval_map(-one(FT), one(FT), endpoints(d)...)
-    elseif isfinite(leftendpoint(d))
-        AffineMap(one(FT), leftendpoint(d))
-    elseif isfinite(rightendpoint(d))
-        AffineMap(-one(FT), rightendpoint(d))
-    elseif leftendpoint(d) < 0 && rightendpoint(d) > 0
-        StaticIdentityMap{FT}()
-    elseif leftendpoint(d) > 0 && rightendpoint(d) < 0
-        LinearMap(-one(FT))
-    else
-        throw(ArgumentError("No bounded map for canonical domain of $(d)"))
-    end
-end
-function mapfrom_canonical(d::Interval{:open,:closed,T}) where {T}
-    FT = float(T)
-    if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        interval_map(-one(FT), one(FT), endpoints(d)...)
-    elseif isfinite(rightendpoint(d))
-        AffineMap(-one(FT), rightendpoint(d))
-    else
-        throw(ArgumentError("Canonical domains can not be closed at infinity."))
-    end
-end
-function mapfrom_canonical(d::Interval{:closed,:open,T}) where {T}
-    FT = float(T)
-    if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        interval_map(-one(FT), one(FT), endpoints(d)...)
-    elseif isfinite(leftendpoint(d))
-        AffineMap(one(FT), leftendpoint(d))
-    else
-        throw(ArgumentError("Canonical domains can not be closed at infinity."))
-    end
-end
-
-mapto(d1::D, d2::D) where {D <: FixedInterval} = identitymap(d1)
-mapto(d1::D1, d2::D2) where {D1 <: FixedInterval,D2 <: FixedInterval} =
-    interval_map(minimum(d1), maximum(d1), minimum(d2), maximum(d2))
 
 "The positive halfline `[0,∞)` or `(0,∞)`, left-closed or left-open."
 struct HalfLine{T,C} <: FixedInterval{C,:open,T} end
