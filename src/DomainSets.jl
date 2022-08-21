@@ -3,6 +3,8 @@ module DomainSets
 using StaticArrays
 using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
+import Random
+using Random: AbstractRNG
 
 using IntervalSets
 using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
@@ -216,6 +218,7 @@ include("domains/indicator.jl")
 include("domains/boundingbox.jl")
 
 include("applications/coordinates.jl")
+include("applications/random.jl")
 include("applications/rotation.jl")
 
 end # module

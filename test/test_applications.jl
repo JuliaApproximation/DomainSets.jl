@@ -48,11 +48,32 @@ function test_cart_polar_map(T)
     @test inverse(m2) == m1
 end
 
+function test_rand(T)
+    r = Rectangle(T[-1, 2], T[3, 4])
+    @test @inferred(Random.gentype(r)) == Vector{T}
+    @test typeof(rand(r)) == Random.gentype(r)
+    @test @inferred(rand(r)) in r
 
+    r = Rectangle(SA[T(-1), T(2)], SA[T(3), T(4)])
+    @test @inferred(Random.gentype(r)) == SVector{2, T}
+    @test typeof(rand(r)) == Random.gentype(r)
+    @test @inferred(rand(r)) in r
+
+    hybrid_product = ProductDomain(["a", "b"], 1.0..2.0)
+    @test @inferred(Random.gentype(hybrid_product)) == Tuple{String, Float64}
+    @test typeof(rand(hybrid_product)) == Random.gentype(hybrid_product)
+    @test @inferred(rand(hybrid_product)) in hybrid_product
+
+    # b = Ball(2.0, SA[1.0, 2.0])
+    # @test @inferred(Random.gentype(r)) == SVector{2, T}
+    # @test typeof(rand(r)) == Random.gentype(r)
+    # @test @inferred(rand(r)) in r
+end
 
 function test_applications(T)
     test_rotation_map(T)
     test_cart_polar_map(T)
+    test_rand(T)
 end
 
 @testset "applications" begin
