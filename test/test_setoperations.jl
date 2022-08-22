@@ -89,8 +89,8 @@
         @test interior(uniondomain(0..1, 2..3)) == uniondomain(OpenInterval(0,1),OpenInterval(2,3))
         @test closure(uniondomain(OpenInterval(0,1),OpenInterval(2,3))) == uniondomain(0..1, 2..3)
 
-        @test uniondomain(0..1, 2..3) \ (0.5..2.5) == uniondomain(0..0.5, 2.5..3.0)
-        @test uniondomain(0..1, 2..3) \ uniondomain(0.5..2.5, -2..(-1)) == uniondomain(0..0.5, 2.5..3.0)
+        @test uniondomain(0..1, 2..3) \ (0.5..2.5) == uniondomain(Interval{:closed,:open}(0..0.5), Interval{:open,:closed}(2.5..3.0))
+        @test uniondomain(0..1, 2..3) \ uniondomain(0.5..2.5, -2..(-1)) == uniondomain(Interval{:closed,:open}(0..0.5), Interval{:open,:closed}(2.5,3.0))
 
         @test !isempty(u1)
         show(io, textmime, u1)

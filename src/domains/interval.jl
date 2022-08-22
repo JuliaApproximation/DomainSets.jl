@@ -345,6 +345,13 @@ function uniondomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpointsInte
     # are they disjoint?
     b2 < a1 && return UnionDomain(d1, d2)   # return a UnionDomain for disjoint intervals
     b1 < a2 && return UnionDomain(d1, d2)
+    if a1 ≤ b1 == a2 ≤ b2
+        if R1 == :closed || L2 == :closed
+            return Interval{L1,R2,T}(a1,b2)
+        else
+            return UnionDomain(Interval{L1,:open,T}(a1,b1), Interval{:open,R2,T}(a2,b2))
+        end
+    end
     # at this stage they must overlap
     if a1 < a2
         a = a1
@@ -509,7 +516,9 @@ end
 # Arithmetic operations
 ########################
 
-function setdiffdomain(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
+complement(L) = L == :open ? :closed : :open
+
+function setdiffdomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpointsInterval{L2,R2,T}) where {L1,R1,L2,R2,T}
     a1 = leftendpoint(d1)
     b1 = rightendpoint(d1)
     a2 = leftendpoint(d2)
@@ -517,19 +526,52 @@ function setdiffdomain(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where T
 
     isempty(d1) && return d1
     isempty(d2) && return d1
+    # intervals aren't empty: we now know that a1 ≤ b1 and a2 ≤ b2
+    d1 == d2 && return EmptySpace{T}()
+    # Order: a1 b1 a2 b2
     b1 < a2 && return d1
-    a1 < a2 ≤ b1 ≤ b2 && return (a1..a2)
-    a1 < a2 ≤ b2 < b1 && return uniondomain(a1..a2, b2..b1)
-    a2 ≤ a1 < b2 < b1 && return (b2..b1)
-    a2 ≤ a1 ≤ b1 ≤ b2 && return EmptySpace{T}()
-
-    @assert b2 ≤ a1
-    d1
+    if a1 < a2 == b1 ≤ b2
+        # if a2==b1==b2 then [a2,b2] is closed, because it is non-empty
+        (L2 == :open && R1 == :closed) ? R = :closed : R = :open
+        return Interval{L1,R,T}(a1, a2)
+    end
+    # Order: a1 a2 b1 b2
+    if a1 < a2 < b1 ≤ b2
+        (L2 == :open) ? R = :closed : R = :open
+        return Interval{L1,R,T}(a1, a2)
+    end
+    # Order: a1 a2 b2 b1
+    if a1 < a2 < b2 < b1
+        return uniondomain(Interval{L1,complement(L1),T}(a1,a2), Interval{complement(R2),R1,T}(b2,b1))
+    end
+    if a1 < a2 == b2 < b1
+        # since a2==b2 and the interval isn't empty, [a2,b2] is closed
+        return uniondomain(Interval{L1,:open,T}(a1,a2), Interval{:open,R1,T}(b2,b1))
+    end
+    # Order: a2 a1 b2 b1
+    if a2 ≤ a1 < b2 < b1
+        return Interval{complement(R2),R1,T}(b2,b1)
+    end
+    # Order: a2 a1 b1 b2
+    if a2 < a1 ≤ b1 < b2
+        return EmptySpace{T}()
+    end
+    if a2 ≤ a1 ≤ b1 ≤ b2
+        return (L2 == :open && R2 == :open) ? d1 : EmptySpace{T}()
+    end
+    # Order: a2 b2 a1 b1
+    if b2 == a1 ≤ b1
+        return (R2 == :open) ? d1 : Interval{:open,R1}(a1,b1)
+    end
+    if b2 < a1
+        return d1
+    end
+    error("Can't reach this line: please file an issue.")
 end
 
 
-switch_open_closed(d::AbstractInterval) = d
-switch_open_closed(d::Interval{L,R,T}) where {L,R,T} =
+switch_open_closed_if_applicable(d::AbstractInterval) = d
+switch_open_closed_if_applicable(d::Interval{L,R,T}) where {L,R,T} =
     Interval{R,L,T}(leftendpoint(d),rightendpoint(d))
 
 function map_domain(map::AbstractAffineMap{<:Number}, domain::AbstractInterval)
@@ -538,7 +580,7 @@ function map_domain(map::AbstractAffineMap{<:Number}, domain::AbstractInterval)
     if le<re
         similar_interval(domain,le,re)
     else
-        similar_interval(switch_open_closed(domain),re,le)
+        similar_interval(switch_open_closed_if_applicable(domain),re,le)
     end
 end
 

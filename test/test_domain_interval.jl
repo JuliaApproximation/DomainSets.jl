@@ -460,27 +460,21 @@ function test_intervals()
     @test isempty(du6)
 
     # - setdiff of intervals
-    d1 = -2one(T).. 2one(T)
-    @test d1 \ (3one(T) .. 4one(T)) == d1
-    @test d1 \ (zero(T) .. one(T)) == UnionDomain((-2one(T)..zero(T))) ∪ UnionDomain((one(T).. 2one(T)))
-    @test d1 \ (zero(T) .. 3one(T)) == (-2one(T) .. zero(T))
-    @test d1 \ (-3one(T) .. zero(T)) == (zero(T) .. 2one(T))
-    @test d1 \ (-4one(T) .. -3one(T)) == d1
-    @test d1 \ (-4one(T) .. 4one(T)) == EmptySpace{T}()
-    @test setdiffdomain(d1, (3one(T) .. 4one(T))) == d1
-    @test setdiffdomain(d1, (zero(T) .. one(T))) == UnionDomain((-2one(T)..zero(T))) ∪ UnionDomain((one(T).. 2one(T)))
-    @test setdiffdomain(d1, (zero(T) .. 3one(T))) == (-2one(T) .. zero(T))
-    @test setdiffdomain(d1, (-3one(T) .. zero(T))) == (zero(T) .. 2one(T))
-    @test setdiffdomain(d1, (-4one(T) .. -3one(T))) == d1
-    @test setdiffdomain(d1, (-4one(T) .. 4one(T))) == EmptySpace{T}()
+    d1 = -T(2)..T(2)
+    @test d1 \ (3..4) == d1
+    @test d1 \ (0..1) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(1,2))
+    @test d1 \ (0..3) == Interval{:closed,:open,T}(-2,0)
+    @test d1 \ (-3..0) == Interval{:open,:closed,T}(0,2)
+    @test d1 \ (-4..(-3)) == d1
+    @test d1 \ (-4..4) == EmptySpace{T}()
 
     # mixed types
-    @test setdiffdomain(0..1, 0.0..0.5) == 0.5..1
+    @test setdiffdomain(0..1, 0.0..0.5) == Interval{:open,:closed,Float64}(0.5,1)
 
     @test setdiffdomain(d1, -3) == d1
-    @test setdiffdomain(d1, -2) == Interval{:open,:closed}(-2one(T),2one(T))
-    @test setdiffdomain(d1, 2one(T)) == Interval{:closed,:open}(-2one(T),2one(T))
-    @test setdiffdomain(d1, zero(T)) == UnionDomain(Interval{:closed,:open}(-2one(T),zero(T))) ∪ UnionDomain(Interval{:open,:closed}(zero(T),2one(T)))
+    @test setdiffdomain(d1, -2) == Interval{:open,:closed,T}(-2,2)
+    @test setdiffdomain(d1, T(2)) == Interval{:closed,:open,T}(-2,2)
+    @test setdiffdomain(d1, zero(T)) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(0,2))
 
     # - empty interval
     @test isempty(one(T)..zero(T))
