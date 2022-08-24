@@ -1,15 +1,15 @@
 Random.gentype(::Type{<:Domain{T}}) where T = T
 
-Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:ProductDomain}) = map(i->(rand(rng, i)), factors(s[]))
+Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:ProductDomain}) = toexternalpoint(s[], map(i->(rand(rng, i)), factors(s[])))
 
-Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:SimpleLazyDomain}) = rand(rng, superdomain(s[]))
+Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:SimpleLazyDomain}) = toexternalpoint(s[], rand(rng, superdomain(s[])))
 
 function Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Ball})
     # Technical details: http://extremelearning.com.au/how-to-generate-uniformly-random-points-on-n-spheres-and-n-balls/
 
     b = s[]
     
-    # for low dimensions, use rejection sampling - acceptance rate is at least 52%
+    # for low-dimensional balls, use rejection sampling - acceptance rate is at least 52%
     if dimension(b) <= 3
         while true
             r = rand(rng, boundingbox(b))
@@ -18,7 +18,7 @@ function Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Ball})
             end
         end
         
-    # for higher dimensions, use the "Mueller" method
+    # for higher dimensional balls, use the "Mueller" method
     else
         u = randn_dimension(rng, eltype(b), dimension(b))
         r = rand(rng)^(1/dimension(b))
