@@ -21,7 +21,7 @@ function Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Ball})
     # for higher dimensional balls, use the "Mueller" method
     else
         u = randn_dimension(rng, eltype(b), dimension(b))
-        r = rand(rng)^(1/dimension(b))
+        r = radius(b)*rand(rng)^(1/dimension(b))
         return (r/norm(u))*u + center(b)
     end
 end
