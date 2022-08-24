@@ -113,6 +113,13 @@ function test_rand(T)
         n_2 = sum(r in region_2 for r in rs)
         @test isapprox(n_1, n_2, rtol=0.1) 
     end
+
+    s = Sphere(2.0, [T(1.0), T(2.0)])
+    @test @inferred(Random.gentype(s)) == Vector{T}
+    @test typeof(rand(s)) == Random.gentype(s)
+    @test @inferred(rand(s)) in s
+    @test all(p in s for p in rand(s, 100))
+    test_rng_consistency(s)
 end
 
 function test_rng_consistency(set)

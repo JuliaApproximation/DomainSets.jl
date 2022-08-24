@@ -29,7 +29,10 @@ end
 randn_dimension(rng::AbstractRNG, t::Type{<:StaticVector}, d) = randn(rng, t)
 randn_dimension(rng::AbstractRNG, t::Type{<:Vector}, d) = randn(rng, eltype(t), d)
 
-# Technical notes
-# ===============
+# Implementation notes
+# ====================
 #
-# The methods implemented above are the only easy ones
+# The methods implemented above are the easy ones
+# Unions and intersections could be implemented with rejection sampling, but it might be inefficient
+# Sphere will require some decisions because `rand(sphere) in sphere` will usually only be approximately satisfied
+# Maps may be difficult because the map could distort the distribution so that it is not uniform.
