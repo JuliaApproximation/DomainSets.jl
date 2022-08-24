@@ -102,15 +102,16 @@ function test_rand(T)
 
     if T == Float64
         # Test numerical accuracy - two rectangles of the same size should have the same number of points
+        # Only works for Float64 since StableRNG doesn't generate BigFloats
         rng = StableRNG(1)
         n = 1_000_000
-        region_1 = Rectangle(zeros(4), [0.3, -0.3, 0.3, -0.3])
+        region_1 = Rectangle([0.0, -0.3, 0.0, -0.3], [0.3, 0.0, 0.3, 0.0]) .+ center(b)
         lower_corner = fill(-0.5, 4)
-        region_2 = Rectangle(lower_corner, lower_corner.+0.3)
+        region_2 = Rectangle(lower_corner, lower_corner.+0.3) .+ center(b)
         rs = rand(rng, b, n)
-        @show n_1 = sum(r in region_1 for r in rs)
-        @show n_2 = sum(r in region_2 for r in rs)
-        @test isapprox(n_1/n, n_2/n, atol=0.01) 
+        n_1 = sum(r in region_1 for r in rs)
+        n_2 = sum(r in region_2 for r in rs)
+        @test isapprox(n_1, n_2, rtol=0.1) 
     end
 end
 
