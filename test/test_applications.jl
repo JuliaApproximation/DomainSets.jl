@@ -59,15 +59,65 @@ function test_rand(T)
     @test typeof(rand(r)) == Random.gentype(r)
     @test @inferred(rand(r)) in r
 
-    hybrid_product = ProductDomain(["a", "b"], 1.0..2.0)
-    @test @inferred(Random.gentype(hybrid_product)) == Tuple{String, Float64}
+    hybrid_product = ProductDomain(["a", "b"], T(1.0)..T(2.0))
+    @test @inferred(Random.gentype(hybrid_product)) == Tuple{String, T}
     @test typeof(rand(hybrid_product)) == Random.gentype(hybrid_product)
     @test @inferred(rand(hybrid_product)) in hybrid_product
 
-    # b = Ball(2.0, SA[1.0, 2.0])
-    # @test @inferred(Random.gentype(r)) == SVector{2, T}
-    # @test typeof(rand(r)) == Random.gentype(r)
-    # @test @inferred(rand(r)) in r
+    b = Ball(2.0, SA[T(1.0), T(2.0)])
+    @test @inferred(Random.gentype(b)) == SVector{2, T}
+    if T == BigFloat
+        @test_broken typeof(rand(b)) == Random.gentype(b) # all rand tests for BigFloat StaticVector Balls are broken due to issue #114
+    else
+        @test typeof(rand(b)) == Random.gentype(b)
+        @test @inferred(rand(b)) in b
+        @test all(p in b for p in rand(b, 100))
+        test_rng_consistency(b)
+    end
+
+    b = Ball(2.0, [T(1.0), T(2.0)])
+    @test @inferred(Random.gentype(b)) == Vector{T}
+    @test typeof(rand(b)) == Random.gentype(b)
+    @test @inferred(rand(b)) in b
+    @test all(p in b for p in rand(b, 100))
+    test_rng_consistency(b)
+
+    b = Ball(2.0, T(1.0))
+    @test @inferred(Random.gentype(b)) == T
+    @test_broken typeof(rand(b)) == Random.gentype(b) # broken due to issue #113
+    @test_broken @inferred(rand(b)) in b # broken due to issue #113
+    # test_rng_consistency(b) # uncomment when issue #113 is fixed
+
+    # Higher dimension
+    b = Ball(2.0, SA[T(1.0), T(1.0), T(1.0), T(1.0)])
+    @test @inferred(Random.gentype(b)) == SVector{4, T}
+    if T == BigFloat
+        @test_broken typeof(rand(b)) == Random.gentype(b) # all rand tests for BigFloat StaticVector Balls are broken due to issue #114
+    else
+        @test typeof(rand(b)) == Random.gentype(b)
+        @test @inferred(rand(b)) in b
+        @test all(p in b for p in rand(b, 100))
+        test_rng_consistency(b)
+    end
+
+    if T == Float64
+        # Test numerical accuracy - two rectangles of the same size should have the same number of points
+        rng = StableRNG(1)
+        n = 1_000_000
+        region_1 = Rectangle(zeros(4), [0.3, -0.3, 0.3, -0.3])
+        lower_corner = fill(-0.5, 4)
+        region_2 = Rectangle(lower_corner, lower_corner.+0.3)
+        rs = rand(rng, b, n)
+        @show n_1 = sum(r in region_1 for r in rs)
+        @show n_2 = sum(r in region_2 for r in rs)
+        @test isapprox(n_1/n, n_2/n, atol=0.01) 
+    end
+end
+
+function test_rng_consistency(set)
+    rng1 = Random.MersenneTwister(1)
+    rng2 = Random.MersenneTwister(1)
+    @test rand(rng1, set) == rand(rng2, set)
 end
 
 function test_applications(T)
