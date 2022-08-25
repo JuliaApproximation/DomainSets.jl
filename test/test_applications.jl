@@ -84,9 +84,9 @@ function test_rand(T)
 
     b = Ball(2.0, T(1.0))
     @test @inferred(Random.gentype(b)) == T
-    @test_broken typeof(rand(b)) == Random.gentype(b) # broken due to issue #113
-    @test_broken @inferred(rand(b)) in b # broken due to issue #113
-    # test_rng_consistency(b) # uncomment when issue #113 is fixed
+    @test typeof(rand(b)) == Random.gentype(b)
+    @test @inferred(rand(b)) in b
+    test_rng_consistency(b)
 
     # Higher dimension
     b = Ball(2.0, SA[T(1.0), T(1.0), T(1.0), T(1.0)])

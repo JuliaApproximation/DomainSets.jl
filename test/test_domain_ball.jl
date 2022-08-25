@@ -87,6 +87,7 @@ function test_balls()
     @test normal(UnitDisk(), [sqrt(2)/2, sqrt(2)/2]) ≈ [sqrt(2)/2, sqrt(2)/2]
 
     @test boundingbox(UnitBall{Float64}()) == ChebyshevInterval()
+    @test boundingbox(Ball(1.0, 1.0)) == 0.0..2.0 # issue #113
 
     @test convert(SublevelSet, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
     @test convert(SublevelSet{SVector{2,Float64}}, UnitDisk()) isa SublevelSet{SVector{2,Float64},:closed}
