@@ -11,8 +11,9 @@ function Base.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Ball})
     
     # for low-dimensional balls, use rejection sampling - acceptance rate is at least 52%
     if dimension(b) <= 3
+        bb = boundingbox(b)
         while true
-            r = rand(rng, boundingbox(b))
+            r = rand(rng, bb)
             if r in b
                 return r
             end

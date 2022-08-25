@@ -66,14 +66,10 @@ function test_rand(T)
 
     b = Ball(2.0, SA[T(1.0), T(2.0)])
     @test @inferred(Random.gentype(b)) == SVector{2, T}
-    if T == BigFloat
-        @test_broken typeof(rand(b)) == Random.gentype(b) # all rand tests for BigFloat StaticVector Balls are broken due to issue #114
-    else
-        @test typeof(rand(b)) == Random.gentype(b)
-        @test @inferred(rand(b)) in b
-        @test all(p in b for p in rand(b, 100))
-        test_rng_consistency(b)
-    end
+    @test typeof(rand(b)) == Random.gentype(b)
+    @test @inferred(rand(b)) in b
+    @test all(p in b for p in rand(b, 100))
+    test_rng_consistency(b)
 
     b = Ball(2.0, [T(1.0), T(2.0)])
     @test @inferred(Random.gentype(b)) == Vector{T}
@@ -89,21 +85,16 @@ function test_rand(T)
     test_rng_consistency(b)
 
     # Higher dimension
-    b = Ball(2.0, SA[T(1.0), T(1.0), T(1.0), T(1.0)])
-    @test @inferred(Random.gentype(b)) == SVector{4, T}
-    if T == BigFloat
-        @test_broken typeof(rand(b)) == Random.gentype(b) # all rand tests for BigFloat StaticVector Balls are broken due to issue #114
-    else
+    # Only works for Float64 since there is no randn(BigFloat)
+    if T == Float64
+        b = Ball(1.5, SA[1.0, -1.0, 2.0, -3.0])
+        @test @inferred(Random.gentype(b)) == SVector{4, T}
         @test typeof(rand(b)) == Random.gentype(b)
         @test @inferred(rand(b)) in b
         @test all(p in b for p in rand(b, 100))
         test_rng_consistency(b)
-    end
 
-    if T == Float64
         # Test numerical accuracy - two rectangles of the same size should have the same number of points
-        # Only works for Float64 since StableRNG doesn't generate BigFloats
-        b = Ball(1.5, SA[1.0, -1.0, 2.0, -3.0])
         rng = StableRNG(1)
         n = 1_000_000
         region_1 = Rectangle([0.0, -0.3, 0.0, -0.3], [0.3, 0.0, 0.3, 0.0]) .+ center(b)
