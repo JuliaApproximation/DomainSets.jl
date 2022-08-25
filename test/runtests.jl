@@ -1,4 +1,4 @@
-using Test, LinearAlgebra, StaticArrays
+using Test, LinearAlgebra, StaticArrays, Random, StableRNGs
 
 using DomainSets
 using CompositeTypes.Indexing

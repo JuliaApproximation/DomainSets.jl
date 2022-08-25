@@ -12,7 +12,7 @@ function corners(d::HyperRectangle)
 	left = leftendpoint(d)
 	right = rightendpoint(d)
     N = length(left)
-    corners = [similar(point_in_domain(d)) for i in 1:2^N]
+    corners = [zeros(numtype(d),dimension(d)) for i in 1:2^N]
     # All possible permutations of the corners
     for i=1:2^length(left)
         for j=1:N
