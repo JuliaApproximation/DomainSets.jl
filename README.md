@@ -1,7 +1,6 @@
 # DomainSets.jl
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/latest)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/dev)
 [![Build Status](https://github.com/JuliaApproximation/DomainSets.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/DomainSets.jl/actions)
 [![Coverage Status](https://codecov.io/gh/JuliaApproximation/DomainSets.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/DomainSets.jl)
 
