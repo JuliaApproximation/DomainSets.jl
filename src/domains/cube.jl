@@ -354,5 +354,5 @@ ProductDomain{T}(domains::D...) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
 	FixedIntervalProduct(convert.(Ref(Domain{S}), domains))
 ProductDomain{T}(domains::NTuple{N,D}) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
 	FixedIntervalProduct(convert.(Ref(Domain{S}), domains))
-ProductDomain{T}(domains::SVector{N,<:FixedInterval}) where {N,S,T<:SVector{N}} =
+ProductDomain{T}(domains::SVector{N,<:FixedInterval}) where {N,T<:SVector{N}} =
 	FixedIntervalProduct(domains)
