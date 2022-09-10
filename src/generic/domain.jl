@@ -6,8 +6,8 @@ eltype(::Type{<:Domain{T}}) where {T} = T
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
 numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
 
-convert_numtype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_numtype(T,U)}, d)
-convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_prectype(T,U)}, d)
+convert_numtype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_numtype(T, U)}, d)
+convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_prectype(T, U)}, d)
 
 Domain(d) = convert(Domain, d)
 
@@ -40,9 +40,9 @@ convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}
 convert_eltype(::Type{T}, d::AbstractRange) where {T} = map(T, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 
-promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
-promote(d1::Domain, d2) = promote_domains((d1,d2))
-promote(d1, d2::Domain) = promote_domains((d1,d2))
+promote(d1::Domain, d2::Domain) = promote_domains((d1, d2))
+promote(d1::Domain, d2) = promote_domains((d1, d2))
+promote(d1, d2::Domain) = promote_domains((d1, d2))
 
 "A `EuclideanDomain` is any domain whose eltype is `<:StaticVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
@@ -50,7 +50,7 @@ const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
 "A `VectorDomain` is any domain whose eltype is `Vector{T}`."
 const VectorDomain{T} = Domain{Vector{T}}
 
-const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
+const AbstractArrayDomain{T} = Domain{<:AbstractArray{T}}
 
 CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 
@@ -60,7 +60,7 @@ dimension(::Domain{T}) where {T} = euclideandimension(T)
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}) where {S,T} =
-    _iscompatiblepair(x, d, S, T, promote_type(S,T))
+    _iscompatiblepair(x, d, S, T, promote_type(S, T))
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = true
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{Any}) where {S,T} = false
 _iscompatiblepair(x, d, ::Type{S}, ::Type{Any}, ::Type{Any}) where {S} = true
@@ -68,19 +68,19 @@ _iscompatiblepair(x, d, ::Type{S}, ::Type{Any}, ::Type{Any}) where {S} = true
 # Some generic cases where we can be sure:
 iscompatiblepair(x::SVector{N}, ::EuclideanDomain{N}) where {N} = true
 iscompatiblepair(x::SVector{N}, ::EuclideanDomain{M}) where {N,M} = false
-iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)==N
+iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x) == N
 
 # Note: there are cases where this warning reveals a bug, and cases where it is
 # annoying. In cases where it is annoying, the domain may want to specialize `in`.
 compatible_or_false(x, domain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(eltype(domain)). Returning false."; false)
 
-compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
+compatible_or_false(x::AbstractVector, domain::AbstractArrayDomain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
 
 
 "Promote point and domain to compatible types."
-promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x),eltype(d)))
+promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x), eltype(d)))
 _promote_pair(x, d, ::Type{T}) where {T} = convert(T, x), convert(Domain{T}, d)
 _promote_pair(x, d, ::Type{Any}) = x, d
 # Some exceptions:
@@ -91,10 +91,10 @@ promote_pair(x, d::Domain{Any}) = x, d
 # - tuples: these are typically composite domains and the elements may be promoted later on
 promote_pair(x::Tuple, d::Domain{<:Tuple}) = x, d
 # - abstract vectors: promotion may be expensive
-promote_pair(x::AbstractVector, d::AbstractVectorDomain) = x, d
+promote_pair(x::AbstractVector, d::AbstractArrayDomain) = x, d
 # - SVector: promotion is likely cheap
 promote_pair(x::AbstractVector{S}, d::EuclideanDomain{N,T}) where {N,S,T} =
-    _promote_pair(x, d, SVector{N,promote_type(S,T)})
+    _promote_pair(x, d, SVector{N,promote_type(S, T)})
 
 
 # At the level of Domain we attempt to promote the arguments to compatible
@@ -112,7 +112,7 @@ a domain. Typically, the tolerance is close to the precision limit of the numeri
 type associated with the domain.
 """
 default_tolerance(d::Domain) = default_tolerance(prectype(d))
-default_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
+default_tolerance(::Type{T}) where {T<:AbstractFloat} = 100eps(T)
 
 
 """

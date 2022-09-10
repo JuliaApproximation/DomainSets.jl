@@ -114,7 +114,7 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain, productdomain,
-    VcatDomain, VectorProductDomain, TupleProductDomain
+    VcatDomain, ArrayProductDomain, TupleProductDomain
 
 # from generic/mapped.jl
 export MappedDomain,
