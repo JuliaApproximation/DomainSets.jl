@@ -75,7 +75,7 @@ iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x) 
 compatible_or_false(x, domain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(eltype(domain)). Returning false."; false)
 
-compatible_or_false(x::AbstractVector, domain::AbstractArrayDomain) =
+compatible_or_false(x::AbstractArray, domain::AbstractArrayDomain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
 
 
@@ -91,7 +91,7 @@ promote_pair(x, d::Domain{Any}) = x, d
 # - tuples: these are typically composite domains and the elements may be promoted later on
 promote_pair(x::Tuple, d::Domain{<:Tuple}) = x, d
 # - abstract vectors: promotion may be expensive
-promote_pair(x::AbstractVector, d::AbstractArrayDomain) = x, d
+promote_pair(x::AbstractArray, d::AbstractArrayDomain) = x, d
 # - SVector: promotion is likely cheap
 promote_pair(x::AbstractVector{S}, d::EuclideanDomain{N,T}) where {N,S,T} =
     _promote_pair(x, d, SVector{N,promote_type(S, T)})
