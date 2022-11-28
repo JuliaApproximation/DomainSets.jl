@@ -279,6 +279,7 @@ function test_affine_maps(T)
     @test DomainSets.to_matrix(T, A, 2) == A
     @test DomainSets.to_matrix(T, 2, 3) == 2
     @test DomainSets.to_matrix(T, UniformScaling(2), 3) == 2
+    @test DomainSets.to_matrix(T, LinearAlgebra.I, zero(T)) isa T
     @test DomainSets.to_matrix(SVector{2,T}, 2, SVector(1,1)) == SMatrix{2,2}(2,0,0,2)
     @test DomainSets.to_matrix(Vector{T}, 2, [1,2]) == [2 0 ; 0 2]
 

@@ -133,7 +133,8 @@ to_matrix(::Type{T}, A::UniformScaling) where {T<:AbstractVector} = A
 to_matrix(::Type{T}, A, b) where {T} = A
 to_matrix(::Type{T}, A::AbstractMatrix, b) where {T} = A
 to_matrix(::Type{T}, A::Number, b::Number) where {T<:Number} = A
-to_matrix(::Type{T}, A::UniformScaling, b::Number) where {T<:Number} = A.λ
+to_matrix(::Type{T}, A::UniformScaling{S}, b::Number) where {S,T<:Number} =
+	convert(promote_type(S,T,typeof(b)), A.λ)
 to_matrix(::Type{SVector{N,T}}, A::NumberLike, b::SVector{N,T}) where {N,T} = A * one(SMatrix{N,N,T})
 to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVector{S}} =
     A * Array{S,2}(I, length(b), length(b))
