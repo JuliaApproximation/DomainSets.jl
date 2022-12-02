@@ -49,11 +49,6 @@ function point_in_domain(d::AbstractInterval{T}) where {T<:Integer}
 end
 
 
-isapprox(d1::AbstractInterval, d2::AbstractInterval) =
-    isapprox(leftendpoint(d1), leftendpoint(d2); atol=default_tolerance(d1)) &&
-    isapprox(rightendpoint(d1), rightendpoint(d2); atol=default_tolerance(d1))
-
-
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 corners(d::AbstractInterval) = [leftendpoint(d), rightendpoint(d)]
 
