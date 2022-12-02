@@ -213,7 +213,7 @@ function test_intervals()
 
         @test (0..1) ≈ (1e-16..1)
         @test (-1..0) ≈ (-1..1e-16)
-        @test isapprox(HalfLine(), 0..Inf)
+        @test isapprox(HalfLine(), 0..Inf, atol=100eps())
     end
 
     @testset "mapping between intervals" begin

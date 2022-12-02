@@ -48,10 +48,14 @@ function point_in_domain(d::AbstractInterval{T}) where {T<:Integer}
     end
 end
 
+# TODO: type-piracy, should be removed in the next breaking release
+function isapprox(d1::AbstractInterval, d2::AbstractInterval;
+        atol=default_tolerance(d1),
+        rtol=Base.rtoldefault(eltype(d1), eltype(d2), atol))
 
-isapprox(d1::AbstractInterval, d2::AbstractInterval) =
-    isapprox(leftendpoint(d1), leftendpoint(d2); atol=default_tolerance(d1)) &&
-    isapprox(rightendpoint(d1), rightendpoint(d2); atol=default_tolerance(d1))
+    isapprox(leftendpoint(d1), leftendpoint(d2); atol, rtol) &&
+    isapprox(rightendpoint(d1), rightendpoint(d2); atol, rtol)
+end
 
 
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
