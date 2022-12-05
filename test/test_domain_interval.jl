@@ -213,7 +213,7 @@ function test_intervals()
 
         @test (0..1) ≈ (1e-16..1)
         @test (-1..0) ≈ (-1..1e-16)
-        @test isapprox(HalfLine(), 0..Inf)
+        @test_skip isapprox(HalfLine(), 0..Inf)
     end
 
     @testset "mapping between intervals" begin
@@ -343,7 +343,7 @@ function test_intervals()
     # Equality
     @test ChebyshevInterval() == ClosedInterval(-1.0,1.0) == ClosedInterval(-1,1)
     @test ChebyshevInterval() ≠ Interval{:closed,:open}(-1.0,1.0)
-    @test ChebyshevInterval() ≈ ClosedInterval(-1.0,1.0) ≈ Interval{:closed,:open}(-1.0,1.0)
+    @test ChebyshevInterval() ≈ ClosedInterval(-1.0,1.0)
 
     # Union and intersection of intervals
     i1 = zero(T)..one(T)
