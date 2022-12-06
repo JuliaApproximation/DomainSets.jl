@@ -59,7 +59,7 @@ end
 
 
 intersectdomain1(d1::Point, d2) = d1.x ∈ d2 ? d1 : EmptySpace{eltype(d1)}()
-intersectdomain1(d1, d2::Point) = d2.x ∈ d1 ? d2 : EmptySpace{eltype(d2)}()
+intersectdomain2(d1, d2::Point) = d2.x ∈ d1 ? d2 : EmptySpace{eltype(d2)}()
 
 # Interval minus a point:
 setdiffdomain(d::Interval, x::Number) = setdiffdomain(d, Point(x))
