@@ -9,18 +9,6 @@ using Random: AbstractRNG
 using IntervalSets
 using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
 
-# deprecations in v0.5
-@deprecate IntersectionDomain IntersectDomain
-@deprecate DifferenceDomain SetdiffDomain
-@deprecate FlexibleUnitCube DynamicUnitCube
-@deprecate FlexibleUnitSphere DynamicUnitSphere
-@deprecate FlexibleUnitBall DynamicUnitBall
-@deprecate Composition ComposedMap
-
-@deprecate element component
-@deprecate elements components
-@deprecate numelements ncomponents
-
 
 ################################
 ## Exhaustive list of imports
@@ -114,7 +102,8 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain, productdomain,
-    VcatDomain, VectorProductDomain, TupleProductDomain
+    VcatDomain, VectorProductDomain, TupleProductDomain,
+    factors
 
 # from generic/mapped.jl
 export MappedDomain,
