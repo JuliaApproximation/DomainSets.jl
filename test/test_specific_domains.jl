@@ -246,6 +246,13 @@ include("test_domain_simplex.jl")
         d1 = Domain(Set([1,2,3]))
         d2 = Point(1) ∪ Point(2) ∪ Point(3)
 
+        @test Point(0.5) ∩ (0..1) == Point(0.5)
+        @test (0..1) ∩ Point(0.5) == Point(0.5)
+        @test isempty(Point(0.5) ∩ (1..2))
+        @test isempty((1..2) ∩ Point(0.5))
+        @test Point(0.5) ∩ 0.5 == Point(0.5)
+        @test isempty(Point(0.5) ∩ 0)
+
         @test d1 == d2
 
         @test convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
@@ -312,6 +319,7 @@ include("test_domain_simplex.jl")
         @test canonicaldomain(Domain([1,2,3])) == [1,2,3]
 
         d = DomainSets.ExampleNamedDomain(UnitBall())
+        @test !DomainSets.isinterval(d)
         @test superdomain(d) == UnitBall()
         @test hascanonicaldomain(d)
         @test DomainSets.simplifies(d)

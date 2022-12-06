@@ -105,6 +105,7 @@ combine
 abstract type DerivedDomain{T} <: SimpleLazyDomain{T} end
 
 isempty(d::DerivedDomain) = isempty(superdomain(d))
+isinterval(d::DerivedDomain) = isinterval(superdomain(d))
 
 # We assume the derived domain and the superdomain are equal
 canonicaldomain(d::DerivedDomain) = canonicaldomain(superdomain(d))

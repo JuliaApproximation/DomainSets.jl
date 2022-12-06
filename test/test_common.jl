@@ -83,6 +83,20 @@ function test_numtype()
     @test promote_numtype(2, 3.0+im, big(4)) isa Tuple{Complex{BigFloat},Complex{BigFloat},Complex{BigFloat}}
 end
 
+using DomainSets: convert_eltype
+function test_eltype()
+    @test convert_eltype(Float64, Point(0)) isa Point{Float64}
+    @test convert_eltype(Float64, Point(0)) == Point(0)
+    @test convert_eltype(Float64, [1,2]) isa Vector{Float64}
+    @test convert_eltype(Float64, [1,2]) == [1,2]
+    @test convert_eltype(Float64, Set([1,2])) isa Set{Float64}
+    @test convert_eltype(Float64, Set([1,2])) == Set([1,2])
+    @test convert_eltype(Float64, 1:5) isa AbstractVector{Float64}
+    @test convert_eltype(Float64, 1:5) == 1:5
+    @test convert_eltype(Float64, 1) isa Float64
+    @test convert_eltype(Float64, 1) == 1
+end
+
 @testset "common functionality" begin
     @testset "dimension" begin
         test_dimension()
@@ -95,5 +109,8 @@ end
     end
     @testset "numtype" begin
         test_numtype()
+    end
+    @testset "eltype" begin
+        test_eltype()
     end
 end

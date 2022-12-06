@@ -39,6 +39,7 @@ _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
 convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
 convert_eltype(::Type{T}, d::AbstractRange) where {T} = map(T, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
+convert_eltype(::Type{T}, d::Number) where {T} = convert(T, d)
 
 promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
 promote(d1::Domain, d2) = promote_domains((d1,d2))
