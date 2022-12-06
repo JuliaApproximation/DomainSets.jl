@@ -57,6 +57,10 @@ for op in (:+,:-)
     @eval $op(a::Point, b::Point) = Point($op(a.x,b.x))
 end
 
+
+intersectdomain1(d1::Point, d2) = d1.x ∈ d2 ? d1 : EmptySpace{eltype(d1)}()
+intersectdomain1(d1, d2::Point) = d2.x ∈ d1 ? d2 : EmptySpace{eltype(d2)}()
+
 # Interval minus a point:
 setdiffdomain(d::Interval, x::Number) = setdiffdomain(d, Point(x))
 setdiffdomain(d::Interval, p::Point) = setdiffdomain(promote_domains((d,p))...)
