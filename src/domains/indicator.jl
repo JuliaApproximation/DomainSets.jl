@@ -72,7 +72,7 @@ generator_domain(gen::Base.Generator{<:Domain}) = BoundedIndicatorFunction(gen.f
 generator_domain(gen::Base.Generator{<:Base.Iterators.ProductIterator}) =
     productgenerator_domain(gen, gen.iter.iterators)
 
-function productgenerator_domain(gen, domains::Tuple{Vararg{Domain,N} where N})
+function productgenerator_domain(gen, domains::Tuple{Vararg{Domain}})
     domain = TupleProductDomain(gen.iter.iterators)
     BoundedIndicatorFunction(gen.f, domain)
 end
