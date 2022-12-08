@@ -14,16 +14,14 @@ issubset2(d1, d2) = d1 == d2
 # Domains, or when d2 is a Domain, anticipating that issubset(d1::Domain,d2)
 # is often harder to implement.
 
-issubset(d1::AbstractArray, d2::Domain) = all(in.(d1, Ref(d2)))
-issubset(d1::AbstractSet, d2::Domain) = all(in.(d1, Ref(d2)))
+issubset(d1::AbstractArray, d2::Domain) = all(in(d2), d1)
+issubset(d1::AbstractSet, d2::Domain) = all(in(d2), d1)
 
 ############################
 # The union of two domains
 ############################
 
 """
-```using DomainSets```
-
 A `UnionDomain` represents the union of a set of domains.
 """
 struct UnionDomain{T,DD} <: CompositeDomain{T}
@@ -32,9 +30,9 @@ end
 
 """
 The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways:
-- with a list of arguments: UnionDomain(d1, d2, ...)
-- with a single domain: UnionDomain(d::Domain)
-- or with any iterable list of domains: UnionDomain(domains)
+- with a list of arguments: `UnionDomain(d1, d2, ...)`
+- with a single domain: `UnionDomain(d::Domain)`
+- or with any iterable list of domains: `UnionDomain(domains)`
 """
 UnionDomain(domains...) = UnionDomain(domains)
 UnionDomain(d::Domain) = UnionDomain((d,))
