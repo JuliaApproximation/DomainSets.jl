@@ -1,14 +1,14 @@
 @testset "set operations" begin
     @testset "union" begin
         d1 = UnitDisk()
-        d2 = (-.9..0.9)^2
+        d2 = (-0.9..0.9)^2
         d3 = ProductDomain(-.5 .. -.1, ChebyshevInterval())
         d4 = (0.0..1.5)
         d5 = [1.0,3.0]
 
         @test convert(Domain{SVector{2,Float64}}, d3) isa Domain{SVector{2,Float64}}
 
-        u1 = UnitDisk() ∪ (-.9..0.9)^2
+        u1 = UnitDisk() ∪ (-0.9..0.9)^2
         u2 = u1 ∪ d3
         @test dimension(u1) == 2
         @test dimension(u2) == 2
@@ -111,19 +111,19 @@
         @test intersectdomain(0..1, 0.5..1.5) == (0..1) & (0.5..1.5)
 
         # intersection of productdomains
-        i1 = intersectdomain((-.4..0.4)^2, (-.5 .. 0.5) × (-.1.. 0.1))
+        i1 = intersectdomain((-0.4..0.4)^2, (-.5 .. 0.5) × (-0.1.. 0.1))
         @test i1 == productdomain(-0.4..0.4, -0.1..0.1)
         show(io,i1)
         @test String(take!(io)) == "(-0.4..0.4) × (-0.1..0.1)"
         @test intersectdomain(productdomain(UnitDisk(),-1..1), productdomain(-1..1, UnitDisk())) isa IntersectDomain
-        i2 = UnitDisk() & (-.4..0.4)^2
+        i2 = UnitDisk() & (-0.4..0.4)^2
         show(io, textmime, i2)
         @test String(take!(io)) == "UnitDisk() ∩ ((-0.4..0.4) × (-0.4..0.4))"
         @test dimension(i1) == 2
         @test dimension(i2) == 2
 
-        i3 = ((-.5 .. 0.5) × (-.1.. 0.1)) & i2
-        i4 = i2 & ((-.5 .. 0.5) × (-.1.. 0.1))
+        i3 = ((-.5 .. 0.5) × (-0.1.. 0.1)) & i2
+        i4 = i2 & ((-.5 .. 0.5) × (-0.1.. 0.1))
         i5 = i3 & i2
         @test SVector(0.,.05) ∈ i3
         @test SVector(0.,.05) ∈ i4
@@ -167,7 +167,7 @@
     end
 
     @testset "setdiff" begin
-        d1 = UnitDisk() \ ProductDomain(-.5..0.5, -.1..0.1)
+        d1 = UnitDisk() \ ProductDomain(-0.5..0.5, -0.1..0.1)
         @test dimension(d1) == 2
         @test SVector(0.,.74) ∈ d1
         @test SVector(0.,.25) ∈ d1
@@ -177,7 +177,7 @@
         @test approx_in(SVector(1.01, 0.1), d1, 0.1)
         show(io, textmime, d1)
         @test String(take!(io)) == "UnitDisk() \\ ((-0.5..0.5) × (-0.1..0.1))"
-        @test setdiff(d1, ProductDomain(-0.5..0.5, -.1..0.1)) == d1
+        @test setdiff(d1, ProductDomain(-0.5..0.5, -0.1..0.1)) == d1
 
         d2 = SetdiffDomain(0.0..3.0, [1.0, 2.5])
         @test d2 isa Domain{Float64}
