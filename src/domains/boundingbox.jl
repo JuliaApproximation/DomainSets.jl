@@ -10,7 +10,7 @@ unionbox(d1::Domain, d2::Domain, domains...) =
 
 unionbox(d1::Domain{T}, d2::Domain{T}) where {T} = unionbox1(d1, d2)
 unionbox1(d1, d2) = unionbox2(d1, d2)
-unionbox2(d1, d2) = FullSpace{eltype(d1)}()
+unionbox2(d1, d2) = fullspace(d1)
 unionbox1(d1::EmptySpace, d2) = d2
 unionbox1(d1::FullSpace, d2) = d1
 unionbox2(d1, d2::EmptySpace) = d1
@@ -23,7 +23,7 @@ function unionbox(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T}
     c, d = endpoints(d2)
     A = min(a, c)
     B = max(b, d)
-    isinf(A) && isinf(B) ? FullSpace{T}() : A..B
+    isinf(A) && isinf(B) ? fullspace(T) : A..B
 end
 
 unionbox(d1::HyperRectangle{T}, d2::HyperRectangle{T}) where {T} =
@@ -37,7 +37,7 @@ intersectbox(d1::Domain, d2::Domain, domains...) =
 
 intersectbox(d1::Domain{T}, d2::Domain{T}) where {T} = intersectbox1(d1, d2)
 intersectbox1(d1, d2) = intersectbox2(d1, d2)
-intersectbox2(d1, d2) = FullSpace{eltype(d1)}()
+intersectbox2(d1, d2) = fullspace(d1)
 intersectbox1(d1::EmptySpace, d2) = d1
 intersectbox1(d1::FullSpace, d2) = d2
 intersectbox2(d1, d2::EmptySpace) = d2
@@ -50,7 +50,7 @@ intersectbox(d1::AbstractInterval{T}, d2::AbstractInterval{T}) where {T} =
 
 function intersectbox(d1::HyperRectangle{T}, d2::HyperRectangle{T}) where {T}
     d = Rectangle{T}(map(intersectbox, components(d1), components(d2)))
-    isempty(d) ? EmptySpace{T}() : d
+    isempty(d) ? emptyspace(d) : d
 end
 
 boundingbox(d::AbstractMappedDomain) = map_boundingbox(boundingbox(superdomain(d)), forward_map(d))

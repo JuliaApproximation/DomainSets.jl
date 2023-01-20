@@ -295,7 +295,7 @@ function similar_interval(d::RealLine{T}, a::S, b::S) where {S,T}
 end
 
 endpoints(d::RealLine{T}) where {T} = (-T(Inf), T(Inf))
-boundary(d::RealLine{T}) where {T} = EmptySpace{T}()
+boundary(d::RealLine) = emptyspace(d)
 interior(d::RealLine) = d
 
 isfullspace(d::RealLine) = true
@@ -382,7 +382,7 @@ function intersectdomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpoints
     d = intersect(Interval(d1), Interval(d2))
     if isempty(d)
         # but avoid returning an interval like 2..1
-        EmptySpace{eltype(d)}()
+        emptyspace(d)
     elseif leftendpoint(d)==rightendpoint(d)
         # and avoid an interval like 1..1
         Point(leftendpoint(d))
@@ -399,7 +399,7 @@ end
 # domains of the same type.
 intersectdomain(d1::D, d2::D) where {D <: FixedInterval} = d1
 uniondomain(d1::D, d2::D) where {D <: FixedInterval} = d1
-setdiffdomain(d1::D, d2::D) where {D <: FixedInterval} = EmptySpace{eltype(D)}()
+setdiffdomain(d1::D, d2::D) where {D <: FixedInterval} = emptyspace(d1)
 
 # [0,1] ∩ [-1,1] = [0,1]
 intersectdomain(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
@@ -408,14 +408,14 @@ intersectdomain(d1::ChebyshevInterval{T}, d2::UnitInterval{T}) where {T} = UnitI
 intersectdomain(d1::UnitInterval{T}, d2::NonnegativeRealLine{T}) where {T} = UnitInterval{T}()
 intersectdomain(d1::NonnegativeRealLine{T}, d2::UnitInterval{T}) where {T} = UnitInterval{T}()
 # [0,1] ∩ (-∞,0) = {}
-intersectdomain(d1::UnitInterval{T}, d2::NegativeRealLine{T}) where {T} = EmptySpace{T}()
-intersectdomain(d1::NegativeRealLine{T}, d2::UnitInterval{T}) where {T} = EmptySpace{T}()
+intersectdomain(d1::UnitInterval{T}, d2::NegativeRealLine{T}) where {T} = emptyspace(T)
+intersectdomain(d1::NegativeRealLine{T}, d2::UnitInterval{T}) where {T} = emptyspace(T)
 # [-1,1] ∩ [0,∞) = [0,1]
 intersectdomain(d1::ChebyshevInterval{T}, d2::NonnegativeRealLine{T}) where {T} = UnitInterval{T}()
 intersectdomain(d1::NonnegativeRealLine{T}, d2::ChebyshevInterval{T}) where {T} = UnitInterval{T}()
 # open and closed halfline
-intersectdomain(d1::HalfLine{T}, d2::NegativeRealLine{T}) where {T} = EmptySpace{T}()
-intersectdomain(d1::NegativeRealLine{T}, d2::HalfLine{T}) where {T} = EmptySpace{T}()
+intersectdomain(d1::HalfLine{T}, d2::NegativeRealLine{T}) where {T} = emptyspace(T)
+intersectdomain(d1::NegativeRealLine{T}, d2::HalfLine{T}) where {T} = emptyspace(T)
 intersectdomain(d1::NonnegativeRealLine{T}, d2::NonpositiveRealLine{T}) where {T} = Point(zero(T))
 intersectdomain(d1::NonpositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = Point(zero(T))
 intersectdomain(d1::NonnegativeRealLine{T}, d2::PositiveRealLine{T}) where {T} = d2
@@ -452,9 +452,9 @@ uniondomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T} = 
 
 
 # [0,1] ∖ [-1,1] = {}
-setdiffdomain(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = EmptySpace{T}()
+setdiffdomain(d1::UnitInterval{T}, d2::ChebyshevInterval{T}) where {T} = emptyspace(T)
 # [0,1] ∖ [0,∞) = {}
-setdiffdomain(d1::UnitInterval{T}, d2::NonnegativeRealLine{T}) where {T} = EmptySpace{T}()
+setdiffdomain(d1::UnitInterval{T}, d2::NonnegativeRealLine{T}) where {T} = emptyspace(T)
 # [0,1] ∖ (-∞,0) = [0,1]
 setdiffdomain(d1::UnitInterval{T}, d2::NegativeRealLine{T}) where {T} = d1
 # [-1,1] ∖ (-∞,0) = [0,1]
@@ -527,7 +527,7 @@ function setdiffdomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpointsIn
     isempty(d1) && return d1
     isempty(d2) && return d1
     # intervals aren't empty: we now know that a1 ≤ b1 and a2 ≤ b2
-    d1 == d2 && return EmptySpace{T}()
+    d1 == d2 && return emptyspace(T)
     # Order: a1 b1 a2 b2
     b1 < a2 && return d1
     if a1 < a2 == b1 ≤ b2
@@ -554,10 +554,10 @@ function setdiffdomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpointsIn
     end
     # Order: a2 a1 b1 b2
     if a2 < a1 ≤ b1 < b2
-        return EmptySpace{T}()
+        return emptyspace(T)
     end
     if a2 ≤ a1 ≤ b1 ≤ b2
-        return (L2 == :open && R2 == :open) ? d1 : EmptySpace{T}()
+        return (L2 == :open && R2 == :open) ? d1 : emptyspace(T)
     end
     # Order: a2 b2 a1 b1
     if b2 == a1 ≤ b1
