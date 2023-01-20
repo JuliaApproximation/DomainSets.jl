@@ -78,18 +78,18 @@ mapto_canonical(ctype::Parameterization, d) = leftinverse(mapfrom_canonical(ctyp
 
 # We define some convenience functions:
 "Return a parameter domain which supports a `parameterization`."
-parameterdomain(d::Domain) = canonicaldomain(Parameterization(), d)
+parameterdomain(d) = canonicaldomain(Parameterization(), d)
 
 "Return a parameterization of the given domain."
-parameterization(d::Domain) = mapfrom_canonical(Parameterization(), d)
+parameterization(d) = mapfrom_canonical(Parameterization(), d)
 
 "Does the domain have a parameterization?"
 hasparameterization(d) = hascanonicaldomain(Parameterization(), d)
 
-mapfrom_parameterdomain(d::Domain) = mapfrom_canonical(Parameterization(), d)
-mapto_parameterdomain(d::Domain) = mapto_canonical(Parameterization(), d)
-mapfrom_parameterdomain(d::Domain, x) = mapfrom_canonical(Parameterization(), d, x)
-mapto_parameterdomain(d::Domain, x) = mapto_canonical(Parameterization(), d, x)
+mapfrom_parameterdomain(d) = mapfrom_canonical(Parameterization(), d)
+mapto_parameterdomain(d) = mapto_canonical(Parameterization(), d)
+mapfrom_parameterdomain(d, x) = mapfrom_canonical(Parameterization(), d, x)
+mapto_parameterdomain(d, x) = mapto_canonical(Parameterization(), d, x)
 
 
 "Return a map from domain `d1` to domain `d2`."
@@ -109,13 +109,16 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 
 ## Equality for domains
 
+@deprecate isequal1(d1,d2) isequaldomain1(d1,d2)
+@deprecate isequal2(d1,d2) isequaldomain2(d1,d2)
+
 ## Note: here we generically define the equality of Domains, using the framework
 # of canonical domains above. It has the benefit of automatically recognizing
 # equality between some domains, but a side-effect is that the default
 # (implicitly defined) equality for a concrete domain type is overruled.
 # To be safe, concrete domains should specialize `==`.
-==(d1::Domain, d2::Domain) = isequal1(d1, d2)
+==(d1::Domain, d2::Domain) = isequaldomain1(d1, d2)
 # simplify the first argument
-isequal1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequal2(d1, d2)
+isequaldomain1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequaldomain2(d1, d2)
 # simplify the second argument
-isequal2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : d1===d2
+isequaldomain2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : d1===d2
