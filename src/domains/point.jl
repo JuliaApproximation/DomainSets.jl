@@ -42,7 +42,7 @@ boundingbox(d::Point) = d.x..d.x
 infimum(d::Point) = d.x
 supremum(d::Point) = d.x
 
-interior(d::Point{T}) where {T} = EmptySpace{T}()
+interior(d::Point) = emptyspace(d)
 closure(d::Point) = d
 
 point_in_domain(d::Point) = d.x
@@ -58,8 +58,8 @@ for op in (:+,:-)
 end
 
 
-intersectdomain1(d1::Point, d2) = d1.x ∈ d2 ? d1 : EmptySpace{eltype(d1)}()
-intersectdomain2(d1, d2::Point) = d2.x ∈ d1 ? d2 : EmptySpace{eltype(d2)}()
+intersectdomain1(d1::Point, d2) = d1.x ∈ d2 ? d1 : emptyspace(d1)
+intersectdomain2(d1, d2::Point) = d2.x ∈ d1 ? d2 : emptyspace(d2)
 
 # Interval minus a point:
 setdiffdomain(d::Interval, x::Number) = setdiffdomain(d, Point(x))
@@ -77,8 +77,8 @@ end
 
 issubset1(d1::Point, d2) = d1.x ∈ d2
 
-setdiffdomain1(p::Point, d2) = issubset(p, d2) ? EmptySpace{eltype(p)}() : p
+setdiffdomain1(p::Point, d2) = issubset(p, d2) ? emptyspace(p) : p
 
-intersectdomain(d1::Point, d2::Point) = d1.x ∈ d2 ? d1 : EmptySpace{eltype(d1)}()
+intersectdomain(d1::Point, d2::Point) = d1.x ∈ d2 ? d1 : emptyspace(d1)
 
 show(io::IO,d::Point) = print(io,"Point(", d.x, ")")

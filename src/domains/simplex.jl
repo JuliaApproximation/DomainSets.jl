@@ -48,7 +48,7 @@ hash(d::UnitSimplex, h::UInt) = hashrec("UnitSimplex", isclosedset(d), dimension
 
 boundingbox(d::UnitSimplex{T}) where {T} = UnitCube{T}(dimension(d))
 
-boundary(d::UnitSimplex{T,:open}) where {T} = EmptySpace{T}()
+boundary(d::UnitSimplex{T,:open}) where {T} = emptyspace(T)
 
 
 distance_to(d::UnitSimplex, x) = x ∈ d ? zero(prectype(d)) : minimum(distance_to(el, x) for el in components(boundary(d)))

@@ -53,7 +53,7 @@ union(d1::Domain, d2::Domain, domains...) = uniondomain(d1, d2, domains...)
 union(d1::Domain, d2, domains...) = uniondomain(d1, d2, domains...)
 union(d1, d2::Domain, domains...) = uniondomain(d1, d2, domains...)
 
-uniondomain() = EmptySpace{Any}()
+uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
 uniondomain(d1, d2) = uniondomain1(promote_domains(d1, d2)...)
 
@@ -196,7 +196,7 @@ intersect(d1::Domain, d2::Domain, domains...) = intersectdomain(d1, d2, domains.
 intersect(d1::Domain, d2, domains...) = intersectdomain(d1, d2, domains...)
 intersect(d1, d2::Domain, domains...) = intersectdomain(d1, d2, domains...)
 
-intersectdomain() = EmptySpace{Any}()
+intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
 intersectdomain(d1, d2) = intersectdomain1(promote_domains(d1, d2)...)
 
@@ -314,7 +314,7 @@ function setdiffdomain2(d1, d2)
 	if isempty(d2)
 		d1
 	elseif d1 == d2
-		EmptySpace{eltype(d1)}()
+		emptyspace(d1)
 	else
 		SetdiffDomain(d1, d2)
 	end
@@ -324,7 +324,7 @@ function setdiffdomain2(d1, d2::Domain)
 	if isempty(d2)
 		d1
 	elseif issubset(d1,d2)
-		EmptySpace{eltype(d1)}()
+		emptyspace(d1)
 	else
 		SetdiffDomain(d1, d2)
 	end
