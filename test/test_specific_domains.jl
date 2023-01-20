@@ -95,8 +95,8 @@ include("test_domain_simplex.jl")
         @test closure(d1) == d1
         @test dimension(d1) == 1
         @test boundingbox(d1) == d1
-        @test DomainSets.isequal1(d1, d1)
-        @test DomainSets.isequal2(d1, d1)
+        @test DomainSets.isequaldomain1(d1, d1)
+        @test DomainSets.isequaldomain2(d1, d1)
         d2 = 0..1
         @test d1 ∪ d2 == d1
         @test d1 ∩ d2 == d2

@@ -44,8 +44,8 @@ map_domain(map::Map{T}, d::EmptySpace{T}) where {T} = d
 mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
 
 ==(d1::EmptySpace, d2::EmptySpace) = true
-isequal1(d1::EmptySpace, d2) = isempty(d2)
-isequal2(d1, d2::EmptySpace) = isempty(d1)
+isequaldomain1(d1::EmptySpace, d2) = isempty(d2)
+isequaldomain2(d1, d2::EmptySpace) = isempty(d1)
 hash(d::EmptySpace, h::UInt) = hash("EmptySpace", h)
 
 
@@ -105,8 +105,8 @@ issubset2(d1, d2::FullSpace) = true
 map_domain(m::AbstractAffineMap{T}, d::FullSpace{T}) where {T} = d
 
 ==(d1::FullSpace, d2::FullSpace) = true
-isequal1(d1::FullSpace, d2) = isfullspace(d2)
-isequal2(d1, d2::FullSpace) = isfullspace(d1)
+isequaldomain1(d1::FullSpace, d2) = isfullspace(d2)
+isequaldomain2(d1, d2::FullSpace) = isfullspace(d1)
 hash(d::FullSpace, h::UInt) = hash("FullSpace", h)
 
 
