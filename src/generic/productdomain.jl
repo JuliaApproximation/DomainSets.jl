@@ -13,7 +13,8 @@ nfactors(d) = length(factors(d))
 "Factor `I...` of a domain."
 factor(d, I...) = getindex(factors(d), I...)
 
-==(d1::ProductDomain, d2::ProductDomain) = mapreduce(==, &, components(d1), components(d2))
+isequaldomain(d1::ProductDomain, d2::ProductDomain) =
+	mapreduce(==, &, components(d1), components(d2))
 hash(d::ProductDomain, h::UInt) = hashrec("ProductDomain", collect(components(d)), h)
 
 isempty(d::ProductDomain) = any(isempty, components(d))

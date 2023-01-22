@@ -93,7 +93,7 @@ uniondomain(d1::UnionDomain, d2::UnionDomain) =
 uniondomain1(d1::UnionDomain, d2) = UnionDomain(components(d1)..., d2)
 uniondomain2(d1, d2::UnionDomain) = UnionDomain(d1, components(d2)...)
 
-==(a::UnionDomain, b::UnionDomain) = Set(components(a)) == Set(components(b))
+isequaldomain(a::UnionDomain, b::UnionDomain) = Set(components(a)) == Set(components(b))
 hash(d::UnionDomain, h::UInt) = hashrec("UnionDomain", Set(d.domains), h)
 
 
@@ -255,7 +255,7 @@ end
 similardomain(d::IntersectDomain, ::Type{T}) where {T} =
     IntersectDomain(convert.(Domain{T}, components(d)))
 
-==(a::IntersectDomain, b::IntersectDomain) = Set(components(a)) == Set(components(b))
+isequaldomain(a::IntersectDomain, b::IntersectDomain) = Set(components(a)) == Set(components(b))
 hash(d::IntersectDomain, h::UInt) = hashrec("IntersectDomain", Set(components(d)), h)
 
 boundingbox(d::IntersectDomain) = intersectbox(map(boundingbox, components(d))...)
@@ -333,7 +333,7 @@ end
 # avoid nested difference domains
 setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], uniondomain(d2, d1.domains[2]))
 
-==(a::SetdiffDomain, b::SetdiffDomain) = a.domains == b.domains
+isequaldomain(a::SetdiffDomain, b::SetdiffDomain) = a.domains == b.domains
 
 boundingbox(d::SetdiffDomain) =  boundingbox(d.domains[1])
 

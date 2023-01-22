@@ -42,7 +42,7 @@ approx_indomain(x, d::OpenUnitSimplex, tolerance) = length(x)==dimension(d) && i
 
 isempty(::UnitSimplex) = false
 
-==(d1::UnitSimplex, d2::UnitSimplex) =
+isequaldomain(d1::UnitSimplex, d2::UnitSimplex) =
     isclosedset(d1)==isclosedset(d2) && dimension(d1)==dimension(d2)
 hash(d::UnitSimplex, h::UInt) = hashrec("UnitSimplex", isclosedset(d), dimension(d), h)
 

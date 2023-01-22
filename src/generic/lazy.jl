@@ -84,7 +84,7 @@ _approx_indomain(x, d, tolerance, ::Product, domains) =
 point_in_domain(d::SimpleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
 point_in_domain(d::CompositeDomain) = toexternalpoint(d, map(point_in_domain, components(d)))
 
-==(a::D, b::D) where {D<:CompositeDomain} = components(a) == components(b)
+isequaldomain(a::D, b::D) where {D<:CompositeDomain} = components(a) == components(b)
 
 
 dimension(d::SimpleLazyDomain{Vector{T}}) where {T} = dimension(superdomain(d))
@@ -140,7 +140,7 @@ convert(::Type{Domain}, v::Domain) = v
 convert(::Type{Domain}, v) = WrappedDomain(v)
 convert(::Type{Domain{T}}, v) where {T} = WrappedDomain{T}(v)
 
-==(d1::WrappedDomain, d2::WrappedDomain) = superdomain(d1)==superdomain(d2)
+isequaldomain(d1::WrappedDomain, d2::WrappedDomain) = superdomain(d1)==superdomain(d2)
 
 "Example of a domain that wraps another domain and thus obtains its own type."
 struct ExampleNamedDomain{T,D} <: DerivedDomain{T}

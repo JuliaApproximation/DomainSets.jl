@@ -118,6 +118,7 @@ is_vector_to_scalar(m) = mapsize(m) isa Tuple{Int,Int} && codomaintype(m)<:Numbe
 is_scalar_to_scalar(m) = mapsize(m) == ()
 is_vector_to_vector(m) = mapsize(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m)
 
+isequalmap(m1, m2) = m1==m2
 
 # Display routines
 map_stencil(m::AbstractMap, x) = [Display.SymbolObject(m), '(', x, ')']

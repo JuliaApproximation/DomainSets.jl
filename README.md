@@ -14,7 +14,7 @@ DomainSets.jl is a package designed to represent simple infinite sets. The packa
 DomainSets.jl uses [IntervalSets.jl](https://github.com/JuliaMath/IntervalSets.jl) for closed and open intervals. In addition, it defines a few standard intervals.
 
 ```julia
-julia> using DomainSets, StaticArrays
+julia> using DomainSets
 
 julia> UnitInterval()
 0.0..1.0 (Unit)
@@ -37,7 +37,7 @@ julia> using DomainSets: ×
 julia> (-1..1) × (0..3) × (4.0..5.0)
 (-1.0..1.0) × (0.0..3.0) × (4.0..5.0)
 
-julia> SVector(1,2) in (-1..1) × (0..3)
+julia> [1,2] in (-1..1) × (0..3)
 true
 
 julia> UnitInterval()^3
@@ -51,7 +51,9 @@ and its dimension is specified with the constructor. The element types are
 `SVector{N,T}` when the dimension is specified as `Val(3)`, and they
 are `Vector{T}` when the dimension is specified by an integer value instead:
 ```julia
-julia> SVector(0,0,1.0) in UnitSphere(Val(3))
+julia> using StaticArrays
+
+julia> SA[0,0,1.0] in UnitSphere(Val(3))
 true
 
 julia> [0.0,1.0,0.0,0.0] in UnitSphere(4)

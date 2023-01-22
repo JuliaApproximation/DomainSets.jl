@@ -90,7 +90,8 @@ function _map_domain(map::Map, domain)
     mapped_domain(inverse(convert(Map{U}, map)), convert(Domain{U}, domain))
 end
 
-==(a::MappedDomain, b::MappedDomain) = (a.invmap == b.invmap) && (superdomain(a) == superdomain(b))
+isequaldomain(a::MappedDomain, b::MappedDomain) =
+    isequalmap(a.invmap, b.invmap) && isequaldomain(superdomain(a), superdomain(b))
 
 
 "Make a mapped domain with the given inverse map"
@@ -168,8 +169,8 @@ function indomain(x, d::ParametricDomain)
     isapprox(x, x2)
 end
 
-==(d1::ParametricDomain, d2::ParametricDomain) =
-    forward_map(d1) == forward_map(d2) && superdomain(d1) == superdomain(d2)
+isequaldomain(d1::ParametricDomain, d2::ParametricDomain) =
+    isequalmap(forward_map(d1), forward_map(d2)) && isequaldomain(superdomain(d1), superdomain(d2))
 hash(d::ParametricDomain, h::UInt) = hashrec(forward_map(d), superdomain(d), h)
 
 "Return the domain that results from mapping the given domain."

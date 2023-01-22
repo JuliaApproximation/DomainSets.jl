@@ -91,11 +91,14 @@ export Domain, EuclideanDomain, VectorDomain,
     interior, closure,
     volume,
     point_in_domain,
-    normal, tangents, distance_to,
-    canonicaldomain, mapto_canonical, mapfrom_canonical, hascanonicaldomain,
-    mapto,
+    normal, tangents, distance_to
+
+# from generic/canonical.jl
+export canonicaldomain, hascanonicaldomain,
+    mapto, mapto_canonical, mapfrom_canonical,
     parameterdomain, parameterization, hasparameterization,
-    mapfrom_parameterdomain, mapto_parameterdomain
+    mapfrom_parameterdomain, mapto_parameterdomain,
+    isequaldomain
 
 # from generic/lazy.jl
 export superdomain

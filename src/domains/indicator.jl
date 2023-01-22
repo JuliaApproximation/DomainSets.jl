@@ -38,7 +38,8 @@ convert(::Type{IndicatorFunction}, d::AbstractIndicatorFunction) = d
 convert(::Type{IndicatorFunction}, d::Domain{T}) where {T} =
     IndicatorFunction{T}(indicatorfunction(d))
 
-==(d1::IndicatorFunction, d2::IndicatorFunction) = indicatorfunction(d1)==indicatorfunction(d2)
+isequaldomain(d1::IndicatorFunction, d2::IndicatorFunction) =
+    indicatorfunction(d1)==indicatorfunction(d2)
 
 intersectdomain1(d1::IndicatorFunction, d2) = BoundedIndicatorFunction(d1.f, d2)
 intersectdomain2(d1, d2::IndicatorFunction) = BoundedIndicatorFunction(d2.f, d1)
@@ -58,7 +59,7 @@ boundingdomain(d::BoundedIndicatorFunction) = d.domain
 
 indomain(x, d::BoundedIndicatorFunction) = in(x, boundingdomain(d)) && d.f(x)
 
-==(d1::BoundedIndicatorFunction, d2::BoundedIndicatorFunction) =
+isequaldomain(d1::BoundedIndicatorFunction, d2::BoundedIndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2) && boundingdomain(d1)==boundingdomain(d2)
 hash(d::BoundedIndicatorFunction, h::UInt) =
     hashrec(indicatorfunction(d), boundingdomain(d), h)

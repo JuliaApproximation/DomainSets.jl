@@ -391,8 +391,8 @@ function intersectdomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpoints
     end
 end
 
-==(d1::TypedEndpointsInterval, d2::Point) =
-    isclosedset(d1) && (leftendpoint(d1)==rightendpoint(d1)==d2.x)
+isequaldomain(d1::TypedEndpointsInterval, d2::Point) =
+    isclosedset(d1) && (leftendpoint(d1)==rightendpoint(d1)==pointval(d2))
 
 # Since fixed intervals are fully determined by their type,
 # the result of intersect, union or setdiff is always known for two

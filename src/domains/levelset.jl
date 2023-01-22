@@ -16,7 +16,7 @@ indomain(x, d::AbstractLevelSet) = levelfun(d, x) == level(d)
 show(io::IO, d::AbstractLevelSet) =
     print(io, "level set f(x) = $(level(d)) with f = $(levelfun(d))")
 
-==(d1::AbstractLevelSet, d2::AbstractLevelSet) = levelfun(d1)==levelfun(d2) &&
+isequaldomain(d1::AbstractLevelSet, d2::AbstractLevelSet) = levelfun(d1)==levelfun(d2) &&
     level(d1)==level(d2)
 hash(d::AbstractLevelSet, h::UInt) = hashrec("AbstractLevelSet", levelfun(d), level(d), h)
 
@@ -59,7 +59,7 @@ show(io::IO, d::AbstractSublevelSet{T,:closed}) where {T} =
 show(io::IO, d::AbstractSublevelSet{T,:open}) where {T} =
     print(io, "sublevel set f(x) < $(level(d)) with f = $(levelfun(d))")
 
-==(d1::AbstractSublevelSet, d2::AbstractSublevelSet) = levelfun(d1)==levelfun(d2) &&
+isequaldomain(d1::AbstractSublevelSet, d2::AbstractSublevelSet) = levelfun(d1)==levelfun(d2) &&
     level(d1)==level(d2)
 hash(d::AbstractSublevelSet, h::UInt) =
     hashrec("AbstractSublevelSet", levelfun(d), level(d), h)
@@ -113,7 +113,7 @@ show(io::IO, d::AbstractSuperlevelSet{T,:closed}) where {T} =
 show(io::IO, d::AbstractSuperlevelSet{T,:open}) where {T} =
     print(io, "superlevel set f(x) > $(level(d)) with f = $(levelfun(d))")
 
-==(d1::AbstractSuperlevelSet, d2::AbstractSuperlevelSet) =
+isequaldomain(d1::AbstractSuperlevelSet, d2::AbstractSuperlevelSet) =
     levelfun(d1)==levelfun(d2) && level(d1)==level(d2)
 hash(d::AbstractSuperlevelSet, h::UInt) =
     hashrec("AbstractSuperlevelSet", levelfun(d), level(d), h)
