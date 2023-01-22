@@ -87,11 +87,15 @@ export Domain, EuclideanDomain, VectorDomain,
     approx_in,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
-    boundingbox,
     interior, closure,
+    point_in_domain
+
+# from generic/geometry.jl
+export boundingbox,
     volume,
-    point_in_domain,
-    normal, tangents, distance_to
+    normal, tangents,
+    distance_to,
+    infimum, supremum
 
 # from generic/canonical.jl
 export canonicaldomain, hascanonicaldomain,
@@ -122,8 +126,6 @@ export UnionDomain, uniondomain,
 
 # from applications/rotations.jl
 export rotate
-
-export infimum, supremum
 
 
 ## Specific domains
@@ -191,6 +193,7 @@ include("maps/affine.jl")
 include("maps/arithmetics.jl")
 
 include("generic/domain.jl")
+include("generic/geometry.jl")
 include("generic/canonical.jl")
 include("generic/lazy.jl")
 include("generic/productdomain.jl")

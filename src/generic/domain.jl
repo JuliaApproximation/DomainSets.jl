@@ -140,50 +140,6 @@ approx_in(x, d::Domain, tol) =
 # Fallback to `in`
 approx_indomain(x, d::Domain, tol) = in(x, d)
 
-
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 
 isreal(d::Domain) = isreal(eltype(d))
-
-infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
-supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
-
-
-"""
-Return a bounding box of the given domain.
-
-A bounding box is an interval, a hyperrectangle or the full space. It is such that
-each point in the domain also lies in the bounding box.
-"""
-boundingbox(d) = fullspace(d)
-
-"Return the boundary of the given domain as a domain."
-function boundary end
-const ∂ = boundary
-
-"""
-Return the normal of the domain at the point `x`.
-
-It is assumed that `x` is a point on the boundary of the domain.
-"""
-function normal end
-
-"""
-Return the tangents of the domain at the point `x`. The tangents form a
-basis for the tangent plane, perpendicular to the normal direction at `x`.
-"""
-function tangents end
-
-# "Lazy representation of the boundary of a domain."
-# struct Boundary{T,D} <: Domain{T}
-#     domain  :: D
-# end
-#
-# domain(d::Boundary) = d.domain
-#
-# Boundary(domain) = Boundary{eltype(domain)}(domain)
-# Boundary{T}(domain) where {T} = Boundary{T,typeof(domain)}(domain)
-# Boundary{T}(domain::Domain{T}) where {T} = Boundary{T,typeof(domain)}(domain)
-# Boundary{T}(domain::Domain{S}) where {S,T} = Boundary{T}(convert(Domain{T}, domain))
-#
-# indomain(x, d::Boundary) = in(x, boundary(domain(d)))
