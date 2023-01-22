@@ -212,6 +212,8 @@ include("domains/cube.jl")
 include("domains/indicator.jl")
 include("domains/boundingbox.jl")
 
+include("generic/generator.jl")
+
 include("applications/coordinates.jl")
 include("applications/random.jl")
 include("applications/rotation.jl")

@@ -560,22 +560,36 @@ include("test_domain_simplex.jl")
     end
 
     @testset "indicator functions" begin
+        using DomainSets: BoundedIndicatorFunction
         ispositive(x) = x >= 0
-        d = IndicatorFunction(ispositive)
-        @test d isa IndicatorFunction{Float64}
-        @test DomainSets.indicatorfunction(d) == ispositive
-        show(io,d)
+        d1 = IndicatorFunction(ispositive)
+        @test d1 isa IndicatorFunction{Float64}
+        @test DomainSets.indicatorfunction(d1) == ispositive
+        show(io,d1)
         @test String(take!(io)) == "indicator domain defined by function f = ispositive"
-        @test 0 ∈ d
-        @test big(0) ∈ d
-        @test -1 ∉ d
-        @test d ∩ ChebyshevInterval() isa DomainSets.BoundedIndicatorFunction
-        @test ChebyshevInterval() ∩ d isa DomainSets.BoundedIndicatorFunction
+        @test 0 ∈ d1
+        @test big(0) ∈ d1
+        @test -1 ∉ d1
+        @test d1 ∩ ChebyshevInterval() isa BoundedIndicatorFunction
+        @test ChebyshevInterval() ∩ d1 isa BoundedIndicatorFunction
 
         @test convert(IndicatorFunction, 0..1) isa IndicatorFunction
-        @test convert(IndicatorFunction, d) == d
-        @test convert(Domain{BigFloat}, d) isa IndicatorFunction{BigFloat}
+        @test convert(IndicatorFunction, d1) == d1
+        @test convert(Domain{BigFloat}, d1) isa IndicatorFunction{BigFloat}
         @test 0.5 ∈ convert(IndicatorFunction, 0..1)
+
+        d2 = BoundedIndicatorFunction(x -> prod(x)>0, UnitDisk())
+        @test d2 isa BoundedIndicatorFunction
+        @test eltype(d2) == SVector{2,Float64}
+        @test SA[0.1,0.2] ∈ d2
+        @test SA[-0.1,0.2] ∉ d2
+        @test SA[0.1,-0.2] ∉ d2
+        @test SA[-0.1,-0.2] ∈ d2
+    end
+
+    @testset "generator domains" begin
+        d1 = Domain(x for x in 0..1)
+        @test d1 == 0..1
 
         d2 = Domain(x>0 for x in -1..1)
         @test -0.5 ∉ d2
@@ -584,18 +598,65 @@ include("test_domain_simplex.jl")
         @test String(take!(io)) == "indicator function bounded by: -1..1"
 
         d3 = Domain(x*y>0 for (x,y) in UnitDisk())
+        @test eltype(d3) == SVector{2,Float64}
+        @test d3 isa DomainSets.BoundedIndicatorFunction
+        @test d3.domain == UnitDisk()
         @test [0.4,0.2] ∈ d3
         @test [0.4,-0.2] ∉ d3
 
-        d4 = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1)
+        d4 = Domain( x+y+z > 0 for (x,y) in UnitDisk(), z in 0..1.0)
         @test d4 isa DomainSets.BoundedIndicatorFunction{F,<:TupleProductDomain} where F
+        @test eltype(d4) == Tuple{SVector{2, Float64}, Float64}
         @test DomainSets.indicatorfunction(d4) isa Function
+        @test DomainSets.boundingdomain(d4) == TupleProductDomain(UnitDisk(), 0..1.0)
+        @test boundingbox(d4) == boundingbox(DomainSets.boundingdomain(d4))
         @test ( [0.5,0.2], 0.5) ∈ d4
         @test ( [0.5,0.2], 1.5) ∉ d4
         @test ( [-0.5,-0.2], 0.1) ∉ d4
-        @test boundingbox(d4) == boundingbox(DomainSets.boundingdomain(d4))
-    end
 
+        # conditional comprehension syntax in 1d
+        g5 = (x > 2 for x in 0..5.0 if x < 3)
+        d5 = Domain(g5)
+        @test d5 isa DomainSets.BoundedIndicatorFunction
+        @test eltype(d5) == Float64
+        @test -1 ∉ d5
+        @test 1 ∉ d5
+        @test 2 ∉ d5
+        @test 2.5 ∈ d5
+        @test 3 ∉ d5
+        @test 3.1 ∉ d5
+        @test 5.5 ∉ d5
+
+        # conditional comprehension syntax in 2d
+        g6 = (x<4 for x in 0..5.0, y in 1..2.0 if x > 3)
+        d6 = Domain(g6)
+        @test d6 isa DomainSets.BoundedIndicatorFunction
+        @test eltype(d6) == Tuple{Float64,Float64}
+        # test values for y smaller than 1, in 1..2, and larger than 2
+        # test values for x smaller than 0, 3, 4, 5 and larger
+        @test (-1, 1.5) ∉ d6
+        @test (1, 1.5) ∉ d6
+        @test (3.5, 1.5) ∈ d6
+        @test (4.5, 1.5) ∉ d6
+        @test (5.5, 1.5) ∉ d6
+        @test (-1, 0.5) ∉ d6
+        @test (1, 0.5) ∉ d6
+        @test (3.5, 0.5) ∉ d6
+        @test (4.5, 0.5) ∉ d6
+        @test (5.5, 0.5) ∉ d6
+        @test (-1, 2.5) ∉ d6
+        @test (1, 2.5) ∉ d6
+        @test (3.5, 2.5) ∉ d6
+        @test (4.5, 2.5) ∉ d6
+        @test (5.5, 2.5) ∉ d6
+
+        g7 = (x+y+z<4 for (x,y) in UnitDisk(), z in ChebyshevInterval() if z < 0)
+        d7 = Domain(g7)
+        @test eltype(d7) == Tuple{SVector{2, Float64}, Float64}
+        @test (SVector(0.1,0.2),-0.3) ∈ d7
+        @test (SVector(0.1,0.2),0.3) ∉ d7
+        @test (SVector(1,2),3) ∉ d7
+    end
 end
 
 @testset "cartesian product" begin

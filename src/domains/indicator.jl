@@ -50,8 +50,13 @@ struct BoundedIndicatorFunction{F,D,T} <: AbstractIndicatorFunction{T}
     domain  ::  D
 end
 
-BoundedIndicatorFunction(f::F, domain::D) where {F,T,D<:Domain{T}} =
-    BoundedIndicatorFunction{F,D,T}(f, domain)
+BoundedIndicatorFunction(f, domain::Domain{T}) where {T} =
+    BoundedIndicatorFunction{typeof(f),typeof(domain),T}(f, domain)
+
+function BoundedIndicatorFunction(f, domain)
+    T = eltype(domain)
+    BoundedIndicatorFunction{typeof(f),typeof(domain),T}(f, domain)
+end
 
 indicatorfunction(d::BoundedIndicatorFunction) = d.f
 
@@ -66,17 +71,6 @@ hash(d::BoundedIndicatorFunction, h::UInt) =
 
 similardomain(d::BoundedIndicatorFunction, ::Type{T}) where {T} =
     BoundedIndicatorFunction(d.f, convert(Domain{T}, d.domain))
-
-Domain(gen::Base.Generator) = generator_domain(gen)
-
-generator_domain(gen::Base.Generator{<:Domain}) = BoundedIndicatorFunction(gen.f, gen.iter)
-generator_domain(gen::Base.Generator{<:Base.Iterators.ProductIterator}) =
-    productgenerator_domain(gen, gen.iter.iterators)
-
-function productgenerator_domain(gen, domains::Tuple{Vararg{Domain}})
-    domain = TupleProductDomain(gen.iter.iterators)
-    BoundedIndicatorFunction(gen.f, domain)
-end
 
 boundingbox(d::BoundedIndicatorFunction) = boundingbox(boundingdomain(d))
 
