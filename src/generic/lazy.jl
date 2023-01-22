@@ -24,7 +24,7 @@ Base.getindex(d::LazyDomain, I::ComponentIndex...) =
     component(d, map(Indexing.to_index, I)...)
 
 """
-A single lazy domain is defined in terms of a single domain.
+A simple lazy domain is defined in terms of a single domain.
 
 It has no composition and no combination of its `in` function.
 """

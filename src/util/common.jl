@@ -45,6 +45,12 @@ end
 # Precision type
 #################
 
+"Convert `x` such that its `eltype` equals `U`."
+convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
+convert_eltype(::Type{T}, d::AbstractRange) where {T} = map(T, d)
+convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
+convert_eltype(::Type{T}, d::Number) where {T} = convert(T, d)
+
 "The floating point precision type associated with the argument."
 prectype(x) = prectype(typeof(x))
 prectype(::Type{<:Complex{T}}) where {T} = prectype(T)

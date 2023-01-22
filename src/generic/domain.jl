@@ -35,11 +35,6 @@ convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, eltype(d))
 _convert_eltype(::Type{T}, d, ::Type{T}) where {T} = d
 _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
     error("Don't know how to convert the `eltype` of $(d).")
-# Some standard cases
-convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
-convert_eltype(::Type{T}, d::AbstractRange) where {T} = map(T, d)
-convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
-convert_eltype(::Type{T}, d::Number) where {T} = convert(T, d)
 
 promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
 promote(d1::Domain, d2) = promote_domains((d1,d2))
@@ -51,6 +46,7 @@ const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
 "A `VectorDomain` is any domain whose eltype is `Vector{T}`."
 const VectorDomain{T} = Domain{Vector{T}}
 
+"An `AbstractVectorDomain` is any domain whose eltype is `<:AbstractVector{T}`."
 const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 
 CompositeTypes.Display.displaysymbol(d::Domain) = 'D'

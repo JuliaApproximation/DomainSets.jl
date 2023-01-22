@@ -20,7 +20,15 @@ hascanonicaldomain(d) = !(d === canonicaldomain(d))
 
 identitymap(d) = IdentityMap{eltype(d)}(dimension(d))
 
-"Return a map to a domain from its canonical domain."
+"""
+    mapfrom_canonical(d[, x])
+
+Return a map to a domain `d` from its canonical domain.
+
+If a second argument `x` is given, the map is evaluated at that point.
+The point `x` should be a point in the canonical domain of `d`, and the
+result is a point in `d`.
+"""
 mapfrom_canonical(d) = identitymap(d)
 mapfrom_canonical(d, x) = mapfrom_canonical(d)(x)
 
