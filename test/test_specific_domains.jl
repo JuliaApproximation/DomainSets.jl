@@ -310,6 +310,7 @@ include("test_domain_simplex.jl")
 
         @test hascanonicaldomain(B)
         @test canonicaldomain(B) == UnitDisk()
+        @test mapfrom_canonical(B) == LinearMap{eltype(B)}(2)
         @test DomainSets.simplifies(B)
         @test canonicaldomain(DomainSets.Equal(), B) === superdomain(B)
         @test B == superdomain(B)

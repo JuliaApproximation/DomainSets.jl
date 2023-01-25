@@ -113,6 +113,8 @@ canonicaldomain(::Equal, d::DerivedDomain) = canonicaldomain(Equal(), superdomai
 canonicaldomain(::Isomorphic, d::DerivedDomain) = canonicaldomain(Isomorphic(), superdomain(d))
 canonicaldomain(::Parameterization, d::DerivedDomain) = canonicaldomain(Parameterization(), superdomain(d))
 
+mapfrom_canonical(d::DerivedDomain) = mapfrom_canonical(superdomain(d))
+
 boundingbox(d::DerivedDomain) = boundingbox(superdomain(d))
 interior(d::DerivedDomain) = interior(superdomain(d))
 closure(d::DerivedDomain) = closure(superdomain(d))
