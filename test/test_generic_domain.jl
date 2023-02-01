@@ -106,11 +106,15 @@ end
             @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") approx_in((0.5,0.2), UnitCircle())
         end
 
-        # some functionality in broadcast
+        # functionality using broadcast
         @test 2 * (1..2) == 2 .* (1..2)
         @test (1..2) * 2 == (1..2) .* 2
         @test (1..2) / 2 ≈ (0.5..1)
         @test 2 \ (1..2) ≈ (0.5..1)
+        @test all(rand(4) .∈ (-1..1))
+        @test all(approx_in.(rand(4), -1..1))
+        @test all(approx_in.([1.005,1.0005], -1..1, [1e-2,1e-3]))
+        @test all(rand(4) .∉ (2..3))
         @test_throws MethodError (0..1) + 0.4
 
         # promotion
