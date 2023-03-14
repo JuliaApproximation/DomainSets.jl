@@ -59,7 +59,7 @@ prectype(::Type{NTuple{N,T}}) where {N,T} = prectype(T)
 prectype(::Type{Tuple{A}}) where {A} = prectype(A)
 prectype(::Type{Tuple{A,B}}) where {A,B} = prectype(A,B)
 prectype(::Type{Tuple{A,B,C}}) where {A,B,C} = prectype(A,B,C)
-@generated function prectype(T::Type{<:Tuple{Vararg}})
+@generated function prectype(T::Type{<:Tuple})
     quote $(promote_type(map(prectype, T.parameters[1].parameters)...)) end
 end
 prectype(::Type{T}) where {T<:AbstractFloat} = T
@@ -103,7 +103,7 @@ numtype(::Type{NTuple{N,T}}) where {N,T} = T
 numtype(::Type{Tuple{A,B}}) where {A,B} = promote_type(numtype(A), numtype(B))
 numtype(::Type{Tuple{A,B,C}}) where {A,B,C} = promote_type(numtype(A), numtype(B), numtype(C))
 numtype(::Type{Tuple{A,B,C,D}}) where {A,B,C,D} = promote_type(numtype(A), numtype(B), numtype(C), numtype(D))
-@generated function numtype(T::Type{<:Tuple{Vararg}})
+@generated function numtype(T::Type{<:Tuple})
     quote $(promote_type(T.parameters[1].parameters...)) end
 end
 
