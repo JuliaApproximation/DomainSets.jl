@@ -50,14 +50,22 @@ broadcasted(::DomainSetStyle, fun::Function, d::Domain{T}) where {T} =
 # has particular structure. A common case would be a raster of points,
 # for plotting purposes.
 # This call can be avoided by typing in.(A, Ref(d)) instead.
-broadcasted(::DomainSetStyle, ::typeof(in), A, d::Domain) = broadcast_in(A, d)
-broadcasted(::DomainSetStyle, ::typeof(approx_in), A, d::Domain, tol) = broadcast_approx_in(A, d, tol)
+broadcasted(::DomainSetStyle, ::typeof(in), A, d::Domain) = vectorized_in(A, d)
+broadcasted(::DomainSetStyle, ::typeof(approx_in), A, d::Domain) = vectorized_approx_in(A, d)
+broadcasted(::DomainSetStyle, ::typeof(approx_in), A, d::Domain, tol) = vectorized_approx_in(A, d, tol)
+
+broadcasted(::DomainSetStyle, ::typeof(∉), A, d::Domain) = A .∉ Ref(d)
+
+@deprecate broadcast_in(A, d::Domain) vectorized_in(A, d)
+@deprecate broadcast_approx_in(A, d::Domain) vectorized_approx_in(A, d)
+@deprecate broadcast_approx_in(A, d::Domain, tol) vectorized_approx_in(A, d, tol)
 
 "Vectorized version of `in`: apply `x ∈ d` to all elements of `A`."
-broadcast_in(A, d::Domain) = in.(A, Ref(d))
+vectorized_in(A, d::Domain) = in.(A, Ref(d))
 
 "Vectorized version of `approx_in`: apply `x ∈ d` to all elements of `A`."
-broadcast_approx_in(A, d::Domain, tol) = approx_in.(A, Ref(d), tol)
+vectorized_approx_in(A, d::Domain) = approx_in.(A, Ref(d))
+vectorized_approx_in(A, d::Domain, tol) = approx_in.(A, Ref(d), tol)
 
 
 ## Some arithmetics
