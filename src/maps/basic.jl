@@ -114,6 +114,8 @@ jacdet(::ConstantMap, x) = 0
 determinantmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(det(constant(m)))
 absmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(abs(constant(m)))
 
+diffvolume(m::ConstantMap{T,U}) where {T,U} = ZeroMap{T,U}()
+
 ==(m1::ConstantMap, m2::ConstantMap) = constant(m1)==constant(m2)
 hash(m::ConstantMap, h::UInt) = hashrec("ConstantMap", constant(m), h)
 

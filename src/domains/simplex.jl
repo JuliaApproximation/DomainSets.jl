@@ -125,6 +125,15 @@ center(d::EuclideanUnitSimplex{N,T}) where {N,T} = ones(SVector{N,T})/N
 center(d::VectorUnitSimplex{T}) where {T} = ones(T, dimension(d))/dimension(d)
 
 corners(d::UnitSimplex) = vcat([origin(d)], [ unitvector(d, i) for i in 1:dimension(d)])
+# low-dimensional special cases
+corners(d::EuclideanUnitSimplex{1,T}) where T =
+	SVector{2,SVector{1,T}}(SA[0],SA[1])
+corners(d::EuclideanUnitSimplex{2,T}) where T =
+	SVector{3,SVector{2,T}}(SA[0,0],SA[1,0],SA[0,1])
+corners(d::EuclideanUnitSimplex{3,T}) where T =
+	SVector{4,SVector{3,T}}(SA[0,0,0],SA[1,0,0],SA[0,1,0],SA[0,0,1])
+corners(d::EuclideanUnitSimplex{4,T}) where T =
+	SVector{5,SVector{4,T}}(SA[0,0,0,0],SA[1,0,0,0],SA[0,1,0,0],SA[0,0,1,0],SA[0,0,0,1])
 
 interior(d::EuclideanUnitSimplex{N,T}) where {N,T} = EuclideanUnitSimplex{N,T,:open}()
 closure(d::EuclideanUnitSimplex{N,T}) where {N,T} = EuclideanUnitSimplex{N,T,:closed}()

@@ -131,6 +131,9 @@ function test_generic_jacobian(m)
     else
         @test abs(diffvolume(m, x) - sqrt(det(transpose(jacobian(m,x))*jacobian(m,x)))) < 1e-7
     end
+    if isaffine(m)
+        @test diffvolume(m) isa ConstantMap
+    end
 end
 
 # generic map test suite

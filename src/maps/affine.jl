@@ -42,6 +42,12 @@ _jacdet(m::AbstractAffineMap, x::Number, A::UniformScaling) = A.λ
 _jacdet(m::AbstractAffineMap, x::AbstractVector, A::Number) = A^length(x)
 _jacdet(m::AbstractAffineMap, x::AbstractVector, A::UniformScaling) = A.λ^length(x)
 
+function diffvolume(m::AbstractAffineMap{T}) where T
+    J = jacobian(m)
+    c = sqrt(det(vector(J)'*vector(J)))
+    ConstantMap{T}(c)
+end
+
 islinear(m::AbstractMap) = false
 islinear(m::AbstractAffineMap) = _islinear(m, unsafe_vector(m))
 _islinear(m::AbstractAffineMap, b) = all(b .== 0)

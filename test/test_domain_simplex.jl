@@ -30,6 +30,10 @@ function test_simplex()
     @test repr(UnitSimplex(Val(2))) == "UnitSimplex(Val(2))"
     @test repr(UnitSimplex(3)) == "UnitSimplex(3)"
 
+    d0 = UnitSimplex(Val(1))
+    @test corners(d0) isa SVector{2,SVector{1,Float64}}
+    @test corners(d0) == [[0],[1]]
+
     d = UnitSimplex(Val(2))
     # We test a point in the interior, a point on each of the boundaries and
     # all corners.
@@ -57,6 +61,7 @@ function test_simplex()
     @test approx_in(SA[-0.1,-0.1], d, 0.1)
     @test !approx_in(SA[-0.1,-0.1], d, 0.09)
 
+    @test corners(d) isa SVector{3,SVector{2,Float64}}
     @test corners(d) == [ SA[0.0,0.0], SA[1.0,0.0], SA[0.0,1.0]]
 
     @test convert(Domain{SVector{2,BigFloat}}, d) == EuclideanUnitSimplex{2,BigFloat}()
@@ -94,6 +99,8 @@ function test_simplex()
     @test SA[x2,-x2,x2] ∉ d3
     @test SA[x2,x2,-x2] ∉ d3
     @test SA[x1,x1,x1] ∉ d3
+    @test corners(d3) isa SVector{4,SVector{3,BigFloat}}
+    @test corners(d3) == [ [0,0,0], [1,0,0], [0,1,0], [0,0,1]]
 
     D = VectorUnitSimplex(2)
     @test isopenset(interior(D))
@@ -113,4 +120,7 @@ function test_simplex()
     @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
     @test corners(D) == [ [0.0,0.0], [1.0,0.0], [0.0,1.0]]
     @test boundingbox(D) == UnitCube(4)
+
+    d4 = EuclideanUnitSimplex{4,Float64}()
+    @test corners(d4) isa SVector{5,SVector{4,Float64}}
 end

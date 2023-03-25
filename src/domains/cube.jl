@@ -7,7 +7,7 @@ convert(::Type{HyperRectangle}, d::ProductDomain) =
 
 boundingbox(d::HyperRectangle) = d
 
-"Compute all corners of the hyperrectangle."
+"Return all corners of the domain in a vector."
 function corners(d::HyperRectangle)
 	left = leftendpoint(d)
 	right = rightendpoint(d)
