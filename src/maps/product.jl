@@ -6,6 +6,7 @@ A product map is diagonal and acts on each of the components of x separately:
 abstract type ProductMap{T} <: CompositeLazyMap{T} end
 
 components(m::ProductMap) = m.maps
+factors(d::ProductMap) = components(d)
 
 VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
 
@@ -41,7 +42,8 @@ function jacobian(m::ProductMap{T}) where {T}
 		ProductMap(map(jacobian, components(m)))
 	end
 end
-# function jacdet(m::ProductMap, x)
+
+diffvolume(m::ProductMap) = multiply_map(map(diffvolume, factors(m))...)
 
 similarmap(m::ProductMap, ::Type{T}) where {T} = ProductMap{T}(components(m))
 
@@ -172,7 +174,7 @@ end
 TupleProductMap(maps::Vector) = TupleProductMap(maps...)
 TupleProductMap(maps...) = TupleProductMap(maps)
 function TupleProductMap(maps::Tuple)
-	T = Tuple{map(eltype, maps)...}
+	T = Tuple{map(domaintype, maps)...}
 	TupleProductMap{T}(maps)
 end
 

@@ -5,13 +5,7 @@ abstract type ProductDomain{T} <: CompositeDomain{T} end
 composition(d::ProductDomain) = Product()
 
 components(d::ProductDomain) = d.domains
-
-"The factors of a product domain (equivalent to `components(d)`)."
 factors(d::ProductDomain) = components(d)
-"The number of factors of a product domain."
-nfactors(d) = length(factors(d))
-"Factor `I...` of a domain."
-factor(d, I...) = getindex(factors(d), I...)
 
 isequaldomain(d1::ProductDomain, d2::ProductDomain) =
 	mapreduce(==, &, components(d1), components(d2))
@@ -99,17 +93,22 @@ similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(componen
 canonicaldomain(d::ProductDomain) = any(map(hascanonicaldomain, factors(d))) ?
 	ProductDomain(map(canonicaldomain, components(d))) : d
 
-mapto_canonical(d::ProductDomain) = ProductMap(map(mapto_canonical, components(d)))
-mapfrom_canonical(d::ProductDomain) = ProductMap(map(mapfrom_canonical, components(d)))
+# this function is meant to avoid, e.g., making a VcatMap for a TupleProductDomain
+matching_product_map(d::ProductDomain, maps) = ProductMap(maps)
+
+mapto_canonical(d::ProductDomain) =
+	matching_product_map(d, map(mapto_canonical, components(d)))
+mapfrom_canonical(d::ProductDomain) =
+	matching_product_map(d, map(mapfrom_canonical, components(d)))
 
 for CTYPE in (Parameterization, Equal)
 	@eval canonicaldomain(ctype::$CTYPE, d::ProductDomain) =
 		any(hascanonicaldomain.(Ref(ctype), factors(d))) ?
 			ProductDomain(canonicaldomain.(Ref(ctype), factors(d))) : d
 	@eval mapto_canonical(ctype::$CTYPE, d::ProductDomain) =
-		ProductMap(mapto_canonical.(Ref(ctype), factors(d)))
+		matching_product_map(d, mapto_canonical.(Ref(ctype), factors(d)))
 	@eval mapfrom_canonical(ctype::$CTYPE, d::ProductDomain) =
-		ProductMap(mapfrom_canonical.(Ref(ctype), factors(d)))
+		matching_product_map(d, mapfrom_canonical.(Ref(ctype), factors(d)))
 end
 
 
@@ -208,3 +207,5 @@ function TupleProductDomain{T}(domains::Tuple) where {T <: Tuple}
 end
 TupleProductDomain{T}(domains::Tuple) where {T} =
 	TupleProductDomain{T,typeof(domains)}(domains)
+
+matching_product_map(d::TupleProductDomain, maps) = TupleProductMap(maps)

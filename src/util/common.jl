@@ -41,6 +41,15 @@ function hashrec(A::AbstractArray, args...)
 	hash(h, hashrec(args...))
 end
 
+## Composite objects
+
+"Factors of a product-like composite object (equivalent to `components(d)`)."
+function factors end
+"The number of factors of a product-like composite object."
+nfactors(d) = length(factors(d))
+"Factor `I...` of a product-like composite object."
+factor(d, I...) = getindex(factors(d), I...)
+
 #################
 # Precision type
 #################
