@@ -18,7 +18,7 @@ ProductMap(maps::AbstractVector) = VectorProductMap(maps)
 
 ProductMap{T}(maps...) where {T} = _TypedProductMap(T, maps...)
 _TypedProductMap(::Type{T}, maps...) where {T<:Tuple} = TupleProductMap(maps...)
-_TypedProductMap(::Type{SVector{N,T}}, maps...) where {N,T} = VcatMap{N,T}(maps...)
+_TypedProductMap(::Type{SVector{N,T}}, maps...) where {N,T} = VcatMap{T}(maps...)
 _TypedProductMap(::Type{T}, maps...) where {T<:AbstractVector} = VectorProductMap{T}(maps...)
 
 compatibleproductdims(d1::ProductMap, d2::ProductMap) =
@@ -88,51 +88,54 @@ show(io::IO, m::ProductMap) = composite_show_compact(io, m)
 A `VcatMap` is a product map with domain and codomain vectors
 concatenated (`vcat`) into a single vector.
 """
-struct VcatMap{N,T,DIM,MAPS} <: ProductMap{SVector{N,T}}
+struct VcatMap{T,M,N,DIM1,DIM2,MAPS} <: ProductMap{SVector{N,T}}
     maps    ::  MAPS
 end
 
 VcatMap(maps::Union{Tuple,Vector}) = VcatMap(maps...)
-function VcatMap(maps...)
-	T = numtype(maps...)
+VcatMap(maps...) = VcatMap{numtype(maps...)}(maps...)
+
+VcatMap{T}(maps::Union{Tuple,Vector}) where T = VcatMap{T}(maps...)
+function VcatMap{T}(maps...) where T
 	M = sum(t->mapsize(t,1), maps)
 	N = sum(t->mapsize(t,2), maps)
-	# M,N = reduce((x,y) -> (x[1]+y[1],x[2]+y[2]), map(mapsize,maps))
-	@assert M==N
-	VcatMap{N,T}(maps...)
+	VcatMap{T,M,N}(maps...)
 end
 
 mapdim(map) = mapsize(map,2)
 
-VcatMap{N,T}(maps::Union{Tuple,Vector}) where {N,T} = VcatMap{N,T}(maps...)
-function VcatMap{N,T}(maps...) where {N,T}
-	DIM = map(mapdim,maps)
-	VcatMap{N,T,DIM}(convert_numtype.(maps, Ref(T))...)
+VcatMap{T,M,N}(maps::Union{Tuple,Vector}) where {T,M,N} = VcatMap{T,M,N}(maps...)
+function VcatMap{T,M,N}(maps...) where {T,M,N}
+	DIM1 = map(t->mapsize(t,1), maps)
+	DIM2 = map(t->mapsize(t,2), maps)
+	VcatMap{T,M,N,DIM1,DIM2}(convert_numtype.(maps, Ref(T))...)
 end
 
-VcatMap{N,T,DIM}(maps...) where {N,T,DIM} = VcatMap{N,T,DIM,typeof(maps)}(maps)
+VcatMap{T,M,N,DIM1,DIM2}(maps...) where {T,M,N,DIM1,DIM2} =
+	VcatMap{T,M,N,DIM1,DIM2,typeof(maps)}(maps)
 
-mapsize(m::VcatMap{N}) where {N} = (N,N)
+mapsize(m::VcatMap{T,M,N}) where {T,M,N} = (M,N)
 
-tointernalpoint(m::VcatMap{N,T,DIM}, x) where {N,T,DIM} =
-	convert_fromcartesian(x, Val{DIM}())
-toexternalpoint(m::VcatMap{N,T,DIM}, y) where {N,T,DIM} =
-	convert_tocartesian(y, Val{DIM}())
+tointernalpoint(m::VcatMap{T,M,N,DIM1,DIM2}, x) where {T,M,N,DIM1,DIM2} =
+	convert_fromcartesian(x, Val{DIM2}())
+toexternalpoint(m::VcatMap{T,M,N,DIM1,DIM2}, y) where {T,M,N,DIM1,DIM2} =
+	convert_tocartesian(y, Val{DIM1}())
 
 size_as_matrix(A::AbstractArray) = size(A)
 size_as_matrix(A::Number) = (1,1)
 
 # The Jacobian is block-diagonal
-function toexternalmatrix(m::VcatMap{N,T}, matrices) where {N,T}
-	A = zeros(T, N, N)
+function toexternalmatrix(m::VcatMap{T,M,N}, matrices) where {T,M,N}
+	A = zeros(T, M, N)
+	k = 0
 	l = 0
 	for el in matrices
 		m,n = size_as_matrix(el)
-		@assert m==n
-		A[l+1:l+m,l+1:l+n] .= el
+		A[k+1:k+m,l+1:l+n] .= el
+		k += m
 		l += n
 	end
-	SMatrix{N,N}(A)
+	SMatrix{M,N}(A)
 end
 
 

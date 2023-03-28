@@ -52,7 +52,7 @@ struct Equal <: CanonicalType end
 
 canonicaldomain(::Equal, d) = d
 mapfrom_canonical(::Equal, d) = identitymap(d)
-mapto_canonical(::Equal, d) = leftinverse(mapto_canonical(Equal(), d))
+mapto_canonical(::Equal, d) = leftinverse(mapfrom_canonical(Equal(), d))
 
 simplify(d) = canonicaldomain(Equal(), d)
 simplifies(d) = hascanonicaldomain(Equal(), d)
@@ -62,7 +62,7 @@ struct Isomorphic <: CanonicalType end
 
 canonicaldomain(::Isomorphic, d) = canonicaldomain(Equal(), d)
 mapfrom_canonical(::Isomorphic, d) = mapfrom_canonical(Equal(), d)
-mapto_canonical(::Isomorphic, d) = leftinverse(mapto_canonical(Isomorphic(), d))
+mapto_canonical(::Isomorphic, d) = leftinverse(mapfrom_canonical(Isomorphic(), d))
 
 canonicaldomain(::Isomorphic, d::Domain{SVector{1,T}}) where {T} =
     convert(Domain{T}, d)

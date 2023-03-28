@@ -24,6 +24,8 @@ multiply_map2(m1, m2::ZeroMap) = m2
 multiply_map2(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =
     ConstantMap{promote_type(S,T)}(constant(m1)*constant(m2))
 
+multiply_map(m1::Function, m2::Function) = t -> m1(t)*m2(t)
+
 sum_map1(m1::ZeroMap, m2) = m2
 sum_map2(m1, m2::ZeroMap) = m1
 sum_map2(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =

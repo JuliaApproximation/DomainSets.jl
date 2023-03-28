@@ -50,7 +50,7 @@ suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, m
 
 suitable_point_to_map(m::DomainSets.ProductMap) =
     map(suitable_point_to_map, components(m))
-suitable_point_to_map(m::DomainSets.VcatMap{N,T}) where {N,T} =
+suitable_point_to_map(m::DomainSets.VcatMap{T,M,N}) where {T,M,N} =
     SVector{N,T}(rand(T,N))
 
 suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
