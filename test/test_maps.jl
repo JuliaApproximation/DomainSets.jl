@@ -638,6 +638,13 @@ function test_product_map(T)
     @test jacdet(mapto(d1v,d2v)) == ConstantMap{Vector{T}}(4)
 
     @test components(productmap(LinearMap(1), LinearMap(one(T)))) isa Tuple{<:Map{T},<:Map{T}}
+
+    # test a non-rectangular product map
+    m_rect = AffineMap(SA[one(T) 2; 3 4; 5 6], SA[one(T),one(T),zero(T)])
+    pm = productmap(m_rect, m_rect)
+    @test pm isa DomainSets.VcatMap{T,6,4,(3,3),(2,2)}
+    @test jacobian(pm, SA[one(T),0,0,0]) isa SMatrix{6,4,T}
+    @test diffvolume(pm, SA[one(T),0,0,0]) == 24
 end
 
 using DomainSets: WrappedMap
