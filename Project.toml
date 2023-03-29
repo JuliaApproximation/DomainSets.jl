@@ -1,6 +1,6 @@
 name = "DomainSets"
 uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
-version = "0.6.5"
+version = "0.6.6"
 
 [deps]
 CompositeTypes = "b152e2b5-7a66-4b01-a709-34e65c35f657"
