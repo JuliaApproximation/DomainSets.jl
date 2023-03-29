@@ -39,11 +39,11 @@ function jacobian(m::ProductMap{T}) where {T}
 	if isaffine(m)
 		ConstantMap{T}(matrix(m))
 	else
-		ProductMap(map(jacobian, components(m)))
+		LazyJacobian(m)
 	end
 end
 
-diffvolume(m::ProductMap) = multiply_map(map(diffvolume, factors(m))...)
+# diffvolume(m::ProductMap) = multiply_map(map(diffvolume, factors(m))...)
 
 similarmap(m::ProductMap, ::Type{T}) where {T} = ProductMap{T}(components(m))
 
