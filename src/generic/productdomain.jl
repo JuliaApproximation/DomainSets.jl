@@ -51,7 +51,7 @@ rightendpoint(d::ProductDomain) = toexternalpoint(d, map(rightendpoint, componen
 interior(d::ProductDomain) = ProductDomain(map(interior, components(d)))
 closure(d::ProductDomain) = ProductDomain(map(closure, components(d)))
 
-center(d::ProductDomain) = hcat(map(center, components(d))...)
+center(d::ProductDomain) = hcat(map(center, factors(d))...)
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
 
