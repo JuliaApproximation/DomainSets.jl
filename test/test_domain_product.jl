@@ -241,6 +241,7 @@ function test_product_domains()
         @test SA[0.5,0.5,0.8] ∈ d4
         @test SA[-1.1,0.3,0.1] ∉ d4
         @test point_in_domain(d4) ∈ d4
+        @test center(d4) == [0.0,0.0,0.0]
 
         @test d1[Component(1)] == -1..1
         @test d1[Component(2)] == -1..1

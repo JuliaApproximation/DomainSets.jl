@@ -108,7 +108,7 @@ export canonicaldomain, hascanonicaldomain,
 export superdomain
 
 # from generic/productdomain.jl
-export ProductDomain, productdomain,
+export ProductDomain, productdomain, center,
     VcatDomain, VectorProductDomain, TupleProductDomain,
     factors
 
