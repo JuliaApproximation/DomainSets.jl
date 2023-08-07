@@ -22,7 +22,7 @@ function test_product_domains()
         @test VcatDomain( (-1..1, -2..2)) isa VcatDomain{2,Int,(1,1),Tuple{ClosedInterval{Int64}, ClosedInterval{Int64}}}
 
         show(io,d1)
-        @test String(take!(io)) == "(-1.0..1.0) × (-1.0..1.0)"
+        @test String(take!(io)) == "($(-1.0..1.0)) × ($(-1.0..1.0))"
 
         bnd = boundary(d1)
         @test bnd isa EuclideanDomain
@@ -37,10 +37,10 @@ function test_product_domains()
         @test VcatDomain(UnitCircle()) isa VcatDomain{2}
 
         # Test vectors of wrong length
-        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '(-1.0..1.0) × (-1.0..1.0)' with dimension 2. Returning false.") SA[0.0,0.0,0.0] ∉ d1
-        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '(-1.0..1.0) × (-1.0..1.0)' with dimension 2. Returning false.") SA[0.0] ∉ d1
-        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '(-1.0..1.0) × (-1.0..1.0)' with dimension 2. Returning false.") [0.0,0.0,0.0] ∉ d1
-        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '(-1.0..1.0) × (-1.0..1.0)' with dimension 2. Returning false.") [0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") SA[0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") SA[0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") [0.0,0.0,0.0] ∉ d1
+        @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") [0.0] ∉ d1
 
         d3 = VcatDomain(-1.0 .. 1.0, -1.5 .. 2.5)
         @test SA[0.5,0.5] ∈ d3
@@ -319,7 +319,7 @@ function test_product_domains()
         # Generic functionality
         long_domain = ProductDomain([0..i for i in 1:20])
         show(io, long_domain)
-        @test String(take!(io)) == "(0..1) × (0..2) × (0..3) × ... × (0..20)"
+        @test String(take!(io)) == "($(0..1)) × ($(0..2)) × ($(0..3)) × ... × ($(0..20))"
         @test isopenset(interior(UnitCube()))
         @test isclosedset(closure(interior(UnitCube())))
     end

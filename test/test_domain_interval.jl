@@ -99,7 +99,7 @@ function test_intervals()
         @test canonicaldomain(d) === d
 
         show(io, ChebyshevInterval())
-        @test String(take!(io)) == "-1.0..1.0 (Chebyshev)"
+        @test String(take!(io)) == "$(-1.0..1.0) (Chebyshev)"
     end
     @testset "HalfLine{$T}" begin
         d = HalfLine{T}()
