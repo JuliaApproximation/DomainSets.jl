@@ -1,11 +1,4 @@
 
-# Some support for intervals from IntervalSets
-DomainSetsCore.DomainStyle(::Type{<:AbstractInterval}) = IsDomain()
-_convert_eltype(::Type{T}, d::AbstractInterval, ::Type{S}) where {S,T} =
-    convert(AbstractInterval{T}, d)
-isreal(d::AbstractInterval) = isreal(eltype(d))
-approx_in(x, d::AbstractInterval, tol) = approx_in(x, AsDomain(d), tol)
-
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
 

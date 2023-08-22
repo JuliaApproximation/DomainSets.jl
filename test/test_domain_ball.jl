@@ -96,7 +96,7 @@ function test_balls()
 
     @test convert(Interval, UnitBall{Float64}()) === ChebyshevInterval()
     @test convert(Interval, UnitBall{Float64,:open}()) === OpenInterval(-1.0, 1.0)
-    @test UnitBall{Float64}() == AsDomain(ChebyshevInterval())
+    @test UnitBall{Float64}() == ChebyshevInterval()
 
     @test convert(Domain{SVector{2,Float64}}, UnitBall(2)) isa StaticUnitBall
     @test convert(Domain{Vector{Float64}}, UnitBall(Val(2))) isa DynamicUnitBall

@@ -27,8 +27,8 @@ function test_generic_domain(d)
         @test x ∈ d
         @test approx_in(x, d, 0.01)
         @test_throws ErrorException approx_in(x, d, -1)
-        @test in.([x,x], AsDomain(d)) == in.([x,x], Ref(d))
-        @test approx_in.([x,x], AsDomain(d), 0.01) == approx_in.([x,x], Ref(d), 0.01)
+        @test in.([x,x], d) == in.([x,x], Ref(d))
+        @test approx_in.([x,x], d, 0.01) == approx_in.([x,x], Ref(d), 0.01)
     else
         try
             x = point_in_domain(d)
@@ -112,15 +112,15 @@ end
         end
 
         # functionality using broadcast
-        @test 2 * AsDomain(1..2) == 2 .* AsDomain(1..2)
-        @test AsDomain(1..2) * 2 == AsDomain(1..2) .* 2
-        @test AsDomain(1..2) / 2 ≈ 0.5..1
-        @test 2 \ AsDomain(1..2) ≈ 0.5..1
-        @test all(rand(4) .∈ AsDomain(-1..1))
-        @test all(approx_in.(rand(4), AsDomain(-1..1)))
-        @test all(approx_in.([1.005,1.0005], AsDomain(-1..1), [1e-2,1e-3]))
-        @test all(rand(4) .∉ AsDomain(2..3))
-        @test_throws MethodError AsDomain(0..1) + 0.4
+        @test 2 * (1..2) == 2 .* (1..2)
+        @test (1..2) * 2 == (1..2) .* 2
+        @test (1..2) / 2 ≈ 0.5..1
+        @test 2 \ (1..2) ≈ 0.5..1
+        @test all(rand(4) .∈ (-1..1))
+        @test all(approx_in.(rand(4), (-1..1)))
+        @test all(approx_in.([1.005,1.0005], (-1..1), [1e-2,1e-3]))
+        @test all(rand(4) .∉ (2..3))
+        @test_throws MethodError (0..1) + 0.4
 
         # promotion
         @test DomainSets.promote_domains() == ()

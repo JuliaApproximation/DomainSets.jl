@@ -40,8 +40,8 @@ include("test_domain_simplex.jl")
         @test interior(d1) == d1
         @test closure(d1) == d1
         @test boundingbox(d1) == d1
-        @test d1 == AsDomain(2..1)
-        @test AsDomain(2..1) == d1
+        @test d1 == 2..1
+        @test 2..1 == d1
         d2 = 0..1
         @test d1 ∩ d2 == d1
         @test d2 ∩ d1 == d1
@@ -49,7 +49,7 @@ include("test_domain_simplex.jl")
         @test d2 ∪ d1 == d2
         @test d1 \ d2 == d1
         @test d2 \ d1 == d2
-        @test d2 \ AsDomain(d2) == d1
+        @test d2 \ d2 == d1
         # Test some promotions
         @test EmptySpace{Float64}() ∪ (0..1) isa AbstractInterval{Float64}
         @test EmptySpace{Int}() ∩ (0..1.0) isa EmptySpace{Float64}
@@ -266,7 +266,7 @@ include("test_domain_simplex.jl")
         @test (0..1) \ Point(0.0) == Interval{:open,:closed,Float64}(0,1)
         @test (0..1) \ Point(1.0) == Interval{:closed,:open,Float64}(0,1)
         @test (0..1) \ Point(2.0) == Interval{:closed,:closed,Float64}(0,1)
-        @test AsDomain(0..1) \ 2.0 == (0..1) \ Point(2.0)
+        @test (0..1) \ 2.0 == (0..1) \ Point(2.0)
         @test issubset(Point(1), (0..2))
         @test Point(0.5) \ (0..1) == EmptySpace{Float64}()
         @test Point(0.5) \ (1..2) == Point(0.5)
@@ -398,7 +398,7 @@ include("test_domain_simplex.jl")
     @testset "mapped_domain" begin
         @test MappedDomain(cos, 0..1.0) isa MappedDomain{Float64}
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
-        @test cos.(AsDomain(0..1.0)) isa MappedDomain
+        @test cos.(0..1.0) isa MappedDomain
         @test isempty(MappedDomain(LinearMap(2.0), EmptySpace()))
 
         # Test chaining of maps
@@ -586,7 +586,7 @@ include("test_domain_simplex.jl")
     end
 
     @testset "generator domains" begin
-        d1 = Domain(x for x in AsDomain(0..1))
+        d1 = Domain(x for x in 0..1)
         @test d1 == 0..1
 
         d2 = Domain(x>0 for x in -1..1)
