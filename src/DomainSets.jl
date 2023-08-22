@@ -35,7 +35,10 @@ import Base: *, +, -, /, \, ^,
     # Display
     show
 
+# DomainSetsCore
 import DomainSetsCore: domain
+
+export DomainStyle
 
 # IntervalSets
 import IntervalSets: (..), endpoints, AbstractInterval, TypedEndpointsInterval,
@@ -46,9 +49,6 @@ export ..
 
 
 import CompositeTypes: component, components
-
-"SDOMAIN is a union of explicitly supported domain types."
-const SDOMAIN = Union{AbstractInterval}
 
 ################################
 ## Exhaustive list of exports

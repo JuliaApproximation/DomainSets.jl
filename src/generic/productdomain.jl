@@ -86,9 +86,9 @@ productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, factors(d2)...)
 
 # Only override cross for variables of type Domain, it may have a different
 # meaning for other variables (like the vector cross product)
-cross(d::Union{Domain,SDOMAIN}...) = productdomain(d...)
+cross(d::Domain...) = productdomain(d...)
 
-^(d::Union{Domain,SDOMAIN}, n::Int) = productdomain(ntuple(i->d, n)...)
+^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
 
 similardomain(d::ProductDomain, ::Type{T}) where {T} =
 	ProductDomain{T}(factors(d))

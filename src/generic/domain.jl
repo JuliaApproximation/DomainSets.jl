@@ -50,7 +50,7 @@ const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 
 "What is the Euclidean dimension of the domain?"
-dimension(d) = euclideandimension(eltype(d))
+dimension(d::Domain) = euclideandimension(eltype(d))
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
