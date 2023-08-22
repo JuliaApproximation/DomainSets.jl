@@ -1,13 +1,9 @@
 # Definition of the abstract Domain type and its interface
 
-# The type Domain{T} is defined in IntervalSets.jl
+# The type Domain{T} is defined in DomainSetsCore.jl
 
-eltype(::Type{<:Domain{T}}) where {T} = T
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
 numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
-
-convert_numtype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_numtype(T,U)}, d)
-convert_prectype(d::Domain{T}, ::Type{U}) where {T,U} = convert(Domain{to_prectype(T,U)}, d)
 
 Domain(d) = convert(Domain, d)
 
@@ -27,8 +23,9 @@ promote_domains() = ()
 promote_domains(domains...) = promote_domains(domains)
 promote_domains(domains) = convert_eltype.(mapreduce(eltype, promote_type, domains), domains)
 
-promote_domains(domains::AbstractSet{<:Domain{T}}) where {T} = domains
-promote_domains(domains::AbstractSet{<:Domain}) = Set(promote_domains(collect(domains)))
+# TODO: deprecate because this is an arbitrary promotion
+# promote_domains(domains::AbstractSet{<:Domain{T}}) where {T} = domains
+# promote_domains(domains::AbstractSet{<:Domain}) = Set(promote_domains(collect(domains)))
 
 convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
 convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, eltype(d))
@@ -36,9 +33,10 @@ _convert_eltype(::Type{T}, d, ::Type{T}) where {T} = d
 _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
     error("Don't know how to convert the `eltype` of $(d).")
 
-promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
-promote(d1::Domain, d2) = promote_domains((d1,d2))
-promote(d1, d2::Domain) = promote_domains((d1,d2))
+# TODO: deprecate because this changes what promotion means, use promote_domains instead
+# promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
+# promote(d1::Domain, d2) = promote_domains((d1,d2))
+# promote(d1, d2::Domain) = promote_domains((d1,d2))
 
 "A `EuclideanDomain` is any domain whose eltype is `<:StaticVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
@@ -52,7 +50,7 @@ const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 
 "What is the Euclidean dimension of the domain?"
-dimension(::Domain{T}) where {T} = euclideandimension(T)
+dimension(d) = euclideandimension(eltype(d))
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
@@ -78,7 +76,7 @@ compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
 
 "Promote point and domain to compatible types."
 promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x),eltype(d)))
-_promote_pair(x, d, ::Type{T}) where {T} = convert(T, x), convert(Domain{T}, d)
+_promote_pair(x, d, ::Type{T}) where {T} = convert(T, x), convert_eltype(T, d)
 _promote_pair(x, d, ::Type{Any}) = x, d
 # Some exceptions:
 # - matching types: avoid promotion just in case it is expensive
@@ -108,9 +106,14 @@ Return a suitable tolerance to use for verifying whether a point is close to
 a domain. Typically, the tolerance is close to the precision limit of the numeric
 type associated with the domain.
 """
-default_tolerance(d::Domain) = default_tolerance(prectype(d))
-default_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
+domain_tolerance(d) = domain_tolerance(prectype(d))
+domain_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
 
+# a version with a tolerance, for use in approx_in
+function compatible_or_false(x, d, tol)
+    tol >= 0 || error("Tolerance has to be positive in `approx_in`.")
+    compatible_or_false(x, d)
+end
 
 """
 `approx_in(x, domain::Domain [, tolerance])`
@@ -127,18 +130,14 @@ Up to inexact computations due to floating point numbers, it should also be
 the case that `approx_in(x, d, 0) == in(x,d)`. This implies that `approx_in`
 reflects whether a domain is open or closed.
 """
-approx_in(x, d::Domain) = approx_in(x, d, default_tolerance(d))
-
-function compatible_or_false(x, d, tol)
-    tol >= 0 || error("Tolerance has to be positive in `approx_in`.")
-    compatible_or_false(x, d)
-end
-
+approx_in(x, d) = approx_in(x, d, domain_tolerance(d))
 approx_in(x, d::Domain, tol) =
     compatible_or_false(x, d, tol) && approx_indomain(promote_pair(x, d)..., tol)
+approx_in(x, d::AsDomain, tol) =
+    compatible_or_false(x, domain(d), tol) && approx_indomain(promote_pair(x, domain(d))..., tol)
 
 # Fallback to `in`
-approx_indomain(x, d::Domain, tol) = in(x, d)
+approx_indomain(x, d, tol) = in(x, d)
 
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 

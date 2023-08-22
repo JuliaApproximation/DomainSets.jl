@@ -8,15 +8,15 @@ components(d::ProductDomain) = d.domains
 factors(d::ProductDomain) = components(d)
 
 isequaldomain(d1::ProductDomain, d2::ProductDomain) =
-	mapreduce(==, &, components(d1), components(d2))
+	compatibleproductdims(d1,d2) && mapreduce(==, &, components(d1), components(d2))
 hash(d::ProductDomain, h::UInt) = hashrec("ProductDomain", collect(components(d)), h)
 
 isempty(d::ProductDomain) = any(isempty, components(d))
 isclosedset(d::ProductDomain) = all(isclosedset, components(d))
 isopenset(d::ProductDomain) = all(isopenset, components(d))
 
-issubset(d1::ProductDomain, d2::ProductDomain) =
-	compatibleproductdims(d1, d2) && all(map(issubset, components(d1), components(d2)))
+issubset_domain(d1::ProductDomain, d2::ProductDomain) =
+	compatibleproductdims(d1, d2) && all(map(issubset, factors(d1), factors(d2)))
 
 volume(d::ProductDomain) = prod(map(volume, components(d)))
 
@@ -24,7 +24,7 @@ distance_to(d::ProductDomain, x) = sqrt(sum(distance_to(component(d, i), x[i])^2
 
 compatibleproductdims(d1::ProductDomain, d2::ProductDomain) =
 	dimension(d1) == dimension(d2) &&
-		all(map(==, map(dimension, components(d1)), map(dimension, components(d2))))
+		all(map(==, map(dimension, factors(d1)), map(dimension, factors(d2))))
 
 Display.combinationsymbol(d::ProductDomain) = Display.Times()
 Display.displaystencil(d::ProductDomain) = composite_displaystencil(d)
@@ -54,10 +54,11 @@ closure(d::ProductDomain) = ProductDomain(map(closure, components(d)))
 center(d::ProductDomain) = toexternalpoint(d, map(center, components(d)))
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
+VcatEltype = Union{Type{<:Number},Type{<:SVector}}
 
-ProductDomain(domains...) = _ProductDomain(map(Domain, domains)...)
-_ProductDomain(domains...) = TupleProductDomain(domains...)
-_ProductDomain(domains::VcatDomainElement...) = VcatDomain(domains...)
+ProductDomain(domains...) = _ProductDomain(domains, map(eltype, domains)...)
+_ProductDomain(domains, types...) = TupleProductDomain(domains...)
+_ProductDomain(domains, types::VcatEltype...) = VcatDomain(domains...)
 ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
 # To create a tuple product domain, invoke ProductDomain{T}. Here, we splat
 # and this may end up creating a VcatDomain instead.
@@ -85,11 +86,12 @@ productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, factors(d2)...)
 
 # Only override cross for variables of type Domain, it may have a different
 # meaning for other variables (like the vector cross product)
-cross(x::Domain...) = productdomain(x...)
+cross(d::Union{Domain,SDOMAIN}...) = productdomain(d...)
 
-^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
+^(d::Union{Domain,SDOMAIN}, n::Int) = productdomain(ntuple(i->d, n)...)
 
-similardomain(d::ProductDomain, ::Type{T}) where {T} = ProductDomain{T}(components(d))
+similardomain(d::ProductDomain, ::Type{T}) where {T} =
+	ProductDomain{T}(factors(d))
 
 canonicaldomain(d::ProductDomain) = any(map(hascanonicaldomain, factors(d))) ?
 	ProductDomain(map(canonicaldomain, components(d))) : d
@@ -150,26 +152,26 @@ struct VectorProductDomain{V<:AbstractVector,DD<:AbstractVector} <: ProductDomai
 	domains	::	DD
 
 	function VectorProductDomain{V,DD}(domains::DD) where {V,DD}
-		@assert eltype(eltype(domains)) == eltype(V)
+		@assert eltype(eltype(domains[1])) == eltype(V)
 		new(domains)
 	end
 end
 
 VectorProductDomain(domains::AbstractVector) =
-	VectorProductDomain{Vector{eltype(eltype(domains))}}(domains)
+	VectorProductDomain{Vector{eltype(eltype(domains[1]))}}(domains)
 
 VectorProductDomain{V}(domains::AbstractVector{<:Domain{T}}) where {T,V<:AbstractVector{T}} =
 	VectorProductDomain{V,typeof(domains)}(domains)
 function VectorProductDomain{V}(domains::AbstractVector) where {T,V<:AbstractVector{T}}
-	Tdomains = convert.(Domain{T}, domains)
-	VectorProductDomain{V}(Tdomains)
+	Tdomains = convert_eltype.(T, domains)
+	VectorProductDomain{V,typeof(Tdomains)}(Tdomains)
 end
 
 # Convenience: allow constructor to be called with multiple arguments, or with
 # a container that is not a vector
-VectorProductDomain(domains::Domain...) = VectorProductDomain(domains)
+VectorProductDomain(domains...) = VectorProductDomain(promote_domains(domains...))
 VectorProductDomain(domains) = VectorProductDomain(collect(domains))
-VectorProductDomain{V}(domains::Domain...) where {V} = VectorProductDomain{V}(domains)
+VectorProductDomain{V}(domains...) where {V} = VectorProductDomain{V}(promote_domains(domains...))
 VectorProductDomain{V}(domains) where {V} = VectorProductDomain{V}(collect(domains))
 
 # the dimension equals the number of composite elements
@@ -193,8 +195,7 @@ struct TupleProductDomain{T,DD} <: ProductDomain{T}
 end
 
 TupleProductDomain(domains::Vector) = TupleProductDomain(domains...)
-TupleProductDomain(domains::Domain...) = TupleProductDomain(domains)
-TupleProductDomain(domains...) = TupleProductDomain(map(Domain, domains)...)
+TupleProductDomain(domains...) = TupleProductDomain(map(checkdomain, domains))
 function TupleProductDomain(domains::Tuple)
 	T = Tuple{map(eltype, domains)...}
 	TupleProductDomain{T}(domains)
@@ -203,7 +204,7 @@ end
 TupleProductDomain{T}(domains::Vector) where {T} = TupleProductDomain{T}(domains...)
 TupleProductDomain{T}(domains...) where {T} = TupleProductDomain{T}(domains)
 function TupleProductDomain{T}(domains::Tuple) where {T <: Tuple}
-	Tdomains = map((t,d) -> convert(Domain{t},d), tuple(T.parameters...), domains)
+	Tdomains = map((t,d) -> convert_eltype(t, d), tuple(T.parameters...), domains)
 	TupleProductDomain{T,typeof(Tdomains)}(Tdomains)
 end
 TupleProductDomain{T}(domains::Tuple) where {T} =

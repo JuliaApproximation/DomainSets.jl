@@ -1,6 +1,9 @@
-
-using DomainSets: convert_numtype, convert_prectype,
-    promote_numtype, promote_prectype
+using DomainSets:
+    convert_eltype,
+    convert_numtype,
+    convert_prectype,
+    promote_numtype,
+    promote_prectype
 
 function test_dimension()
     @test DomainSets.euclideandimension(Int) == 1
@@ -83,7 +86,6 @@ function test_numtype()
     @test promote_numtype(2, 3.0+im, big(4)) isa Tuple{Complex{BigFloat},Complex{BigFloat},Complex{BigFloat}}
 end
 
-using DomainSets: convert_eltype
 function test_eltype()
     @test convert_eltype(Float64, Point(0)) isa Point{Float64}
     @test convert_eltype(Float64, Point(0)) == Point(0)

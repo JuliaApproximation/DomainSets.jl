@@ -5,9 +5,9 @@ Domain(gen::Base.Generator) = generator_domain(gen)
 generator_domain(gen::Base.Generator) = generator_domain(gen.f, gen.iter)
 
 # Example: Domain(x for x in 0..1)
-generator_domain(f::typeof(identity), iter::Domain) = iter
+generator_domain(f::typeof(identity), iter) = checkdomain(iter)
 # Example: Domain(x>1 for x in 0..2)
-generator_domain(f, iter::Domain) = BoundedIndicatorFunction(f, iter)
+generator_domain(f, iter) = BoundedIndicatorFunction(f, checkdomain(iter))
 
 # Example: Domain(x for x in 0..2 if x > 1)
 generator_domain(f::typeof(identity), iter::Base.Iterators.Filter) =

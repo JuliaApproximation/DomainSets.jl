@@ -1,5 +1,7 @@
 module DomainSets
 
+using DomainSetsCore
+
 using StaticArrays
 using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
@@ -33,8 +35,10 @@ import Base: *, +, -, /, \, ^,
     # Display
     show
 
+import DomainSetsCore: domain
+
 # IntervalSets
-import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
+import IntervalSets: (..), endpoints, AbstractInterval, TypedEndpointsInterval,
                         leftendpoint, rightendpoint, isleftopen, isleftclosed,
                         isrightopen, isrightclosed, isopenset, isclosedset,
                         infimum, supremum
@@ -43,6 +47,8 @@ export ..
 
 import CompositeTypes: component, components
 
+"SDOMAIN is a union of explicitly supported domain types."
+const SDOMAIN = Union{AbstractInterval}
 
 ################################
 ## Exhaustive list of exports

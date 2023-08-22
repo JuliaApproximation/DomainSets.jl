@@ -1,6 +1,6 @@
 
 """
-    canonicaldomain([ctype::CanonicalType, ]d::Domain)
+    canonicaldomain([ctype::CanonicalType, ]domain)
 
 Return an associated canonical domain, if any, of the given domain.
 
@@ -130,4 +130,4 @@ isequaldomain1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequaldomain2(d1, 
 # simplify the second argument
 isequaldomain2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : d1===d2
 
-==(d1::Domain, d2::Domain) = isequaldomain(d1, d2)
+==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))

@@ -29,13 +29,13 @@
         ũ2 = UnionDomain([d1,d2])
         @test ũ2 == ũ2
         @test u1 == ũ2
-        @test UnionDomain{SVector{2,Float64}}(d1) isa UnionDomain
+        @test UnionDomain{SVector{2,Float64}}((d1,)) isa UnionDomain
 
         # Don't create a union with two identical elements
         @test UnitDisk() ∪ UnitDisk() isa UnitDisk
 
         # union with non-Domain type that implements domain interface
-        u45 = (0.0..1.5) ∪ [1.0,3.0]
+        u45 = (0.0..1.5) ∪ AsDomain([1.0,3.0])
         @test u45 isa Domain{Float64}
         @test u45 isa UnionDomain
         @test eltype(component(u45,1)) == Float64
@@ -46,10 +46,10 @@
         @test -1.2 ∉ u45
         @test convert(Domain{BigFloat}, u45) isa Domain{BigFloat}
 
-        u45b = (0.0..1.5) ∪ [1,3]
+        u45b = (0.0..1.5) ∪ AsDomain([1,3])
         @test u45b isa Domain{Float64}
         @test component(u45b,2) isa AbstractArray{Float64}
-        @test [1,3] ∪ (0.0..1.5) isa Domain{Float64}
+        @test [1,3] ∪ AsDomain(0.0..1.5) isa Domain{Float64}
 
         @test issubset([0,1], 0..1)
         @test !issubset([0,1,2], 0..1)
@@ -74,14 +74,12 @@
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
         @test UnionDomain((d1,d2)) == UnionDomain(d1,d2)
-        @test UnionDomain(d1) isa UnionDomain
         @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
 
-        @test convert(Domain, [0..1,2..3,3..4]) isa UnionDomain{Int}
-        @test convert(Domain{Float64}, [0..1,2..3,3..4]) isa UnionDomain{Float64}
-        @test convert(Domain, Set([0..1,2..3,3..4])) isa UnionDomain{Int}
-        @test convert(Domain{Float64}, Set([0..1,2..3,3..4])) isa UnionDomain{Float64}
-        @test convert(Domain, Set([1,2,3])) isa UnionDomain{Int}
+        @test convert(Domain, [Point(0),Point(2),Point(3)]) isa UnionDomain{Int}
+        @test convert(Domain{Float64}, [Point(1),Point(2),Point(3)]) isa UnionDomain{Float64}
+        @test convert(Domain, Set([Point(0),Point(2),Point(3)])) isa UnionDomain{Int}
+        @test convert(Domain{Float64}, Set([Point(0),Point(2),Point(3)])) isa UnionDomain{Float64}
         @test 2 ∈ convert(Domain, Set([1,2,3]))
         @test 2 ∈ convert(Domain{Float64}, Set([1,2,3]))
         @test 4 ∉ convert(Domain, Set([1,2,3]))
@@ -103,12 +101,10 @@
     end
 
     @testset "intersect" begin
-        @test IntersectDomain(0..1) == IntersectDomain((0..1))
-        @test IntersectDomain{Float64}(0..1) == IntersectDomain(0.0..1.0)
         @test IntersectDomain{Float64}(0..1, 1..2) == IntersectDomain((0..1, 1..2))
         @test intersectdomain(0..1, 1..2) == Point(1)
 
-        @test intersectdomain(0..1, 0.5..1.5) == (0..1) & (0.5..1.5)
+        @test intersectdomain(0..1, 0.5..1.5) == AsDomain(0..1) & AsDomain(0.5..1.5)
 
         # intersection of productdomains
         i1 = intersectdomain((-0.4..0.4)^2, (-.5 .. 0.5) × (-0.1.. 0.1))
@@ -139,8 +135,8 @@
         @test intersectdomain() == EmptySpace{Any}()
         @test intersectdomain(UnitDisk()) == UnitDisk()
 
-        @test (0..1) ∩ [1.5] isa IntersectDomain{Float64}
-        @test [0.5] ∩ (1..2) isa IntersectDomain{Float64}
+        @test (0..1) ∩ AsDomain([1.5]) isa IntersectDomain{Float64}
+        @test [0.5] ∩ AsDomain(1..2) isa IntersectDomain{Float64}
 
         @test intersectdomain(0..1, [0,1]) == [0,1]
         @test intersectdomain([0,1], 0..1) == [0,1]
@@ -187,18 +183,18 @@
         @test 1.0 ∉ d2
         @test convert(Domain{BigFloat}, d2) isa Domain{BigFloat}
 
-        @test (0..1) \ [0.5] isa SetdiffDomain{Float64}
-        d3 = [0,5] \ (0..3)
+        @test (0..1) \ AsDomain([0.5]) isa SetdiffDomain{Float64}
+        d3 = [0,5] \ AsDomain(0..3)
         @test d3 isa SetdiffDomain{Int}
         @test 0 ∉ d3
         @test 5 ∈ d3
 
-        @test setdiff(0..1, 2..3) == setdiffdomain(0..1, 2..3)
-        @test setdiff(0..1, 0.5) == setdiffdomain(0..1, 0.5)
-        @test setdiff(0.5, 0..1) == setdiffdomain(0.5, 0..1)
+        @test setdiff(0..1, AsDomain(2..3)) == setdiffdomain(0..1, 2..3)
+        @test setdiff(0..1, AsDomain(0.5)) == setdiffdomain(0..1, 0.5)
+        @test setdiff(0.5, AsDomain(0..1)) == setdiffdomain(0.5, 0..1)
 
         @test setdiff(0..1, EmptySpace()) == 0..1
-        @test setdiff(0..1, 0.0..1.0) == EmptySpace()
+        @test setdiffdomain(0..1, 0.0..1.0) == EmptySpace()
 
         @test (0..1)^2 \ UnitCircle() == UnitInterval()^2 \ UnitCircle()
     end
@@ -206,25 +202,25 @@
     @testset "arithmetic" begin
         d1 = (0..1)
         d2 = (2..3)
-        d = UnionDomain(d1) ∪ UnionDomain(d2)
+        d = UnionDomain((d1,)) ∪ UnionDomain((d2,))
 
-        @test d .+ 1 == UnionDomain(d1 .+ 1) ∪ (d2 .+ 1)
-        @test d .- 1 == UnionDomain(d1 .- 1) ∪ (d2 .- 1)
-        @test 2 * d  == UnionDomain(2 * d1)  ∪ (2 * d2)
-        @test d * 2 == UnionDomain(d1 * 2) ∪ (d2 * 2)
-        @test d / 2 == UnionDomain(d1 / 2) ∪ (d2 / 2)
-        @test 2 \ d == UnionDomain(2 \ d1) ∪ (2 \ d2)
+        @test d .+ 1 == UnionDomain((AsDomain(d1) .+ 1,)) ∪ (AsDomain(d2) .+ 1)
+        @test d .- 1 == UnionDomain((AsDomain(d1) .- 1,)) ∪ (AsDomain(d2) .- 1)
+        @test 2 * d  == UnionDomain((2*AsDomain(d1),))  ∪ 2 * AsDomain(d2)
+        @test d * 2 == UnionDomain((AsDomain(d1) * 2,)) ∪ (AsDomain(d2) * 2)
+        @test d / 2 == UnionDomain((AsDomain(d1) / 2,)) ∪ (AsDomain(d2) / 2)
+        @test 2 \ d == UnionDomain((2 \ AsDomain(d1),)) ∪ (2 \ AsDomain(d2))
 
         @test infimum(d) == minimum(d) == 0
         @test supremum(d) == maximum(d) == 3
     end
 
     @testset "different types" begin
-        d̃1 = (0..1)
-        d1 = (0f0.. 1f0)
-        d2 = (2..3)
+        d1 = 0..1
+        d2 = 0f0..1f0
+        d3 = 2..3
 
-        @test UnionDomain(d1) ∪ d2 == UnionDomain(d̃1) ∪ d2
+        @test UnionDomain(d1,d2) ∪ d3 == d1 ∪ UnionDomain(d2, d3)
     end
 
     @testset "disk × interval" begin

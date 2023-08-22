@@ -119,7 +119,7 @@ function test_simplex()
     @test SA[0.2,-0.2] ∉ D
     @test convert(Domain{Vector{BigFloat}}, D) == VectorUnitSimplex{BigFloat}(2)
     @test corners(D) == [ [0.0,0.0], [1.0,0.0], [0.0,1.0]]
-    @test boundingbox(D) == UnitCube(4)
+    @test boundingbox(D) == UnitCube(2)
 
     d4 = EuclideanUnitSimplex{4,Float64}()
     @test corners(d4) isa SVector{5,SVector{4,Float64}}

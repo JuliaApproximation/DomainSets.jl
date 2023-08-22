@@ -42,9 +42,9 @@ function test_product_domains()
         @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") [0.0,0.0,0.0] ∉ d1
         @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") [0.0] ∉ d1
 
-        d3 = VcatDomain(-1.0 .. 1.0, -1.5 .. 2.5)
-        @test SA[0.5,0.5] ∈ d3
-        @test SA[-1.1,0.3] ∉ d3
+        d2 = VcatDomain(-1.0 .. 1.0, -1.5 .. 2.5)
+        @test SA[0.5,0.5] ∈ d2
+        @test SA[-1.1,0.3] ∉ d2
 
         d3 = VcatDomain(1.05 * UnitDisk(), -1.0 .. 1.0)
         @inferred(cross(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
@@ -110,7 +110,7 @@ function test_product_domains()
         @test rand(10) ∈ d4
         @test 2 .+ rand(10) ∉ d4
 
-        @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
+        @test eltype(VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1]) == Float64
     end
     @testset "Tuple product domain" begin
         # Use the constructor ProductDomain{T} directly

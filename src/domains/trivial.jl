@@ -72,6 +72,9 @@ fullspace(::Type{T}) where {T} = FullSpace{T}()
 
 isfullspace(d::FullSpace) = true
 isfullspace(d::Domain) = false
+isfullspace(d) = _isfullspace(d, DomainStyle(d))
+_isfullspace(d, ::IsDomain) = false
+_isfullspace(d, ::NotDomain) = error("isfullspace invoked on non-domain type")
 
 similardomain(::FullSpace, ::Type{T}) where {T} = FullSpace{T}()
 

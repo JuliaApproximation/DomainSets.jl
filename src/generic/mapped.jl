@@ -52,18 +52,23 @@ struct MappedDomain{T,F,D} <: AbstractMappedDomain{T}
 end
 
 # In the constructor, we have to decide which T to use for the MappedDomain.
-# - we don't know anything about invmap: deduce T from the given domain
-MappedDomain(invmap, domain::Domain{T}) where {T} = MappedDomain{T}(invmap, domain)
+# - if we don't know anything about invmap: deduce T from the given domain
+MappedDomain(invmap, domain) =
+    MappedDomain{eltype(domain)}(invmap, domain)
 # - if the map is a Map{T}, use that T for the MappedDomain
-MappedDomain(invmap::Map{T}, domain::Domain{S}) where {S,T} = MappedDomain{T}(invmap, domain)
-# - if T is given in the constructor, by all means we use that
-MappedDomain{T}(invmap, domain::Domain) where {T} =
-    MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
+MappedDomain(invmap::Map{T}, domain) where {T} =
+    MappedDomain{T}(invmap, domain)
+# If T is given in the constructor, by all means we use that:
+MappedDomain{T}(invmap, domain) where {T} =
+    _MappedDomain(T, invmap, checkdomain(domain))
 # - in that case, if the map is a Map{S}, make sure that S matches T
-MappedDomain{T}(invmap::Map{T}, domain::Domain) where {T} =
-    MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
-MappedDomain{T}(invmap::Map{S}, domain::Domain) where {S,T} =
+MappedDomain{T}(invmap::Map{T}, domain) where {T} =
+    _MappedDomain(T, invmap, checkdomain(domain))
+MappedDomain{T}(invmap::Map{S}, domain) where {S,T} =
     MappedDomain{T}(convert(Map{T}, invmap), domain)
+# invoke the constructor
+_MappedDomain(::Type{T}, invmap, domain) where {T} =
+    MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
 
 similardomain(d::MappedDomain, ::Type{T}) where {T} =
     MappedDomain{T}(d.invmap, d.domain)
@@ -75,7 +80,7 @@ inverse_map(d::MappedDomain) = d.invmap
 inverse_map(d::MappedDomain, y) = d.invmap(y)
 
 "Map a domain with the inverse of the given map"
-map_domain(map, domain::Domain) = _map_domain(map, domain)
+map_domain(map, domain) = _map_domain(map, checkdomain(domain))
 
 # Fallback: we don't know anything about map, just try to invert
 _map_domain(map, domain) = mapped_domain(inverse(map), domain)
@@ -87,7 +92,7 @@ function _map_domain(map::Map, domain)
     if U == Union{}
         error("incompatible types of $(map) and $(domain)")
     end
-    mapped_domain(inverse(convert(Map{U}, map)), convert(Domain{U}, domain))
+    mapped_domain(inverse(convert(Map{U}, map)), convert_eltype(U, domain))
 end
 
 isequaldomain(a::MappedDomain, b::MappedDomain) =
@@ -95,7 +100,7 @@ isequaldomain(a::MappedDomain, b::MappedDomain) =
 
 
 "Make a mapped domain with the given inverse map"
-mapped_domain(invmap, domain::Domain) = _mapped_domain(invmap, domain)
+mapped_domain(invmap, domain) = _mapped_domain(invmap, checkdomain(domain))
 
 # We face the same task as in the constructor: attempt to identify T
 # Here, we are more flexible, and attempt to do more conversions. We assume
@@ -108,7 +113,7 @@ _mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
 # -- first, update the numtype
 _mapped_domain(invmap::Map, domain) =
     _mapped_domain(invmap, domain, promote_type(numtype(invmap),numtype(domain)))
-_mapped_domain(invmap::Map{T}, domain::Domain{S}, ::Type{U}) where {S,T,U} =
+_mapped_domain(invmap, domain, ::Type{U}) where {U} =
     _mapped_domain2(convert_numtype(invmap,U), convert_numtype(domain,U))
 # -- then, ensure the codomaintype of the map equals the element type of the domain
 _mapped_domain2(invmap, domain) = _mapped_domain2(invmap, domain, codomaintype(invmap), eltype(domain))
@@ -150,8 +155,13 @@ struct ParametricDomain{T,F,D} <: AbstractMappedDomain{T}
     domain  ::  D
 end
 
-ParametricDomain(fmap, domain::Domain) = ParametricDomain{codomaintype(fmap)}(fmap, domain)
+ParametricDomain(fmap, domain) =
+    ParametricDomain{codomaintype(fmap)}(fmap, domain)
 ParametricDomain{T}(fmap, domain::Domain) where {T} =
+    ParametricDomain{T,typeof(fmap),typeof(domain)}(fmap, domain)
+ParametricDomain{T}(fmap, domain) where {T} =
+    _ParametricDomain(T, fmap, checkdomain(domain))
+_ParametricDomain(::Type{T}, fmap, domain) where {T} =
     ParametricDomain{T,typeof(fmap),typeof(domain)}(fmap, domain)
 
 similardomain(d::ParametricDomain, ::Type{T}) where {T} =
@@ -174,7 +184,7 @@ isequaldomain(d1::ParametricDomain, d2::ParametricDomain) =
 hash(d::ParametricDomain, h::UInt) = hashrec(forward_map(d), superdomain(d), h)
 
 "Return the domain that results from mapping the given domain."
-parametric_domain(fmap, domain::Domain) = ParametricDomain(fmap, domain)
+parametric_domain(fmap, domain) = ParametricDomain(fmap, domain)
 parametric_domain(fmap, domain::ParametricDomain) =
     parametric_domain(fmap ∘ forward_map(domain), superdomain(domain))
 

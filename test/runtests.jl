@@ -1,7 +1,10 @@
 using Test, LinearAlgebra, StaticArrays, Random, StableRNGs
 
-using DomainSets
+using DomainSetsCore, DomainSets
 using CompositeTypes.Indexing
+
+const io = IOBuffer()
+const textmime = MIME"text/plain"()
 
 include("test_common.jl")
 include("test_maps.jl")

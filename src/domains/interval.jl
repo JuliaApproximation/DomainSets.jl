@@ -1,8 +1,15 @@
 
+# Some support for intervals from IntervalSets
+DomainSetsCore.DomainStyle(::Type{<:AbstractInterval}) = IsDomain()
+_convert_eltype(::Type{T}, d::AbstractInterval, ::Type{S}) where {S,T} =
+    convert(AbstractInterval{T}, d)
+isreal(d::AbstractInterval) = isreal(eltype(d))
+approx_in(x, d::AbstractInterval, tol) = approx_in(x, AsDomain(d), tol)
+
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
 
-isinterval(d::Domain) = false
+isinterval(d) = false
 isinterval(d::AbstractInterval) = true
 
 hash(d::AbstractInterval, h::UInt) =
@@ -78,6 +85,10 @@ and `ChebyshevInterval`.
 """
 abstract type FixedInterval{L,R,T} <: TypedEndpointsInterval{L,R,T} end
 const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
+
+convert(::Type{AbstractInterval{T}}, d::FixedInterval{L,R,T}) where {L,R,T} = d
+convert(::Type{AbstractInterval{T}}, d::FixedInterval{L,R,S}) where {L,R,S,T} =
+    similardomain(d, T)
 
 closure(d::AbstractInterval) = ClosedInterval(endpoints(d)...)
 closure(d::ClosedInterval) = d
@@ -318,11 +329,11 @@ intersect(d1::FixedInterval, d2::FixedInterval) = intersectdomain(d1, d2)
 
 # Promotion to joint type T
 uniondomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) =
-    uniondomain(promote(d1,d2)...)
+    uniondomain(promote_domains(d1,d2)...)
 intersectdomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) =
-    intersectdomain(promote(d1,d2)...)
+    intersectdomain(promote_domains(d1,d2)...)
 setdiffdomain(d1::AbstractInterval, d2::AbstractInterval) =
-    setdiffdomain(promote(d1,d2)...)
+    setdiffdomain(promote_domains(d1,d2)...)
 
 
 

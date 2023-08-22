@@ -56,7 +56,7 @@ isequaldomain(d1::Ball, d2::Ball) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && center(d1)==center(d2)
 hash(d::Ball, h::UInt) = hashrec("Ball", isclosedset(d), radius(d), center(d), h)
 
-function issubset(d1::Ball, d2::Ball)
+function issubset_domain(d1::Ball, d2::Ball)
     if dimension(d1) == dimension(d2)
         if center(d1) == center(d2)
             if radius(d1) < radius(d2)
@@ -119,7 +119,7 @@ approx_indomain(x, d::ClosedUnitBall, tolerance) = norm(x) <= 1+tolerance
 isequaldomain(d1::UnitBall, d2::UnitBall) = isclosedset(d1)==isclosedset(d2) &&
     dimension(d1) == dimension(d2)
 
-issubset(d1::UnitBall, d2::UnitBall) =
+issubset_domain(d1::UnitBall, d2::UnitBall) =
     dimension(d1) == dimension(d2) && (isclosedset(d2) || isopenset(d1))
 
 convert(::Type{SublevelSet}, d::UnitBall{T,C}) where {T,C} =
