@@ -28,7 +28,7 @@ promote_domains(domains) = convert_eltype.(mapreduce(eltype, promote_type, domai
 # promote_domains(domains::AbstractSet{<:Domain}) = Set(promote_domains(collect(domains)))
 
 convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
-convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, eltype(d))
+convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, deltype(d))
 _convert_eltype(::Type{T}, d, ::Type{T}) where {T} = d
 _convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
     error("Don't know how to convert the `eltype` of $(d).")
@@ -53,7 +53,7 @@ CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 dimension(d::Domain) = euclideandimension(eltype(d))
 
 "Is the given combination of point and domain compatible?"
-iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), eltype(d))
+iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), deltype(d))
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}) where {S,T} =
     _iscompatiblepair(x, d, S, T, promote_type(S,T))
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = true
@@ -68,14 +68,14 @@ iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)=
 # Note: there are cases where this warning reveals a bug, and cases where it is
 # annoying. In cases where it is annoying, the domain may want to specialize `in`.
 compatible_or_false(x, domain) =
-    iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(eltype(domain)). Returning false."; false)
+    iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(deltype(domain)). Returning false."; false)
 
 compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
 
 
 "Promote point and domain to compatible types."
-promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x),eltype(d)))
+promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x), deltype(d)))
 _promote_pair(x, d, ::Type{T}) where {T} = convert(T, x), convert_eltype(T, d)
 _promote_pair(x, d, ::Type{Any}) = x, d
 # Some exceptions:

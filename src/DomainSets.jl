@@ -38,7 +38,8 @@ import Base: *, +, -, /, \, ^,
 # DomainSetsCore
 import DomainSetsCore: domain
 
-export DomainStyle
+export DomainStyle, domaineltype
+const deltype = domaineltype    # convenience abbreviation for internal use
 
 # IntervalSets
 import IntervalSets: (..), endpoints, AbstractInterval, TypedEndpointsInterval,

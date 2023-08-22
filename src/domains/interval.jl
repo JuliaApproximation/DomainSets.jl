@@ -54,9 +54,9 @@ end
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 corners(d::AbstractInterval) = [leftendpoint(d), rightendpoint(d)]
 
-normal(d::AbstractInterval, x) = (abs(minimum(d)-x) < abs(maximum(d)-x)) ? -one(eltype(d)) : one(eltype(d))
+normal(d::AbstractInterval, x) = (abs(minimum(d)-x) < abs(maximum(d)-x)) ? -one(deltype(d)) : one(deltype(d))
 
-distance_to(d::AbstractInterval, x) = x ∈ d ? zero(eltype(d)) : min(abs(x-supremum(d)), abs(x-infimum(d)))
+distance_to(d::AbstractInterval, x) = x ∈ d ? zero(deltype(d)) : min(abs(x-supremum(d)), abs(x-infimum(d)))
 
 boundingbox(d::AbstractInterval) = d
 
@@ -248,8 +248,8 @@ function similar_interval(d::HalfLine{T,C}, a::S, b::S) where {T,S,C}
     HalfLine{promote_type(float(T),S),C}()
 end
 
-point_in_domain(d::NonnegativeRealLine) = zero(eltype(d))
-point_in_domain(d::PositiveRealLine) = one(eltype(d))
+point_in_domain(d::NonnegativeRealLine) = zero(deltype(d))
+point_in_domain(d::PositiveRealLine) = one(deltype(d))
 
 
 "The negative halfline `(-∞,0]` or `(-∞,0)`, right-closed or right-open."
@@ -280,15 +280,15 @@ function similar_interval(d::NegativeHalfLine{T,C}, a::S, b::S) where {S,T,C}
     NegativeHalfLine{promote_type(S,float(T)),C}()
 end
 
-point_in_domain(d::NegativeRealLine) = -one(eltype(d))
-point_in_domain(d::NonpositiveRealLine) = zero(eltype(d))
+point_in_domain(d::NegativeRealLine) = -one(deltype(d))
+point_in_domain(d::NonpositiveRealLine) = zero(deltype(d))
 
 
 "The real line `(-∞,∞)`."
 struct RealLine{T} <: FixedInterval{:open,:open,T} end
 RealLine() = RealLine{Float64}()
 
-point_in_domain(d::RealLine) = zero(eltype(d))
+point_in_domain(d::RealLine) = zero(deltype(d))
 
 similardomain(::RealLine, ::Type{T}) where {T} = RealLine{T}()
 

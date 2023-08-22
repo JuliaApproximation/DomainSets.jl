@@ -13,7 +13,7 @@ EmptySpace(::Type{T}) where {T} = EmptySpace{T}()
 similardomain(::EmptySpace, ::Type{T}) where {T} = EmptySpace{T}()
 
 "Return the empty space with the same element type as the given domain."
-emptyspace(d) = emptyspace(eltype(d))
+emptyspace(d) = emptyspace(deltype(d))
 emptyspace(::Type{T}) where {T} = EmptySpace{T}()
 
 indomain(x::T, d::EmptySpace{T}) where {T} = false
@@ -64,10 +64,10 @@ struct FullSpace{T} <: Domain{T} end
 const AnyFullSpace = FullSpace{Any}
 
 FullSpace() = FullSpace{Float64}()
-FullSpace(d) = FullSpace{eltype(d)}()
+FullSpace(d) = FullSpace{deltype(d)}()
 
 "Return the full space with the same element type as the given domain."
-fullspace(d) = fullspace(eltype(d))
+fullspace(d) = fullspace(deltype(d))
 fullspace(::Type{T}) where {T} = FullSpace{T}()
 
 isfullspace(d::FullSpace) = true
@@ -128,7 +128,7 @@ type `T`.
 struct TypeDomain{T} <: Domain{T} end
 
 "Return the domain for the element type of the given domain."
-typedomain(d) = typedomain(eltype(d))
+typedomain(d) = typedomain(deltype(d))
 typedomain(::Type{T}) where {T} = TypeDomain{T}()
 
 iscompatiblepair(x::T, d::TypeDomain{T}) where {T} = true

@@ -128,12 +128,12 @@ struct WrappedDomain{T,D} <: DerivedDomain{T}
 end
 
 WrappedDomain(domain::Domain{T}) where {T} = WrappedDomain{T}(domain)
-WrappedDomain(domain) = WrappedDomain{eltype(domain)}(domain)
+WrappedDomain(domain) = WrappedDomain{deltype(domain)}(domain)
 
 WrappedDomain{T}(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
 WrappedDomain{T}(domain::Domain) where {T} = WrappedDomain{T}(convert(Domain{T}, domain))
 WrappedDomain{T}(domain) where {T} = _WrappedDomain(convert_eltype(T, domain))
-_WrappedDomain(domain) = WrappedDomain{eltype(domain),typeof(domain)}(domain)
+_WrappedDomain(domain) = WrappedDomain{deltype(domain),typeof(domain)}(domain)
 
 similardomain(d::WrappedDomain, ::Type{T}) where {T} = WrappedDomain{T}(d.domain)
 

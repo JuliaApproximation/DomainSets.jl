@@ -152,13 +152,13 @@ struct VectorProductDomain{V<:AbstractVector,DD<:AbstractVector} <: ProductDomai
 	domains	::	DD
 
 	function VectorProductDomain{V,DD}(domains::DD) where {V,DD}
-		@assert eltype(eltype(domains[1])) == eltype(V)
+		@assert eltype(deltype(domains[1])) == eltype(V)
 		new(domains)
 	end
 end
 
 VectorProductDomain(domains::AbstractVector) =
-	VectorProductDomain{Vector{eltype(eltype(domains[1]))}}(domains)
+	VectorProductDomain{Vector{eltype(deltype(domains[1]))}}(domains)
 
 VectorProductDomain{V}(domains::AbstractVector{<:Domain{T}}) where {T,V<:AbstractVector{T}} =
 	VectorProductDomain{V,typeof(domains)}(domains)
