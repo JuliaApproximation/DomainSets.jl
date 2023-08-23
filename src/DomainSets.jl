@@ -1,10 +1,12 @@
 module DomainSets
 
-using StaticArrays
 using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
 import Random
 using Random: AbstractRNG
+
+using StaticArraysCore
+using StaticArraysCore: StaticVector
 
 using IntervalSets
 using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
