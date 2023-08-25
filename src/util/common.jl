@@ -10,7 +10,8 @@ const StaticTypes = Union{Number,<:StaticVector{N} where N,<:NTuple{N,Any} where
 euclideandimension(::Type{T}) where {T <: Number} = 1
 euclideandimension(::Type{T}) where {N,T <: StaticVector{N}} = N
 euclideandimension(::Type{T}) where {N,T <: NTuple{N,Any}} = N
-# Does not apply to Vector{T}: we don't know its dimension
+euclideandimension(::Type{T}) where {T} =
+	error("Don't know the euclidean dimension of $(T).")
 
 unitvector(d::Domain{T}, dim) where {N,S,T<:SVector{N,S}} = SVector{N,S}(ntuple(i -> i==dim, N))
 function unitvector(d::Domain{T}, dim) where {T<:AbstractVector}

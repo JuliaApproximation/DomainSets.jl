@@ -18,7 +18,7 @@ canonicaldomain(d) = d
 "Does the domain have a canonical domain?"
 hascanonicaldomain(d) = !(d === canonicaldomain(d))
 
-identitymap(d) = IdentityMap{deltype(d)}(euclideandimension(d))
+identitymap(d) = IdentityMap{deltype(d)}(dimension(d))
 
 """
     mapfrom_canonical(d[, x])
@@ -131,3 +131,5 @@ isequaldomain1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequaldomain2(d1, 
 isequaldomain2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : d1===d2
 
 ==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))
+==(d1::AnyDomain, d2) = isequaldomain(domain(d1), d2)
+==(d1, d2::AnyDomain) = isequaldomain(d1, domain(d2))

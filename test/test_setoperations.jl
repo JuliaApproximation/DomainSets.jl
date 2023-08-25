@@ -95,9 +95,9 @@
         @test String(take!(io)) == "UnitDisk() ∪ (($(-0.9..0.9)) × ($(-0.9..0.9)))"
 
         # repeated union
-        @test ncomponents(uniondomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
-        @test ncomponents(uniondomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
-        @test ncomponents(uniondomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
+        @test ncomponents(uniondomain(-2 .. -1, UnitInterval(), UnitInterval())) == 2
+        @test ncomponents(uniondomain(UnitInterval(), -2 .. -1, UnitInterval())) == 2
+        @test ncomponents(uniondomain(UnitInterval(), UnitInterval(), -2 .. -1)) == 2
     end
 
     @testset "intersect" begin
@@ -150,9 +150,9 @@
         @test intersectdomain(2..4, uniondomain(0..1, 2..3)) == 2..3
 
         # repeated intersection
-        @test ncomponents(intersectdomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
-        @test ncomponents(intersectdomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
-        @test ncomponents(intersectdomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
+        @test ncomponents(intersectdomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 0
+        @test ncomponents(intersectdomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 0
+        @test ncomponents(intersectdomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 0
         # larger intersection expressions
         @test intersectdomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa EmptySpace
         @test intersectdomain(0..1, 1..3, Point(1.0)) == Point(1.0)

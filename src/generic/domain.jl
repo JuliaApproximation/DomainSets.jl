@@ -23,20 +23,15 @@ promote_domains() = ()
 promote_domains(domains...) = promote_domains(domains)
 promote_domains(domains) = convert_eltype.(mapreduce(domaineltype, promote_type, domains), domains)
 
-# TODO: deprecate because this is an arbitrary promotion
-# promote_domains(domains::AbstractSet{<:Domain{T}}) where {T} = domains
-# promote_domains(domains::AbstractSet{<:Domain}) = Set(promote_domains(collect(domains)))
-
 convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
-convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, deltype(d))
-_convert_eltype(::Type{T}, d, ::Type{T}) where {T} = d
-_convert_eltype(::Type{T}, d, ::Type{S}) where {S,T} =
+convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, deltype(d), DomainStyle(d))
+_convert_eltype(::Type{T}, d, ::Type{T}, ::IsDomain) where {T} = d
+_convert_eltype(::Type{T}, d, ::Type{S}, ::IsDomain) where {S,T} =
     error("Don't know how to convert the `eltype` of $(d).")
+_convert_eltype(::Type{T}, d, ::Type{T}, ::NotDomain) where {T} = d
+_convert_eltype(::Type{T}, d, ::Type{S}, ::NotDomain) where {S,T} =
+    error("Convert eltype: argument given is not a domain.")
 
-# TODO: deprecate because this changes what promotion means, use promote_domains instead
-# promote(d1::Domain, d2::Domain) = promote_domains((d1,d2))
-# promote(d1::Domain, d2) = promote_domains((d1,d2))
-# promote(d1, d2::Domain) = promote_domains((d1,d2))
 
 "A `EuclideanDomain` is any domain whose eltype is `<:StaticVector{N,T}`."
 const EuclideanDomain{N,T} = Domain{<:StaticVector{N,T}}
@@ -50,9 +45,7 @@ const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 
 "What is the Euclidean dimension of the domain?"
-dimension(d::Domain) = euclideandimension(eltype(d))
-
-euclideandimension(d) = euclideandimension(domaineltype(d))
+dimension(d) = euclideandimension(domaineltype(checkdomain(d)))
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), deltype(d))

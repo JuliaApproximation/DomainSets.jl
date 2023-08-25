@@ -13,7 +13,7 @@ function test_dimension()
     @test DomainSets.euclideandimension(MVector{2,Float64}) == 2
     @test DomainSets.euclideandimension(Tuple{Int,Int}) == 2
     @test DomainSets.euclideandimension(Tuple{Int,Float64}) == 2
-    @test_throws MethodError DomainSets.euclideandimension(Vector{Float64})
+    @test_throws ErrorException DomainSets.euclideandimension(Vector{Float64})
 end
 
 function test_components()
