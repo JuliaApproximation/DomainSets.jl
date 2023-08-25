@@ -6,8 +6,8 @@ issubset(d1::AnyDomain, d2) = issubset_domain(domain(d1), d2)
 issubset_domain(d1, d2) =
 	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
 
-issubset1(d1, d2) = issubset2(d1, d2)
-issubset2(d1, d2) = d1 == d2
+issubset1(d1, d2) = simplifies(d1) ? issubset(simplify(d1),d2) : issubset2(d1, d2)
+issubset2(d1, d2) = simplifies(d2) ? issubset(d1, simplify(d2)) : d1 == d2
 # this last fallback is only an approximation of the truth: if d1 equals d2, then
 # d1 is a subset of d2, but the reverse is not true. So we might be returning false
 # even when the correct mathematical answer is true.

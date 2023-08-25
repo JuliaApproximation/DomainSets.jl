@@ -18,7 +18,7 @@ canonicaldomain(d) = d
 "Does the domain have a canonical domain?"
 hascanonicaldomain(d) = !(d === canonicaldomain(d))
 
-identitymap(d) = IdentityMap{deltype(d)}(dimension(d))
+identitymap(d) = IdentityMap{deltype(d)}(euclideandimension(d))
 
 """
     mapfrom_canonical(d[, x])

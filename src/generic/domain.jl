@@ -13,7 +13,7 @@ convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
 convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
 
 "Can the domains be promoted without throwing an error?"
-promotable_domains(domains...) = promotable_eltypes(map(eltype, domains)...)
+promotable_domains(domains...) = promotable_eltypes(map(domaineltype, domains)...)
 promotable_eltypes(types...) = isconcretetype(promote_type(types...))
 promotable_eltypes(::Type{S}, ::Type{T}) where {S<:AbstractVector,T<:AbstractVector} =
     promotable_eltypes(eltype(S), eltype(T))
@@ -21,7 +21,7 @@ promotable_eltypes(::Type{S}, ::Type{T}) where {S<:AbstractVector,T<:AbstractVec
 "Promote the given domains to have a common element type."
 promote_domains() = ()
 promote_domains(domains...) = promote_domains(domains)
-promote_domains(domains) = convert_eltype.(mapreduce(eltype, promote_type, domains), domains)
+promote_domains(domains) = convert_eltype.(mapreduce(domaineltype, promote_type, domains), domains)
 
 # TODO: deprecate because this is an arbitrary promotion
 # promote_domains(domains::AbstractSet{<:Domain{T}}) where {T} = domains
@@ -51,6 +51,8 @@ CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 
 "What is the Euclidean dimension of the domain?"
 dimension(d::Domain) = euclideandimension(eltype(d))
+
+euclideandimension(d) = euclideandimension(domaineltype(d))
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), deltype(d))
