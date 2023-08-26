@@ -36,7 +36,7 @@ import Base: *, +, -, /, \, ^,
     show
 
 # DomainSetsCore
-import DomainSetsCore: domain
+import DomainSetsCore: domain, domaineltype
 
 export DomainStyle, domaineltype
 const deltype = domaineltype    # convenience abbreviation for internal use

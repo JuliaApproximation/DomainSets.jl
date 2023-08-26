@@ -57,6 +57,11 @@ mapto_canonical(::Equal, d) = leftinverse(mapfrom_canonical(Equal(), d))
 simplify(d) = canonicaldomain(Equal(), d)
 simplifies(d) = hascanonicaldomain(Equal(), d)
 
+"Convert the given domain to a domain defined in DomainSets.jl."
+todomainset(d::Domain) = d
+todomainset(d::AsDomain) = todomainset(domain(d))
+
+
 "A canonical domain that is isomorphic but may have different element type."
 struct Isomorphic <: CanonicalType end
 
@@ -73,6 +78,7 @@ canonicaldomain(::Isomorphic, d::Domain{NTuple{N,T}}) where {N,T} =
     convert(Domain{SVector{N,T}}, d)
 mapfrom_canonical(::Isomorphic, d::Domain{NTuple{N,T}}) where {N,T} =
     VectorToTuple{N,T}()
+
 
 
 "A parameter domain that can be mapped to the domain."
@@ -118,7 +124,6 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 ## Equality for domains
 # We generically define the equality of Domains, using the framework
 # of canonical domains.
-
 
 @deprecate isequal1(d1,d2) isequaldomain1(d1,d2)
 @deprecate isequal2(d1,d2) isequaldomain2(d1,d2)

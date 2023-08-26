@@ -29,9 +29,9 @@ maps_to_test(T) = [
     AffineMap(rand(T, 3, 2), rand(T, 3)), # vector map, rectangular
     AffineMap(LinearAlgebra.I, one(T)/2),  # use UniformScaling object as A
     AffineMap(LinearAlgebra.I, randvec(T,2)),  # use UniformScaling object as A
-    DomainSets.GenericAffineMap(randvec(T, 2, 2), randvec(T, 2)),
-    DomainSets.GenericAffineMap(T(1.2), randvec(T, 2)),
-    DomainSets.GenericAffineMap(randvec(T, 3, 2), randvec(T, 3)),
+    GenericAffineMap(randvec(T, 2, 2), randvec(T, 2)),
+    GenericAffineMap(T(1.2), randvec(T, 2)),
+    GenericAffineMap(randvec(T, 3, 2), randvec(T, 3)),
     Translation(randvec(T, 3)),
     LinearMap(randvec(T, 2, 2)),
     LinearMap(randvec(T, 2)),

@@ -33,12 +33,12 @@ codomaintype(::Type{M}, ::Type{T}) where {M,T} = Any
 codomaintype(M::Type{<:AbstractMap}, ::Type{T}) where {T} = Base.promote_op(applymap, M, T)
 codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
 
+prectype(::Type{<:Map{T}}) where T = prectype(T)
+numtype(::Type{<:Map{T}}) where T = numtype(T)
+
 isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(codomaintype(m))
 isreal(::UniformScaling{T}) where {T} = isreal(T)
 isreal(::Type{UniformScaling{T}}) where {T} = isreal(T)
-
-numtype(::Type{<:Map{T}}) where {T} = numtype(T)
-prectype(::Type{<:Map{T}}) where {T} = prectype(T)
 
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m

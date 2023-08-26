@@ -63,10 +63,10 @@ convert_eltype(::Type{T}, d::Number) where {T} = convert(T, d)
 
 "The floating point precision type associated with the argument."
 prectype(x) = prectype(typeof(x))
+prectype(::Type{T}) where T = Any		# fallback
 prectype(::Type{T}) where {T<:AbstractFloat} = T
 prectype(::Type{T}) where {T<:Number} = prectype(float(T))
-prectype(::Type{T}) where {T} = prectype(eltype(T))
-# special cases
+prectype(::Type{<:AbstractArray{T}}) where T = prectype(T)
 prectype(::Type{<:Complex{T}}) where {T} = prectype(T)
 prectype(::Type{NTuple{N,T}}) where {N,T} = prectype(T)
 prectype(::Type{Tuple{A}}) where {A} = prectype(A)
@@ -104,9 +104,9 @@ _promote_prectype(U, a, b, c...) =
 
 "The numeric element type of `x` in a Euclidean space."
 numtype(x) = numtype(typeof(x))
+numtype(::Type{T}) where T = Any
 numtype(::Type{T}) where {T<:Number} = T
-numtype(::Type{T}) where {T} = eltype(T)
-# special cases
+numtype(::Type{<:AbstractArray{T}}) where T = T
 numtype(::Type{NTuple{N,T}}) where {N,T} = T
 numtype(::Type{Tuple{A,B}}) where {A,B} = promote_type(numtype(A), numtype(B))
 numtype(::Type{Tuple{A,B,C}}) where {A,B,C} = promote_type(numtype(A), numtype(B), numtype(C))

@@ -2,10 +2,10 @@
 
 # The type Domain{T} is defined in DomainSetsCore.jl
 
-prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
-numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
-
 Domain(d) = convert(Domain, d)
+
+prectype(::Type{<:Domain{T}}) where T = prectype(T)
+numtype(::Type{<:Domain{T}}) where T = numtype(T)
 
 # Concrete types can implement similardomain(d, ::Type{T}) where {T}
 # to support convert(Domain{T}, d) functionality.
@@ -45,7 +45,7 @@ const AbstractVectorDomain{T} = Domain{<:AbstractVector{T}}
 CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 
 "What is the Euclidean dimension of the domain?"
-dimension(d) = euclideandimension(domaineltype(checkdomain(d)))
+dimension(d) = euclideandimension(domaineltype(d))
 
 "Is the given combination of point and domain compatible?"
 iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), deltype(d))
