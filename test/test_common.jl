@@ -4,7 +4,10 @@ using DomainSets:
     convert_prectype,
     promote_numtype,
     promote_prectype,
-    euclideandimension
+    euclideandimension,
+    deltype,
+    dnumtype,
+    dprectype
 
 function test_dimension()
     @test euclideandimension(Int) == 1

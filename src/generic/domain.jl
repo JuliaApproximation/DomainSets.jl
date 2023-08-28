@@ -7,6 +7,17 @@ Domain(d) = convert(Domain, d)
 prectype(::Type{<:Domain{T}}) where T = prectype(T)
 numtype(::Type{<:Domain{T}}) where T = numtype(T)
 
+# Domain-specific prectype and numtype default to using domaineltype
+domain_prectype(d) = prectype(domaineltype(d))
+domain_numtype(d) = numtype(domaineltype(d))
+prectype(d::AsDomain) = prectype(domaineltype(d))
+numtype(d::AsDomain) = numtype(domaineltype(d))
+
+# convenience abbreviations for internal usage
+const deltype = domaineltype
+const dprectype = domain_prectype
+const dnumtype = domain_numtype
+
 # Concrete types can implement similardomain(d, ::Type{T}) where {T}
 # to support convert(Domain{T}, d) functionality.
 convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
@@ -101,7 +112,7 @@ Return a suitable tolerance to use for verifying whether a point is close to
 a domain. Typically, the tolerance is close to the precision limit of the numeric
 type associated with the domain.
 """
-domain_tolerance(d) = domain_tolerance(prectype(d))
+domain_tolerance(d) = domain_tolerance(dprectype(d))
 domain_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
 
 # a version with a tolerance, for use in approx_in

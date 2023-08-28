@@ -1,4 +1,4 @@
-import DomainSets: factors, nfactors, factor
+using DomainSets: factors, nfactors, factor
 
 
 widen_eltype(::Type{T}) where {T<:Number} = widen(T)
@@ -10,8 +10,8 @@ widen_eltype(::Type{Vector{T}}) where {T<:Number} = Vector{widen(T)}
 # These tests check whether the given domain correctly implements the
 # interface of a domain.
 function test_generic_domain(d)
-    @test isreal(d) == isreal(eltype(d))
-    @test isreal(d) == isreal(numtype(d))
+    @test isreal(d) == isreal(deltype(d))
+    @test isreal(d) == isreal(dnumtype(d))
 
     if d isa Domain
         @test convert(Domain{eltype(d)}, d) == d

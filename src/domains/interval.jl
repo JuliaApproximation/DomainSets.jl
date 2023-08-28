@@ -288,7 +288,7 @@ point_in_domain(d::NonpositiveRealLine) = zero(deltype(d))
 struct RealLine{T} <: FixedInterval{:open,:open,T} end
 RealLine() = RealLine{Float64}()
 
-point_in_domain(d::RealLine) = zero(deltype(d))
+point_in_domain(d::RealLine) = zero(eltype(d))
 
 similardomain(::RealLine, ::Type{T}) where {T} = RealLine{T}()
 

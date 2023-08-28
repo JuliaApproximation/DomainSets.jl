@@ -112,7 +112,7 @@ _mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
 # - invmap is a Map{T}: its codomaintype should match the eltype of the domain
 # -- first, update the numtype
 _mapped_domain(invmap::Map, domain) =
-    _mapped_domain(invmap, domain, promote_type(numtype(invmap),numtype(domain)))
+    _mapped_domain(invmap, domain, promote_type(numtype(invmap),dnumtype(domain)))
 _mapped_domain(invmap, domain, ::Type{U}) where {U} =
     _mapped_domain2(convert_numtype(invmap,U), convert_numtype(domain,U))
 # -- then, ensure the codomaintype of the map equals the element type of the domain
