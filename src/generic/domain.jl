@@ -1,7 +1,5 @@
 # Definition of the abstract Domain type and its interface
 
-# The type Domain{T} is defined in DomainSetsCore.jl
-
 Domain(d) = convert(Domain, d)
 
 prectype(::Type{<:Domain{T}}) where T = prectype(T)

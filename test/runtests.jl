@@ -1,6 +1,6 @@
 using Test, LinearAlgebra, StaticArrays, Random, StableRNGs
 
-using DomainSetsCore, DomainSets
+using DomainSets
 using CompositeTypes.Indexing
 
 const io = IOBuffer()

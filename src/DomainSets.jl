@@ -1,7 +1,5 @@
 module DomainSets
 
-using DomainSetsCore
-
 using StaticArrays
 using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
@@ -35,13 +33,8 @@ import Base: *, +, -, /, \, ^,
     # Display
     show
 
-# DomainSetsCore
-import DomainSetsCore: domain, domaineltype
-
-export DomainStyle, domaineltype
-
 # IntervalSets
-import IntervalSets: (..), endpoints, AbstractInterval, TypedEndpointsInterval,
+import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
                         leftendpoint, rightendpoint, isleftopen, isleftclosed,
                         isrightopen, isrightclosed, isopenset, isclosedset,
                         infimum, supremum
@@ -198,6 +191,7 @@ include("maps/basic.jl")
 include("maps/affine.jl")
 include("maps/arithmetics.jl")
 
+include("generic/core.jl")
 include("generic/domain.jl")
 include("generic/geometry.jl")
 include("generic/canonical.jl")
