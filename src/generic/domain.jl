@@ -11,11 +11,6 @@ domain_numtype(d) = numtype(domaineltype(d))
 prectype(d::AsDomain) = prectype(domaineltype(d))
 numtype(d::AsDomain) = numtype(domaineltype(d))
 
-# convenience abbreviations for internal usage
-const deltype = domaineltype
-const dprectype = domain_prectype
-const dnumtype = domain_numtype
-
 # Concrete types can implement similardomain(d, ::Type{T}) where {T}
 # to support convert(Domain{T}, d) functionality.
 convert(::Type{Domain{T}}, d::Domain{T}) where {T} = d
@@ -33,7 +28,7 @@ promote_domains(domains...) = promote_domains(domains)
 promote_domains(domains) = convert_eltype.(mapreduce(domaineltype, promote_type, domains), domains)
 
 convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
-convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, deltype(d), DomainStyle(d))
+convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, domaineltype(d), DomainStyle(d))
 _convert_eltype(::Type{T}, d, ::Type{T}, ::IsDomain) where {T} = d
 _convert_eltype(::Type{T}, d, ::Type{S}, ::IsDomain) where {S,T} =
     error("Don't know how to convert the `eltype` of $(d).")
@@ -57,7 +52,7 @@ CompositeTypes.Display.displaysymbol(d::Domain) = 'D'
 dimension(d) = euclideandimension(domaineltype(d))
 
 "Is the given combination of point and domain compatible?"
-iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), deltype(d))
+iscompatiblepair(x, d) = _iscompatiblepair(x, d, typeof(x), domaineltype(d))
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}) where {S,T} =
     _iscompatiblepair(x, d, S, T, promote_type(S,T))
 _iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} = true
@@ -72,14 +67,14 @@ iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)=
 # Note: there are cases where this warning reveals a bug, and cases where it is
 # annoying. In cases where it is annoying, the domain may want to specialize `in`.
 compatible_or_false(x, domain) =
-    iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(deltype(domain)). Returning false."; false)
+    iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(domaineltype(domain)). Returning false."; false)
 
 compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
 
 
 "Promote point and domain to compatible types."
-promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x), deltype(d)))
+promote_pair(x, d) = _promote_pair(x, d, promote_type(typeof(x), domaineltype(d)))
 _promote_pair(x, d, ::Type{T}) where {T} = convert(T, x), convert_eltype(T, d)
 _promote_pair(x, d, ::Type{Any}) = x, d
 # Some exceptions:
@@ -110,7 +105,7 @@ Return a suitable tolerance to use for verifying whether a point is close to
 a domain. Typically, the tolerance is close to the precision limit of the numeric
 type associated with the domain.
 """
-domain_tolerance(d) = domain_tolerance(dprectype(d))
+domain_tolerance(d) = domain_tolerance(domain_prectype(d))
 domain_tolerance(::Type{T}) where {T <: AbstractFloat} = 100eps(T)
 
 # a version with a tolerance, for use in approx_in

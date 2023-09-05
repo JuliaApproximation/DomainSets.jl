@@ -39,7 +39,7 @@ The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways
 UnionDomain(domains...) = UnionDomain(domains)
 @deprecate UnionDomain(domain::Domain) UnionDomain((domain,))
 UnionDomain(domains) = _UnionDomain(promote_domains(domains))
-_UnionDomain(domains) = _UnionDomain(deltype(first(domains)), domains)
+_UnionDomain(domains) = _UnionDomain(domaineltype(first(domains)), domains)
 
 UnionDomain{T}(domains...) where {T} = UnionDomain{T}(domains)
 @deprecate UnionDomain{T}(domain::Domain) where {T} UnionDomain{T}((domain,))
@@ -178,7 +178,7 @@ The `IntersectDomain` constructor can be invoked in one of three ways:
 IntersectDomain(domains...) = IntersectDomain(domains)
 @deprecate IntersectDomain(domain::Domain) IntersectDomain((domain,))
 IntersectDomain(domains) = _IntersectDomain(promote_domains(domains))
-_IntersectDomain(domains) = IntersectDomain{deltype(first(domains))}(domains)
+_IntersectDomain(domains) = IntersectDomain{domaineltype(first(domains))}(domains)
 
 IntersectDomain{T}(domains...) where {T} = IntersectDomain{T}(domains)
 @deprecate IntersectDomain{T}(domain::Domain) where T IntersectDomain((domain,))
@@ -285,7 +285,7 @@ struct SetdiffDomain{T,DD} <: CompositeDomain{T}
 end
 
 SetdiffDomain(d1, d2) = _SetdiffDomain(promote_domains((d1, d2))...)
-_SetdiffDomain(d1, d2) = SetdiffDomain{deltype(d1)}((d1,d2))
+_SetdiffDomain(d1, d2) = SetdiffDomain{domaineltype(d1)}((d1,d2))
 SetdiffDomain{T}(domains) where {T} = SetdiffDomain{T,typeof(domains)}(domains)
 
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions

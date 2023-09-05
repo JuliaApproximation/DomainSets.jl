@@ -27,12 +27,12 @@ broadcasted(::DomainSetStyle, ::typeof(-), a::Union{Number,AbstractArray}, d::An
 broadcasted(::DomainSetStyle, ::typeof(-), d::AnyDomain, a::Union{Number,AbstractArray}) =
     map_domain(Translation(-a), domain(d))
 broadcasted(::DomainSetStyle, ::typeof(-), d::AnyDomain) =
-    map_domain(LinearMap{deltype(d)}(-1), domain(d))
+    map_domain(LinearMap{domaineltype(d)}(-1), domain(d))
 
 broadcasted(::DomainSetStyle, ::typeof(*), a::Number, d::AnyDomain) =
-    map_domain(LinearMap{deltype(d)}(a), domain(d))
+    map_domain(LinearMap{domaineltype(d)}(a), domain(d))
 broadcasted(::DomainSetStyle, ::typeof(*), d::AnyDomain, a::Number) =
-    map_domain(LinearMap{deltype(d)}(a), domain(d))
+    map_domain(LinearMap{domaineltype(d)}(a), domain(d))
 
 
 broadcasted(::DomainSetStyle, ::typeof(/), d::AnyDomain, a::Number) =
@@ -45,7 +45,7 @@ broadcasted(::DomainSetStyle, m::AbstractMap, d::AnyDomain) =
     map_domain(m, domain(d))
 
 broadcasted(::DomainSetStyle, fun::Function, d::AnyDomain) =
-    convert(Map{deltype(d)}, fun).(d)
+    convert(Map{domaineltype(d)}, fun).(d)
 
 # Intercept broadcast applied to `in`, e.g. in.(A, d).
 # This gives domains an opportunity to provide a more efficient implementation

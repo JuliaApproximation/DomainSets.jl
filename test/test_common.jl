@@ -5,9 +5,9 @@ using DomainSets:
     promote_numtype,
     promote_prectype,
     euclideandimension,
-    deltype,
-    dnumtype,
-    dprectype
+    domaineltype,
+    domain_numtype,
+    domain_prectype
 
 function test_dimension()
     @test euclideandimension(Int) == 1

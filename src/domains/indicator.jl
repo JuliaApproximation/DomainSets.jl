@@ -36,7 +36,7 @@ similardomain(d::IndicatorFunction, ::Type{T}) where {T} = IndicatorFunction{T}(
 
 convert(::Type{IndicatorFunction}, d::AbstractIndicatorFunction) = d
 convert(::Type{IndicatorFunction}, d) =
-    IndicatorFunction{deltype(d)}(indicatorfunction(checkdomain(d)))
+    IndicatorFunction{domaineltype(d)}(indicatorfunction(checkdomain(d)))
 
 isequaldomain(d1::IndicatorFunction, d2::IndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2)
@@ -51,7 +51,7 @@ struct BoundedIndicatorFunction{T,F,D} <: AbstractIndicatorFunction{T}
 end
 
 BoundedIndicatorFunction(f, domain) =
-    BoundedIndicatorFunction{deltype(domain)}(f, domain)
+    BoundedIndicatorFunction{domaineltype(domain)}(f, domain)
 BoundedIndicatorFunction{T}(f, domain::Domain{T}) where {T} =
     BoundedIndicatorFunction{T,typeof(f),typeof(domain)}(f, domain)
 BoundedIndicatorFunction{T}(f, domain) where {T} =

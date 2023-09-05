@@ -54,7 +54,7 @@ end
 # In the constructor, we have to decide which T to use for the MappedDomain.
 # - if we don't know anything about invmap: deduce T from the given domain
 MappedDomain(invmap, domain) =
-    MappedDomain{deltype(domain)}(invmap, domain)
+    MappedDomain{domaineltype(domain)}(invmap, domain)
 # - if the map is a Map{T}, use that T for the MappedDomain
 MappedDomain(invmap::Map{T}, domain) where {T} =
     MappedDomain{T}(invmap, domain)
@@ -88,7 +88,7 @@ _map_domain(map::Map{T}, domain::Domain{T}) where {T} =
     mapped_domain(inverse(map), domain)
 # If map is a Map{T}, then verify and if necessary update T
 function _map_domain(map::Map, domain)
-    U = codomaintype(map, deltype(domain))
+    U = codomaintype(map, domaineltype(domain))
     if U == Union{}
         error("incompatible types of $(map) and $(domain)")
     end
@@ -112,11 +112,11 @@ _mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
 # - invmap is a Map{T}: its codomaintype should match the eltype of the domain
 # -- first, update the numtype
 _mapped_domain(invmap::Map, domain) =
-    _mapped_domain(invmap, domain, promote_type(numtype(invmap),dnumtype(domain)))
+    _mapped_domain(invmap, domain, promote_type(numtype(invmap),domain_numtype(domain)))
 _mapped_domain(invmap, domain, ::Type{U}) where {U} =
     _mapped_domain2(convert_numtype(invmap,U), convert_numtype(domain,U))
 # -- then, ensure the codomaintype of the map equals the element type of the domain
-_mapped_domain2(invmap, domain) = _mapped_domain2(invmap, domain, codomaintype(invmap), deltype(domain))
+_mapped_domain2(invmap, domain) = _mapped_domain2(invmap, domain, codomaintype(invmap), domaineltype(domain))
 # --- it's okay
 _mapped_domain2(invmap, domain, ::Type{T}, ::Type{T}) where {T} =
     MappedDomain(invmap, domain)
