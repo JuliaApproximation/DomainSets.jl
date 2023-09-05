@@ -109,7 +109,7 @@ similardomain(d::UnionDomain, ::Type{T}) where {T} =
 
 
 
-point_in_domain(d::UnionDomain) = convert(eltype(d), point_in_domain(component(d,1)))
+choice(d::UnionDomain) = convert(eltype(d), choice(component(d,1)))
 
 isempty(d::UnionDomain) = all(isempty, d.domains)
 

@@ -48,7 +48,7 @@ supremum(d::Point) = pointval(d)
 interior(d::Point) = emptyspace(d)
 closure(d::Point) = d
 
-point_in_domain(d::Point) = pointval(d)
+choice(d::Point) = pointval(d)
 
 distance_to(d::Point, x) = norm(x-pointval(d))
 

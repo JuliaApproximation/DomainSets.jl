@@ -81,7 +81,7 @@ include("test_domain_simplex.jl")
         @test convert(Domain{BigFloat}, d1) === FullSpace{BigFloat}()
         @test DomainSets.euclideanspace(Val{2}()) == FullSpace{SVector{2,Float64}}()
         @test 0.5 ∈ d1
-        @test point_in_domain(d1) == 0
+        @test choice(d1) == 0
         @test d1 ∪ d1 == d1
         @test d1 ∩ d1 == d1
         @test isempty(d1) == false
@@ -256,7 +256,7 @@ include("test_domain_simplex.jl")
         @test Number(Point(1)) ≡ convert(Number, Point(1)) ≡ convert(Int, Point(1)) ≡ 1
         @test convert(Domain{Float64}, 1) isa Point{Float64}
 
-        @test point_in_domain(Point(1)) == 1
+        @test choice(Point(1)) == 1
 
         @test Point(1) + Point(2) == Point(3)
         @test Point(1) - Point(2) == Point(-1)
@@ -419,7 +419,7 @@ include("test_domain_simplex.jl")
         D = rotate(UnitInterval()^2, π/2)
         @test SA[-0.9, 0.9] ∈ D
         @test SA[-1.1, -1.1] ∉ D
-        x = point_in_domain(D)
+        x = choice(D)
         @test forward_map(D)(x) ≈ forward_map(D, x)
         @test DomainSets.toexternalpoint(D, x) ≈ forward_map(D, x)
 

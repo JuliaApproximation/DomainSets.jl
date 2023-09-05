@@ -70,7 +70,7 @@ function test_simplex()
     @test !isopenset(d)
     @test isopenset(interior(d))
     @test closure(d) == d
-    @test point_in_domain(d) ∈ d
+    @test choice(d) ∈ d
 
     # open/closed
     d2 = EuclideanUnitSimplex{2,Float64,:open}()
@@ -83,7 +83,7 @@ function test_simplex()
     @test !approx_in(SA[-0.01,0.0], d2, 0.001)
 
     d3 = EuclideanUnitSimplex{3,BigFloat}()
-    @test point_in_domain(d3) ∈ d3
+    @test choice(d3) ∈ d3
     x0 = big(0.0)
     x1 = big(1.0)
     x2 = big(0.3)

@@ -87,7 +87,7 @@ approx_indomain(x, d::FullSpace, tolerance) = in(x, d)
 show(io::IO, d::FullSpace) = print(io, "{x} (full space)")
 
 # We choose the origin as a point in the full space
-point_in_domain(d::FullSpace) = zero(eltype(d))
+choice(d::FullSpace) = zero(eltype(d))
 
 isempty(::FullSpace) = false
 

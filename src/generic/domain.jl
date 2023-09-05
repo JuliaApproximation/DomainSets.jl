@@ -141,3 +141,9 @@ approx_indomain(x, d, tol) = in(x, d)
 isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 
 isreal(d::Domain) = isreal(eltype(d))
+
+"Return a point from the given domain."
+function choice(d) end
+
+choice(d::AbstractSet) = first(d)
+choice(d::AbstractArray) = first(d)

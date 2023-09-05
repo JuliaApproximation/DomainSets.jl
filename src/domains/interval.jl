@@ -23,7 +23,7 @@ approx_indomain(x, d::TypedEndpointsInterval{:open,:open}, tolerance) =
     (x > leftendpoint(d)-tolerance) && (x < rightendpoint(d)+tolerance)
 
 
-function point_in_domain(d::AbstractInterval)
+function choice(d::AbstractInterval)
     isempty(d) && throw(BoundsError())
     mean(d)
 end
@@ -31,7 +31,7 @@ end
 center(d::AbstractInterval) = mean(d)
 
 # For an interval of integers, try to find an integer point
-function point_in_domain(d::AbstractInterval{T}) where {T<:Integer}
+function choice(d::AbstractInterval{T}) where {T<:Integer}
     isempty(d) && throw(BoundsError())
     x = round(T, mean(d))
     if x ∈ d
@@ -248,8 +248,8 @@ function similar_interval(d::HalfLine{T,C}, a::S, b::S) where {T,S,C}
     HalfLine{promote_type(float(T),S),C}()
 end
 
-point_in_domain(d::NonnegativeRealLine) = zero(domaineltype(d))
-point_in_domain(d::PositiveRealLine) = one(domaineltype(d))
+choice(d::NonnegativeRealLine) = zero(domaineltype(d))
+choice(d::PositiveRealLine) = one(domaineltype(d))
 
 
 "The negative halfline `(-∞,0]` or `(-∞,0)`, right-closed or right-open."
@@ -280,15 +280,15 @@ function similar_interval(d::NegativeHalfLine{T,C}, a::S, b::S) where {S,T,C}
     NegativeHalfLine{promote_type(S,float(T)),C}()
 end
 
-point_in_domain(d::NegativeRealLine) = -one(domaineltype(d))
-point_in_domain(d::NonpositiveRealLine) = zero(domaineltype(d))
+choice(d::NegativeRealLine) = -one(domaineltype(d))
+choice(d::NonpositiveRealLine) = zero(domaineltype(d))
 
 
 "The real line `(-∞,∞)`."
 struct RealLine{T} <: FixedInterval{:open,:open,T} end
 RealLine() = RealLine{Float64}()
 
-point_in_domain(d::RealLine) = zero(eltype(d))
+choice(d::RealLine) = zero(eltype(d))
 
 similardomain(::RealLine, ::Type{T}) where {T} = RealLine{T}()
 

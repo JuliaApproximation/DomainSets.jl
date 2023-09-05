@@ -84,7 +84,7 @@ normal(d::Ball, x) = normal(boundary(d), x)
 distance_to(d::Ball, x) = x ∈ d ? zero(prectype(d)) : norm(x-center(d))-radius(d)
 
 # We choose the center of the ball here. Concrete types should implement 'center'
-point_in_domain(d::Ball) = center(d)
+choice(d::Ball) = center(d)
 
 
 "The unit ball."
@@ -304,7 +304,7 @@ normal(d::Sphere, x) = (x-center(d))/norm(x-center(d))
 
 distance_to(d::Sphere, x) = abs(norm(x-center(d))-radius(d))
 
-point_in_domain(d::Sphere) = center(d) + unitvector(d, 1)
+choice(d::Sphere) = center(d) + unitvector(d, 1)
 
 isequaldomain(d1::Sphere, d2::Sphere) =
     radius(d1)==radius(d2) && center(d1)==center(d2)

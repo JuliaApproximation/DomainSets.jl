@@ -81,8 +81,8 @@ _approx_indomain(x, d, tolerance, ::Combination, domains) =
 _approx_indomain(x, d, tolerance, ::Product, domains) =
     mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
 
-point_in_domain(d::SimpleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
-point_in_domain(d::CompositeDomain) = toexternalpoint(d, map(point_in_domain, components(d)))
+choice(d::SimpleLazyDomain) = toexternalpoint(d, choice(superdomain(d)))
+choice(d::CompositeDomain) = toexternalpoint(d, map(choice, components(d)))
 
 isequaldomain(a::D, b::D) where {D<:CompositeDomain} = components(a) == components(b)
 

@@ -143,7 +143,7 @@ closure(d::VectorUnitSimplex{T}) where {T} = VectorUnitSimplex{T,:closed}(dimens
 
 # We pick the center point, because it belongs to the domain regardless of
 # whether it is open or closed.
-point_in_domain(d::UnitSimplex) = center(d)
+choice(d::UnitSimplex) = center(d)
 
 similardomain(d::StaticUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
     StaticUnitSimplex{T,C}()

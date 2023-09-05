@@ -23,7 +23,7 @@ function test_generic_domain(d)
     @test prectype(convert_prectype(d, BigFloat)) == BigFloat
 
     if !isempty(d)
-        x = point_in_domain(d)
+        x = choice(d)
         @test x ∈ d
         @test approx_in(x, d, 0.01)
         @test_throws ErrorException approx_in(x, d, -1)
@@ -31,7 +31,7 @@ function test_generic_domain(d)
         @test approx_in.([x,x], d, 0.01) == approx_in.([x,x], Ref(d), 0.01)
     else
         try
-            x = point_in_domain(d)
+            x = choice(d)
             @test false
         catch
         end
@@ -41,7 +41,7 @@ function test_generic_domain(d)
         cd = canonicaldomain(d)
         @test mapfrom_canonical(d) == mapto(cd, d)
         @test mapto_canonical(d) == mapto(d, cd)
-        x1 = point_in_domain(cd)
+        x1 = choice(cd)
         @test mapfrom_canonical(d, x1) ∈ d
         @test mapto_canonical(d, x) ∈ cd
     else
@@ -51,7 +51,7 @@ function test_generic_domain(d)
     if hasparameterization(d)
         par = parameterdomain(d)
         @test mapfrom_parameterdomain(d) == mapto(par, d)
-        xp = point_in_domain(par)
+        xp = choice(par)
         @test approx_in(mapfrom_parameterdomain(d, xp), d)
     end
     if iscomposite(d)
@@ -143,4 +143,7 @@ end
         @test_throws ErrorException DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
         @test DomainSets.convert_eltype(Int, (1,2)) == (1,2)
     end
+
+    @test choice(Set([1,2,3])) ∈ Set([1,2,3])
+    @test choice([1,2,3]) == 1
 end
