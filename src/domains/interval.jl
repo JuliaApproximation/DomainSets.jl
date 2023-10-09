@@ -2,7 +2,7 @@
 iscompact(d::TypedEndpointsInterval{:closed,:closed}) = true
 iscompact(d::TypedEndpointsInterval) = false
 
-isinterval(d::Domain) = false
+isinterval(d) = false
 isinterval(d::AbstractInterval) = true
 
 hash(d::AbstractInterval, h::UInt) =
@@ -23,7 +23,7 @@ approx_indomain(x, d::TypedEndpointsInterval{:open,:open}, tolerance) =
     (x > leftendpoint(d)-tolerance) && (x < rightendpoint(d)+tolerance)
 
 
-function point_in_domain(d::AbstractInterval)
+function choice(d::AbstractInterval)
     isempty(d) && throw(BoundsError())
     mean(d)
 end
@@ -31,7 +31,7 @@ end
 center(d::AbstractInterval) = mean(d)
 
 # For an interval of integers, try to find an integer point
-function point_in_domain(d::AbstractInterval{T}) where {T<:Integer}
+function choice(d::AbstractInterval{T}) where {T<:Integer}
     isempty(d) && throw(BoundsError())
     x = round(T, mean(d))
     if x ∈ d
@@ -54,9 +54,9 @@ end
 boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
 corners(d::AbstractInterval) = [leftendpoint(d), rightendpoint(d)]
 
-normal(d::AbstractInterval, x) = (abs(minimum(d)-x) < abs(maximum(d)-x)) ? -one(eltype(d)) : one(eltype(d))
+normal(d::AbstractInterval, x) = (abs(minimum(d)-x) < abs(maximum(d)-x)) ? -one(domaineltype(d)) : one(domaineltype(d))
 
-distance_to(d::AbstractInterval, x) = x ∈ d ? zero(eltype(d)) : min(abs(x-supremum(d)), abs(x-infimum(d)))
+distance_to(d::AbstractInterval, x) = x ∈ d ? zero(domaineltype(d)) : min(abs(x-supremum(d)), abs(x-infimum(d)))
 
 boundingbox(d::AbstractInterval) = d
 
@@ -78,6 +78,10 @@ and `ChebyshevInterval`.
 """
 abstract type FixedInterval{L,R,T} <: TypedEndpointsInterval{L,R,T} end
 const ClosedFixedInterval{T} = FixedInterval{:closed,:closed,T}
+
+convert(::Type{AbstractInterval{T}}, d::FixedInterval{L,R,T}) where {L,R,T} = d
+convert(::Type{AbstractInterval{T}}, d::FixedInterval{L,R,S}) where {L,R,S,T} =
+    similardomain(d, T)
 
 closure(d::AbstractInterval) = ClosedInterval(endpoints(d)...)
 closure(d::ClosedInterval) = d
@@ -244,8 +248,8 @@ function similar_interval(d::HalfLine{T,C}, a::S, b::S) where {T,S,C}
     HalfLine{promote_type(float(T),S),C}()
 end
 
-point_in_domain(d::NonnegativeRealLine) = zero(eltype(d))
-point_in_domain(d::PositiveRealLine) = one(eltype(d))
+choice(d::NonnegativeRealLine) = zero(domaineltype(d))
+choice(d::PositiveRealLine) = one(domaineltype(d))
 
 
 "The negative halfline `(-∞,0]` or `(-∞,0)`, right-closed or right-open."
@@ -276,15 +280,15 @@ function similar_interval(d::NegativeHalfLine{T,C}, a::S, b::S) where {S,T,C}
     NegativeHalfLine{promote_type(S,float(T)),C}()
 end
 
-point_in_domain(d::NegativeRealLine) = -one(eltype(d))
-point_in_domain(d::NonpositiveRealLine) = zero(eltype(d))
+choice(d::NegativeRealLine) = -one(domaineltype(d))
+choice(d::NonpositiveRealLine) = zero(domaineltype(d))
 
 
 "The real line `(-∞,∞)`."
 struct RealLine{T} <: FixedInterval{:open,:open,T} end
 RealLine() = RealLine{Float64}()
 
-point_in_domain(d::RealLine) = zero(eltype(d))
+choice(d::RealLine) = zero(eltype(d))
 
 similardomain(::RealLine, ::Type{T}) where {T} = RealLine{T}()
 
@@ -318,11 +322,11 @@ intersect(d1::FixedInterval, d2::FixedInterval) = intersectdomain(d1, d2)
 
 # Promotion to joint type T
 uniondomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) =
-    uniondomain(promote(d1,d2)...)
+    uniondomain(promote_domains(d1,d2)...)
 intersectdomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) =
-    intersectdomain(promote(d1,d2)...)
+    intersectdomain(promote_domains(d1,d2)...)
 setdiffdomain(d1::AbstractInterval, d2::AbstractInterval) =
-    setdiffdomain(promote(d1,d2)...)
+    setdiffdomain(promote_domains(d1,d2)...)
 
 
 

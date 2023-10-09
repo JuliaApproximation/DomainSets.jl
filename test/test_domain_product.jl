@@ -42,9 +42,9 @@ function test_product_domains()
         @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") [0.0,0.0,0.0] ∉ d1
         @test_logs (:warn, "`in`: incompatible combination of vector with length 1 and domain '($(-1.0..1.0)) × ($(-1.0..1.0))' with dimension 2. Returning false.") [0.0] ∉ d1
 
-        d3 = VcatDomain(-1.0 .. 1.0, -1.5 .. 2.5)
-        @test SA[0.5,0.5] ∈ d3
-        @test SA[-1.1,0.3] ∉ d3
+        d2 = VcatDomain(-1.0 .. 1.0, -1.5 .. 2.5)
+        @test SA[0.5,0.5] ∈ d2
+        @test SA[-1.1,0.3] ∉ d2
 
         d3 = VcatDomain(1.05 * UnitDisk(), -1.0 .. 1.0)
         @inferred(cross(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
@@ -52,7 +52,7 @@ function test_product_domains()
         @test eltype(d3) == SVector{3,Float64}
         @test SA[0.5,0.5,0.8] ∈ d3
         @test SA[-1.1,0.3,0.1] ∉ d3
-        @test point_in_domain(d3) ∈ d3
+        @test choice(d3) ∈ d3
     end
     @testset "mixed intervals" begin
         d = (0..1) × (0.0..1)
@@ -63,7 +63,7 @@ function test_product_domains()
         # Make sure promotion of domains happened
         @test eltype(component(d,1)) == Float64
         @test eltype(component(d,2)) == Float64
-        @test point_in_domain(d) ∈ d
+        @test choice(d) ∈ d
     end
     @testset "vector domains" begin
         d1 = VectorProductDomain([0..1.0, 0..2.0])
@@ -72,7 +72,7 @@ function test_product_domains()
         @test dimension(d1) == 2
         @test [0.1,0.2] ∈ d1
         @test SA[0.1,0.2] ∈ d1
-        @test point_in_domain(d1) ∈ d1
+        @test choice(d1) ∈ d1
         @test convert(Domain{Vector{BigFloat}}, d1) == d1
         d1big = convert(Domain{Vector{BigFloat}}, d1)
         @test eltype(d1big) == Vector{BigFloat}
@@ -81,7 +81,7 @@ function test_product_domains()
         d2 = VectorProductDomain([0..1, 0..3])
         @test dimension(d2) == 2
         @test [0.1,0.2] ∈ d2
-        @test point_in_domain(d2) ∈ d2
+        @test choice(d2) ∈ d2
 
         # other constructor calls
         @test VectorProductDomain(0..1, 1..2) isa VectorProductDomain{Vector{Int}}
@@ -110,7 +110,7 @@ function test_product_domains()
         @test rand(10) ∈ d4
         @test 2 .+ rand(10) ∉ d4
 
-        @test VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1] isa Domain{Float64}
+        @test eltype(VectorProductDomain{SVector{2,Float64}}(SVector(0..1, 0..2)).domains[1]) == Float64
     end
     @testset "Tuple product domain" begin
         # Use the constructor ProductDomain{T} directly
@@ -240,7 +240,7 @@ function test_product_domains()
         @test d4 isa Rectangle
         @test SA[0.5,0.5,0.8] ∈ d4
         @test SA[-1.1,0.3,0.1] ∉ d4
-        @test point_in_domain(d4) ∈ d4
+        @test choice(d4) ∈ d4
         @test center(d4) == [0.0,0.0,0.0]
 
         @test d1[Component(1)] == -1..1
@@ -251,13 +251,13 @@ function test_product_domains()
         @test d5 isa Rectangle
         @test SA[0.,0.5,0.5] ∈ d5
         @test SA[0.,-1.1,0.3] ∉ d5
-        @test point_in_domain(d5) ∈ d5
+        @test choice(d5) ∈ d5
 
         d6 = d1 × d1
         @test d6 isa Rectangle
         @test SA[0.,0.,0.5,0.5] ∈ d6
         @test SA[0.,0.,-1.1,0.3] ∉ d6
-        @test point_in_domain(d6) ∈ d6
+        @test choice(d6) ∈ d6
 
         @test Rectangle( SA[1,2], SA[2.0,3.0]) isa Rectangle{SVector{2,Float64}}
         @test Rectangle([0..1, 2..3]) isa Rectangle{Vector{Int}}

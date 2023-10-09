@@ -1,21 +1,24 @@
 # The union, intersection and difference of domains are represented with lazy domains.
 
-issubset(d1::Domain, d2::Domain) = promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
-issubset(d1, d2::Domain) = issubset1(promote_domains(d1, d2)...)
-issubset1(d1, d2) = issubset2(d1, d2)
-issubset2(d1, d2) = d1 == d2
+issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
+issubset(d1::AnyDomain, d2) = issubset_domain(domain(d1), d2)
+
+issubset_domain(d1, d2) =
+	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
+
+issubset1(d1, d2) = simplifies(d1) ? issubset(simplify(d1),d2) : issubset2(d1, d2)
+issubset2(d1, d2) = simplifies(d2) ? issubset(d1, simplify(d2)) : d1 == d2
 # this last fallback is only an approximation of the truth: if d1 equals d2, then
 # d1 is a subset of d2, but the reverse is not true. So we might be returning false
 # even when the correct mathematical answer is true.
 # What `issubset` means for the optimizations below is:
 # - if true: we are sure that d1 is a subset of d2
 # - if false: either it really is false, or we don't really know
-# On top of that, we only invoke issubset(d1,d2) when the arguments are both
-# Domains, or when d2 is a Domain, anticipating that issubset(d1::Domain,d2)
-# is often harder to implement.
 
-issubset(d1::AbstractArray, d2::Domain) = all(in(d2), d1)
-issubset(d1::AbstractSet, d2::Domain) = all(in(d2), d1)
+issubset1(d1::Number, d2) = in(d1, d2)
+issubset1(d1::AbstractArray, d2) = all(in(d2), d1)
+issubset1(d1::AbstractSet, d2) = all(in(d2), d1)
+
 
 ############################
 # The union of two domains
@@ -31,16 +34,15 @@ end
 """
 The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways:
 - with a list of arguments: `UnionDomain(d1, d2, ...)`
-- with a single domain: `UnionDomain(d::Domain)`
-- or with any iterable list of domains: `UnionDomain(domains)`
+- or with an iterable list of domains: `UnionDomain(domains)`
 """
 UnionDomain(domains...) = UnionDomain(domains)
-UnionDomain(d::Domain) = UnionDomain((d,))
+@deprecate UnionDomain(domain::Domain) UnionDomain((domain,))
 UnionDomain(domains) = _UnionDomain(promote_domains(domains))
-_UnionDomain(domains) = _UnionDomain(eltype(first(domains)), domains)
+_UnionDomain(domains) = _UnionDomain(domaineltype(first(domains)), domains)
 
 UnionDomain{T}(domains...) where {T} = UnionDomain{T}(domains)
-UnionDomain{T}(d::Domain) where {T} = UnionDomain{T}((d,))
+@deprecate UnionDomain{T}(domain::Domain) where {T} UnionDomain{T}((domain,))
 UnionDomain{T}(domains) where {T} = _UnionDomain(T, convert_eltype.(T, domains))
 _UnionDomain(::Type{T}, domains) where {T} = UnionDomain{T,typeof(domains)}(domains)
 
@@ -48,21 +50,19 @@ _UnionDomain(::Type{T}, domains) where {T} = UnionDomain{T,typeof(domains)}(doma
 composition(d::UnionDomain) = Combination()
 combine(d::UnionDomain, results) = reduce(|, results)
 
-# Make d1 ∪ d2 invoke `uniondomain` if one of the first two arguments is a Domain
-union(d1::Domain, d2::Domain, domains...) = uniondomain(d1, d2, domains...)
-union(d1::Domain, d2, domains...) = uniondomain(d1, d2, domains...)
-union(d1, d2::Domain, domains...) = uniondomain(d1, d2, domains...)
+# Make d1 ∪ d2 invoke `uniondomain` if one of the first two arguments is a domain
+union(d1::AnyDomain, d2::AnyDomain, domains...) =
+	uniondomain(domain(d1), domain(d2), domains...)
+union(d1::AnyDomain, d2, domains...) = uniondomain(domain(d1), d2, domains...)
+union(d1, d2::AnyDomain, domains...) = uniondomain(d1, domain(d2), domains...)
 
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
 uniondomain(d1, d2) = uniondomain1(promote_domains(d1, d2)...)
 
 # simplification: in case the domains are equal, we don't create a union
-uniondomain1(d1, d2) = d1 == d2 ? d1 : uniondomain2(d1, d2)
-# if d1 is a Domain, we go one step further and invoke `issubset`
-uniondomain1(d1::Domain, d2) = issubset(d2, d1) ? d1 : uniondomain2(d1, d2)
-uniondomain2(d1, d2) = UnionDomain(d1, d2)
-uniondomain2(d1, d2::Domain) = issubset(d1, d2) ? d2 : UnionDomain(d1, d2)
+uniondomain1(d1, d2) = issubset_domain(d2, d1) ? d1 : uniondomain2(d1, d2)
+uniondomain2(d1, d2) = issubset_domain(d1, d2) ? d2 : UnionDomain(d1, d2)
 
 uniondomain(d1, d2, d3) = _ud3(promote_domains(d1, d2, d3)...)
 _ud3(d1, d2, d3) =
@@ -105,11 +105,11 @@ convert(::Type{Domain{T}}, v::AbstractSet{<:Domain}) where {T} = UnionDomain{T}(
 convert(::Type{Domain{T}}, s::AbstractSet) where {T} = UnionDomain{T}(map(Point,collect(s)))
 
 similardomain(d::UnionDomain, ::Type{T}) where {T} =
-    UnionDomain(convert.(Domain{T}, components(d)))
+    UnionDomain(convert_eltype.(T, components(d)))
 
 
 
-point_in_domain(d::UnionDomain) = convert(eltype(d), point_in_domain(component(d,1)))
+choice(d::UnionDomain) = convert(eltype(d), choice(component(d,1)))
 
 isempty(d::UnionDomain) = all(isempty, d.domains)
 
@@ -173,16 +173,15 @@ end
 """
 The `IntersectDomain` constructor can be invoked in one of three ways:
 - with a list of arguments: IntersectDomain(d1, d2, ...)
-- with a single domain: IntersectDomain(d::Domain)
 - or with any iterable list of domains: IntersectDomain(domains)
 """
 IntersectDomain(domains...) = IntersectDomain(domains)
-IntersectDomain(d::Domain) = IntersectDomain((d,))
+@deprecate IntersectDomain(domain::Domain) IntersectDomain((domain,))
 IntersectDomain(domains) = _IntersectDomain(promote_domains(domains))
-_IntersectDomain(domains) = IntersectDomain{eltype(first(domains))}(domains)
+_IntersectDomain(domains) = IntersectDomain{domaineltype(first(domains))}(domains)
 
 IntersectDomain{T}(domains...) where {T} = IntersectDomain{T}(domains)
-IntersectDomain{T}(d::Domain) where {T} = IntersectDomain{T}((d,))
+@deprecate IntersectDomain{T}(domain::Domain) where T IntersectDomain((domain,))
 IntersectDomain{T}(domains) where {T} = _IntersectDomain(T, convert_eltype.(T, domains))
 _IntersectDomain(::Type{T}, domains) where {T} = IntersectDomain{T,typeof(domains)}(domains)
 
@@ -192,18 +191,21 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 
 
 # Make d1 ∩ d2 invoke `intersectdomain` if one of the first two arguments is a Domain
-intersect(d1::Domain, d2::Domain, domains...) = intersectdomain(d1, d2, domains...)
-intersect(d1::Domain, d2, domains...) = intersectdomain(d1, d2, domains...)
-intersect(d1, d2::Domain, domains...) = intersectdomain(d1, d2, domains...)
+intersect(d1::AnyDomain, d2::AnyDomain, domains...) =
+	intersectdomain(domain(d1), domain(d2), domains...)
+# if a domain is combined with another argument that has a domain interpretation,
+# proceed with intersectdomain
+intersect(d1::AnyDomain, d2, domains...) = _intersect(domain(d1), d2, DomainStyle(d2), domains...)
+intersect(d1, d2::AnyDomain, domains...) = _intersect(d1, domain(d2), DomainStyle(d1), domains...)
+_intersect(d1, d2, ::IsDomain, domains...) = intersectdomain(d1, d2, domains...)
+_intersect(d1, d2, ::NotDomain, domains...) = intersectdomain(d1, d2, domains...)
 
 intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
 intersectdomain(d1, d2) = intersectdomain1(promote_domains(d1, d2)...)
 
-intersectdomain1(d1, d2) = d1 == d2 ? d1 : intersectdomain2(d1, d2)
-intersectdomain1(d1::Domain, d2) = issubset(d2, d1) ? d2 : intersectdomain2(d1, d2)
-intersectdomain2(d1, d2) = IntersectDomain(d1, d2)
-intersectdomain2(d1, d2::Domain) = issubset(d1, d2) ? d1 : IntersectDomain(d1, d2)
+intersectdomain1(d1, d2) = issubset_domain(d2, d1) ? d2 : intersectdomain2(d1, d2)
+intersectdomain2(d1, d2) = issubset_domain(d1, d2) ? d1 : IntersectDomain(d1, d2)
 
 intersectdomain(d1, d2, d3) = _id3(promote_domains(d1, d2, d3)...)
 _id3(d1, d2, d3) =
@@ -239,10 +241,12 @@ function intersectdomain(d1::UnionDomain, d2::UnionDomain)
     d1 == d2 && return d1
     uniondomain(intersectdomain.(Ref(d1), components(d2))...)
 end
-intersectdomain(d1::UnionDomain, d2::Domain) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
-intersectdomain(d1::Domain, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
+intersectdomain1(d1::UnionDomain, d2) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
+intersectdomain2(d1, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
 
-(&)(d1::Domain, d2::Domain) = intersectdomain(d1,d2)
+(&)(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
+(&)(d1::AnyDomain, d2) = intersectdomain(domain(d1), d2)
+(&)(d1, d2::AnyDomain) = intersectdomain(d1, domain(d2))
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 	if compatibleproductdims(d1, d2)
@@ -253,7 +257,7 @@ function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 end
 
 similardomain(d::IntersectDomain, ::Type{T}) where {T} =
-    IntersectDomain(convert.(Domain{T}, components(d)))
+    IntersectDomain(convert_eltype.(T, components(d)))
 
 isequaldomain(a::IntersectDomain, b::IntersectDomain) = Set(components(a)) == Set(components(b))
 hash(d::IntersectDomain, h::UInt) = hashrec("IntersectDomain", Set(components(d)), h)
@@ -281,7 +285,7 @@ struct SetdiffDomain{T,DD} <: CompositeDomain{T}
 end
 
 SetdiffDomain(d1, d2) = _SetdiffDomain(promote_domains((d1, d2))...)
-_SetdiffDomain(d1, d2) = SetdiffDomain{eltype(d1)}((d1,d2))
+_SetdiffDomain(d1, d2) = SetdiffDomain{domaineltype(d1)}((d1,d2))
 SetdiffDomain{T}(domains) where {T} = SetdiffDomain{T,typeof(domains)}(domains)
 
 # The difference between two domains corresponds to a logical AND NOT of their characteristic functions
@@ -294,18 +298,18 @@ _approx_indomain(x, d::SetdiffDomain, comp::Combination, domains, tolerance) =
     approx_in(x, domains[1], tolerance) & !in(x, domains[2])
 
 similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
-    SetdiffDomain(convert(Domain{T}, d.domains[1]), convert(Domain{T}, d.domains[2]))
+    SetdiffDomain(convert_eltype(T, d.domains[1]), convert_eltype(T, d.domains[2]))
 
 # use \ as a synomym for setdiff, in the context of domains (though, generically,
 # \ means left division in Julia)
-\(d1::Domain, d2::Domain) = setdiffdomain(d1, d2)
-\(d1::Domain, d2) = setdiffdomain(d1, d2)
-\(d1, d2::Domain) = setdiffdomain(d1, d2)
+\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+\(d1::AnyDomain, d2) = setdiffdomain(domain(d1), d2)
+\(d1, d2::AnyDomain) = setdiffdomain(d1, domain(d2))
 
 # Make setdiff invoke `setdiffdomain` if one of the arguments is a Domain
-setdiff(d1::Domain, d2::Domain) = setdiffdomain(d1, d2)
-setdiff(d1::Domain, d2) = setdiffdomain(d1, d2)
-setdiff(d1, d2::Domain) = setdiffdomain(d1, d2)
+setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+setdiff(d1::AnyDomain, d2) = setdiffdomain(domain(d1), d2)
+setdiff(d1, d2::AnyDomain) = setdiffdomain(d1, domain(d2))
 
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = setdiffdomain2(d1, d2)
@@ -313,17 +317,7 @@ setdiffdomain1(d1, d2) = setdiffdomain2(d1, d2)
 function setdiffdomain2(d1, d2)
 	if isempty(d2)
 		d1
-	elseif d1 == d2
-		emptyspace(d1)
-	else
-		SetdiffDomain(d1, d2)
-	end
-end
-# similar to uniondomain, if d2 is a Domain we use `issubset` as an optimization
-function setdiffdomain2(d1, d2::Domain)
-	if isempty(d2)
-		d1
-	elseif issubset(d1,d2)
+	elseif issubset_domain(d1,d2)
 		emptyspace(d1)
 	else
 		SetdiffDomain(d1, d2)

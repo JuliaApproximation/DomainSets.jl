@@ -232,8 +232,8 @@ function test_intervals()
         @test isopenset(d)
         @test DomainSets.isfullspace(d)
         @test 1 ∈ d
-        @test point_in_domain(d) ∈ d
-        @test point_in_domain(d) isa T
+        @test choice(d) ∈ d
+        @test choice(d) isa T
         @test isempty(boundary(d))
         @test_throws ArgumentError minimum(d)
         @test_throws ArgumentError maximum(d)

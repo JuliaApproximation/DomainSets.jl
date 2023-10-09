@@ -13,7 +13,7 @@ implementing `in` directly.
 abstract type AbstractIndicatorFunction{T} <: Domain{T} end
 
 "The indicator function of a domain is the function `f(x) = x ∈ D`."
-indicatorfunction(d::Domain) = x -> x ∈ d
+indicatorfunction(d) = x -> x ∈ d
 
 indomain(x, d::AbstractIndicatorFunction) = _indomain(x, d, indicatorfunction(d))
 _indomain(x, d::AbstractIndicatorFunction, f) = f(x)
@@ -35,8 +35,8 @@ indicatorfunction(d::IndicatorFunction) = d.f
 similardomain(d::IndicatorFunction, ::Type{T}) where {T} = IndicatorFunction{T}(d.f)
 
 convert(::Type{IndicatorFunction}, d::AbstractIndicatorFunction) = d
-convert(::Type{IndicatorFunction}, d::Domain{T}) where {T} =
-    IndicatorFunction{T}(indicatorfunction(d))
+convert(::Type{IndicatorFunction}, d) =
+    IndicatorFunction{domaineltype(d)}(indicatorfunction(checkdomain(d)))
 
 isequaldomain(d1::IndicatorFunction, d2::IndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2)
@@ -45,18 +45,19 @@ intersectdomain1(d1::IndicatorFunction, d2) = BoundedIndicatorFunction(d1.f, d2)
 intersectdomain2(d1, d2::IndicatorFunction) = BoundedIndicatorFunction(d2.f, d1)
 
 "An indicator function with a known bounding domain."
-struct BoundedIndicatorFunction{F,D,T} <: AbstractIndicatorFunction{T}
+struct BoundedIndicatorFunction{T,F,D} <: AbstractIndicatorFunction{T}
     f       ::  F
     domain  ::  D
 end
 
-BoundedIndicatorFunction(f, domain::Domain{T}) where {T} =
-    BoundedIndicatorFunction{typeof(f),typeof(domain),T}(f, domain)
-
-function BoundedIndicatorFunction(f, domain)
-    T = eltype(domain)
-    BoundedIndicatorFunction{typeof(f),typeof(domain),T}(f, domain)
-end
+BoundedIndicatorFunction(f, domain) =
+    BoundedIndicatorFunction{domaineltype(domain)}(f, domain)
+BoundedIndicatorFunction{T}(f, domain::Domain{T}) where {T} =
+    BoundedIndicatorFunction{T,typeof(f),typeof(domain)}(f, domain)
+BoundedIndicatorFunction{T}(f, domain) where {T} =
+    _BoundedIndicatorFunction(T, f, checkdomain(domain))
+_BoundedIndicatorFunction(::Type{T}, f, domain) where {T} =
+    BoundedIndicatorFunction{T,typeof(f),typeof(domain)}(f, domain)
 
 indicatorfunction(d::BoundedIndicatorFunction) = d.f
 
@@ -70,7 +71,7 @@ hash(d::BoundedIndicatorFunction, h::UInt) =
     hashrec(indicatorfunction(d), boundingdomain(d), h)
 
 similardomain(d::BoundedIndicatorFunction, ::Type{T}) where {T} =
-    BoundedIndicatorFunction(d.f, convert(Domain{T}, d.domain))
+    BoundedIndicatorFunction(d.f, convert_eltype(T, d.domain))
 
 boundingbox(d::BoundedIndicatorFunction) = boundingbox(boundingdomain(d))
 

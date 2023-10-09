@@ -103,7 +103,7 @@ function test_rand(T)
         rs = rand(rng, b, n)
         n_1 = sum(r in region_1 for r in rs)
         n_2 = sum(r in region_2 for r in rs)
-        @test isapprox(n_1, n_2, rtol=0.1) 
+        @test isapprox(n_1, n_2, rtol=0.1)
     end
 end
 

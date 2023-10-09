@@ -41,6 +41,7 @@ similarmap(m::WrappedMap, ::Type{T}) where {T} = WrappedMap{T}(m)
 convert(::Type{Map}, m::Map) = m
 convert(::Type{Map}, m) = WrappedMap(m)
 convert(::Type{Map{T}}, m) where {T} = WrappedMap{T}(m)
+convert(::Type{Map{T}}, m::WrappedMap) where {T} = WrappedMap{T}(m.map)
 
 ==(m1::WrappedMap, m2::Function) = m1.map == m2
 ==(m1::Function, m2::WrappedMap) = m1 == m2.map

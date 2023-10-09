@@ -43,7 +43,6 @@ export ..
 
 import CompositeTypes: component, components
 
-
 ################################
 ## Exhaustive list of exports
 ################################
@@ -81,6 +80,8 @@ export AffineMap, Translation, LinearMap,
 
 ## Generic domains
 
+@deprecate point_in_domain(d) choice(d)
+
 # from generic/domain.jl
 export Domain, EuclideanDomain, VectorDomain,
     dimension,
@@ -88,7 +89,7 @@ export Domain, EuclideanDomain, VectorDomain,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
     interior, closure,
-    point_in_domain
+    choice
 
 # from generic/geometry.jl
 export boundingbox,
@@ -192,6 +193,7 @@ include("maps/basic.jl")
 include("maps/affine.jl")
 include("maps/arithmetics.jl")
 
+include("generic/core.jl")
 include("generic/domain.jl")
 include("generic/geometry.jl")
 include("generic/canonical.jl")

@@ -1,4 +1,4 @@
-import DomainSets: factors, nfactors, factor
+using DomainSets: factors, nfactors, factor
 
 
 widen_eltype(::Type{T}) where {T<:Number} = widen(T)
@@ -9,16 +9,21 @@ widen_eltype(::Type{Vector{T}}) where {T<:Number} = Vector{widen(T)}
 # We test the generic functionality of a domain.
 # These tests check whether the given domain correctly implements the
 # interface of a domain.
-function test_generic_domain(d::Domain)
-    @test isreal(d) == isreal(eltype(d))
-    @test isreal(d) == isreal(numtype(d))
+function test_generic_domain(d)
+    @test isreal(d) == isreal(domaineltype(d))
+    @test isreal(d) == isreal(domain_numtype(d))
 
-    @test convert(Domain{eltype(d)}, d) == d
-    @test convert(Domain{widen_eltype(eltype(d))}, d) == d
+    if d isa Domain
+        @test convert(Domain{eltype(d)}, d) == d
+        @test convert(Domain{widen_eltype(eltype(d))}, d) == d
+    elseif DomainStyle(d) isa IsDomain
+        @test convert_eltype(eltype(d), d) == d
+        @test convert_eltype(widen_eltype(eltype(d)), d) == d
+    end
     @test prectype(convert_prectype(d, BigFloat)) == BigFloat
 
     if !isempty(d)
-        x = point_in_domain(d)
+        x = choice(d)
         @test x ∈ d
         @test approx_in(x, d, 0.01)
         @test_throws ErrorException approx_in(x, d, -1)
@@ -26,17 +31,17 @@ function test_generic_domain(d::Domain)
         @test approx_in.([x,x], d, 0.01) == approx_in.([x,x], Ref(d), 0.01)
     else
         try
-            x = point_in_domain(d)
+            x = choice(d)
             @test false
         catch
         end
     end
-    @test canonicaldomain(DomainSets.Equal(), d) == d
+    @test isequaldomain(canonicaldomain(DomainSets.Equal(), d), d)
     if hascanonicaldomain(d)
         cd = canonicaldomain(d)
         @test mapfrom_canonical(d) == mapto(cd, d)
         @test mapto_canonical(d) == mapto(d, cd)
-        x1 = point_in_domain(cd)
+        x1 = choice(cd)
         @test mapfrom_canonical(d, x1) ∈ d
         @test mapto_canonical(d, x) ∈ cd
     else
@@ -46,7 +51,7 @@ function test_generic_domain(d::Domain)
     if hasparameterization(d)
         par = parameterdomain(d)
         @test mapfrom_parameterdomain(d) == mapto(par, d)
-        xp = point_in_domain(par)
+        xp = choice(par)
         @test approx_in(mapfrom_parameterdomain(d, xp), d)
     end
     if iscomposite(d)
@@ -109,24 +114,19 @@ end
         # functionality using broadcast
         @test 2 * (1..2) == 2 .* (1..2)
         @test (1..2) * 2 == (1..2) .* 2
-        @test (1..2) / 2 ≈ (0.5..1)
-        @test 2 \ (1..2) ≈ (0.5..1)
+        @test (1..2) / 2 ≈ 0.5..1
+        @test 2 \ (1..2) ≈ 0.5..1
         @test all(rand(4) .∈ (-1..1))
-        @test all(approx_in.(rand(4), -1..1))
-        @test all(approx_in.([1.005,1.0005], -1..1, [1e-2,1e-3]))
+        @test all(approx_in.(rand(4), (-1..1)))
+        @test all(approx_in.([1.005,1.0005], (-1..1), [1e-2,1e-3]))
         @test all(rand(4) .∉ (2..3))
         @test_throws MethodError (0..1) + 0.4
 
         # promotion
         @test DomainSets.promote_domains() == ()
-        s1 = Set([0..1,2..3,3..4.0])
-        @test s1 isa Set{<:Domain{Float64}}
-        @test DomainSets.promote_domains(s1) == s1
-        s2 = Set([0..1,2..3,3..4.0, Point(2)])
-        @test s2 isa Set{Domain}
-        @test DomainSets.promote_domains(s2) isa Set{<:Domain{Float64}}
-        @test DomainSets.promote(0..1.0, [1,2,3]) isa Tuple{Interval,Vector{Float64}}
-        @test DomainSets.promote([1,2,3], 0..1.0) isa Tuple{Vector{Float64},Interval}
+        @test DomainSets.promote_domains(0..1, 2..4.0) isa Tuple{ClosedInterval{Float64},ClosedInterval{Float64}}
+        @test DomainSets.promote_domains(0..1.0, [1,2,3]) isa Tuple{Interval,Vector{Float64}}
+        @test DomainSets.promote_domains([1,2,3], 0..1.0) isa Tuple{Vector{Float64},Interval}
 
         # compatible point-domain pairs
         @test DomainSets.iscompatiblepair(0.5, 0..1)
@@ -143,4 +143,7 @@ end
         @test_throws ErrorException DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
         @test DomainSets.convert_eltype(Int, (1,2)) == (1,2)
     end
+
+    @test choice(Set([1,2,3])) ∈ Set([1,2,3])
+    @test choice([1,2,3]) == 1
 end

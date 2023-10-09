@@ -29,7 +29,7 @@
         ũ2 = UnionDomain([d1,d2])
         @test ũ2 == ũ2
         @test u1 == ũ2
-        @test UnionDomain{SVector{2,Float64}}(d1) isa UnionDomain
+        @test UnionDomain{SVector{2,Float64}}((d1,)) isa UnionDomain
 
         # Don't create a union with two identical elements
         @test UnitDisk() ∪ UnitDisk() isa UnitDisk
@@ -74,14 +74,12 @@
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
 
         @test UnionDomain((d1,d2)) == UnionDomain(d1,d2)
-        @test UnionDomain(d1) isa UnionDomain
         @test UnionDomain(UnionDomain(d1,d2),d3) == UnionDomain(d3,UnionDomain(d1,d2))
 
-        @test convert(Domain, [0..1,2..3,3..4]) isa UnionDomain{Int}
-        @test convert(Domain{Float64}, [0..1,2..3,3..4]) isa UnionDomain{Float64}
-        @test convert(Domain, Set([0..1,2..3,3..4])) isa UnionDomain{Int}
-        @test convert(Domain{Float64}, Set([0..1,2..3,3..4])) isa UnionDomain{Float64}
-        @test convert(Domain, Set([1,2,3])) isa UnionDomain{Int}
+        @test convert(Domain, [Point(0),Point(2),Point(3)]) isa UnionDomain{Int}
+        @test convert(Domain{Float64}, [Point(1),Point(2),Point(3)]) isa UnionDomain{Float64}
+        @test convert(Domain, Set([Point(0),Point(2),Point(3)])) isa UnionDomain{Int}
+        @test convert(Domain{Float64}, Set([Point(0),Point(2),Point(3)])) isa UnionDomain{Float64}
         @test 2 ∈ convert(Domain, Set([1,2,3]))
         @test 2 ∈ convert(Domain{Float64}, Set([1,2,3]))
         @test 4 ∉ convert(Domain, Set([1,2,3]))
@@ -97,14 +95,12 @@
         @test String(take!(io)) == "UnitDisk() ∪ (($(-0.9..0.9)) × ($(-0.9..0.9)))"
 
         # repeated union
-        @test ncomponents(uniondomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
-        @test ncomponents(uniondomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
-        @test ncomponents(uniondomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
+        @test ncomponents(uniondomain(-2 .. -1, UnitInterval(), UnitInterval())) == 2
+        @test ncomponents(uniondomain(UnitInterval(), -2 .. -1, UnitInterval())) == 2
+        @test ncomponents(uniondomain(UnitInterval(), UnitInterval(), -2 .. -1)) == 2
     end
 
     @testset "intersect" begin
-        @test IntersectDomain(0..1) == IntersectDomain((0..1))
-        @test IntersectDomain{Float64}(0..1) == IntersectDomain(0.0..1.0)
         @test IntersectDomain{Float64}(0..1, 1..2) == IntersectDomain((0..1, 1..2))
         @test intersectdomain(0..1, 1..2) == Point(1)
 
@@ -154,9 +150,9 @@
         @test intersectdomain(2..4, uniondomain(0..1, 2..3)) == 2..3
 
         # repeated intersection
-        @test ncomponents(intersectdomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
-        @test ncomponents(intersectdomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 2
-        @test ncomponents(intersectdomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 2
+        @test ncomponents(intersectdomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 0
+        @test ncomponents(intersectdomain(UnitInterval(), UnitBall{Float64}(), UnitInterval())) == 0
+        @test ncomponents(intersectdomain(UnitInterval(), UnitInterval(), UnitBall{Float64}())) == 0
         # larger intersection expressions
         @test intersectdomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa EmptySpace
         @test intersectdomain(0..1, 1..3, Point(1.0)) == Point(1.0)
@@ -198,7 +194,7 @@
         @test setdiff(0.5, 0..1) == setdiffdomain(0.5, 0..1)
 
         @test setdiff(0..1, EmptySpace()) == 0..1
-        @test setdiff(0..1, 0.0..1.0) == EmptySpace()
+        @test setdiffdomain(0..1, 0.0..1.0) == EmptySpace()
 
         @test (0..1)^2 \ UnitCircle() == UnitInterval()^2 \ UnitCircle()
     end
@@ -206,25 +202,25 @@
     @testset "arithmetic" begin
         d1 = (0..1)
         d2 = (2..3)
-        d = UnionDomain(d1) ∪ UnionDomain(d2)
+        d = UnionDomain((d1,)) ∪ UnionDomain((d2,))
 
-        @test d .+ 1 == UnionDomain(d1 .+ 1) ∪ (d2 .+ 1)
-        @test d .- 1 == UnionDomain(d1 .- 1) ∪ (d2 .- 1)
-        @test 2 * d  == UnionDomain(2 * d1)  ∪ (2 * d2)
-        @test d * 2 == UnionDomain(d1 * 2) ∪ (d2 * 2)
-        @test d / 2 == UnionDomain(d1 / 2) ∪ (d2 / 2)
-        @test 2 \ d == UnionDomain(2 \ d1) ∪ (2 \ d2)
+        @test d .+ 1 == UnionDomain((d1 .+ 1,)) ∪ (d2 .+ 1)
+        @test d .- 1 == UnionDomain((d1 .- 1,)) ∪ (d2 .- 1)
+        @test 2 * d  == UnionDomain((2*d1,))  ∪ 2 * d2
+        @test d * 2 == UnionDomain((d1 * 2,)) ∪ (d2 * 2)
+        @test d / 2 == UnionDomain((d1 / 2,)) ∪ (d2 / 2)
+        @test 2 \ d == UnionDomain((2 \ d1,)) ∪ (2 \ d2)
 
         @test infimum(d) == minimum(d) == 0
         @test supremum(d) == maximum(d) == 3
     end
 
     @testset "different types" begin
-        d̃1 = (0..1)
-        d1 = (0f0.. 1f0)
-        d2 = (2..3)
+        d1 = 0..1
+        d2 = 0f0..1f0
+        d3 = 2..3
 
-        @test UnionDomain(d1) ∪ d2 == UnionDomain(d̃1) ∪ d2
+        @test UnionDomain(d1,d2) ∪ d3 == d1 ∪ UnionDomain(d2, d3)
     end
 
     @testset "disk × interval" begin

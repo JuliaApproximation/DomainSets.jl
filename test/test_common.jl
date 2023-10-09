@@ -1,16 +1,23 @@
-
-using DomainSets: convert_numtype, convert_prectype,
-    promote_numtype, promote_prectype
+using DomainSets:
+    convert_eltype,
+    convert_numtype,
+    convert_prectype,
+    promote_numtype,
+    promote_prectype,
+    euclideandimension,
+    domaineltype,
+    domain_numtype,
+    domain_prectype
 
 function test_dimension()
-    @test DomainSets.euclideandimension(Int) == 1
-    @test DomainSets.euclideandimension(Float64) == 1
-    @test DomainSets.euclideandimension(ComplexF64) == 1
-    @test DomainSets.euclideandimension(SVector{2,Float64}) == 2
-    @test DomainSets.euclideandimension(MVector{2,Float64}) == 2
-    @test DomainSets.euclideandimension(Tuple{Int,Int}) == 2
-    @test DomainSets.euclideandimension(Tuple{Int,Float64}) == 2
-    @test_throws MethodError DomainSets.euclideandimension(Vector{Float64})
+    @test euclideandimension(Int) == 1
+    @test euclideandimension(Float64) == 1
+    @test euclideandimension(ComplexF64) == 1
+    @test euclideandimension(SVector{2,Float64}) == 2
+    @test euclideandimension(MVector{2,Float64}) == 2
+    @test euclideandimension(Tuple{Int,Int}) == 2
+    @test euclideandimension(Tuple{Int,Float64}) == 2
+    @test_throws ErrorException euclideandimension(Vector{Float64})
 end
 
 function test_components()
@@ -29,13 +36,13 @@ function test_prectype()
     @test prectype(1.0+2.0im) == Float64
     @test prectype([1.0+2.0im, 3.0]) == Float64
     @test prectype(NTuple{2,Int}) == Float64
-    @test prectype((1.0,)) == Float64
-    @test prectype((1.0, 2.0)) == Float64
-    @test prectype((1.0, 2.0, 3.0)) == Float64
-    @test prectype((1.0, big(2.0), 3.0+im)) == BigFloat
+    @test prectype(typeof((1.0,))) == Float64
+    @test prectype(typeof((1.0, 2.0))) == Float64
+    @test prectype(typeof((1.0, 2.0, 3.0))) == Float64
+    @test prectype(typeof((1.0, big(2.0), 3.0+im))) == BigFloat
     @test prectype(NTuple{4,Int}) == Float64
     @test @inferred(prectype(1, 2.0)) == Float64
-    @test @inferred(prectype((1, 2.0, 3, 40+im))) == Float64
+    @test @inferred(prectype(typeof((1, 2.0, 3, 40+im)))) == Float64
 
     @test convert_prectype(2, Float64) == 2
     @test convert_prectype(2, Float64) isa Float64
@@ -63,14 +70,14 @@ function test_numtype()
     @test numtype(1.0+2.0im) == Complex{Float64}
     @test numtype([1.0+2.0im, 3.0]) == Complex{Float64}
     @test numtype(NTuple{2,Complex{Int}}) == Complex{Int}
-    @test numtype((1.0,)) == Float64
-    @test numtype((1.0, 2.0)) == Float64
+    @test numtype(typeof((1.0,))) == Float64
+    @test numtype(typeof((1.0, 2.0))) == Float64
     @test numtype((1.0, 2.0, 3.0)) == Float64
     @test numtype((1.0, 2.0, 3.0, 4.0)) == Float64
     @test numtype(1.0, big(2.0), 3.0+im) == Complex{BigFloat}
-    @test numtype((1.0, big(2.0), 3.0+im)) == Complex{BigFloat}
+    @test numtype(typeof((1.0, big(2.0), 3.0+im))) == Complex{BigFloat}
     @test @inferred(numtype(1, 2.0)) == Float64
-    @test @inferred(numtype((1, 2.0, 3, 40+im))) == Complex{Float64}
+    @test @inferred(numtype(typeof((1, 2.0, 3, 40+im)))) == Complex{Float64}
 
     @test convert_numtype(2, Float64) == 2
     @test convert_numtype(2, Float64) isa Float64
@@ -83,7 +90,6 @@ function test_numtype()
     @test promote_numtype(2, 3.0+im, big(4)) isa Tuple{Complex{BigFloat},Complex{BigFloat},Complex{BigFloat}}
 end
 
-using DomainSets: convert_eltype
 function test_eltype()
     @test convert_eltype(Float64, Point(0)) isa Point{Float64}
     @test convert_eltype(Float64, Point(0)) == Point(0)

@@ -81,8 +81,8 @@ _approx_indomain(x, d, tolerance, ::Combination, domains) =
 _approx_indomain(x, d, tolerance, ::Product, domains) =
     mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
 
-point_in_domain(d::SimpleLazyDomain) = toexternalpoint(d, point_in_domain(superdomain(d)))
-point_in_domain(d::CompositeDomain) = toexternalpoint(d, map(point_in_domain, components(d)))
+choice(d::SimpleLazyDomain) = toexternalpoint(d, choice(superdomain(d)))
+choice(d::CompositeDomain) = toexternalpoint(d, map(choice, components(d)))
 
 isequaldomain(a::D, b::D) where {D<:CompositeDomain} = components(a) == components(b)
 
@@ -128,11 +128,12 @@ struct WrappedDomain{T,D} <: DerivedDomain{T}
 end
 
 WrappedDomain(domain::Domain{T}) where {T} = WrappedDomain{T}(domain)
-WrappedDomain(domain) = WrappedDomain{eltype(domain)}(domain)
+WrappedDomain(domain) = WrappedDomain{domaineltype(domain)}(domain)
 
 WrappedDomain{T}(domain::D) where {T,D<:Domain{T}} = WrappedDomain{T,D}(domain)
 WrappedDomain{T}(domain::Domain) where {T} = WrappedDomain{T}(convert(Domain{T}, domain))
-WrappedDomain{T}(domain) where {T} = WrappedDomain{T,typeof(domain)}(domain)
+WrappedDomain{T}(domain) where {T} = _WrappedDomain(convert_eltype(T, domain))
+_WrappedDomain(domain) = WrappedDomain{domaineltype(domain),typeof(domain)}(domain)
 
 similardomain(d::WrappedDomain, ::Type{T}) where {T} = WrappedDomain{T}(d.domain)
 

@@ -10,7 +10,8 @@ const StaticTypes = Union{Number,<:StaticVector{N} where N,<:NTuple{N,Any} where
 euclideandimension(::Type{T}) where {T <: Number} = 1
 euclideandimension(::Type{T}) where {N,T <: StaticVector{N}} = N
 euclideandimension(::Type{T}) where {N,T <: NTuple{N,Any}} = N
-# Does not apply to Vector{T}: we don't know its dimension
+euclideandimension(::Type{T}) where {T} =
+	error("Don't know the euclidean dimension of $(T).")
 
 unitvector(d::Domain{T}, dim) where {N,S,T<:SVector{N,S}} = SVector{N,S}(ntuple(i -> i==dim, N))
 function unitvector(d::Domain{T}, dim) where {T<:AbstractVector}
@@ -22,7 +23,7 @@ unitvector(d::Domain{T}, dim) where {T<:Number} = (@assert dim==1; one(T))
 
 origin(d::Domain{T}) where {T <: StaticTypes} = zero(T)
 function origin(d::Domain{T}) where {T <: AbstractVector}
-	p = similar(point_in_domain(d))
+	p = similar(choice(d))
 	fill!(p, 0)
 	convert(T, p)
 end
@@ -62,8 +63,11 @@ convert_eltype(::Type{T}, d::Number) where {T} = convert(T, d)
 
 "The floating point precision type associated with the argument."
 prectype(x) = prectype(typeof(x))
+prectype(::Type{T}) where T = Any		# fallback
+prectype(::Type{T}) where {T<:AbstractFloat} = T
+prectype(::Type{T}) where {T<:Number} = prectype(float(T))
+prectype(::Type{<:AbstractArray{T}}) where T = prectype(T)
 prectype(::Type{<:Complex{T}}) where {T} = prectype(T)
-prectype(::Type{<:AbstractArray{T}}) where {T} = prectype(T)
 prectype(::Type{NTuple{N,T}}) where {N,T} = prectype(T)
 prectype(::Type{Tuple{A}}) where {A} = prectype(A)
 prectype(::Type{Tuple{A,B}}) where {A,B} = prectype(A,B)
@@ -71,18 +75,12 @@ prectype(::Type{Tuple{A,B,C}}) where {A,B,C} = prectype(A,B,C)
 @generated function prectype(T::Type{<:Tuple})
     quote $(promote_type(map(prectype, T.parameters[1].parameters)...)) end
 end
-prectype(::Type{T}) where {T<:AbstractFloat} = T
-prectype(::Type{T}) where {T<:Number} = prectype(float(T))
 
 prectype(a...) = promote_type(map(prectype, a)...)
 
 "Convert `x` such that its `prectype` equals `U`."
-convert_prectype(x, ::Type{U}) where {U} = convert(to_prectype(typeof(x),U), x)
-
-# function convert_prectype(x, ::Type{U}) where {U}
-#     @warn "The order of arguments of convert_prectype has changed."
-#     prectype(U, x)
-# end
+convert_prectype(x, ::Type{U}) where {U} =
+	convert_eltype(to_prectype(eltype(x), U), x)
 
 "Return the type to which `U` can be converted, such that the `prectype` becomes `T`."
 to_prectype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the numtype of $(T) to $(U).")
@@ -104,10 +102,11 @@ _promote_prectype(U, a, b, c...) =
 # Numeric type
 #################
 
-"The numeric element type of x in a Euclidean space."
+"The numeric element type of `x` in a Euclidean space."
 numtype(x) = numtype(typeof(x))
+numtype(::Type{T}) where T = Any
 numtype(::Type{T}) where {T<:Number} = T
-numtype(::Type{T}) where {T} = eltype(T)
+numtype(::Type{<:AbstractArray{T}}) where T = T
 numtype(::Type{NTuple{N,T}}) where {N,T} = T
 numtype(::Type{Tuple{A,B}}) where {A,B} = promote_type(numtype(A), numtype(B))
 numtype(::Type{Tuple{A,B,C}}) where {A,B,C} = promote_type(numtype(A), numtype(B), numtype(C))
@@ -119,7 +118,8 @@ end
 numtype(a...) = promote_type(map(numtype, a)...)
 
 "Convert `x` such that its `numtype` equals `U`."
-convert_numtype(x, ::Type{U}) where {U} = convert(to_numtype(typeof(x),U), x)
+convert_numtype(x, ::Type{U}) where {U} =
+	convert_eltype(to_numtype(eltype(x), U), x)
 
 to_numtype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the numtype of $(T) to $(U).")
 to_numtype(::Type{T}, ::Type{U}) where {T <: Number,U <: Number} = U
