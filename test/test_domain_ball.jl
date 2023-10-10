@@ -135,8 +135,8 @@ function test_balls()
     @test canonicaldomain(D) == UnitDisk()
     @test matrix(mapfrom_canonical(D)) == [2 0; 0 2]
     @test vector(mapfrom_canonical(D)) == [0; 0]
-    @test parameterdomain(D) == canonicaldomain(D)
-    @test mapfrom_parameterdomain(D) == mapfrom_canonical(D)
+    @test parameterdomain(D) == UnitSquare()
+    @test mapfrom_parameterdomain(D)([0.2,0.4]) ∈ D
     @test boundingbox(D) == (-2.0..2.0)^2
 
     D = 2UnitDisk() .+ SA[1.0,1.0]
