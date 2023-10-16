@@ -566,14 +566,14 @@ struct UnitDiskMap{T} <: Map{SVector{2,T}} end
 
 UnitDiskMap() = UnitDiskMap{Float64}()
 
-mapsize(m::UnitDiskMap) = (2,)
+mapsize(m::UnitDiskMap) = (2,2)
 
 applymap(m::UnitDiskMap{T}, x) where {T} =
     SVector(x[1]*cos(2*T(pi)*x[2]), x[1]*sin(2*T(pi)*x[2]))
 
 function jacobian(m::UnitDiskMap{T}, x) where {T}
     a = 2*T(pi)
-    SVector(-a*x[1]*sin(a*x[2]), a*x[1]*cos(a*x[2]))
+    SMatrix{2,2}(cos(a*x[2]), sin(a*x[2]), -a*x[1]*sin(a*x[2]), a*x[1]*cos(a*x[2]))
 end
 
 # we know that the differential volume is 2*r*pi
