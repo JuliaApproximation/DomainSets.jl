@@ -660,3 +660,15 @@ end
 @testset "cartesian product" begin
     test_product_domains()
 end
+
+@testset "intervals" begin
+    test_intervals()
+end
+
+@testset "balls" begin
+    test_balls()
+end
+
+@testset "simplex" begin
+    test_simplex()
+end

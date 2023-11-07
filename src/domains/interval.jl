@@ -228,6 +228,8 @@ HalfLine{T}() where {T} = HalfLine{Float64,:closed}()
 
 const NonnegativeRealLine{T} = HalfLine{T,:closed}
 const PositiveRealLine{T} = HalfLine{T,:open}
+NonnegativeRealLine() = NonnegativeRealLine{Float64}()
+PositiveRealLine() = PositiveRealLine{Float64}()
 
 endpoints(d::HalfLine{T}) where {T} = (zero(T), T(Inf))
 boundary(d::HalfLine) = Point(leftendpoint(d))
@@ -259,6 +261,8 @@ NegativeHalfLine{T}() where {T} = NegativeHalfLine{T,:open}()
 
 const NonpositiveRealLine{T} = NegativeHalfLine{T,:closed}
 const NegativeRealLine{T} = NegativeHalfLine{T,:open}
+NonpositiveRealLine() = NonpositiveRealLine{Float64}()
+NegativeRealLine() = NegativeRealLine{Float64}()
 
 similardomain(::NegativeHalfLine{S,C}, ::Type{T}) where {S,T,C} =
     NegativeHalfLine{T,C}()
