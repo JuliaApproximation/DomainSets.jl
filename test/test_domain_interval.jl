@@ -1,5 +1,9 @@
-using DomainSets: PositiveRealLine, NonnegativeRealLine,
-    NegativeRealLine, NonpositiveRealLine
+using DomainSets:
+    PositiveRealLine,
+    NonnegativeRealLine,
+    NegativeRealLine,
+    NonpositiveRealLine,
+    isinterval
 
 function test_intervals()
     T = Float64
@@ -99,7 +103,7 @@ function test_intervals()
         @test canonicaldomain(d) === d
 
         show(io, ChebyshevInterval())
-        @test String(take!(io)) == "-1.0..1.0 (Chebyshev)"
+        @test String(take!(io)) == "-1.0 .. 1.0 (Chebyshev)"
     end
     @testset "HalfLine{$T}" begin
         d = HalfLine{T}()
@@ -452,7 +456,7 @@ function test_intervals()
     @test rightendpoint(du4) == rightendpoint(i1)
 
     # - union of non-overlapping intervals
-    du5 = UnionDomain(i1) ∪ UnionDomain(i4)
+    du5 = UnionDomain((i1,)) ∪ UnionDomain((i4,))
     @test typeof(du5) <: UnionDomain
 
     # - intersection of non-overlapping intervals
@@ -524,5 +528,60 @@ function test_intervals()
         @test convert(AbstractInterval{T}, 0..1) ≡ d
         @test convert(ClosedInterval{T}, 0..1) ≡ d
         @test ClosedInterval{T}(0..1) ≡ d
+    end
+
+    @testset "operations on special intervals" begin
+        @test isempty(UnitInterval() \ UnitInterval())
+        @test ChebyshevInterval() ∩ UnitInterval() === UnitInterval()
+        @test UnitInterval() ∩ ChebyshevInterval() === UnitInterval()
+        @test UnitInterval() ∩ NonnegativeRealLine() === UnitInterval()
+        @test NonnegativeRealLine() ∩ UnitInterval() === UnitInterval()
+        @test isempty(UnitInterval() ∩ NegativeRealLine())
+        @test isempty(NegativeRealLine() ∩ UnitInterval())
+        @test ChebyshevInterval() ∩ NonnegativeRealLine() === UnitInterval()
+        @test NonnegativeRealLine() ∩ ChebyshevInterval() === UnitInterval()
+        @test isempty(HalfLine() ∩ NegativeRealLine())
+        @test isempty(NegativeRealLine() ∩ HalfLine())
+        @test NonpositiveRealLine() ∩ NonnegativeRealLine() == Point(0)
+        @test NonnegativeRealLine() ∩ NonpositiveRealLine() == Point(0)
+        @test NonnegativeRealLine() ∩ PositiveRealLine() === PositiveRealLine()
+        @test PositiveRealLine() ∩ NonnegativeRealLine() === PositiveRealLine()
+        @test (0..1) ∩ RealLine() == (0..1)
+        @test OpenInterval(0,1) ∩ RealLine() == OpenInterval(0,1)
+        @test RealLine() ∩ (0..1) == (0..1)
+        @test RealLine() ∩ OpenInterval(0,1) == OpenInterval(0,1)
+
+        @test UnitInterval() ∪ ChebyshevInterval() === ChebyshevInterval()
+        @test ChebyshevInterval() ∪ UnitInterval() === ChebyshevInterval()
+        @test UnitInterval() ∪ NonnegativeRealLine() === NonnegativeRealLine()
+        @test NonnegativeRealLine() ∪ UnitInterval() === NonnegativeRealLine()
+        @test NonnegativeRealLine() ∪ NonpositiveRealLine() === RealLine()
+        @test NonpositiveRealLine() ∪ NonnegativeRealLine() === RealLine()
+        @test PositiveRealLine() ∪ NonpositiveRealLine() === RealLine()
+        @test NonpositiveRealLine() ∪ PositiveRealLine() === RealLine()
+        @test NegativeRealLine() ∪ NonnegativeRealLine() === RealLine()
+        @test NonnegativeRealLine() ∪ NegativeRealLine() === RealLine()
+        @test NonnegativeRealLine() ∪ PositiveRealLine() === NonnegativeRealLine()
+        @test PositiveRealLine() ∪ NonnegativeRealLine() === NonnegativeRealLine()
+        @test NonpositiveRealLine() ∪ NegativeHalfLine() === NonpositiveRealLine()
+        @test NegativeHalfLine() ∪ NonpositiveRealLine() === NonpositiveRealLine()
+        @test uniondomain(0..1, RealLine()) === RealLine()
+        @test uniondomain(OpenInterval(0,1), RealLine()) === RealLine()
+        @test uniondomain(RealLine(), 0..1) === RealLine()
+        @test uniondomain(RealLine(), OpenInterval(0,1)) === RealLine()
+
+        @test isempty(UnitInterval() \ ChebyshevInterval())
+        @test isempty(UnitInterval() \ NonnegativeRealLine())
+        @test UnitInterval() \ NegativeRealLine() === UnitInterval()
+        @test ChebyshevInterval() \ NegativeRealLine() === UnitInterval()
+        @test HalfLine() \ NegativeRealLine() === HalfLine()
+        @test HalfLine() \ NonpositiveRealLine() === HalfLine{T,:open}()
+        @test NegativeRealLine() \ UnitInterval() === NegativeRealLine()
+        @test NegativeHalfLine() \ PositiveRealLine() === NegativeHalfLine()
+        @test NegativeHalfLine() \ NonnegativeRealLine() === NegativeRealLine()
+        @test RealLine() \ NonnegativeRealLine() === NegativeRealLine()
+        @test RealLine() \ PositiveRealLine() === NonpositiveRealLine()
+        @test RealLine() \ NonpositiveRealLine() === PositiveRealLine()
+        @test RealLine() \ NegativeRealLine() === NonnegativeRealLine()
     end
 end

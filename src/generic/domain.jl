@@ -1,8 +1,7 @@
 # Definition of the abstract Domain type and its interface
 
-# The type Domain{T} is defined in IntervalSets.jl
+# The type Domain{T} is defined in DomainSetsCore.jl
 
-eltype(::Type{<:Domain{T}}) where {T} = T
 prectype(::Type{<:Domain{T}}) where {T} = prectype(T)
 numtype(::Type{<:Domain{T}}) where {T} = numtype(T)
 

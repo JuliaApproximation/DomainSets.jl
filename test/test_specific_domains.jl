@@ -596,7 +596,7 @@ include("test_domain_simplex.jl")
         @test -0.5 ∉ d2
         @test 0.5 ∈ d2
         show(io, d2)
-        @test String(take!(io)) == "indicator function bounded by: -1..1"
+        @test String(take!(io)) == "indicator function bounded by: -1 .. 1"
 
         d3 = Domain(x*y>0 for (x,y) in UnitDisk())
         @test eltype(d3) == SVector{2,Float64}
@@ -662,4 +662,16 @@ end
 
 @testset "cartesian product" begin
     test_product_domains()
+end
+
+@testset "intervals" begin
+    test_intervals()
+end
+
+@testset "balls" begin
+    test_balls()
+end
+
+@testset "simplex" begin
+    test_simplex()
 end

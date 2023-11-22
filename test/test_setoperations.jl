@@ -94,7 +94,7 @@
 
         @test !isempty(u1)
         show(io, textmime, u1)
-        @test String(take!(io)) == "UnitDisk() ∪ ((-0.9..0.9) × (-0.9..0.9))"
+        @test String(take!(io)) == "UnitDisk() ∪ ((-0.9 .. 0.9) × (-0.9 .. 0.9))"
 
         # repeated union
         @test ncomponents(uniondomain(UnitBall{Float64}(), UnitInterval(), UnitInterval())) == 2
@@ -114,11 +114,11 @@
         i1 = intersectdomain((-0.4..0.4)^2, (-.5 .. 0.5) × (-0.1.. 0.1))
         @test i1 == productdomain(-0.4..0.4, -0.1..0.1)
         show(io,i1)
-        @test String(take!(io)) == "(-0.4..0.4) × (-0.1..0.1)"
+        @test String(take!(io)) == "(-0.4 .. 0.4) × (-0.1 .. 0.1)"
         @test intersectdomain(productdomain(UnitDisk(),-1..1), productdomain(-1..1, UnitDisk())) isa IntersectDomain
         i2 = UnitDisk() & (-0.4..0.4)^2
         show(io, textmime, i2)
-        @test String(take!(io)) == "UnitDisk() ∩ ((-0.4..0.4) × (-0.4..0.4))"
+        @test String(take!(io)) == "UnitDisk() ∩ ((-0.4 .. 0.4) × (-0.4 .. 0.4))"
         @test dimension(i1) == 2
         @test dimension(i2) == 2
 
@@ -176,7 +176,7 @@
         @test SVector(1.01, 0.1) ∉ d1
         @test approx_in(SVector(1.01, 0.1), d1, 0.1)
         show(io, textmime, d1)
-        @test String(take!(io)) == "UnitDisk() \\ ((-0.5..0.5) × (-0.1..0.1))"
+        @test String(take!(io)) == "UnitDisk() \\ ((-0.5 .. 0.5) × (-0.1 .. 0.1))"
         @test setdiff(d1, ProductDomain(-0.5..0.5, -0.1..0.1)) == d1
 
         d2 = SetdiffDomain(0.0..3.0, [1.0, 2.5])

@@ -1,5 +1,7 @@
 module DomainSets
 
+using DomainSetsCore
+
 using StaticArrays
 using LinearAlgebra, Statistics
 import LinearAlgebra: cross, ×, pinv
@@ -33,8 +35,11 @@ import Base: *, +, -, /, \, ^,
     # Display
     show
 
+# DomainSetsCore
+import DomainSetsCore: Domain, domain
+
 # IntervalSets
-import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
+import IntervalSets: (..), endpoints, AbstractInterval, TypedEndpointsInterval,
                         leftendpoint, rightendpoint, isleftopen, isleftclosed,
                         isrightopen, isrightclosed, isopenset, isclosedset,
                         infimum, supremum

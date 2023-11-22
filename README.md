@@ -17,13 +17,13 @@ DomainSets.jl uses [IntervalSets.jl](https://github.com/JuliaMath/IntervalSets.j
 julia> using DomainSets
 
 julia> UnitInterval()
-0.0..1.0 (Unit)
+0.0 .. 1.0 (Unit)
 
 julia> ChebyshevInterval()
--1.0..1.0 (Chebyshev)
+-1.0 .. 1.0 (Chebyshev)
 
 julia> HalfLine()
-0.0..Inf (closed–open) (HalfLine)
+0.0 .. Inf (closed–open) (HalfLine)
 ```
 
 ### Rectangles
@@ -35,7 +35,7 @@ are `SVector{2}`:
 julia> using DomainSets: ×
 
 julia> (-1..1) × (0..3) × (4.0..5.0)
-(-1.0..1.0) × (0.0..3.0) × (4.0..5.0)
+(-1.0 .. 1.0) × (0.0 .. 3.0) × (4.0 .. 5.0)
 
 julia> [1,2] in (-1..1) × (0..3)
 true
@@ -119,7 +119,7 @@ arguments. If all arguments are Euclidean, i.e., their element types are numbers
 or static vectors, then the product is a Euclidean domain as well:
 ```julia
 julia> ProductDomain(0..2, UnitCircle())
-0.0..2.0 x the unit circle
+0.0 .. 2.0 x the unit circle
 
 julia> eltype(ans)
 SVector{3, Float64} (alias for SArray{Tuple{3}, Float64, 1, 3})
@@ -143,10 +143,10 @@ Some arguments are recognized and return a more specialized product domain.
 Examples are the unit box and more general hyperrectangles:
 ```julia
 julia> ProductDomain(UnitInterval(), UnitInterval())
-0.0..1.0 (Unit) x 0.0..1.0 (Unit)
+0.0 .. 1.0 (Unit) x 0.0 .. 1.0 (Unit)
 
 julia> ProductDomain(0..2, 4..5, 6..7.0)
-0.0..2.0 x 4.0..5.0 x 6.0..7.0
+0.0 .. 2.0 x 4.0 .. 5.0 x 6.0 .. 7.0
 
 julia> typeof(ans)
 Rectangle{SVector{3, Float64}}
