@@ -1,41 +1,47 @@
+
+# The contents of this file are a copy of the preliminary core package
+# DomainSetsCore.jl. Once that package is registered and usable,
+# this file can be removed.
+
 export Domain,
     domain,
     domaineltype,
     DomainStyle,
     IsDomain,
     NotDomain,
-    AsDomain,
+    DomainRef,
     AnyDomain,
     checkdomain
 
-# """
-# A domain is a set of elements that is possibly continuous.
-#
-# Examples may be intervals and triangles. These are geometrical shapes, but more
-# generally a domain can be any type that supports `in`. Conceptually, a domain
-# is the set of all elements `x` for which `in(x, domain)` returns true.
-#
-# A `Domain{T}` is a domain with elements of type `T`, in analogy with
-# `AbstractSet{T}` and `AbstractVector{T}`. Although domains may be defined by a
-# mathematical condition such as `a <= x <= b`, irrespective of the type of `x`,
-# points generated to belong to the domain have type `T`.
-# """
-# abstract type Domain{T} end
-
-import IntervalSets: Domain
-Base.eltype(::Type{<:Domain{T}}) where {T} = T
+# AsDomain was defined in versions 0.7 and 0.7.1, and then replaced by DomainRef
+@deprecate AsDomain(d) DomainRef(d)
 
 """
     domaineltype(d)
 
-The `domaineltype` of a continuous domain is the element type of any
-discretization of that domain.
+The `domaineltype` of a continuous set is a valid type for elements of that set.
+By default it is equal to the `eltype` of `d`, which in turn defaults to `Any`.
 """
-domaineltype(d) = domaineltype(typeof(d))
-domaineltype(::Type{D}) where D = eltype(D)
-domaineltype(d::Domain{T}) where T = T      # shortcut definition
+domaineltype(d) = eltype(d)
 
 
+# Definition of Domain commented out as it is defined in IntervalSets.jl
+# """
+# A `Domain{T}` is a supertype for domains with `domaineltype` equal to `T`.
+#
+# In addition, the `eltype` of a `Domain{T}` is also equal to `T`.
+# """
+# abstract type Domain{T} end
+#
+domaineltype(d::Domain{T}) where T = T
+Base.eltype(::Type{<:Domain{T}}) where T = T
+
+
+"""
+    DomainStyle(d)
+
+Trait to indicate whether or not `d` implements the domain interface.
+"""
 abstract type DomainStyle end
 
 """
@@ -53,49 +59,46 @@ indicates an object does not implement the domain interface.
 struct NotDomain <: DomainStyle end
 
 
-"""
-    DomainStyle(d)
-
-The domain style of `d` is a trait to indicate whether or not `d` implements
-the domain interface. If so, the object supports `in(x,d)` and optionally also
-implements `domaineltype(d)`.
-"""
 DomainStyle(d) = DomainStyle(typeof(d))
+# - the default is no domain
 DomainStyle(::Type) = NotDomain()
+# - subtypes of Domain are domains
 DomainStyle(::Type{<:Domain}) = IsDomain()
+# - declare Number, AbstractSet and AbstractArray to be valid domain types
 DomainStyle(::Type{<:Number}) = IsDomain()
 DomainStyle(::Type{<:AbstractSet}) = IsDomain()
 DomainStyle(::Type{<:AbstractArray}) = IsDomain()
 
-"""
-A reference to a domain.
 
-In a function call, `AsDomain(x)` can be used to indicate that `x` should be
-treated as a domain in the function, e.g., `foo(x, AsDomain(d))`.
 """
-abstract type AsDomain end
+    domain(d)
 
-"A reference to a specific given domain."
-struct DomainRef{D} <: AsDomain
-    domain  ::  D
-end
-domain(d::DomainRef) = d.domain
+Return a domain associated with the object `d`.
+"""
 domain(d::Domain) = d
 
-Base.eltype(::Type{<:DomainRef{D}}) where D = domaineltype(D)
+"""
+    DomainRef(d)
 
-domaineltype(d::AsDomain) = domaineltype(domain(d))
-domaineltype(::Type{<:DomainRef{D}}) where D = domaineltype(D)
+A reference to a domain.
 
-AsDomain(d) = DomainRef(d)
-AsDomain(d::Domain) = d
+In a function call, `DomainRef(x)` can be used to indicate that `x` should be
+treated as a domain, e.g., `foo(x, DomainRef(d))`.
+"""
+struct DomainRef{D}
+    domain  ::  D
+end
+
+domain(d::DomainRef) = d.domain
+domaineltype(d::DomainRef) = domaineltype(domain(d))
+
 
 """
-`AnyDomain` can be a concrete domain or a reference to a domain.
+`AnyDomain` is the union of `Domain` and `DomainRef`.
 
 In both cases `domain(d::AnyDomain)` returns the domain itself.
 """
-const AnyDomain = Union{Domain,AsDomain}
+const AnyDomain = Union{Domain,DomainRef}
 
 """
    checkdomain(d)
@@ -105,7 +108,7 @@ throws an error otherwise.
 """
 checkdomain(d::Domain) = d
 # we trust the explicit intention of a user providing a domain reference
-checkdomain(d::AsDomain) = domain(d)
+checkdomain(d::DomainRef) = domain(d)
 # for other objects we check DomainStyle
 checkdomain(d) = _checkdomain(d, DomainStyle(d))
 _checkdomain(d, ::IsDomain) = d

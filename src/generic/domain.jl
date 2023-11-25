@@ -8,8 +8,8 @@ numtype(::Type{<:Domain{T}}) where T = numtype(T)
 # Domain-specific prectype and numtype default to using domaineltype
 domain_prectype(d) = prectype(domaineltype(d))
 domain_numtype(d) = numtype(domaineltype(d))
-prectype(d::AsDomain) = prectype(domaineltype(d))
-numtype(d::AsDomain) = numtype(domaineltype(d))
+prectype(d::DomainRef) = prectype(domaineltype(d))
+numtype(d::DomainRef) = numtype(domaineltype(d))
 
 # Concrete types can implement similardomain(d, ::Type{T}) where {T}
 # to support convert(Domain{T}, d) functionality.
@@ -91,14 +91,14 @@ promote_pair(x::AbstractVector{S}, d::EuclideanDomain{N,T}) where {N,S,T} =
     _promote_pair(x, d, SVector{N,promote_type(S,T)})
 
 
-# At the level of Domain we attempt to promote the arguments to compatible
-# types, then we invoke indomain. Concrete subtypes should implement
+# For subtypes of Domain we attempt to promote the arguments to compatible
+# types, then we invoke indomain. Concrete subtypes may implement
 # indomain. They may also implement `in` in order to accept more types.
-#
-# Note that if the type of x and the element type of d don't match, then
-# both x and the domain may be promoted (using convert(Domain{T}, d)) syntax).
 in(x, d::Domain) = compatible_or_false(x, d) && indomain(promote_pair(x, d)...)
 
+# Generically, the domain interface specifies to implement `in` so for
+# references we invoke `in` with the referenced domain.
+in(x, d::DomainRef) = in(x, domain(d))
 
 """
 Return a suitable tolerance to use for verifying whether a point is close to
@@ -130,10 +130,9 @@ the case that `approx_in(x, d, 0) == in(x,d)`. This implies that `approx_in`
 reflects whether a domain is open or closed.
 """
 approx_in(x, d) = approx_in(x, d, domain_tolerance(d))
-approx_in(x, d::Domain, tol) =
+approx_in(x, d, tol) =
     compatible_or_false(x, d, tol) && approx_indomain(promote_pair(x, d)..., tol)
-approx_in(x, d::AsDomain, tol) =
-    compatible_or_false(x, domain(d), tol) && approx_indomain(promote_pair(x, domain(d))..., tol)
+approx_in(x, d::DomainRef, tol) = approx_in(x, domain(d), tol)
 
 # Fallback to `in`
 approx_indomain(x, d, tol) = in(x, d)

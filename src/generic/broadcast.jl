@@ -6,10 +6,10 @@
 struct DomainSetStyle <: Base.Broadcast.BroadcastStyle end
 
 Base.BroadcastStyle(::Type{<:Domain}) = DomainSetStyle()
-Base.BroadcastStyle(::Type{<:AsDomain}) = DomainSetStyle()
+Base.BroadcastStyle(::Type{<:DomainRef}) = DomainSetStyle()
 
 Base.broadcastable(d::Domain) = d
-Base.broadcastable(d::AsDomain) = d
+Base.broadcastable(d::DomainRef) = d
 
 # DomainSetStyle doesn't mix with ArrayStyle
 Base.BroadcastStyle(::DomainSetStyle, ::Base.Broadcast.AbstractArrayStyle) = DomainSetStyle()

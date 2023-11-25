@@ -179,7 +179,8 @@
         @test d2 isa Domain{Float64}
         @test d2 isa SetdiffDomain
         @test 0.99 ∈ d2
-        @test_throws MethodError approx_in(3.01, d2, 0.1)
+        @test approx_in(3.01, d2, 0.1)
+        @test !approx_in(3.01, d2, 0.009)
         @test 1.0 ∉ d2
         @test convert(Domain{BigFloat}, d2) isa Domain{BigFloat}
 

@@ -59,7 +59,7 @@ simplifies(d) = hascanonicaldomain(Equal(), d)
 
 "Convert the given domain to a domain defined in DomainSets.jl."
 todomainset(d::Domain) = d
-todomainset(d::AsDomain) = todomainset(domain(d))
+todomainset(d::DomainRef) = todomainset(domain(d))
 
 
 "A canonical domain that is isomorphic but may have different element type."
