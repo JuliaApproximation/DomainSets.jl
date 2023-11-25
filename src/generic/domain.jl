@@ -8,8 +8,8 @@ numtype(::Type{<:Domain{T}}) where T = numtype(T)
 # Domain-specific prectype and numtype default to using domaineltype
 domain_prectype(d) = prectype(domaineltype(d))
 domain_numtype(d) = numtype(domaineltype(d))
-prectype(d::AsDomain) = prectype(domaineltype(d))
-numtype(d::AsDomain) = numtype(domaineltype(d))
+prectype(d::DomainRef) = prectype(domaineltype(d))
+numtype(d::DomainRef) = numtype(domaineltype(d))
 
 # Concrete types can implement similardomain(d, ::Type{T}) where {T}
 # to support convert(Domain{T}, d) functionality.
@@ -132,7 +132,7 @@ reflects whether a domain is open or closed.
 approx_in(x, d) = approx_in(x, d, domain_tolerance(d))
 approx_in(x, d::Domain, tol) =
     compatible_or_false(x, d, tol) && approx_indomain(promote_pair(x, d)..., tol)
-approx_in(x, d::AsDomain, tol) =
+approx_in(x, d::DomainRef, tol) =
     compatible_or_false(x, domain(d), tol) && approx_indomain(promote_pair(x, domain(d))..., tol)
 
 # Fallback to `in`
