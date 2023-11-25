@@ -121,5 +121,5 @@ is_vector_to_vector(m) = mapsize(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m
 isequalmap(m1, m2) = m1==m2
 
 # Display routines
-map_stencil(m::AbstractMap, x) = [Display.SymbolObject(m), '(', x, ')']
-map_stencil_broadcast(m::AbstractMap, x) = [Display.SymbolObject(m), ".(", x, ')']
+map_stencil(m, x) = [Display.SymbolObject(m), '(', x, ')']
+map_stencil_broadcast(m, x) = [Display.SymbolObject(m), ".(", x, ')']

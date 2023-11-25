@@ -2,9 +2,6 @@
 # These routines may make assumptions about orientations and a metric that
 # might not be entirely generic.
 
-infimum(d::Domain) = minimum(d)  # if the minimum exists, then it is also the infimum
-supremum(d::Domain) = maximum(d)  # if the maximum exists, then it is also the supremum
-
 """
 Return a bounding box of the given domain.
 

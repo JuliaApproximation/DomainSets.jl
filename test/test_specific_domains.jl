@@ -400,6 +400,8 @@ include("test_domain_simplex.jl")
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
         @test cos.(0..1.0) isa MappedDomain
         @test isempty(MappedDomain(LinearMap(2.0), EmptySpace()))
+        @test map_domain(cos, 0..1.0) isa MappedDomain
+        @test mapped_domain(acos, 0..1.0) isa MappedDomain
 
         # Test chaining of maps
         D = UnitCircle()
@@ -437,7 +439,7 @@ include("test_domain_simplex.jl")
 
         B = mapped_domain(inverse(LinearMap(2.0)), VectorUnitBall(10))
         @test dimension(B) == 10
-        @test superdomain(B) ∘ inverse_map(B) == B
+        @test mapped_domain(inverse_map(B), superdomain(B)) == B
         @test isopenset(interior(B))
         @test B == closure(interior(B))
         @test DomainSets.superdomain(boundary(B)) isa UnitSphere
@@ -460,6 +462,11 @@ include("test_domain_simplex.jl")
         @test boundary(pd) isa UnionDomain
         @test interior(pd) isa ParametricDomain
         @test closure(pd) isa ParametricDomain
+        @test corners(pd) == [ [4.0; 5.0], [5.0; 6.0]]
+        @test DomainSets.similardomain(pd, eltype(pd)) isa ParametricDomain
+
+        @test convert(MappedDomain, 3..4.0) isa MappedDomain
+        @test convert(MappedDomain{Float64}, 3..4.0) isa MappedDomain
     end
 
     @testset "simplex" begin
