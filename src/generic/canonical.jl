@@ -43,6 +43,9 @@ abstract type CanonicalType end
 canonicaldomain(ctype::CanonicalType, d) = d
 hascanonicaldomain(ctype::CanonicalType, d) = !(d === canonicaldomain(ctype, d))
 
+mapfrom_canonical(ctype::CanonicalType, d) = identitymap(d)
+mapto_canonical(ctype::CanonicalType, d) = leftinverse(mapfrom_canonical(ctype, d))
+
 mapfrom_canonical(ctype::CanonicalType, d, x) = mapfrom_canonical(ctype, d)(x)
 mapto_canonical(ctype::CanonicalType, d, x) = mapto_canonical(ctype, d)(x)
 

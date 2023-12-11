@@ -316,6 +316,9 @@ function test_spheres()
     @test parameterdomain(C) == UnitInterval()
     @test mapfrom_parameterdomain(C) isa ComposedMap
     @test mapfrom_parameterdomain(C)(0.5) ≈ [-1; 1]
+    @test mapfrom_parameterdomain(C, 0.5) ≈ [-1; 1]
+    @test mapto_parameterdomain(C)([-1; 1]) ≈ 0.5
+    @test mapto_parameterdomain(C, [-1; 1]) ≈ 0.5
     @test boundingbox(C) == (-1.0..3.0)^2
 
     C = UnitCircle() .+ SA[1,1]
