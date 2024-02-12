@@ -125,7 +125,7 @@ Display.displaystencil(d::UnionDomain) = composite_displaystencil(d)
 show(io::IO, mime::MIME"text/plain", d::UnionDomain) = Display.composite_show(io, mime, d)
 show(io::IO, d::UnionDomain) = Display.composite_show_compact(io, d)
 
-## ualgebra
+## algebra
 
 # preserve the uniondomain when mapping
 map_domain(map, domain::UnionDomain) = UnionDomain(map_domain.(Ref(map), components(domain)))

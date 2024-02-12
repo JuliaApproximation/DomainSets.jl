@@ -93,7 +93,7 @@ Return an interval that is similar to the given interval, but with endpoints
 `a` and `b` instead.
 """
 similar_interval(d::ClosedFixedInterval{T}, a::S, b::S) where {S,T} =
-    ClosedInterval{promote_type(float(T),S)}(a, b)
+    ClosedInterval{promote_type(T,S)}(a, b)
 
 "The closed unit interval [0,1]."
 struct UnitInterval{T} <: ClosedFixedInterval{T} end
@@ -247,7 +247,7 @@ approx_indomain(x, d::HalfLine, tolerance) = x >= -tolerance
 function similar_interval(d::HalfLine{T,C}, a::S, b::S) where {T,S,C}
     @assert a == 0
     @assert isinf(b) && b > 0
-    HalfLine{promote_type(float(T),S),C}()
+    HalfLine{promote_type(T,S),C}()
 end
 
 choice(d::NonnegativeRealLine) = zero(domaineltype(d))
@@ -281,7 +281,7 @@ approx_indomain(x, d::NegativeHalfLine, tolerance) = x < tolerance
 function similar_interval(d::NegativeHalfLine{T,C}, a::S, b::S) where {S,T,C}
     @assert isinf(a) && a < 0
     @assert b == 0
-    NegativeHalfLine{promote_type(S,float(T)),C}()
+    NegativeHalfLine{promote_type(S,T),C}()
 end
 
 choice(d::NegativeRealLine) = -one(domaineltype(d))
@@ -299,7 +299,7 @@ similardomain(::RealLine, ::Type{T}) where {T} = RealLine{T}()
 function similar_interval(d::RealLine{T}, a::S, b::S) where {S,T}
     @assert isinf(a) && a < 0
     @assert isinf(b) && b > 0
-    RealLine{promote_type(S,float(T))}()
+    RealLine{promote_type(S,T)}()
 end
 
 endpoints(d::RealLine{T}) where {T} = (-T(Inf), T(Inf))
@@ -309,7 +309,7 @@ interior(d::RealLine) = d
 isfullspace(d::RealLine) = true
 
 similar_interval(d::Interval{L,R,T}, a::S, b::S) where {L,R,T,S} =
-    Interval{L,R,promote_type(float(T),S)}(a, b)
+    Interval{L,R,promote_type(T,S)}(a, b)
 
 
 #########################################
