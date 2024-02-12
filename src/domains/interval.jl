@@ -25,15 +25,15 @@ approx_indomain(x, d::TypedEndpointsInterval{:open,:open}, tolerance) =
 
 function choice(d::AbstractInterval)
     isempty(d) && throw(BoundsError())
-    mean(d)
+    IntervalSets.mean(d)
 end
 
-center(d::AbstractInterval) = mean(d)
+center(d::AbstractInterval) = IntervalSets.mean(d)
 
 # For an interval of integers, try to find an integer point
 function choice(d::AbstractInterval{T}) where {T<:Integer}
     isempty(d) && throw(BoundsError())
-    x = round(T, mean(d))
+    x = round(T, IntervalSets.mean(d))
     if x ∈ d
         x
     else

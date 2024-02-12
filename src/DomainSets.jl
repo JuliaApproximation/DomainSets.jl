@@ -1,7 +1,7 @@
 module DomainSets
 
 using StaticArrays
-using LinearAlgebra, Statistics
+using LinearAlgebra
 import LinearAlgebra: cross, ×, pinv
 import Random
 using Random: AbstractRNG
