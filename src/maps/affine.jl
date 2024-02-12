@@ -111,7 +111,9 @@ LinearMap(A::SMatrix) = StaticLinearMap(A)
 LinearMap(A::Matrix) = VectorLinearMap(A)
 LinearMap(A) = GenericLinearMap(A)
 
-LinearMap{T}(A::Number) where {T<:Number} = ScalarLinearMap{T}(A)
+LinearMap{T}(A::Number) where {T<:Number} = _LinearMap(A, T, promote_type(T,typeof(A)))
+_LinearMap(A::Number, ::Type{T}, ::Type{T}) where {T<:Number} = ScalarLinearMap{T}(A)
+_LinearMap(A::Number, ::Type{T}, ::Type{S}) where {T<:Number,S} = GenericLinearMap{T}(A)
 LinearMap{T}(A::SMatrix{M,N}) where {M,N,S,T <: SVector{N,S}} = StaticLinearMap{S}(A)
 LinearMap{T}(A::Matrix) where {S,T <: Vector{S}} = VectorLinearMap{S}(A)
 LinearMap{T}(A) where {T} = GenericLinearMap{T}(A)
@@ -189,8 +191,21 @@ GenericLinearMap(A::AbstractVector{T}) where {T} =
 # Allow any A
 GenericLinearMap{T}(A) where {T} = GenericLinearMap{T,typeof(A)}(A)
 
-GenericLinearMap{T}(A::Number) where {T <: Number} = GenericLinearMap{T,T}(A)
-GenericLinearMap{T}(A::Number) where {S,T <: AbstractVector{S}} = GenericLinearMap{T,S}(A)
+# Promote some eltypes if applicable
+GenericLinearMap{T}(A::Number) where {T <: Number} =
+    _GenericLinearMap(A, T, promote_type(T,typeof(A)))
+_GenericLinearMap(A::Number, ::Type{T}, ::Type{T}) where {T <: Number} =
+    GenericLinearMap{T,T}(A)
+_GenericLinearMap(A::Number, ::Type{T}, ::Type{S}) where {S,T<:Number} =
+    GenericLinearMap{T,typeof(A)}(A)
+
+GenericLinearMap{T}(A::Number) where {T <: AbstractVector} =
+    _GenericLinearMap(A, T, promote_type(eltype(T),typeof(A)))
+_GenericLinearMap(A::Number, ::Type{T}, ::Type{S}) where {S,T<:AbstractVector{S}} =
+    GenericLinearMap{T,S}(A)
+_GenericLinearMap(A::Number, ::Type{T}, ::Type{S}) where {S,T<:AbstractVector} =
+    GenericLinearMap{T,typeof(A)}(A)
+
 GenericLinearMap{T}(A::AbstractMatrix{S}) where {S,T <: AbstractVector{S}} =
     GenericLinearMap{T,typeof(A)}(A)
 GenericLinearMap{T}(A::AbstractMatrix{U}) where {S,T <: AbstractVector{S},U} =
