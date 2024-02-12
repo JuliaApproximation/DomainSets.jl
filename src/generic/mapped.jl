@@ -125,10 +125,6 @@ _mapped_domain2(invmap, domain, ::Type{T}, ::Type{T}) where {T} =
 _mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
     MappedDomain(convert(Map{T}, invmap), domain)
 
-# TODO: deprecate this syntax, it is confusing
-@deprecate (∘)(domain::Domain, invmap::Function) mapped_domain(invmap, domain)
-@deprecate (∘)(domain::Domain, invmap::AbstractMap) mapped_domain(invmap, domain)
-
 # Avoid nested mapping domains, construct a composite map instead
 # This assumes that the map types can be combined using \circ
 mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))

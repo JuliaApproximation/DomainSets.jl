@@ -57,9 +57,8 @@ mapped_domain(invmap, p::Point) = Point(inverse(invmap, pointval(p)))
 map_domain(map, p::Point) = Point(applymap(map, pointval(p)))
 parametric_domain(map, p::Point) = Point(applymap(map, pointval(p)))
 
-for op in (:+,:-)
-    @eval $op(a::Point, b::Point) = Point($op(pointval(a),pointval(b)))
-end
+Base.:+(a::Point, b::Point) = Point(pointval(a) + pointval(b))
+Base.:-(a::Point, b::Point) = Point(pointval(a) - pointval(b))
 
 
 intersectdomain1(d1::Point, d2) = pointval(d1) ∈ d2 ? d1 : emptyspace(d1)

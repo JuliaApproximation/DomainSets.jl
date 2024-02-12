@@ -115,7 +115,7 @@ endpoints(d::ChebyshevInterval{T}) where {T} = (-one(T),one(T))
 
 similardomain(::ChebyshevInterval, ::Type{T}) where {T} = ChebyshevInterval{T}()
 
--(d::ChebyshevInterval) = d
+Base.:-(d::ChebyshevInterval) = d
 
 
 interval_map(a, b, c, d) = interval_map(promote(a,b,c,d)...)
@@ -321,8 +321,8 @@ similar_interval(d::Interval{L,R,T}, a::S, b::S) where {L,R,T,S} =
 # the output is known explicitly.
 
 # Override the definition of Intervals.jl for FixedInterval's defined here
-union(d1::FixedInterval, d2::FixedInterval) = uniondomain(d1, d2)
-intersect(d1::FixedInterval, d2::FixedInterval) = intersectdomain(d1, d2)
+Base.union(d1::FixedInterval, d2::FixedInterval) = uniondomain(d1, d2)
+Base.intersect(d1::FixedInterval, d2::FixedInterval) = intersectdomain(d1, d2)
 
 # Promotion to joint type T
 uniondomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) =

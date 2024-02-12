@@ -77,10 +77,10 @@ vectorized_approx_in(A, d, tol) = approx_in.(A, Ref(d), tol)
 ## Some arithmetics
 
 # Allow unary minus, but use broadcast for the implementation
--(d::AnyDomain) = (-).(d)
+Base.:-(d::AnyDomain) = (-).(d)
 
 # Allow multiplication and division by numbers, like for vectors
-*(a::Number, domain::AnyDomain) = a .* domain
-*(domain::AnyDomain, a::Number) = domain .* a
-/(domain::AnyDomain, a::Number) = domain ./ a
-\(a::Number, domain::AnyDomain) = a .\ domain
+Base.:*(a::Number, domain::AnyDomain) = a .* domain
+Base.:*(domain::AnyDomain, a::Number) = domain .* a
+Base.:/(domain::AnyDomain, a::Number) = domain ./ a
+Base.:\(a::Number, domain::AnyDomain) = a .\ domain

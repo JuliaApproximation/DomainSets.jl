@@ -1,7 +1,7 @@
 # The union, intersection and difference of domains are represented with lazy domains.
 
-issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
-issubset(d1::AnyDomain, d2) = issubset_domain(domain(d1), d2)
+Base.issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
+Base.issubset(d1::AnyDomain, d2) = issubset_domain(domain(d1), d2)
 
 issubset_domain(d1, d2) =
 	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
@@ -51,10 +51,10 @@ composition(d::UnionDomain) = Combination()
 combine(d::UnionDomain, results) = reduce(|, results)
 
 # Make d1 ∪ d2 invoke `uniondomain` if one of the first two arguments is a domain
-union(d1::AnyDomain, d2::AnyDomain, domains...) =
+Base.union(d1::AnyDomain, d2::AnyDomain, domains...) =
 	uniondomain(domain(d1), domain(d2), domains...)
-union(d1::AnyDomain, d2, domains...) = uniondomain(domain(d1), d2, domains...)
-union(d1, d2::AnyDomain, domains...) = uniondomain(d1, domain(d2), domains...)
+Base.union(d1::AnyDomain, d2, domains...) = uniondomain(domain(d1), d2, domains...)
+Base.union(d1, d2::AnyDomain, domains...) = uniondomain(d1, domain(d2), domains...)
 
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
@@ -133,9 +133,10 @@ mapped_domain(map, domain::UnionDomain) = UnionDomain(mapped_domain.(Ref(map), c
 
 
 # TODO: what is the correct semantics for these functions? Should we have them?
-for (op, mop) in ((:minimum, :min), (:maximum, :max), (:infimum, :min), (:supremum, :max))
-    @eval $op(d::UnionDomain) = mapreduce($op, $mop, components(d))
-end
+Base.minimum(d::UnionDomain) = mapreduce(minimum, min, components(d))
+Base.maximum(d::UnionDomain) = mapreduce(maximum, max, components(d))
+infimum(d::UnionDomain) = mapreduce(infimum, min, components(d))
+supremum(d::UnionDomain) = mapreduce(supremum, max, components(d))
 
 
 setdiffdomain(d1::UnionDomain, d2::UnionDomain) =
@@ -191,12 +192,12 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 
 
 # Make d1 ∩ d2 invoke `intersectdomain` if one of the first two arguments is a Domain
-intersect(d1::AnyDomain, d2::AnyDomain, domains...) =
+Base.intersect(d1::AnyDomain, d2::AnyDomain, domains...) =
 	intersectdomain(domain(d1), domain(d2), domains...)
 # if a domain is combined with another argument that has a domain interpretation,
 # proceed with intersectdomain
-intersect(d1::AnyDomain, d2, domains...) = _intersect(domain(d1), d2, DomainStyle(d2), domains...)
-intersect(d1, d2::AnyDomain, domains...) = _intersect(d1, domain(d2), DomainStyle(d1), domains...)
+Base.intersect(d1::AnyDomain, d2, domains...) = _intersect(domain(d1), d2, DomainStyle(d2), domains...)
+Base.intersect(d1, d2::AnyDomain, domains...) = _intersect(d1, domain(d2), DomainStyle(d1), domains...)
 _intersect(d1, d2, ::IsDomain, domains...) = intersectdomain(d1, d2, domains...)
 _intersect(d1, d2, ::NotDomain, domains...) = intersectdomain(d1, d2, domains...)
 
@@ -244,9 +245,9 @@ end
 intersectdomain1(d1::UnionDomain, d2) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
 intersectdomain2(d1, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
 
-(&)(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
-(&)(d1::AnyDomain, d2) = intersectdomain(domain(d1), d2)
-(&)(d1, d2::AnyDomain) = intersectdomain(d1, domain(d2))
+Base.:&(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
+Base.:&(d1::AnyDomain, d2) = intersectdomain(domain(d1), d2)
+Base.:&(d1, d2::AnyDomain) = intersectdomain(d1, domain(d2))
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 	if compatibleproductdims(d1, d2)
@@ -302,9 +303,9 @@ similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
 
 # use \ as a synomym for setdiff, in the context of domains (though, generically,
 # \ means left division in Julia)
-\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
-\(d1::AnyDomain, d2) = setdiffdomain(domain(d1), d2)
-\(d1, d2::AnyDomain) = setdiffdomain(d1, domain(d2))
+Base.:\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+Base.:\(d1::AnyDomain, d2) = setdiffdomain(domain(d1), d2)
+Base.:\(d1, d2::AnyDomain) = setdiffdomain(d1, domain(d2))
 
 # Make setdiff invoke `setdiffdomain` if one of the arguments is a Domain
 setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))

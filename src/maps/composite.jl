@@ -72,7 +72,7 @@ composedmap1(m1::ComposedMap, m2) = ComposedMap(components(m1)..., m2)
 composedmap2(m1, m2::ComposedMap) = ComposedMap(m1, components(m2)...)
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
-(∘)(map1::AbstractMap, map2::AbstractMap) = composedmap(map2, map1)
+Base.:∘(map1::AbstractMap, map2::AbstractMap) = composedmap(map2, map1)
 
 
 ==(m1::ComposedMap, m2::ComposedMap) =

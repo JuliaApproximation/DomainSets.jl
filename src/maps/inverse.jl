@@ -30,7 +30,7 @@ inverse(m) = LazyInverse(m)
 inverse(m::LazyInverse) = supermap(m)
 # Concrete maps should implement inverse(m, x)
 
-(\)(m::AbstractMap, x) = inverse(m, x)
+Base.:\(m::AbstractMap, x) = inverse(m, x)
 
 implements_inverse(m) = !(inverse(m) isa LazyInverse)
 

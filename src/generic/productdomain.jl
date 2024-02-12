@@ -88,7 +88,7 @@ productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, factors(d2)...)
 # meaning for other variables (like the vector cross product)
 cross(d::Domain...) = productdomain(d...)
 
-^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
+Base.:^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
 
 similardomain(d::ProductDomain, ::Type{T}) where {T} =
 	ProductDomain{T}(factors(d))

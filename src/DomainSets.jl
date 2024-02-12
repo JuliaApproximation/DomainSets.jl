@@ -1,31 +1,20 @@
 module DomainSets
 
-using StaticArrays
-using LinearAlgebra
-import LinearAlgebra: cross, ×, pinv
-import Random
-using Random: AbstractRNG
-
-using IntervalSets
 using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
+using IntervalSets
+using LinearAlgebra
+using Random
+using StaticArrays
 
 
 ################################
 ## Exhaustive list of imports
 ################################
 
-# Generated functions
-import Base: @ncall
-
-# Operator symbols
-import Base: *, +, -, /, \, ^,
-    |, &,
-    ∪, ∩,
+import Base:
     ==, isapprox,
-    ∘,
     # Set operations
-    intersect, union, setdiff, in, isempty, minimum, maximum,
-    issubset,
+    setdiff, in, isempty, issubset,
     # Arrays
     eltype, hash, isreal,
     # Types, promotions and conversions
@@ -33,15 +22,16 @@ import Base: *, +, -, /, \, ^,
     # Display
     show
 
-# IntervalSets
+import CompositeTypes: component, components
+
 import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
                         leftendpoint, rightendpoint, isleftopen, isleftclosed,
                         isrightopen, isrightclosed, isopenset, isclosedset,
                         infimum, supremum
 export ..
 
+import LinearAlgebra: cross, ×, pinv
 
-import CompositeTypes: component, components
 
 ################################
 ## Exhaustive list of exports
@@ -64,7 +54,7 @@ export AbstractMap, Map, TypedMap,
     inverse, leftinverse, rightinverse,
     mapsize, jacobian, jacdet, diffvolume
 # from maps/composite.jl
-export ComposedMap, composedmap, ∘
+export ComposedMap, composedmap
 # from maps/product.jl
 export ProductMap, productmap
 # from maps/basic.jl
