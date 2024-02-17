@@ -5,9 +5,11 @@ using DomainSets:
     NonpositiveRealLine,
     isinterval
 
+using IntervalSets
+
 function test_intervals()
     T = Float64
-    @testset "ClosedInterval{$T}" begin
+    @testset "ClosedInterval" begin
         d = zero(T)..one(T)
         @test approx_in(-0.1, d, 0.2)
         @test approx_in(1.1, d, 0.2)
@@ -33,6 +35,7 @@ function test_intervals()
         @test closure(d) == d
 
         @test similar_interval(0..1, 0, big(1.0)) isa ClosedInterval{BigFloat}
+        @test convert(AbstractInterval{Float64}, 0..1) isa ClosedInterval{Float64}
 
         @test canonicaldomain(d) isa ChebyshevInterval{Float64}
         @test canonicaldomain(0..1) isa ChebyshevInterval{Float64}
@@ -40,8 +43,12 @@ function test_intervals()
         @test intersectdomain(0..1, 1..3) isa Point{Int}
         @test 1..1 == Point(1)
         @test 1..1 != Point(2)
+
+        @test normal(0..1, -0.3) == -1
+        @test normal(0..1, 0.7) == 1
+        @test distance_to(0..1, 1.5) == 0.5
     end
-    @testset "UnitInterval{$T}" begin
+    @testset "UnitInterval" begin
         d = UnitInterval{T}()
         @test leftendpoint(d) == zero(T)
         @test rightendpoint(d) == one(T)
@@ -68,7 +75,7 @@ function test_intervals()
 
         @test canonicaldomain(d) === d
     end
-    @testset "ChebyshevInterval{$T}" begin
+    @testset "ChebyshevInterval" begin
         d = ChebyshevInterval{T}()
         @test leftendpoint(d) == -one(T)
         @test rightendpoint(d) == one(T)
@@ -108,9 +115,10 @@ function test_intervals()
         show(io, ChebyshevInterval())
         @test String(take!(io)) == "$(-1.0..1.0) (Chebyshev)"
     end
-    @testset "HalfLine{$T}" begin
+    @testset "HalfLine" begin
         d = HalfLine{T}()
-        d_open = HalfLine{T,:open}()
+        d_open = PositiveRealLine{T}()
+        @test d_open === HalfLine{T,:open}()
         @test leftendpoint(d) == zero(T)
         @test rightendpoint(d) == T(Inf)
         @test DomainSets.endpoints(d) == DomainSets.endpoints(d_open)
@@ -157,6 +165,8 @@ function test_intervals()
         @test boundary(d) == Point(0)
         @test leftendpoint(d) ∈ ∂(d)
         @test rightendpoint(d) ∉ ∂(d)
+        @test choice(d) == 0
+        @test choice(d_open) == 1
 
         @test isopenset(d_open)
         @test !isclosedset(d_open)
@@ -166,9 +176,10 @@ function test_intervals()
         @test interior(d) == d_open
         @test closure(d_open) == d
     end
-    @testset "NegativeHalfLine{$T}" begin
+    @testset "NegativeHalfLine" begin
         d = NegativeHalfLine{T}()
-        d_closed = NegativeHalfLine{T,:closed}()
+        d_closed = NonpositiveRealLine{T}()
+        @test d_closed == NegativeHalfLine{T,:closed}()
         @test leftendpoint(d) == -T(Inf)
         @test rightendpoint(d) == zero(T)
         @test infimum(d) == leftendpoint(d)
@@ -222,6 +233,8 @@ function test_intervals()
         @test boundary(d) == Point(0)
         @test leftendpoint(d) ∉ ∂(d)
         @test rightendpoint(d) ∈ ∂(d)
+        @test choice(d) == -1
+        @test choice(d_closed) == 0
 
         # additional tests for the right-closed negative half line
         @test !isrightopen(d_closed)
@@ -233,7 +246,7 @@ function test_intervals()
         @test closure(d) == d_closed
     end
 
-    @testset "RealLine{$T}" begin
+    @testset "RealLine" begin
         @test RealLine() isa RealLine{Float64}
         d = RealLine{T}()
         @test isopenset(d)
@@ -253,31 +266,68 @@ function test_intervals()
         @test setdiffdomain(d, NegativeRealLine{T}()) === NonnegativeRealLine{T}()
 
         @test similar_interval(d, T(-Inf), T(Inf)) == d
+
+        @test (0..1) ∩ d == 0..1
+        @test d ∩ (0..1) == 0..1
+        @test (0..1) ∪ d == d
+        @test d ∪ (0..1) == d
     end
 
-    @testset "OpenInterval{$T}" begin
+    @testset "OpenInterval" begin
         d = OpenInterval(0,1)
         @test isopenset(d)
         @test closure(d) == UnitInterval()
 
         @test leftendpoint(d) ∈ ∂(d)
         @test rightendpoint(d) ∈ ∂(d)
+
+        @test canonicaldomain(d) == OpenInterval(-1,1)
+        @test canonicaldomain(OpenInterval(0,0)) == EmptySpace()
+        @test canonicaldomain(OpenInterval(2,Inf)) == DomainSets.PositiveRealLine()
+        @test mapfrom_canonical(OpenInterval(2,Inf)) isa AffineMap
+        @test canonicaldomain(OpenInterval(-Inf,Inf)) == DomainSets.RealLine()
+        @test canonicaldomain(OpenInterval(Inf,-Inf)) == DomainSets.RealLine()
+        @test canonicaldomain(OpenInterval(Inf,Inf)) === EmptySpace{Float64}()
+    end
+    @testset "Halfopen intervals" begin
+        d1 = Interval{:closed,:open}(0,1)
+        @test closure(d1) == 0..1
+        @test leftendpoint(d1) ∈ ∂(d1)
+        @test rightendpoint(d1) ∈ ∂(d1)
+        d2 = Interval{:open,:closed}(0,1)
+        @test closure(d2) == 0..1
+        @test leftendpoint(d2) ∈ ∂(d2)
+        @test rightendpoint(d2) ∈ ∂(d2)
+
+        @test canonicaldomain(Interval{:closed,:open,T}(0,1)) == Interval{:closed,:open}(-1,1)
+        @test canonicaldomain(Interval{:open,:closed,T}(0,1)) == Interval{:open,:closed}(-1,1)
+        @test canonicaldomain(Interval{:closed,:open}(0,0)) == EmptySpace()
+        @test canonicaldomain(Interval{:open,:closed}(0,0)) == EmptySpace()
+        @test canonicaldomain(Interval{:closed,:open}(0,Inf)) == HalfLine()
+        @test canonicaldomain(Interval{:open,:closed}(-Inf,0)) == HalfLine()
+        @test_throws ArgumentError canonicaldomain(Interval{:closed,:open}(Inf,0))
+        @test_throws ArgumentError canonicaldomain(Interval{:open,:closed}(0,Inf))
     end
 
     @testset "Integer intervals" begin
-        d = 0..1
-        @test leftendpoint(d) ∈ ∂(d)
-        @test rightendpoint(d) ∈ ∂(d)
+        d1 = 0..1
+        @test leftendpoint(d1) ∈ ∂(d1)
+        @test rightendpoint(d1) ∈ ∂(d1)
 
-        d = Interval{:open,:closed}(0,1)
-        @test leftendpoint(d) ∈ ∂(d)
-        @test rightendpoint(d) ∈ ∂(d)
-        @test closure(d) == 0..1
+        d2 = Interval{:open,:closed}(0,1)
+        @test leftendpoint(d2) ∈ ∂(d2)
+        @test rightendpoint(d2) ∈ ∂(d2)
+        @test closure(d2) == 0..1
+        @test choice(d2) == 1
 
-        d = Interval{:closed,:open}(0,1)
-        @test leftendpoint(d) ∈ ∂(d)
-        @test rightendpoint(d) ∈ ∂(d)
-        @test closure(d) == 0..1
+        d3 = Interval{:closed,:open}(0,1)
+        @test leftendpoint(d3) ∈ ∂(d3)
+        @test rightendpoint(d3) ∈ ∂(d3)
+        @test closure(d3) == 0..1
+        @test choice(d3) == 0
+
+        d4 = Interval{:open,:open}(0,1)
+        @test_throws BoundsError choice(d4)
     end
 
     @testset "approximate in for open and closed intervals" begin
@@ -303,6 +353,18 @@ function test_intervals()
         @test isaffine(m2)
         @test m2(4) ≈ 2
         @test m2(6) ≈ 3
+
+        @test DomainSets.interval_map(-Inf, Inf, -Inf, Inf) == IdentityMap()
+        @test DomainSets.interval_map(-Inf, Inf, Inf, -Inf) == LinearMap(-1)
+        @test DomainSets.interval_map(Inf, -Inf, -Inf, Inf) == LinearMap(-1)
+        @test DomainSets.interval_map(Inf, -Inf, Inf, -Inf) == IdentityMap()
+        @test DomainSets.interval_map(Inf, Inf, Inf, Inf) == IdentityMap()
+        @test DomainSets.interval_map(-Inf, -Inf, -Inf, -Inf) == IdentityMap()
+        @test DomainSets.interval_map(Inf, Inf, -Inf, -Inf) == LinearMap(-1)
+        @test DomainSets.interval_map(-Inf, -Inf, Inf, Inf) == LinearMap(-1)
+        @test_throws ArgumentError DomainSets.interval_map(-Inf, Inf, -Inf, -Inf)
+        @test_throws ArgumentError DomainSets.interval_map(-1, 1, -1, Inf)
+        @test_throws ArgumentError DomainSets.interval_map(-1, 1, -1, Inf)
     end
 
     @test DomainSets.isinterval(0..1)
@@ -311,88 +373,88 @@ function test_intervals()
     @test typeof(UnitInterval{Float64}(0.0..1.0)) <: UnitInterval
     @test typeof(ChebyshevInterval{Float64}(-1.0..1.0)) <: ChebyshevInterval
 
-    ## Some mappings preserve the interval structure
-    # Translation
-    d = zero(T)..one(T)
+    @testset "some mappings that preserve interval structure" begin
+        # Translation
+        d = zero(T)..one(T)
 
-    @test -Interval{:closed,:open}(2,3) isa Interval{:open,:closed}
+        @test -Interval{:closed,:open}(2,3) isa Interval{:open,:closed}
 
-    d2 = d .+ one(T)
-    @test typeof(d2) == typeof(d)
-    @test leftendpoint(d2) == one(T)
-    @test rightendpoint(d2) == 2*one(T)
+        d2 = d .+ one(T)
+        @test typeof(d2) == typeof(d)
+        @test leftendpoint(d2) == one(T)
+        @test rightendpoint(d2) == 2*one(T)
 
-    d2 = one(T) .+ d
-    @test typeof(d2) == typeof(d)
-    @test leftendpoint(d2) == one(T)
-    @test rightendpoint(d2) == 2*one(T)
+        d2 = one(T) .+ d
+        @test typeof(d2) == typeof(d)
+        @test leftendpoint(d2) == one(T)
+        @test rightendpoint(d2) == 2*one(T)
 
-    d2 = d .- one(T)
-    @test typeof(d2) == typeof(d)
-    @test leftendpoint(d2) == -one(T)
-    @test rightendpoint(d2) == zero(T)
+        d2 = d .- one(T)
+        @test typeof(d2) == typeof(d)
+        @test leftendpoint(d2) == -one(T)
+        @test rightendpoint(d2) == zero(T)
 
-    d2 = -d
-    @test typeof(d2) == typeof(d)
-    @test leftendpoint(d2) == -one(T)
-    @test rightendpoint(d2) == zero(T)
+        d2 = -d
+        @test typeof(d2) == typeof(d)
+        @test leftendpoint(d2) == -one(T)
+        @test rightendpoint(d2) == zero(T)
 
-    d2 = one(T) .- d
-    @test d2 == d
+        d2 = one(T) .- d
+        @test d2 == d
 
-    # translation for UnitInterval
-    # Does a shifted unit interval return an interval?
-    d = UnitInterval{T}()
-    d2 = d .+ one(T)
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == one(T)
-    @test rightendpoint(d2) == 2*one(T)
+        # translation for UnitInterval
+        # Does a shifted unit interval return an interval?
+        d = UnitInterval{T}()
+        d2 = d .+ one(T)
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == one(T)
+        @test rightendpoint(d2) == 2*one(T)
 
-    d2 = one(T) .+ d
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == one(T)
-    @test rightendpoint(d2) == 2*one(T)
+        d2 = one(T) .+ d
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == one(T)
+        @test rightendpoint(d2) == 2*one(T)
 
-    d2 = d .- one(T)
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == -one(T)
-    @test rightendpoint(d2) == zero(T)
+        d2 = d .- one(T)
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == -one(T)
+        @test rightendpoint(d2) == zero(T)
 
-    d2 = -d
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == -one(T)
-    @test rightendpoint(d2) == zero(T)
+        d2 = -d
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == -one(T)
+        @test rightendpoint(d2) == zero(T)
 
-    d2 = one(T) .- d
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == zero(T)
-    @test rightendpoint(d2) == one(T)
+        d2 = one(T) .- d
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == zero(T)
+        @test rightendpoint(d2) == one(T)
 
 
-    # translation for ChebyshevInterval
-    d = ChebyshevInterval{T}()
-    d2 = d .+ one(T)
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == zero(T)
-    @test rightendpoint(d2) == 2*one(T)
+        # translation for ChebyshevInterval
+        d = ChebyshevInterval{T}()
+        d2 = d .+ one(T)
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == zero(T)
+        @test rightendpoint(d2) == 2*one(T)
 
-    d2 = one(T) .+ d
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == zero(T)
-    @test rightendpoint(d2) == 2*one(T)
+        d2 = one(T) .+ d
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == zero(T)
+        @test rightendpoint(d2) == 2*one(T)
 
-    d2 = d .- one(T)
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == -2one(T)
-    @test rightendpoint(d2) == zero(T)
+        d2 = d .- one(T)
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == -2one(T)
+        @test rightendpoint(d2) == zero(T)
 
-    @test -d == d
+        @test -d == d
 
-    d2 = one(T) .- d
-    @test typeof(d2) <: AbstractInterval
-    @test leftendpoint(d2) == zero(T)
-    @test rightendpoint(d2) == 2one(T)
-
+        d2 = one(T) .- d
+        @test typeof(d2) <: AbstractInterval
+        @test leftendpoint(d2) == zero(T)
+        @test rightendpoint(d2) == 2one(T)
+    end
 
     # Scaling
     d = zero(T)..one(T)
@@ -422,83 +484,91 @@ function test_intervals()
     @test ChebyshevInterval() ≠ Interval{:closed,:open}(-1.0,1.0)
     @test ChebyshevInterval() ≈ ClosedInterval(-1.0,1.0)
 
-    # Union and intersection of intervals
-    i1 = zero(T)..one(T)
-    i2 = one(T)/3 .. one(T)/2
-    i3 = one(T)/2 .. 2*one(T)
-    i4 = T(2) .. T(3)
-    # - union of completely overlapping intervals
-    du1 = uniondomain(i1, i2)
-    @test typeof(du1) <: AbstractInterval
-    @test leftendpoint(du1) == leftendpoint(i1)
-    @test rightendpoint(du1) == rightendpoint(i1)
-    @test uniondomain(0..1, 0.1..1.5) isa AbstractInterval{Float64}
+    @testset "union and intersection of intervals" begin
+        # Union and intersection of intervals
+        i1 = zero(T)..one(T)
+        i2 = one(T)/3 .. one(T)/2
+        i3 = one(T)/2 .. 2*one(T)
+        i4 = T(2) .. T(3)
+        # - union of completely overlapping intervals
+        du1 = uniondomain(i1, i2)
+        @test typeof(du1) <: AbstractInterval
+        @test leftendpoint(du1) == leftendpoint(i1)
+        @test rightendpoint(du1) == rightendpoint(i1)
+        @test uniondomain(0..1, 0.1..1.5) isa AbstractInterval{Float64}
 
-    # - intersection of completely overlapping intervals
-    du2 = intersectdomain(i1, i2)
-    @test typeof(du2) <: AbstractInterval
-    @test leftendpoint(du2) == leftendpoint(i2)
-    @test rightendpoint(du2) == rightendpoint(i2)
+        # - intersection of completely overlapping intervals
+        du2 = intersectdomain(i1, i2)
+        @test typeof(du2) <: AbstractInterval
+        @test leftendpoint(du2) == leftendpoint(i2)
+        @test rightendpoint(du2) == rightendpoint(i2)
 
-    # - union of partially overlapping intervals
-    du3 = uniondomain(i1, i3)
-    @test typeof(du3) <: AbstractInterval
-    @test leftendpoint(du3) == leftendpoint(i1)
-    @test rightendpoint(du3) == rightendpoint(i3)
+        # - union of partially overlapping intervals
+        du3 = uniondomain(i1, i3)
+        @test typeof(du3) <: AbstractInterval
+        @test leftendpoint(du3) == leftendpoint(i1)
+        @test rightendpoint(du3) == rightendpoint(i3)
 
-    @test uniondomain(OpenInterval(0,1), 0..2) == 0..2
-    @test uniondomain(OpenInterval(0,1), OpenInterval(0,2)) == OpenInterval(0,2)
-    @test uniondomain(1..2, 0..1.5) == 0..2.0
-    @test uniondomain(1..2.5, 0.8..1.5) == 0.8..2.5
-    @test uniondomain(1..2.5, 0.8..2.5) == 0.8..2.5
-    @test uniondomain(OpenInterval(1,2.5), OpenInterval(0.8,2.5)) == OpenInterval(0.8,2.5)
+        @test uniondomain(OpenInterval(0,1), 0..2) == 0..2
+        @test uniondomain(OpenInterval(0,1), OpenInterval(0,2)) == OpenInterval(0,2)
+        @test uniondomain(1..2, 0..1.5) == 0..2.0
+        @test uniondomain(1..2.5, 0.8..1.5) == 0.8..2.5
+        @test uniondomain(1..2.5, 0.8..2.5) == 0.8..2.5
+        @test uniondomain(OpenInterval(1,2.5), OpenInterval(0.8,2.5)) == OpenInterval(0.8,2.5)
 
-    # - intersection of partially overlapping intervals
-    du4 = intersectdomain(i1, i3)
-    @test typeof(du4) <: AbstractInterval
-    @test leftendpoint(du4) == leftendpoint(i3)
-    @test rightendpoint(du4) == rightendpoint(i1)
+        # - intersection of partially overlapping intervals
+        du4 = intersectdomain(i1, i3)
+        @test typeof(du4) <: AbstractInterval
+        @test leftendpoint(du4) == leftendpoint(i3)
+        @test rightendpoint(du4) == rightendpoint(i1)
 
-    # - union of non-overlapping intervals
-    du5 = UnionDomain((i1,)) ∪ UnionDomain((i4,))
-    @test typeof(du5) <: UnionDomain
+        # - union of non-overlapping intervals
+        du5 = UnionDomain((i1,)) ∪ UnionDomain((i4,))
+        @test typeof(du5) <: UnionDomain
 
-    # - intersection of non-overlapping intervals
-    du6 = intersectdomain(i1, i4)
-    @test isempty(du6)
+        # - intersection of non-overlapping intervals
+        du6 = intersectdomain(i1, i4)
+        @test isempty(du6)
 
-    # - setdiff of intervals
-    d1 = -T(2)..T(2)
-    @test d1 \ (3..4) == d1
-    @test d1 \ (0..1) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(1,2))
-    @test d1 \ (0..3) == Interval{:closed,:open,T}(-2,0)
-    @test d1 \ (-3..0) == Interval{:open,:closed,T}(0,2)
-    @test d1 \ (-4..(-3)) == d1
-    @test d1 \ (-4..4) == EmptySpace{T}()
+        # - setdiff of intervals
+        d1 = -T(2)..T(2)
+        @test d1 \ (3..4) == d1
+        @test d1 \ (0..1) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(1,2))
+        @test d1 \ (0..3) == Interval{:closed,:open,T}(-2,0)
+        @test d1 \ (-3..0) == Interval{:open,:closed,T}(0,2)
+        @test d1 \ (-4..(-3)) == d1
+        @test d1 \ (-4..4) == EmptySpace{T}()
 
-    # mixed types
-    @test setdiffdomain(0..1, 0.0..0.5) == Interval{:open,:closed,Float64}(0.5,1)
+        # mixed types
+        @test setdiffdomain(0..1, 0.0..0.5) == Interval{:open,:closed,Float64}(0.5,1)
+        @test setdiffdomain(d1, -3) == d1
+        @test setdiffdomain(d1, -2) == Interval{:open,:closed,T}(-2,2)
+        @test setdiffdomain(d1, T(2)) == Interval{:closed,:open,T}(-2,2)
+        @test setdiffdomain(d1, zero(T)) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(0,2))
+        @test setdiffdomain(0.0..1.0, 1.0..2.0) == Interval{:closed,:open,Float64}(0,1)
+        @test setdiffdomain(0.0..1.0, OpenInterval(1.0..2.0)) == 0.0..1.0
+        @test setdiffdomain(0.0..1.0, 1.0..1.0) == Interval{:closed,:open,Float64}(0,1)
+        @test setdiffdomain(0.0..1.0, -1.0..2.0) === EmptySpace{Float64}()
+        @test setdiffdomain(0.0..1.0, -1.0..0.0) == Interval{:open,:closed,Float64}(0,1)
+        @test setdiffdomain(0.0..1.0, OpenInterval(-1.0,0.0)) == 0.0..1.0
+    end
 
-    @test setdiffdomain(d1, -3) == d1
-    @test setdiffdomain(d1, -2) == Interval{:open,:closed,T}(-2,2)
-    @test setdiffdomain(d1, T(2)) == Interval{:closed,:open,T}(-2,2)
-    @test setdiffdomain(d1, zero(T)) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(0,2))
+    @testset "empty intervals" begin
+        @test isempty(one(T)..zero(T))
+        @test zero(T) ∉ (one(T)..zero(T))
+        @test isempty(Interval{:open,:open}(zero(T),zero(T)))
+        @test zero(T) ∉ Interval{:open,:open}(zero(T),zero(T))
+        @test isempty(Interval{:open,:closed}(zero(T),zero(T)))
+        @test zero(T) ∉ Interval{:open,:closed}(zero(T),zero(T))
+        @test isempty(Interval{:closed,:open}(zero(T),zero(T)))
+        @test zero(T) ∉ Interval{:closed,:open}(zero(T),zero(T))
 
-    # - empty interval
-    @test isempty(one(T)..zero(T))
-    @test zero(T) ∉ (one(T)..zero(T))
-    @test isempty(Interval{:open,:open}(zero(T),zero(T)))
-    @test zero(T) ∉ Interval{:open,:open}(zero(T),zero(T))
-    @test isempty(Interval{:open,:closed}(zero(T),zero(T)))
-    @test zero(T) ∉ Interval{:open,:closed}(zero(T),zero(T))
-    @test isempty(Interval{:closed,:open}(zero(T),zero(T)))
-    @test zero(T) ∉ Interval{:closed,:open}(zero(T),zero(T))
-
-    d = one(T) .. zero(T)
-    @test_throws ArgumentError minimum(d)
-    @test_throws ArgumentError maximum(d)
-    @test_throws ArgumentError infimum(d)
-    @test_throws ArgumentError supremum(d)
+        d = one(T) .. zero(T)
+        @test_throws ArgumentError minimum(d)
+        @test_throws ArgumentError maximum(d)
+        @test_throws ArgumentError infimum(d)
+        @test_throws ArgumentError supremum(d)
+    end
 
     # Subset relations of intervals
     @test issubset((zero(T)..one(T)), (zero(T).. 2*one(T)))

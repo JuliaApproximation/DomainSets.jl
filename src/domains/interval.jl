@@ -161,6 +161,12 @@ function interval_map(a::T, b::T, c::T, d::T) where {T}
         elseif (a < 0) && (b < 0) && (c < 0) && (d < 0)
             # (-Inf,-Inf) to (-Inf,-Inf)
             StaticIdentityMap{FT}()
+        elseif (a < 0) && (b < 0) && (c > 0) && (d > 0)
+            # (-Inf,-Inf) to (Inf,Inf)
+            LinearMap(-one(FT))
+        elseif (a > 0) && (b > 0) && (c < 0) && (d < 0)
+            # (Inf,Inf) to (-Inf,-Inf)
+            LinearMap(-one(FT))
         else
             throw(ArgumentError("Requested affine map is unbounded"))
         end
@@ -185,31 +191,34 @@ canonicaldomain(d::FixedInterval) = d
 function canonicaldomain(d::Interval{:open,:open,T}) where {T}
     FT = float(T)
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        Interval{:open,:open,FT}(-1, 1)
+        isempty(d) ? EmptySpace{FT}() : Interval{:open,:open,FT}(-1, 1)
     elseif isfinite(leftendpoint(d)) || isfinite(rightendpoint(d))
+        # one finite endpoint
         PositiveRealLine{FT}()
-    elseif leftendpoint(d) < 0 && rightendpoint(d) > 0
-        RealLine{FT}()
-    elseif leftendpoint(d) > 0 && rightendpoint(d) < 0
+    elseif leftendpoint(d) != rightendpoint(d)
+        # two infinite endpoints
         RealLine{FT}()
     else
-        Point(zero(T))
+        # this is an interval like (Inf,Inf)
+        EmptySpace{FT}()
     end
 end
+
 function canonicaldomain(d::Interval{:open,:closed,T}) where {T}
     FT = float(T)
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        Interval{:open,:closed,FT}(-1, 1)
+        isempty(d) ? EmptySpace{FT}() : Interval{:open,:closed,FT}(-1, 1)
     elseif isfinite(rightendpoint(d))
         NonnegativeRealLine{FT}()
     else
         throw(ArgumentError("Canonical domains can not be closed at infinity."))
     end
 end
+
 function canonicaldomain(d::Interval{:closed,:open,T}) where {T}
     FT = float(T)
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        Interval{:closed,:open,FT}(-1, 1)
+        isempty(d) ? EmptySpace{FT}() : Interval{:closed,:open,FT}(-1, 1)
     elseif isfinite(leftendpoint(d))
         NonnegativeRealLine{FT}()
     else

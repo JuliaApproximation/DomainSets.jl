@@ -40,6 +40,7 @@ include("test_domain_simplex.jl")
         @test interior(d1) == d1
         @test closure(d1) == d1
         @test boundingbox(d1) == d1
+        @test distance_to(d1, 0) == Inf
         @test d1 == 2..1
         @test 2..1 == d1
         d2 = 0..1
@@ -65,12 +66,19 @@ include("test_domain_simplex.jl")
         @test boundary(d2) == d2
         @test dimension(d2) == 2
 
+        @test EmptySpace{Int}() == EmptySpace{Float64}()
+        @test hash(EmptySpace{Int}()) == hash(EmptySpace{Float64}())
         @test emptyspace(0..1) == EmptySpace{Int}()
         @test emptyspace([1,2]) == EmptySpace{Int}()
 
         m = LinearMap(2)
         @test map_domain(m, emptyspace(Int)) == EmptySpace{Int}()
         @test mapped_domain(m, emptyspace(Int)) == EmptySpace{Int}()
+
+        @test mapto(EmptySpace(), OpenInterval(0,0)) isa IdentityMap
+        @test mapto(OpenInterval(0,0), EmptySpace()) isa IdentityMap
+        @test_throws ArgumentError mapto(EmptySpace(), 0..1)
+        @test_throws ArgumentError mapto(0..1, EmptySpace())
     end
 
     @testset "full space" begin
@@ -92,6 +100,7 @@ include("test_domain_simplex.jl")
         @test closure(d1) == d1
         @test dimension(d1) == 1
         @test boundingbox(d1) == d1
+        @test distance_to(d1, 0) == 0
         @test DomainSets.isequaldomain1(d1, d1)
         @test DomainSets.isequaldomain2(d1, d1)
         d2 = 0..1
@@ -115,6 +124,8 @@ include("test_domain_simplex.jl")
         @test d2 == convert(Domain,SVector{2,Float64})
         @test d2 == convert(Domain{SVector{2,Float64}}, SVector{2,Float64})
 
+        @test FullSpace{Int}() == FullSpace{Float64}()
+        @test hash(FullSpace{Int}()) == hash(FullSpace{Float64}())
         @test fullspace(0..1) == FullSpace{Int}()
         @test fullspace([1,2]) == FullSpace{Int}()
 

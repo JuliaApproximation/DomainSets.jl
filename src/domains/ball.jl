@@ -308,6 +308,7 @@ choice(d::Sphere) = center(d) + unitvector(d, 1)
 
 isequaldomain(d1::Sphere, d2::Sphere) =
     radius(d1)==radius(d2) && center(d1)==center(d2)
+hash(d::Sphere, h::UInt) = hashrec("Sphere", radius(d), center(d))
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
 const EuclideanSphere{N,T} = Sphere{SVector{N,T}}

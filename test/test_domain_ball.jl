@@ -33,8 +33,11 @@ function test_balls()
     @test Ball{Float64}() isa UnitBall{Float64}
     @test Ball{Float64,:open}() isa UnitBall{Float64,:open}
     @test Ball(1.0) == DomainSets.GenericBall{SVector{3,Float64},:closed}(1.0)
+    @test hash(Ball(1.0)) == hash(DomainSets.GenericBall{SVector{3,Float64},:closed}(1.0))
     @test Ball{BigFloat}(1) == DomainSets.GenericBall{BigFloat,:closed}(big(1))
+    @test hash(Ball{BigFloat}(1)) == hash(DomainSets.GenericBall{BigFloat,:closed}(big(1)))
     @test Ball{BigFloat,:open}(1) == DomainSets.GenericBall{BigFloat,:open}(big(1))
+    @test hash(Ball{BigFloat,:open}(1)) == hash(DomainSets.GenericBall{BigFloat,:open}(big(1)))
     @test_throws MethodError Ball{Vector{Float64}}(1.0)
     @test Ball(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
     @test Ball{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
@@ -57,6 +60,7 @@ function test_balls()
     @test StaticUnitBall(Val(2)) isa StaticUnitBall{SVector{2,Float64}}
 
     @test GenericBall() == GenericBall(1.0)
+    @test hash(GenericBall()) == hash(GenericBall(1.0))
     @test GenericBall(2.0, 1:5) isa GenericBall{Vector{Float64},:closed,Float64}
     @test GenericBall(2, 1.0:5.0) isa GenericBall{Vector{Float64},:closed,Float64}
 
@@ -234,7 +238,9 @@ function test_spheres()
     @test Sphere(1.0, 2.0) isa DomainSets.GenericSphere{Float64}
     @test Sphere{Float64}() isa UnitSphere{Float64}
     @test Sphere(1.0) == DomainSets.GenericSphere{SVector{3,Float64}}(1.0)
+    @test hash(Sphere(1.0)) == hash(DomainSets.GenericSphere{SVector{3,Float64}}(1.0))
     @test Sphere{BigFloat}(1) == DomainSets.GenericSphere{BigFloat}(big(1))
+    @test hash(Sphere{BigFloat}(1)) == hash(DomainSets.GenericSphere{BigFloat}(big(1)))
     @test_throws MethodError Sphere{Vector{Float64}}(1.0)
     @test Sphere(1.0, [1,2,3]) isa DomainSets.GenericSphere{Vector{Float64},Float64}
     @test Sphere{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericSphere{Vector{Float64},Float64}
@@ -251,6 +257,7 @@ function test_spheres()
     @test StaticUnitSphere(Val(2)) isa StaticUnitSphere{SVector{2,Float64}}
 
     @test GenericSphere() == GenericSphere(1.0)
+    @test hash(GenericSphere()) == hash(GenericSphere(1.0))
     @test GenericSphere(2.0, 1:5) isa GenericSphere{Vector{Float64},Float64}
     @test GenericSphere(2, 1.0:5.0) isa GenericSphere{Vector{Float64},Float64}
 

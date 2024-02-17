@@ -48,6 +48,11 @@ isequaldomain1(d1::EmptySpace, d2) = isempty(d2)
 isequaldomain2(d1, d2::EmptySpace) = isempty(d1)
 hash(d::EmptySpace, h::UInt) = hash("EmptySpace", h)
 
+mapto1(d1::EmptySpace{T}, d2) where {T} =
+    isempty(d2) ? StaticIdentityMap{T}() : throw(ArgumentError("Can't map empty to non-empty domain"))
+mapto2(d1, d2::EmptySpace{T}) where {T} =
+    isempty(d1) ? StaticIdentityMap{T}() : throw(ArgumentError("Can't map non-empty to empty domain"))
+
 
 """
 A domain that represents the full space.
