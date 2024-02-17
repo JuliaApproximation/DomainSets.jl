@@ -266,6 +266,9 @@ include("test_domain_simplex.jl")
         @test convert(Domain{Float64}, Point(1)) ≡ Point(1.0)
         @test Number(Point(1)) ≡ convert(Number, Point(1)) ≡ convert(Int, Point(1)) ≡ 1
         @test convert(Domain{Float64}, 1) isa Point{Float64}
+        @test Int(Point(2)) == 2
+        @test Float64(Point(2.0)) == 2.0
+        @test Float64(Point(2)) isa Float64
 
         @test choice(Point(1)) == 1
 
@@ -281,6 +284,8 @@ include("test_domain_simplex.jl")
         @test issubset(Point(1), (0..2))
         @test Point(0.5) \ (0..1) == EmptySpace{Float64}()
         @test Point(0.5) \ (1..2) == Point(0.5)
+        @test isequaldomain(Point(1), Point(1.0))
+        @test isequaldomain(Point(1), 1)
 
         pv = Point([1,2,3])
         @test dimension(pv)==3

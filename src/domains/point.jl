@@ -10,10 +10,8 @@ end
 
 similardomain(d::Point, ::Type{T}) where {T} = Point{T}(d.x)
 
-convert(::Type{Number}, d::Point{<:Number}) = d.x
-convert(::Type{N}, d::Point{<:Number}) where N<:Number =
-    convert(N, convert(Number, d.x))
-Number(d::Point) = convert(Number, d)
+(::Type{T})(p::Point{<:Number}) where {T<:Number} = T(p.x)
+convert(::Type{N}, d::Point{<:Number}) where {N<:Number} = N(d)
 
 convert(::Type{Domain}, c::Number) = Point(c)
 convert(::Type{Domain{T}}, c::Number) where T = Point{T}(c)
