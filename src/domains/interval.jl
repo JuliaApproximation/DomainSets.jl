@@ -51,12 +51,22 @@ function choice(d::AbstractInterval{T}) where {T<:Integer}
 end
 
 
-boundary(d::AbstractInterval) = Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
-corners(d::AbstractInterval) = [leftendpoint(d), rightendpoint(d)]
+boundary(d::AbstractInterval{T}) where T =
+    isempty(d) ? EmptySpace{T}() : Point(leftendpoint(d)) ∪ Point(rightendpoint(d))
+corners(d::AbstractInterval{T}) where T =
+    isempty(d) ? T[] : [leftendpoint(d), rightendpoint(d)]
 
 normal(d::AbstractInterval, x) = (abs(minimum(d)-x) < abs(maximum(d)-x)) ? -one(domaineltype(d)) : one(domaineltype(d))
 
-distance_to(d::AbstractInterval, x) = x ∈ d ? zero(domaineltype(d)) : min(abs(x-supremum(d)), abs(x-infimum(d)))
+function distance_to(d::AbstractInterval{T}, x) where T
+    if x ∈ d
+        zero(T)
+    elseif isempty(d)
+        T(Inf)
+    else
+        min(abs(x-supremum(d)), abs(x-infimum(d)))
+    end
+end
 
 boundingbox(d::AbstractInterval) = d
 
@@ -541,49 +551,79 @@ function setdiffdomain(d1::TypedEndpointsInterval{L1,R1,T}, d2::TypedEndpointsIn
     a2 = leftendpoint(d2)
     b2 = rightendpoint(d2)
 
+    # First treat the case of empty intervals
     isempty(d1) && return d1
     isempty(d2) && return d1
-    # intervals aren't empty: we now know that a1 ≤ b1 and a2 ≤ b2
-    d1 == d2 && return emptyspace(T)
-    # Order: a1 b1 a2 b2
-    b1 < a2 && return d1
-    if a1 < a2 == b1 ≤ b2
-        # if a2==b1==b2 then [a2,b2] is closed, because it is non-empty
-        (L2 == :open && R1 == :closed) ? R = :closed : R = :open
-        return Interval{L1,R,T}(a1, a2)
+
+    # - the case where either interval is a point
+    if a1 == b1
+        return a1 ∈ d2 ? emptyspace(T) : d1
     end
-    # Order: a1 a2 b1 b2
-    if a1 < a2 < b1 ≤ b2
-        (L2 == :open) ? R = :closed : R = :open
-        return Interval{L1,R,T}(a1, a2)
+    if a2 == b2
+        return setdiffdomain(d1, Point(a2))
     end
-    # Order: a1 a2 b2 b1
-    if a1 < a2 < b2 < b1
-        return uniondomain(Interval{L1,complement(L1),T}(a1,a2), Interval{complement(R2),R1,T}(b2,b1))
-    end
-    if a1 < a2 == b2 < b1
-        # since a2==b2 and the interval isn't empty, [a2,b2] is closed
-        return uniondomain(Interval{L1,:open,T}(a1,a2), Interval{:open,R1,T}(b2,b1))
-    end
-    # Order: a2 a1 b2 b1
-    if a2 ≤ a1 < b2 < b1
-        return Interval{complement(R2),R1,T}(b2,b1)
-    end
-    # Order: a2 a1 b1 b2
-    if a2 < a1 ≤ b1 < b2
-        return emptyspace(T)
-    end
-    if a2 ≤ a1 ≤ b1 ≤ b2
-        return (L2 == :open && R2 == :open) ? d1 : emptyspace(T)
-    end
-    # Order: a2 b2 a1 b1
-    if b2 == a1 ≤ b1
-        return (R2 == :open) ? d1 : Interval{:open,R1}(a1,b1)
-    end
-    if b2 < a1
+
+    # We now know that a1 < b1 and a2 < b2
+    # - the case where intervals are disjoint
+    if (b1 < a2) || (a1 > b2)
         return d1
     end
-    error("Can't reach this line: please file an issue.")
+    # - the case where the first is embedded in the second
+    if (a2 < a1) && (b1 < b2)
+        return EmptySpace{T}()
+    end
+    # - intervals overlap in whole or in part, with a1 <= a2
+    if b1 == a2  # hence a1 < b1 = a2 < b2
+        return L2 == :open && R1 == :closed ? d1 : Interval{L1,:open}(a1,b1)
+    end
+    if a1 < a2 < b1 < b2
+        return Interval{L1,complement(L2),T}(a1,a2)
+    end
+    if a1 < a2 < b1 == b2
+        int1 = Interval{L1,complement(L2),T}(a1,a2)
+        return isrightopen(d2) && isrightclosed(d1) ?
+            uniondomain(int1, Point(b1)) : int1
+    end
+    if a1 < a2 < b2 < b1
+        int1 = Interval{L1,complement(L2)}(a1, a2)
+        int2 = Interval{complement(R2),R1}(b2, b1)
+        return uniondomain(int1, int2)
+    end
+    if a1 == a2 < b1 < b2
+        return isleftclosed(d1) && isleftopen(d2) ?
+            Point(a1) : EmptySpace{T}()
+    end
+    if a1 == a2 < b2 < b1
+        int1 = Interval{complement(R2),R1}(b2, b1)
+        return isleftclosed(d1) && isleftopen(d2) ?
+            uniondomain(Point(a1), int1) : int1
+    end
+    # - intervals overlap completely
+    if (a1 == a2) && (b1 == b2)
+        no_left = isleftopen(d1) || isleftclosed(d2)
+        no_right = isrightopen(d1) || isrightclosed(d2)
+        if no_left && no_right
+            return EmptySpace{T}()
+        elseif no_left
+            return Point(b1)
+        elseif no_right
+            return Point(a1)
+        else
+            return uniondomain(Point(a1), Point(b2))
+        end
+    end
+    # - intervals overlap in part, with a2 < a1
+    if a1 == b2  # hence a2 < b2 = a1 < b1
+        return L1 == :closed && R2 == :open ? d1 : Interval{:open,R1}(a1,b1)
+    end
+    if a2 < a1 < b2 < b1
+        return Interval{complement(R2),R1,T}(b2,b1)
+    end
+    if a2 < a1 && b1 == b2
+        return isrightclosed(d1) && isrightopen(d2) ?
+            Point(b1) : EmptySpace{T}()
+    end
+    # All cases covered, this line can't be reached
 end
 
 

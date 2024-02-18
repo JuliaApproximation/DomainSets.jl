@@ -51,6 +51,12 @@ function test_simplex()
     @test SA[0.2,-0.2] ∉ d
     @test boundingbox(d) == UnitCube{SVector{2,Float64}}()
 
+    # @test distance_to(d, SA[0.2,0.2]) == 0.0
+    # @test distance_to(d, SA[1.0,1.0]) ≈ sqrt(2)
+    @test normal(d, SA[0,0.5]) == SA[-1,0]
+    @test normal(d, SA[0.5,0.5]) == SA[sqrt(2)/2,sqrt(2)/2]
+    @test boundary(d) isa UnionDomain
+
     # issue #102
     @test !([0.3,0.4,0.2] ∈ UnitSimplex(2))
     z1 = @test_logs (:warn, "`in`: incompatible combination of vector with length 3 and domain 'UnitSimplex(Val(2))' with dimension 2. Returning false.") !([0.3,0.4,0.2] ∈ UnitSimplex(Val(2)))
@@ -65,6 +71,7 @@ function test_simplex()
     @test corners(d) == [ SA[0.0,0.0], SA[1.0,0.0], SA[0.0,1.0]]
 
     @test convert(Domain{SVector{2,BigFloat}}, d) == EuclideanUnitSimplex{2,BigFloat}()
+    @test hash(convert(Domain{SVector{2,BigFloat}}, d)) == hash(EuclideanUnitSimplex{2,BigFloat}())
 
     @test isclosedset(d)
     @test !isopenset(d)
@@ -76,6 +83,7 @@ function test_simplex()
     d2 = EuclideanUnitSimplex{2,Float64,:open}()
     @test !isclosedset(d2)
     @test isopenset(d2)
+    @test boundary(d2) == boundary(closure(d2))
     @test SA[0.3,0.1] ∈ d2
     @test SA[0.0,0.1] ∉ d2
     @test SA[0.3,0.0] ∉ d2
@@ -123,4 +131,11 @@ function test_simplex()
 
     d4 = EuclideanUnitSimplex{4,Float64}()
     @test corners(d4) isa SVector{5,SVector{4,Float64}}
+
+    d5 = StaticUnitSimplex{Float64,:closed}()
+    @test convert(AbstractInterval, d5) isa UnitInterval
+    @test convert(AbstractInterval, StaticUnitSimplex{Float64,:open}()) isa OpenInterval{Float64}
+    @test canonicaldomain(d5) isa UnitInterval
+    @test canonicaldomain(DomainSets.Equal(), d5) isa UnitInterval
+    @test boundary(d5) == Point(0.0) ∪ Point(1.0)
 end

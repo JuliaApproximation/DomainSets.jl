@@ -47,6 +47,8 @@ function test_intervals()
         @test normal(0..1, -0.3) == -1
         @test normal(0..1, 0.7) == 1
         @test distance_to(0..1, 1.5) == 0.5
+        @test distance_to(0..1, 0.5) == 0
+        @test distance_to(OpenInterval(0,0.0), 0.5) == Inf
     end
     @testset "UnitInterval" begin
         d = UnitInterval{T}()
@@ -288,6 +290,9 @@ function test_intervals()
         @test canonicaldomain(OpenInterval(-Inf,Inf)) == DomainSets.RealLine()
         @test canonicaldomain(OpenInterval(Inf,-Inf)) == DomainSets.RealLine()
         @test canonicaldomain(OpenInterval(Inf,Inf)) === EmptySpace{Float64}()
+
+        @test isempty(boundary(OpenInterval(0,0)))
+        @test length(corners(OpenInterval(0,0))) == 0
     end
     @testset "Halfopen intervals" begin
         d1 = Interval{:closed,:open}(0,1)
@@ -354,6 +359,10 @@ function test_intervals()
         @test m2(4) ≈ 2
         @test m2(6) ≈ 3
 
+        @test DomainSets.interval_map(1.0, Inf, 2.0, Inf) == AffineMap(1.0, 1.0)
+        @test DomainSets.interval_map(1.0, Inf, Inf, 2.0) == AffineMap(-1.0, 3.0)
+        @test DomainSets.interval_map(Inf, 1.0, 2.0, Inf) == AffineMap(-1.0, 3.0)
+        @test DomainSets.interval_map(Inf, 1.0, Inf, 2.0) == AffineMap(1.0, 1.0)
         @test DomainSets.interval_map(-Inf, Inf, -Inf, Inf) == IdentityMap()
         @test DomainSets.interval_map(-Inf, Inf, Inf, -Inf) == LinearMap(-1)
         @test DomainSets.interval_map(Inf, -Inf, -Inf, Inf) == LinearMap(-1)
@@ -531,26 +540,40 @@ function test_intervals()
         @test isempty(du6)
 
         # - setdiff of intervals
-        d1 = -T(2)..T(2)
-        @test d1 \ (3..4) == d1
-        @test d1 \ (0..1) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(1,2))
-        @test d1 \ (0..3) == Interval{:closed,:open,T}(-2,0)
-        @test d1 \ (-3..0) == Interval{:open,:closed,T}(0,2)
-        @test d1 \ (-4..(-3)) == d1
-        @test d1 \ (-4..4) == EmptySpace{T}()
-
-        # mixed types
-        @test setdiffdomain(0..1, 0.0..0.5) == Interval{:open,:closed,Float64}(0.5,1)
-        @test setdiffdomain(d1, -3) == d1
-        @test setdiffdomain(d1, -2) == Interval{:open,:closed,T}(-2,2)
-        @test setdiffdomain(d1, T(2)) == Interval{:closed,:open,T}(-2,2)
-        @test setdiffdomain(d1, zero(T)) == uniondomain(Interval{:closed,:open,T}(-2,0), Interval{:open,:closed,T}(0,2))
-        @test setdiffdomain(0.0..1.0, 1.0..2.0) == Interval{:closed,:open,Float64}(0,1)
-        @test setdiffdomain(0.0..1.0, OpenInterval(1.0..2.0)) == 0.0..1.0
-        @test setdiffdomain(0.0..1.0, 1.0..1.0) == Interval{:closed,:open,Float64}(0,1)
-        @test setdiffdomain(0.0..1.0, -1.0..2.0) === EmptySpace{Float64}()
-        @test setdiffdomain(0.0..1.0, -1.0..0.0) == Interval{:open,:closed,Float64}(0,1)
-        @test setdiffdomain(0.0..1.0, OpenInterval(-1.0,0.0)) == 0.0..1.0
+        @test setdiffdomain(1.0..0.0, 2.0..3.0) == 1..0.0
+        @test setdiffdomain(1.0..0.0, -3.0 .. -2.0) == 1..0.0
+        @test setdiffdomain(1.0..1.0, 2.0..3) == 1.0..1.0
+        @test setdiffdomain(1.0..1.0, 0.0..3) isa EmptySpace{Float64}
+        @test setdiffdomain(1.0..2.0, 0.0..0.0) == 1.0..2.0
+        @test setdiffdomain(1.0..2.0, 1.5..1.5) ==
+            uniondomain(Interval{:closed,:open}(1,1.5), Interval{:open,:closed}(1.5,2))
+        @test setdiffdomain(1.0..2.0, 0.0..0.5) == 1.0..2.0
+        @test setdiffdomain(1.0..2.0, 2.5..3.0) == 1.0..2.0
+        @test setdiffdomain(1.0..2.0, 0.0..3.0) == EmptySpace{Float64}()
+        @test setdiffdomain(1.0..2.0, 2.0..3.0) == Interval{:closed,:open}(1.0..2.0)
+        @test setdiffdomain(1.0..2.0, OpenInterval(2.0,3.0)) == Interval{:closed,:closed}(1.0..2.0)
+        @test setdiffdomain(1.0..2.0, 1.5..3.0) == Interval{:closed,:open}(1,1.5)
+        @test setdiffdomain(1.0..2.0, OpenInterval(1.5,3.0)) == 1.0..1.5
+        @test setdiffdomain(1.0..2.0, 1.5..2.0) == Interval{:closed,:open}(1.0,1.5)
+        @test setdiffdomain(1.0..2.0, OpenInterval(1.5,2.0)) == (1.0..1.5) ∪ Point(2.0)
+        @test setdiffdomain(1.0..2.0, Interval{:closed,:open}(1.5,2.0)) == Interval{:closed,:open}(1.0..1.5) ∪ Point(2.0)
+        @test setdiffdomain(0.0..3.0, 1.0..2.0) ==
+            uniondomain(Interval{:closed,:open}(0.0,1.0), Interval{:open,:closed}(2.0,3.0))
+        @test setdiffdomain(0.0..1.0, 0.0..2.0) isa EmptySpace{Float64}
+        @test setdiffdomain(0.0..1.0, OpenInterval(0.0,2.0)) == Point(0.0)
+        @test setdiffdomain(0.0..2.0, 0.0..1.0) == Interval{:open,:closed}(1.0, 2.0)
+        @test setdiffdomain(0.0..2.0, OpenInterval(0.0,1.0)) ==
+            uniondomain(Point(0.0), Interval{:closed,:closed}(1.0,2.0))
+        @test setdiffdomain(0.0..1.0, 0.0..1.0) isa EmptySpace{Float64}
+        @test setdiffdomain(0.0..1.0, OpenInterval(0.0,1.0)) == Point(0.0) ∪ Point(1.0)
+        @test setdiffdomain(0.0..1.0, Interval{:closed,:open}(0.0,1.0)) == Point(1.0)
+        @test setdiffdomain(0.0..1.0, Interval{:open,:closed}(0.0,1.0)) == Point(0.0)
+        @test setdiffdomain(1.0..2.0, 0.0..1.0) == Interval{:open,:closed}(1.0,2.0)
+        @test setdiffdomain(1.0..2.0, OpenInterval(0.0,1.0)) == 1.0..2.0
+        @test setdiffdomain(1.0..2.0, 0.0..1.5) == Interval{:open,:closed}(1.5,2.0)
+        @test setdiffdomain(1.0..2.0, OpenInterval(0.0,1.5)) == 1.5..2.0
+        @test setdiffdomain(1.0..2.0, 0.0..2.0) == EmptySpace{Float64}()
+        @test setdiffdomain(1.0..2.0, OpenInterval(0.0,2.0)) == Point(2.0)
     end
 
     @testset "empty intervals" begin

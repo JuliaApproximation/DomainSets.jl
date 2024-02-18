@@ -48,10 +48,8 @@ hash(d::UnitSimplex, h::UInt) = hashrec("UnitSimplex", isclosedset(d), dimension
 
 boundingbox(d::UnitSimplex{T}) where {T} = UnitCube{T}(dimension(d))
 
-boundary(d::UnitSimplex{T,:open}) where {T} = emptyspace(T)
-
-
-distance_to(d::UnitSimplex, x) = x ∈ d ? zero(prectype(d)) : minimum(distance_to(el, x) for el in components(boundary(d)))
+# TODO: implement when segments are available
+# distance_to(d::UnitSimplex, x) = x ∈ d ? zero(prectype(d)) : minimum(distance_to(el, x) for el in components(boundary(d)))
 
 function normal(d::UnitSimplex, x)
     z = similar(x)
@@ -89,14 +87,16 @@ const EuclideanUnitSimplex{N,T,C} = StaticUnitSimplex{SVector{N,T},C}
 EuclideanUnitSimplex{N}() where {N} = EuclideanUnitSimplex{N,Float64}()
 
 ## A StaticUnitSimplex{<:Number} equals the interval [0,1]  (open or closed)
-convert(::Type{Interval}, d::StaticUnitSimplex{T,:closed}) where {T <: Number} =
-    UnitInterval{T}()
-convert(::Type{Interval}, d::StaticUnitSimplex{T,:open}) where {T <: Number} =
-    OpenInterval{T}(0, 1)
+AbstractInterval(d::StaticUnitSimplex{T,:closed}) where {T <: Number} = UnitInterval{T}()
+AbstractInterval(d::StaticUnitSimplex{T,:open}) where {T <: Number} = OpenInterval{T}(0, 1)
 
-canonicaldomain(::Equal, d::StaticUnitSimplex{T}) where {T<:Number} = convert(Interval, d)
+convert(::Type{AbstractInterval}, d::StaticUnitSimplex{T}) where {T <: Number} =
+	AbstractInterval(d)
 
-boundary(d::StaticUnitSimplex{T}) where {T<:Number} = boundary(convert(Interval, d))
+canonicaldomain(d::StaticUnitSimplex{T}) where {T<:Number} = AbstractInterval(d)
+canonicaldomain(::Equal, d::StaticUnitSimplex{T}) where {T<:Number} = AbstractInterval(d)
+
+boundary(d::StaticUnitSimplex{T}) where {T<:Number} = boundary(AbstractInterval(d))
 
 
 "A unit simplex with vector elements with variable dimension determined by a field."
@@ -158,7 +158,7 @@ function simplex_face_map(a::Number, b::Number, c::Vector, d::Vector)
 	AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
 end
 
-function boundary(d::StaticUnitSimplex{SVector{2,T},:closed}) where {T}
+function boundary(d::StaticUnitSimplex{SVector{2,T}}) where T
     d0 = UnitInterval{T}()
 	T0 = zero(T)
 	T1 = one(T)
