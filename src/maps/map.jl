@@ -46,6 +46,9 @@ convert(::Type{Map{T}}, m::Map{S}) where {S,T} = similarmap(m, T)
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 convert(::Type{TypedMap{T,U}}, m::TypedMap) where {T,U} = similarmap(m, T, U)
 
+convert_domaintype(map::Map{T}, ::Type{T}) where {T} = map
+convert_domaintype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{U}, map)
+
 convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
 convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
 
@@ -86,9 +89,26 @@ applymap!(y, m, x) = y .= m(x)
 applymap(m, x) = m(x)
 applymap(m::AbstractMap, x) = error("Please implement applymap for map $(m)")
 
+
+"Can the maps be promoted to a common domain type without throwing an error?"
+promotable_maps(maps...) = promotable_eltypes(map(domaintype, maps)...)
+
+"Promote the given maps to have a common domain type."
+promote_maps() = ()
+promote_maps(m1) = m1
+function promote_maps(m1, m2)
+    T = promote_type(domaintype(m1), domaintype(m2))
+    convert_domaintype(m1, T), convert_domaintype(m2, T)
+end
+function promote_maps(m1, m2, m3, maps...)
+    T = mapreduce(domaintype, promote_type, (m1,m2,m3,maps...))
+    convert_domaintype.((m1,m2,m3,maps...), T)
+end
+
 isvectorvalued_type(::Type{T}) where {T<:Number} = true
 isvectorvalued_type(::Type{T}) where {T<:AbstractVector} = true
 isvectorvalued_type(::Type{T}) where {T} = false
+
 
 "Is the map a vector-valued function, i.e., a function from Rn to Rm?"
 isvectorvalued(m) =

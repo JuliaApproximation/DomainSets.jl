@@ -8,6 +8,9 @@ isinterval(d::AbstractInterval) = true
 hash(d::AbstractInterval, h::UInt) =
     hashrec(isleftopen(d), isrightopen(d), leftendpoint(d), rightendpoint(d), h)
 
+issubset_domain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) = issubset(d1, d2)
+isequaldomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) = isequal(d1, d2)
+
 Display.object_parentheses(::AbstractInterval) = true
 
 approx_indomain(x, d::AbstractInterval, tolerance) =
@@ -194,50 +197,53 @@ mapto(d1::D, d2::D) where {D <: FixedInterval} = identitymap(d1)
 mapto(d1::AbstractInterval, d2::AbstractInterval) =
     interval_map(leftendpoint(d1), rightendpoint(d1), leftendpoint(d2), rightendpoint(d2))
 
+identitymap(d::TypedEndpointsInterval{L,R,T}) where {L,R,T<:Integer} = IdentityMap{float(T)}()
 
-canonicaldomain(d::ClosedInterval{T}) where {T} = ChebyshevInterval{float(T)}()
+canonicaldomain(d::TypedEndpointsInterval{:closed,:closed,T}) where {T} =
+    ChebyshevInterval{T}()
+mapfrom_canonical(d::TypedEndpointsInterval{:closed,:closed}) =
+    bounded_interval_map(-1, 1, endpoints(d)...)
+
 canonicaldomain(d::FixedInterval) = d
+canonicaldomain(ctype::Equal, d::FixedInterval) = d
+mapfrom_canonical(d::FixedInterval) = identitymap(d)
 
-function canonicaldomain(d::Interval{:open,:open,T}) where {T}
-    FT = float(T)
+function canonicaldomain(d::TypedEndpointsInterval{:open,:open,T}) where {T}
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        isempty(d) ? EmptySpace{FT}() : Interval{:open,:open,FT}(-1, 1)
+        isempty(d) ? EmptySpace{T}() : Interval{:open,:open,T}(-1, 1)
     elseif isfinite(leftendpoint(d)) || isfinite(rightendpoint(d))
         # one finite endpoint
-        PositiveRealLine{FT}()
+        PositiveRealLine{T}()
     elseif leftendpoint(d) != rightendpoint(d)
         # two infinite endpoints
-        RealLine{FT}()
+        RealLine{T}()
     else
         # this is an interval like (Inf,Inf)
-        EmptySpace{FT}()
+        EmptySpace{T}()
     end
 end
 
-function canonicaldomain(d::Interval{:open,:closed,T}) where {T}
-    FT = float(T)
+function canonicaldomain(d::TypedEndpointsInterval{:open,:closed,T}) where {T}
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        isempty(d) ? EmptySpace{FT}() : Interval{:open,:closed,FT}(-1, 1)
+        isempty(d) ? EmptySpace{T}() : Interval{:open,:closed,T}(-1, 1)
     elseif isfinite(rightendpoint(d))
-        NonnegativeRealLine{FT}()
+        NonnegativeRealLine{T}()
     else
         throw(ArgumentError("Canonical domains can not be closed at infinity."))
     end
 end
 
-function canonicaldomain(d::Interval{:closed,:open,T}) where {T}
-    FT = float(T)
+function canonicaldomain(d::TypedEndpointsInterval{:closed,:open,T}) where {T}
     if isfinite(leftendpoint(d)) && isfinite(rightendpoint(d))
-        isempty(d) ? EmptySpace{FT}() : Interval{:closed,:open,FT}(-1, 1)
+        isempty(d) ? EmptySpace{T}() : Interval{:closed,:open,T}(-1, 1)
     elseif isfinite(leftendpoint(d))
-        NonnegativeRealLine{FT}()
+        NonnegativeRealLine{T}()
     else
         throw(ArgumentError("Canonical domains can not be closed at infinity."))
     end
 end
 
-mapfrom_canonical(d::ClosedInterval) = bounded_interval_map(-1, 1, endpoints(d)...)
-mapfrom_canonical(d::Interval) = mapto(canonicaldomain(d), d)
+mapfrom_canonical(d::AbstractInterval) = mapto(canonicaldomain(d), d)
 
 
 "The positive halfline `[0,∞)` or `(0,∞)`, left-closed or left-open."

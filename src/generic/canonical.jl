@@ -134,10 +134,8 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 "Are the two given domains equal?"
 isequaldomain(d1, d2) = isequaldomain1(d1, d2)
 # simplify the first argument
-isequaldomain1(d1, d2) = simplifies(d1) ? simplify(d1)==d2 : isequaldomain2(d1, d2)
+isequaldomain1(d1, d2) = simplifies(d1) ? isequaldomain(simplify(d1), d2) : isequaldomain2(d1, d2)
 # simplify the second argument
-isequaldomain2(d1, d2) = simplifies(d2) ? d1==simplify(d2) : d1===d2
+isequaldomain2(d1, d2) = simplifies(d2) ? isequaldomain(d1, simplify(d2)) : d1===d2
 
 ==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))
-==(d1::AnyDomain, d2) = isequaldomain(domain(d1), d2)
-==(d1, d2::AnyDomain) = isequaldomain(d1, domain(d2))

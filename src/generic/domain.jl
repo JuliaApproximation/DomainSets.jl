@@ -8,6 +8,8 @@ numtype(::Type{<:Domain{T}}) where T = numtype(T)
 # Domain-specific prectype and numtype default to using domaineltype
 domain_prectype(d) = prectype(domaineltype(d))
 domain_numtype(d) = numtype(domaineltype(d))
+domain_prectype(domains...) = prectype(map(domaineltype, domains)...)
+domain_numtype(domains...) = numtype(map(domaineltype, domains)...)
 prectype(d::DomainRef) = prectype(domaineltype(d))
 numtype(d::DomainRef) = numtype(domaineltype(d))
 
@@ -18,9 +20,6 @@ convert(::Type{Domain{T}}, d::Domain{S}) where {S,T} = similardomain(d, T)
 
 "Can the domains be promoted without throwing an error?"
 promotable_domains(domains...) = promotable_eltypes(map(domaineltype, domains)...)
-promotable_eltypes(types...) = isconcretetype(promote_type(types...))
-promotable_eltypes(::Type{S}, ::Type{T}) where {S<:AbstractVector,T<:AbstractVector} =
-    promotable_eltypes(eltype(S), eltype(T))
 
 "Promote the given domains to have a common element type."
 promote_domains() = ()

@@ -5,6 +5,8 @@
 struct EmptySpace{T} <: Domain{T}
 end
 
+EmptySet = EmptySpace
+
 const AnyEmptySpace = EmptySpace{Any}
 
 EmptySpace() = EmptySpace{Float64}()

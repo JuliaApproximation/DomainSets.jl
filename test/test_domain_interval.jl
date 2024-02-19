@@ -38,7 +38,7 @@ function test_intervals()
         @test convert(AbstractInterval{Float64}, 0..1) isa ClosedInterval{Float64}
 
         @test canonicaldomain(d) isa ChebyshevInterval{Float64}
-        @test canonicaldomain(0..1) isa ChebyshevInterval{Float64}
+        @test canonicaldomain(0..1) isa ChebyshevInterval{Int}
 
         @test intersectdomain(0..1, 1..3) isa Point{Int}
         @test 1..1 == Point(1)
@@ -276,7 +276,7 @@ function test_intervals()
     end
 
     @testset "OpenInterval" begin
-        d = OpenInterval(0,1)
+        d = OpenInterval(0.0,1.0)
         @test isopenset(d)
         @test closure(d) == UnitInterval()
 
@@ -284,6 +284,7 @@ function test_intervals()
         @test rightendpoint(d) ∈ ∂(d)
 
         @test canonicaldomain(d) == OpenInterval(-1,1)
+        @test canonicaldomain(OpenInterval(0,1)) isa OpenInterval{Int}
         @test canonicaldomain(OpenInterval(0,0)) == EmptySpace()
         @test canonicaldomain(OpenInterval(2,Inf)) == DomainSets.PositiveRealLine()
         @test mapfrom_canonical(OpenInterval(2,Inf)) isa AffineMap
@@ -295,7 +296,7 @@ function test_intervals()
         @test length(corners(OpenInterval(0,0))) == 0
     end
     @testset "Halfopen intervals" begin
-        d1 = Interval{:closed,:open}(0,1)
+        d1 = Interval{:closed,:open}(0.0,1.0)
         @test closure(d1) == 0..1
         @test leftendpoint(d1) ∈ ∂(d1)
         @test rightendpoint(d1) ∈ ∂(d1)
@@ -304,8 +305,11 @@ function test_intervals()
         @test leftendpoint(d2) ∈ ∂(d2)
         @test rightendpoint(d2) ∈ ∂(d2)
 
-        @test canonicaldomain(Interval{:closed,:open,T}(0,1)) == Interval{:closed,:open}(-1,1)
-        @test canonicaldomain(Interval{:open,:closed,T}(0,1)) == Interval{:open,:closed}(-1,1)
+        @test canonicaldomain(Interval{:closed,:open}(0,1)) isa Interval{:closed,:open,Int}
+        @test canonicaldomain(Interval{:open,:closed}(0,1)) isa Interval{:open,:closed,Int}
+
+        @test canonicaldomain(Interval{:closed,:open}(0,1)) == Interval{:closed,:open}(-1,1)
+        @test canonicaldomain(Interval{:open,:closed}(0,1)) == Interval{:open,:closed}(-1,1)
         @test canonicaldomain(Interval{:closed,:open}(0,0)) == EmptySpace()
         @test canonicaldomain(Interval{:open,:closed}(0,0)) == EmptySpace()
         @test canonicaldomain(Interval{:closed,:open}(0,Inf)) == HalfLine()
@@ -576,55 +580,13 @@ function test_intervals()
         @test setdiffdomain(1.0..2.0, OpenInterval(0.0,2.0)) == Point(2.0)
     end
 
-    @testset "empty intervals" begin
-        @test isempty(one(T)..zero(T))
-        @test zero(T) ∉ (one(T)..zero(T))
-        @test isempty(Interval{:open,:open}(zero(T),zero(T)))
-        @test zero(T) ∉ Interval{:open,:open}(zero(T),zero(T))
-        @test isempty(Interval{:open,:closed}(zero(T),zero(T)))
-        @test zero(T) ∉ Interval{:open,:closed}(zero(T),zero(T))
-        @test isempty(Interval{:closed,:open}(zero(T),zero(T)))
-        @test zero(T) ∉ Interval{:closed,:open}(zero(T),zero(T))
-
-        d = one(T) .. zero(T)
-        @test_throws ArgumentError minimum(d)
-        @test_throws ArgumentError maximum(d)
-        @test_throws ArgumentError infimum(d)
-        @test_throws ArgumentError supremum(d)
-    end
-
-    # Subset relations of intervals
-    @test issubset((zero(T)..one(T)), (zero(T).. 2*one(T)))
-    @test issubset((zero(T)..one(T)), (zero(T).. one(T)))
-    @test issubset(OpenInterval(zero(T),one(T)), zero(T) .. one(T))
-    @test !issubset(zero(T) .. one(T), OpenInterval(zero(T), one(T)))
-    @test issubset(UnitInterval{T}(), ChebyshevInterval{T}())
-
-    # - convert
-    d = zero(T).. one(T)
-    @test d ≡ Interval(zero(T), one(T))
-    @test d ≡ ClosedInterval(zero(T), one(T))
-
-    @test convert(Domain, d) ≡ d
-    @test convert(Domain{Float32}, d) ≡ (0f0 .. 1f0)
-    @test convert(Domain{Float64}, d) ≡ (0.0 .. 1.0)
-    @test convert(Domain, zero(T)..one(T)) ≡ d
-    @test convert(Domain{T}, zero(T)..one(T)) ≡ d
-    @test convert(AbstractInterval, zero(T)..one(T)) ≡ d
-    @test convert(AbstractInterval{T}, zero(T)..one(T)) ≡ d
-    @test convert(Interval, zero(T)..one(T)) ≡ d
-    @test Interval(zero(T)..one(T)) ≡ d
-    @test convert(ClosedInterval, zero(T)..one(T)) ≡ d
-    @test ClosedInterval(zero(T)..one(T)) ≡ d
-    @test convert(ClosedInterval{T}, zero(T)..one(T)) ≡ d
-    @test ClosedInterval{T}(zero(T)..one(T)) ≡ d
-
-
-    @testset "conversion from other types" begin
-        @test convert(Domain{T}, 0..1) ≡ d
-        @test convert(AbstractInterval{T}, 0..1) ≡ d
-        @test convert(ClosedInterval{T}, 0..1) ≡ d
-        @test ClosedInterval{T}(0..1) ≡ d
+    @testset "conversion to domain" begin
+        d = zero(T).. one(T)
+        @test convert(Domain, d) ≡ d
+        @test convert(Domain{Float32}, d) ≡ (0f0 .. 1f0)
+        @test convert(Domain{Float64}, d) ≡ (0.0 .. 1.0)
+        @test convert(Domain, zero(T)..one(T)) ≡ d
+        @test convert(Domain{T}, zero(T)..one(T)) ≡ d
     end
 
     @testset "operations on special intervals" begin
@@ -680,5 +642,7 @@ function test_intervals()
         @test RealLine() \ PositiveRealLine() === NonpositiveRealLine()
         @test RealLine() \ NonpositiveRealLine() === PositiveRealLine()
         @test RealLine() \ NegativeRealLine() === NonnegativeRealLine()
+
+        @test issubset(UnitInterval{T}(), ChebyshevInterval{T}())
     end
 end

@@ -52,16 +52,33 @@ nfactors(d) = length(factors(d))
 factor(d, I...) = getindex(factors(d), I...)
 
 #################
-# Precision type
+# Element type
 #################
 
-"Convert `x` such that its `eltype` equals `U`."
+"""
+	convert_eltype(T, x)
+
+Convert `x` such that its `eltype` equals `T`.
+"""
 convert_eltype(::Type{T}, d::AbstractArray) where {T} = convert(AbstractArray{T}, d)
 convert_eltype(::Type{T}, d::AbstractRange) where {T} = map(T, d)
 convert_eltype(::Type{T}, d::Set) where {T} = convert(Set{T}, d)
 convert_eltype(::Type{T}, d::Number) where {T} = convert(T, d)
 
-"The floating point precision type associated with the argument."
+"Are the given element types promotable to a concrete supertype?"
+promotable_eltypes(types...) = isconcretetype(promote_type(types...))
+promotable_eltypes(::Type{S}, ::Type{T}) where {S<:AbstractVector,T<:AbstractVector} =
+    promotable_eltypes(eltype(S), eltype(T))
+
+#################
+# Precision type
+#################
+
+"""
+	prectype(x[, ...])
+
+The floating point precision type associated with the argument(s).
+"""
 prectype(x) = prectype(typeof(x))
 prectype(::Type{T}) where T = Any		# fallback
 prectype(::Type{T}) where {T<:AbstractFloat} = T
@@ -78,18 +95,30 @@ end
 
 prectype(a...) = promote_type(map(prectype, a)...)
 
-"Convert `x` such that its `prectype` equals `U`."
-convert_prectype(x, ::Type{U}) where {U} =
-	convert_eltype(to_prectype(eltype(x), U), x)
+"""
+	convert_prectype(x, T)
 
-"Return the type to which `U` can be converted, such that the `prectype` becomes `T`."
-to_prectype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the numtype of $(T) to $(U).")
+Convert `x` such that its `prectype` equals `T`.
+"""
+convert_prectype(x, ::Type{T}) where {T} =
+	convert_eltype(to_prectype(eltype(x), T), x)
+
+"""
+	to_prectype(T, U)
+
+Return the type to which `T` can be converted, such that the `prectype` becomes `U`.
+"""
+to_prectype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the prectype of $(T) to $(U).")
 to_prectype(::Type{T}, ::Type{U}) where {T <: Real,U <: Real} = U
 to_prectype(::Type{Complex{T}}, ::Type{U}) where {T <: Real,U <: Real} = Complex{U}
 to_prectype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,to_prectype(T,U)}
 to_prectype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{to_prectype(T,U)}
 
-"Promote the precision types of the arguments to a joined supertype."
+"""
+	promote_prectype(a, b[, ...])
+
+Promote the precision types of the arguments to a joined supertype.
+"""
 promote_prectype(a) = a
 promote_prectype(a, b) = _promote_prectype(prectype(a,b), a, b)
 promote_prectype(a, b, c...) = _promote_prectype(prectype(a,b,c...), a, b, c...)
@@ -121,12 +150,21 @@ numtype(a...) = promote_type(map(numtype, a)...)
 convert_numtype(x, ::Type{U}) where {U} =
 	convert_eltype(to_numtype(eltype(x), U), x)
 
+"""
+	to_numtype(T, U)
+
+Return the type to which `T` can be converted, such that the `numtype` becomes `U`.
+"""
 to_numtype(::Type{T}, ::Type{U}) where {T,U} = error("Don't know how to convert the numtype of $(T) to $(U).")
 to_numtype(::Type{T}, ::Type{U}) where {T <: Number,U <: Number} = U
 to_numtype(::Type{SVector{N,T}}, ::Type{U}) where {N,T,U} = SVector{N,to_numtype(T,U)}
 to_numtype(::Type{Vector{T}}, ::Type{U}) where {T,U} = Vector{to_numtype(T,U)}
 
-"Promote the numeric types of the arguments to a joined supertype."
+"""
+	promote_numtype(a, b[, ...])
+
+Promote the numeric types of the arguments to a joined supertype.
+"""
 promote_numtype(a) = a
 promote_numtype(a, b) = _promote_numtype(numtype(a,b), a, b)
 promote_numtype(a, b, c...) = _promote_numtype(numtype(a,b,c...), a, b, c...)
