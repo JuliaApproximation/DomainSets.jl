@@ -274,6 +274,10 @@ function test_product_domains()
         @test [1,2.5] ∈ bnd
         @test [1.5,4] ∈ bnd
         @test [1.5,3.5] ∉ bnd
+
+        @test 2 .* UnitCube() isa Rectangle{SVector{3,Float64}}
+        @test 2 .* UnitCube() .+ SA[1,2,3.0] isa Rectangle{SVector{3,Float64}}
+        @test 2 .* UnitCube() .+ SA[1,2,3.0] == ProductDomain(1..3, 2..4, 3..5)
     end
     @testset "fixed product domains" begin
         d1 = ProductDomain(ChebyshevInterval(), ChebyshevInterval())

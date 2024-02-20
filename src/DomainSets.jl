@@ -91,6 +91,8 @@ export boundingbox,
 # from generic/canonical.jl
 export canonicaldomain, hascanonicaldomain,
     mapto, mapto_canonical, mapfrom_canonical,
+    equaldomain, hasequaldomain,
+    mapfrom_equaldomain, mapto_equaldomain,
     parameterdomain, parameterization, hasparameterization,
     mapfrom_parameterdomain, mapto_parameterdomain,
     isequaldomain

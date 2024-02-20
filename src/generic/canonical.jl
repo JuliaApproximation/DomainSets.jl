@@ -57,8 +57,15 @@ canonicaldomain(::Equal, d) = d
 mapfrom_canonical(::Equal, d) = identitymap(d)
 mapto_canonical(::Equal, d) = leftinverse(mapfrom_canonical(Equal(), d))
 
-simplify(d) = canonicaldomain(Equal(), d)
-simplifies(d) = hascanonicaldomain(Equal(), d)
+equaldomain(d) = canonicaldomain(Equal(), d)
+hasequaldomain(d) = hascanonicaldomain(Equal(), d)
+mapfrom_equaldomain(d) = mapfrom_canonical(Equal(), d)
+mapto_equaldomain(d) = mapto_canonical(Equal(), d)
+mapfrom_equaldomain(d, x) = mapfrom_canonical(Equal(), d, x)
+mapto_equaldomain(d, x) = mapto_canonical(Equal(), d, x)
+
+simplify(d) = equaldomain(d)
+simplifies(d) = hasequaldomain(d)
 
 "Convert the given domain to a domain defined in DomainSets.jl."
 todomainset(d::Domain) = d

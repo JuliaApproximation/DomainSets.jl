@@ -8,7 +8,7 @@ components(d::ProductDomain) = d.domains
 factors(d::ProductDomain) = components(d)
 
 isequaldomain(d1::ProductDomain, d2::ProductDomain) =
-	compatibleproductdims(d1,d2) && mapreduce(==, &, components(d1), components(d2))
+	compatibleproductdims(d1,d2) && mapreduce(isequaldomain, &, components(d1), components(d2))
 hash(d::ProductDomain, h::UInt) = hashrec("ProductDomain", collect(components(d)), h)
 
 isempty(d::ProductDomain) = any(isempty, components(d))
@@ -16,7 +16,7 @@ isclosedset(d::ProductDomain) = all(isclosedset, components(d))
 isopenset(d::ProductDomain) = all(isopenset, components(d))
 
 issubset_domain(d1::ProductDomain, d2::ProductDomain) =
-	compatibleproductdims(d1, d2) && all(map(issubset, factors(d1), factors(d2)))
+	compatibleproductdims(d1, d2) && all(map(issubset_domain, factors(d1), factors(d2)))
 
 volume(d::ProductDomain) = prod(map(volume, components(d)))
 
@@ -112,6 +112,17 @@ for CTYPE in (Parameterization, Equal)
 		matching_product_map(d, mapto_canonical.(Ref(ctype), factors(d)))
 	@eval mapfrom_canonical(ctype::$CTYPE, d::ProductDomain) =
 		matching_product_map(d, mapfrom_canonical.(Ref(ctype), factors(d)))
+end
+
+# multiplication with a scalar number
+function map_domain(linmap::GenericLinearMap{SVector{N,S},A}, domain::ProductDomain{SVector{N,T}}) where {N,S,T,A<:Number}
+	c = unsafe_matrix(linmap)
+	ProductDomain{SVector{N,promote_type(S,T)}}(map(d -> c .* d, components(domain)))
+end
+
+function map_domain(transmap::Translation{SVector{N,S}}, domain::ProductDomain{SVector{N,T}}) where {N,S,T}
+	vec = unsafe_vector(transmap)
+	ProductDomain{SVector{N,promote_type(S,T)}}(map( (d,v) -> d .+ v, components(domain), vec))
 end
 
 
