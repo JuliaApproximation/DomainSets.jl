@@ -159,13 +159,8 @@ function setdiffdomain1(d1::UnionDomain, d2)
 		UnionDomain(setdiffdomain.(components(d1), Ref(d2)))
 	end
 end
-function setdiffdomain2(d1, d2::UnionDomain)
-    result = d1
-    for d in components(d2)
-        result = setdiffdomain(result, d)
-    end
-    result
-end
+setdiffdomain2(d1, d2::UnionDomain) =
+	reduce(setdiffdomain, components(d2), init=d1)
 
 
 ##############################
