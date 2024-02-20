@@ -21,6 +21,7 @@
         @test SVector(1.1,.75) ∉ u3
         @test SVector(1.1,.75) ∉ u4
 
+        @test_throws ArgumentError UnionDomain()
         ũ1 = UnionDomain(d1,d2)
         @test u1 == ũ1
         @test UnionDomain{SVector{2,Float64}}(d1,d2) == ũ1
