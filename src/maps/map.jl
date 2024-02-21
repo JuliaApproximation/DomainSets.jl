@@ -138,7 +138,14 @@ is_vector_to_scalar(m) = mapsize(m) isa Tuple{Int,Int} && codomaintype(m)<:Numbe
 is_scalar_to_scalar(m) = mapsize(m) == ()
 is_vector_to_vector(m) = mapsize(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m)
 
-isequalmap(m1, m2) = m1==m2
+==(m1::AbstractMap, m2::AbstractMap) = isequalmap(m1, m2)
+
+isequalmap(m1, m2) = isequalmap1(m1, m2)
+isequalmap1(m1, m2) = isequalmap2(m1, m2)
+isequalmap2(m1, m2) = default_isequalmap(m1, m2)
+default_isequalmap(m1, m2) = m1===m2
+
+hash(m::AbstractMap, h::UInt) = map_hash(m, h)
 
 # Display routines
 map_stencil(m, x) = [Display.SymbolObject(m), '(', x, ')']

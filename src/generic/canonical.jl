@@ -140,9 +140,17 @@ no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known betwee
 
 "Are the two given domains equal?"
 isequaldomain(d1, d2) = isequaldomain1(d1, d2)
-# simplify the first argument
 isequaldomain1(d1, d2) = simplifies(d1) ? isequaldomain(simplify(d1), d2) : isequaldomain2(d1, d2)
-# simplify the second argument
-isequaldomain2(d1, d2) = simplifies(d2) ? isequaldomain(d1, simplify(d2)) : d1===d2
+isequaldomain2(d1, d2) = simplifies(d2) ? isequaldomain(d1, simplify(d2)) : default_isequaldomain(d1, d2)
+default_isequaldomain(d1, d2) = d1===d2
 
 ==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))
+
+# Associated with == we have to define the hashes of domains
+# Since equality is based in `simplify`, so should hash be. To that end we
+# are forced to intercept hash to call simplify, and in order to avoid a stack
+# overflow we call a different function `domainhash`. This implies that all
+# concrete domains should implement `domainhash`.
+hash(d::Domain, h::UInt) = domainhash(simplify(d), h)
+
+domainhash(d) = domainhash(d, zero(UInt))

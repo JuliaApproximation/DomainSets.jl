@@ -40,6 +40,7 @@ convert(::Type{IndicatorFunction}, d) =
 
 isequaldomain(d1::IndicatorFunction, d2::IndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2)
+domainhash(d1::IndicatorFunction, h::UInt) = hashrec("IndicatorFunction", indicatorfunction(d1), h)
 
 intersectdomain1(d1::IndicatorFunction, d2) = BoundedIndicatorFunction(d1.f, d2)
 intersectdomain2(d1, d2::IndicatorFunction) = BoundedIndicatorFunction(d2.f, d1)
@@ -67,8 +68,8 @@ indomain(x, d::BoundedIndicatorFunction) = in(x, boundingdomain(d)) && d.f(x)
 
 isequaldomain(d1::BoundedIndicatorFunction, d2::BoundedIndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2) && boundingdomain(d1)==boundingdomain(d2)
-hash(d::BoundedIndicatorFunction, h::UInt) =
-    hashrec(indicatorfunction(d), boundingdomain(d), h)
+domainhash(d::BoundedIndicatorFunction, h::UInt) =
+    hashrec("BoundedIndicatorFunction", indicatorfunction(d), boundingdomain(d), h)
 
 similardomain(d::BoundedIndicatorFunction, ::Type{T}) where {T} =
     BoundedIndicatorFunction(d.f, convert_eltype(T, d.domain))

@@ -653,8 +653,8 @@ function test_wrapped_maps(T)
     m2 = WrappedMap{T}(sin)
     @test m1(one(T)) ≈ cos(one(T))
     @test m2(one(T)) ≈ sin(one(T))
-    @test m1 == cos
-    @test sin == m2
+    @test isequalmap(m1, cos)
+    @test isequalmap(sin, m2)
     m3 = m1 ∘ m2
     @test m3(one(T)) ≈ cos(sin(one(T)))
 

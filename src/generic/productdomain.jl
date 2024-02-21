@@ -9,7 +9,7 @@ factors(d::ProductDomain) = components(d)
 
 isequaldomain(d1::ProductDomain, d2::ProductDomain) =
 	compatibleproductdims(d1,d2) && mapreduce(isequaldomain, &, components(d1), components(d2))
-hash(d::ProductDomain, h::UInt) = hashrec("ProductDomain", collect(components(d)), h)
+domainhash(d::ProductDomain, h::UInt) = hashrec("ProductDomain", collect(components(d)), h)
 
 isempty(d::ProductDomain) = any(isempty, components(d))
 isclosedset(d::ProductDomain) = all(isclosedset, components(d))

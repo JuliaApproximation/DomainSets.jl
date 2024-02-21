@@ -16,9 +16,10 @@ indomain(x, d::AbstractLevelSet) = levelfun(d, x) == level(d)
 show(io::IO, d::AbstractLevelSet) =
     print(io, "level set f(x) = $(level(d)) with f = $(levelfun(d))")
 
-isequaldomain(d1::AbstractLevelSet, d2::AbstractLevelSet) = levelfun(d1)==levelfun(d2) &&
-    level(d1)==level(d2)
-hash(d::AbstractLevelSet, h::UInt) = hashrec("AbstractLevelSet", levelfun(d), level(d), h)
+isequaldomain(d1::AbstractLevelSet, d2::AbstractLevelSet) =
+    levelfun(d1)==levelfun(d2) && level(d1)==level(d2)
+domainhash(d::AbstractLevelSet, h::UInt) =
+    hashrec("AbstractLevelSet", levelfun(d), level(d), h)
 
 "The domain defined by `f(x)=0` for a given function `f`."
 struct ZeroSet{T,F} <: AbstractLevelSet{T}
@@ -54,15 +55,21 @@ abstract type AbstractSublevelSet{T,C} <: FunctionLevelSet{T} end
 indomain(x, d::AbstractSublevelSet{T,:closed}) where {T} = levelfun(d, x) <= level(d)
 indomain(x, d::AbstractSublevelSet{T,:open}) where {T} = levelfun(d, x) < level(d)
 
+isclosedset(d::AbstractSublevelSet{T,:closed}) where {T} = true
+isclosedset(d::AbstractSublevelSet{T,:open}) where {T} = false
+isopenset(d::AbstractSublevelSet{T,:closed}) where {T} = false
+isopenset(d::AbstractSublevelSet{T,:open}) where {T} = true
+
 show(io::IO, d::AbstractSublevelSet{T,:closed}) where {T} =
     print(io, "sublevel set f(x) <= $(level(d)) with f = $(levelfun(d))")
 show(io::IO, d::AbstractSublevelSet{T,:open}) where {T} =
     print(io, "sublevel set f(x) < $(level(d)) with f = $(levelfun(d))")
 
-isequaldomain(d1::AbstractSublevelSet, d2::AbstractSublevelSet) = levelfun(d1)==levelfun(d2) &&
+isequaldomain(d1::AbstractSublevelSet, d2::AbstractSublevelSet) =
+    isclosedset(d1)==isclosedset(d2) && levelfun(d1)==levelfun(d2) &&
     level(d1)==level(d2)
-hash(d::AbstractSublevelSet, h::UInt) =
-    hashrec("AbstractSublevelSet", levelfun(d), level(d), h)
+domainhash(d::AbstractSublevelSet, h::UInt) =
+    hashrec("AbstractSublevelSet", isclosedset(d), levelfun(d), level(d), h)
 
 "The domain where `f(x) <= 0` (or `f(x) < 0`)."
 struct SubzeroSet{T,C,F} <: AbstractSublevelSet{T,C}
@@ -108,15 +115,20 @@ abstract type AbstractSuperlevelSet{T,C} <: FunctionLevelSet{T} end
 indomain(x, d::AbstractSuperlevelSet{T,:closed}) where {T} = levelfun(d, x) >= level(d)
 indomain(x, d::AbstractSuperlevelSet{T,:open}) where {T} = levelfun(d, x) > level(d)
 
+isclosedset(d::AbstractSuperlevelSet{T,:closed}) where {T} = true
+isclosedset(d::AbstractSuperlevelSet{T,:open}) where {T} = false
+isopenset(d::AbstractSuperlevelSet{T,:closed}) where {T} = false
+isopenset(d::AbstractSuperlevelSet{T,:open}) where {T} = true
+
 show(io::IO, d::AbstractSuperlevelSet{T,:closed}) where {T} =
     print(io, "superlevel set f(x) >= $(level(d)) with f = $(levelfun(d))")
 show(io::IO, d::AbstractSuperlevelSet{T,:open}) where {T} =
     print(io, "superlevel set f(x) > $(level(d)) with f = $(levelfun(d))")
 
 isequaldomain(d1::AbstractSuperlevelSet, d2::AbstractSuperlevelSet) =
-    levelfun(d1)==levelfun(d2) && level(d1)==level(d2)
-hash(d::AbstractSuperlevelSet, h::UInt) =
-    hashrec("AbstractSuperlevelSet", levelfun(d), level(d), h)
+    isclosedset(d1)==isclosedset(d2) && levelfun(d1)==levelfun(d2) && level(d1)==level(d2)
+domainhash(d::AbstractSuperlevelSet, h::UInt) =
+    hashrec("AbstractSuperlevelSet", isclosedset(d), levelfun(d), level(d), h)
 
 
 "The domain where `f(x) >= 0` (or `f(x) > 0`)."

@@ -44,7 +44,7 @@ isempty(::UnitSimplex) = false
 
 isequaldomain(d1::UnitSimplex, d2::UnitSimplex) =
     isclosedset(d1)==isclosedset(d2) && dimension(d1)==dimension(d2)
-hash(d::UnitSimplex, h::UInt) = hashrec("UnitSimplex", isclosedset(d), dimension(d), h)
+domainhash(d::UnitSimplex, h::UInt) = hashrec("UnitSimplex", isclosedset(d), dimension(d), h)
 
 boundingbox(d::UnitSimplex{T}) where {T} = UnitCube{T}(dimension(d))
 

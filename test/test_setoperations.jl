@@ -13,6 +13,7 @@
         @test dimension(u1) == 2
         @test dimension(u2) == 2
         @test boundingbox(u1) == ChebyshevInterval()^2
+        @test choice(u1) ∈ u1
 
         u3 = d3 ∪ u1
         u4 = u1 ∪ u2
@@ -21,6 +22,7 @@
         @test SVector(1.1,.75) ∉ u3
         @test SVector(1.1,.75) ∉ u4
 
+        @test_throws ArgumentError UnionDomain()
         ũ1 = UnionDomain(d1,d2)
         @test u1 == ũ1
         @test UnionDomain{SVector{2,Float64}}(d1,d2) == ũ1
@@ -33,6 +35,14 @@
 
         # Don't create a union with two identical elements
         @test UnitDisk() ∪ UnitDisk() isa UnitDisk
+
+        # uniondomain and setdiff
+        @test setdiffdomain(uniondomain(0..1, 2..3), 1.3..1.5) == uniondomain(0..1, 2..3)
+        @test setdiffdomain(uniondomain(0..1, 2..3), 0.0..1.0) == 2..3
+        @test setdiffdomain(UnionDomain(0..1, 0..1), 0.0..1.0) === EmptySpace{Float64}()
+        @test setdiffdomain(UnionDomain(0..1, 2..3, 4..5), 0..1) == uniondomain(2..3, 4..5)
+        @test setdiffdomain(0.0..1.0, uniondomain(0..1, 2..3)) == EmptySpace{Float64}()
+        @test setdiffdomain(0.0..1.0, uniondomain(1..1.5, 2..3)) == Interval{:closed,:open}(0..1)
 
         # union with non-Domain type that implements domain interface
         u45 = uniondomain(0.0..1.5, [1.0,3.0])
@@ -51,10 +61,11 @@
         @test component(u45b,2) isa AbstractArray{Float64}
         @test uniondomain([1,3], 0.0..1.5) isa Domain{Float64}
 
-        @test issubset([0,1], 0..1)
-        @test !issubset([0,1,2], 0..1)
-        @test issubset(Set([0,1]), 0..1)
-        @test !issubset(Set([0,2]), 0..1)
+        @test issubset_domain([0,1], 0..1)
+        @test issubset_domain(Set([0,1]), 0..1)
+        @test !issubset_domain([0,1,2], 0..1)
+        @test issubset_domain(Set([0,1]), 0..1)
+        @test !issubset_domain(Set([0,2]), 0..1)
 
         @test uniondomain() == EmptySpace{Any}()
         @test uniondomain(0..1) == 0..1
@@ -69,6 +80,9 @@
         @test uniondomain(0..1, 1..3, Point(0.4)) == 0..3
         @test uniondomain(0..1, Point(0.4), 1..3) == 0..3
         @test uniondomain(Point(0.4), 0..1, 1..3) == 0..3
+        @test uniondomain(0..1, 2..3, 0..3) == 0..3
+        @test uniondomain(0..1, 0..3, 2..3) == 0..3
+        @test uniondomain(0..3, 0..1, 2..3) == 0..3
 
         # ordering doesn't matter
         @test UnionDomain(d1,d2) == UnionDomain(d2,d1)
@@ -158,6 +172,11 @@
         @test intersectdomain(0..1, 1..3, Point(1.0)) == Point(1.0)
         @test intersectdomain(0..1, Point(1.0), 1..3) == Point(1.0)
         @test intersectdomain(Point(1.0), 0..1, 1..3) == Point(1.0)
+
+        pt = Point(SA[0.0,0.0])
+        @test intersectdomain(UnitDisk(), UnitSquare(), pt) == pt
+        @test intersectdomain(UnitDisk(), pt, UnitSquare()) == pt
+        @test intersectdomain(pt, UnitDisk(), UnitSquare()) == pt
 
         @test boundingbox(UnitSphere() ∩ 2UnitBall()) == (-1..1)^3
     end

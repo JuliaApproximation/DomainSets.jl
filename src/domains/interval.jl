@@ -5,11 +5,11 @@ iscompact(d::TypedEndpointsInterval) = false
 isinterval(d) = false
 isinterval(d::AbstractInterval) = true
 
-hash(d::AbstractInterval, h::UInt) =
-    hashrec(isleftopen(d), isrightopen(d), leftendpoint(d), rightendpoint(d), h)
-
 issubset_domain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) = issubset(d1, d2)
 isequaldomain(d1::TypedEndpointsInterval, d2::TypedEndpointsInterval) = isequal(d1, d2)
+
+# Invoke the implementation of hash by IntervalSets
+domainhash(d::AbstractInterval, h::UInt) = hash(d, h)
 
 Display.object_parentheses(::AbstractInterval) = true
 

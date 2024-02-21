@@ -49,7 +49,7 @@ export prectype, numtype,
 
 # from maps/map.jl
 export AbstractMap, Map, TypedMap,
-    applymap,
+    applymap, isequalmap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
     mapsize, jacobian, jacdet, diffvolume
@@ -115,7 +115,8 @@ export MappedDomain,
 # from generic/setoperations.jl
 export UnionDomain, uniondomain,
     IntersectDomain, intersectdomain,
-    SetdiffDomain, setdiffdomain
+    SetdiffDomain, setdiffdomain,
+    issubset_domain
 
 # from applications/rotations.jl
 export rotate

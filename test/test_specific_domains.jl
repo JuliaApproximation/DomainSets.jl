@@ -499,6 +499,7 @@ include("test_domain_simplex.jl")
         @test 0im ∈ d1
         @test 0.1 ∉ d1
         @test 0.1+1im ∉ d1
+        @test hash(d1) == DomainSets.domainhash(d1)
 
         # prod yields the function (x,y) -> x*y
         d2 = ZeroSet{SVector{2,Float64}}(prod)
@@ -510,6 +511,7 @@ include("test_domain_simplex.jl")
         @test convert(Domain{BigFloat}, ZeroSet(cos)) isa ZeroSet{BigFloat}
         @test convert(LevelSet, ZeroSet{BigFloat}(cos)) isa LevelSet{BigFloat}
         @test convert(LevelSet{BigFloat}, ZeroSet{Float64}(cos)) isa LevelSet{BigFloat}
+        @test hash(d2) == DomainSets.domainhash(d2)
 
         d3 = SublevelSet(cos, 0.5)
         d3_open = SublevelSet{Float64,:open}(cos,0.5)
@@ -528,6 +530,9 @@ include("test_domain_simplex.jl")
         @test String(take!(io)) == "sublevel set f(x) < 0.5 with f = cos"
         @test convert(Domain{BigFloat}, d3) isa SublevelSet{BigFloat,:closed}
         @test convert(Domain{BigFloat}, d3_open) isa SublevelSet{BigFloat,:open}
+        @test d3 != d3_open
+        @test hash(d3) == DomainSets.domainhash(d3)
+        @test hash(d3_open) != hash(d3)
 
         d4 = SubzeroSet{SVector{2,Float64}}(prod)
         d4_open = SubzeroSet{SVector{2,Float64},:open}(prod)
@@ -544,6 +549,9 @@ include("test_domain_simplex.jl")
         convert(Domain{SVector{2,BigFloat}}, d4) isa SubzeroSet{SVector{2,BigFloat},:closed}
         convert(Domain{SVector{2,BigFloat}}, d4_open) isa SubzeroSet{SVector{2,BigFloat},:open}
         @test SubzeroSet(cos) == SubzeroSet{Float64}(cos)
+        @test d4 != d4_open
+        @test hash(d4) == DomainSets.domainhash(d4)
+        @test hash(d4_open) != hash(d4)
 
         d5 = SuperlevelSet(cos, 0.5)
         d5_open = SuperlevelSet{Float64,:open}(cos, 0.5)
@@ -563,6 +571,9 @@ include("test_domain_simplex.jl")
         @test String(take!(io)) == "superlevel set f(x) > 0.5 with f = cos"
         @test convert(Domain{BigFloat}, d5) isa SuperlevelSet{BigFloat}
         @test convert(Domain{BigFloat}, d5_open) isa SuperlevelSet{BigFloat,:open}
+        @test d5 != d5_open
+        @test hash(d5) == DomainSets.domainhash(d5)
+        @test hash(d5_open) != hash(d5)
 
         d6 = SuperzeroSet{SVector{2,Float64}}(prod)
         d6_open = SuperzeroSet{SVector{2,Float64},:open}(prod)
@@ -578,6 +589,9 @@ include("test_domain_simplex.jl")
         @test SuperzeroSet(cos) isa SuperzeroSet{Float64}
         @test convert(Domain{SVector{2,BigFloat}}, d6) isa SuperzeroSet{SVector{2,BigFloat},:closed}
         @test convert(Domain{SVector{2,BigFloat}}, d6_open) isa SuperzeroSet{SVector{2,BigFloat},:open}
+        @test d6 != d6_open
+        @test hash(d6) == DomainSets.domainhash(d6)
+        @test hash(d6_open) != hash(d6)
     end
 
     @testset "indicator functions" begin
@@ -593,6 +607,9 @@ include("test_domain_simplex.jl")
         @test -1 ∉ d1
         @test d1 ∩ ChebyshevInterval() isa BoundedIndicatorFunction
         @test ChebyshevInterval() ∩ d1 isa BoundedIndicatorFunction
+        d1b = IndicatorFunction(ispositive)
+        @test d1 == d1b
+        @test hash(d1) == DomainSets.domainhash(d1)
 
         @test convert(IndicatorFunction, 0..1) isa IndicatorFunction
         @test convert(IndicatorFunction, d1) == d1
@@ -606,6 +623,8 @@ include("test_domain_simplex.jl")
         @test SA[-0.1,0.2] ∉ d2
         @test SA[0.1,-0.2] ∉ d2
         @test SA[-0.1,-0.2] ∈ d2
+        @test isequaldomain(d2, d2)
+        @test hash(d2) == DomainSets.domainhash(d2)
     end
 
     @testset "generator domains" begin

@@ -6,11 +6,13 @@ issubset_domain(d1, d2) =
 	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
 
 issubset1(d1, d2) = simplifies(d1) ? issubset_domain(simplify(d1),d2) : issubset2(d1, d2)
-issubset2(d1, d2) = simplifies(d2) ? issubset_domain(d1, simplify(d2)) : d1 == d2
+issubset2(d1, d2) = simplifies(d2) ? issubset_domain(d1, simplify(d2)) : default_issubset_domain(d1, d2)
+
+default_issubset_domain(d1, d2) = d1 == d2
 # this last fallback is only an approximation of the truth: if d1 equals d2, then
 # d1 is a subset of d2, but the reverse is not true. So we might be returning false
 # even when the correct mathematical answer is true.
-# What `issubset` means for the optimizations below is:
+# What `issubset` means in this package is:
 # - if true: we are sure that d1 is a subset of d2
 # - if false: either it really is false, or we don't really know
 
@@ -35,6 +37,7 @@ The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways
 - with a list of arguments: `UnionDomain(d1, d2, ...)`
 - or with an iterable list of domains: `UnionDomain(domains)`
 """
+UnionDomain() = throw(ArgumentError("Can't create an empty UnionDomain."))
 UnionDomain(domains...) = UnionDomain(domains)
 @deprecate UnionDomain(domain::Domain) UnionDomain((domain,))
 UnionDomain(domains) = _UnionDomain(promote_domains(domains))
@@ -55,7 +58,6 @@ Base.union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
 uniondomain(d1, d2) = uniondomain1(promote_domains(d1, d2)...)
-
 uniondomain1(d1, d2) = simplifies(d1) ? uniondomain(simplify(d1), d2) : uniondomain2(d1, d2)
 uniondomain2(d1, d2) = simplifies(d2) ? uniondomain(d1, simplify(d2)) : default_uniondomain(d1, d2)
 
@@ -99,7 +101,7 @@ uniondomain1(d1::UnionDomain, d2) = UnionDomain(components(d1)..., d2)
 uniondomain2(d1, d2::UnionDomain) = UnionDomain(d1, components(d2)...)
 
 isequaldomain(a::UnionDomain, b::UnionDomain) = Set(components(a)) == Set(components(b))
-hash(d::UnionDomain, h::UInt) = hashrec("UnionDomain", Set(d.domains), h)
+domainhash(d::UnionDomain, h::UInt) = hashrec("UnionDomain", Set(components(d)), h)
 
 
 convert(::Type{Domain}, v::AbstractVector{<:Domain}) = UnionDomain(v)
@@ -143,25 +145,24 @@ Base.maximum(d::UnionDomain) = mapreduce(maximum, max, components(d))
 infimum(d::UnionDomain) = mapreduce(infimum, min, components(d))
 supremum(d::UnionDomain) = mapreduce(supremum, max, components(d))
 
-
 setdiffdomain(d1::UnionDomain, d2::UnionDomain) =
 	UnionDomain(setdiffdomain.(components(d1), Ref(d2)))
-
 function setdiffdomain1(d1::UnionDomain, d2)
-    s = Set(components(d1))
-    # check if any element is in d1 and just remove
-    s2 = Set(setdiff(s, tuple(d2)))
-    s2 ≠ s && return UnionDomain(s2)
-    UnionDomain(setdiffdomain.(components(d1), Ref(d2)))
+	if d2 ∈ components(d1)
+		el = filter(x->x!=d2, components(d1))
+		if length(el) == 0
+			EmptySpace{domaineltype(d1)}()
+		elseif length(el) == 1
+			first(el)
+		else
+			UnionDomain(el)
+		end
+	else
+		UnionDomain(setdiffdomain.(components(d1), Ref(d2)))
+	end
 end
-
-function setdiffdomain2(d1, d2::UnionDomain)
-    result = d1
-    for d in components(d2)
-        result = setdiffdomain(result, d)
-    end
-    result
-end
+setdiffdomain2(d1, d2::UnionDomain) =
+	reduce(setdiffdomain, components(d2), init=d1)
 
 
 ##############################
@@ -267,7 +268,7 @@ similardomain(d::IntersectDomain, ::Type{T}) where {T} =
     IntersectDomain(convert_eltype.(T, components(d)))
 
 isequaldomain(a::IntersectDomain, b::IntersectDomain) = Set(components(a)) == Set(components(b))
-hash(d::IntersectDomain, h::UInt) = hashrec("IntersectDomain", Set(components(d)), h)
+domainhash(d::IntersectDomain, h::UInt) = hashrec("IntersectDomain", Set(components(d)), h)
 
 boundingbox(d::IntersectDomain) = intersectbox(map(boundingbox, components(d))...)
 
@@ -316,11 +317,10 @@ setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = simplifies(d1) ? setdiffdomain(simplify(d1), d2) : setdiffdomain2(d1, d2)
+setdiffdomain2(d1, d2) = simplifies(d2) ? setdiffdomain(d1, simplify(d2)) : default_setdiffdomain(d1, d2)
 
-function setdiffdomain2(d1, d2)
-	if simplifies(d2)
-		setdiffdomain(d1, simplify(d2))
-	elseif isempty(d2)
+function default_setdiffdomain(d1, d2)
+	if isempty(d2)
 		d1
 	elseif issubset_domain(d1,d2)
 		emptyspace(d1)
@@ -332,7 +332,8 @@ end
 # avoid nested difference domains
 setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], uniondomain(d2, d1.domains[2]))
 
-isequaldomain(a::SetdiffDomain, b::SetdiffDomain) = a.domains == b.domains
+isequaldomain(a::SetdiffDomain, b::SetdiffDomain) = components(a) == components(b)
+domainhash(d::SetdiffDomain, h::UInt) = hashrec("SetdiffDomain", components(d), h)
 
 boundingbox(d::SetdiffDomain) =  boundingbox(d.domains[1])
 
