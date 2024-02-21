@@ -61,8 +61,8 @@ similarmap(m::StaticIdentityMap, ::Type{T}) where {T} =
 
 convert(::Type{StaticIdentityMap{T}}, ::StaticIdentityMap) where {T} = StaticIdentityMap{T}()
 
-==(m1::StaticIdentityMap, m2::StaticIdentityMap) = true
-hash(m::StaticIdentityMap, h::UInt) = hash("StaticIdentityMap", h)
+isequalmap(m1::StaticIdentityMap, m2::StaticIdentityMap) = true
+map_hash(m::StaticIdentityMap, h::UInt) = hash("StaticIdentityMap", h)
 
 "Identity map with dynamic size determined by a dimension field."
 struct DynamicIdentityMap{T} <: IdentityMap{T}
@@ -82,8 +82,8 @@ similarmap(m::DynamicIdentityMap, ::Type{T}) where {T} =
 similarmap(m::DynamicIdentityMap, ::Type{T}) where {T<:StaticTypes} =
     StaticIdentityMap{T}()
 
-==(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = m1.dimension == m2.dimension
-hash(m::DynamicIdentityMap, h::UInt) = hashrec("DynamicIdentityMap", m.dimension, h)
+isequalmap(m1::DynamicIdentityMap, m2::DynamicIdentityMap) = m1.dimension == m2.dimension
+map_hash(m::DynamicIdentityMap, h::UInt) = hashrec("DynamicIdentityMap", m.dimension, h)
 
 
 "The supertype of constant maps from `T` to `U`."
@@ -116,8 +116,8 @@ absmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(abs(constant(m)))
 
 diffvolume(m::ConstantMap{T,U}) where {T,U} = ZeroMap{T,U}()
 
-==(m1::ConstantMap, m2::ConstantMap) = constant(m1)==constant(m2)
-hash(m::ConstantMap, h::UInt) = hashrec("ConstantMap", constant(m), h)
+isequalmap(m1::ConstantMap, m2::ConstantMap) = constant(m1)==constant(m2)
+map_hash(m::ConstantMap, h::UInt) = hashrec("ConstantMap", constant(m), h)
 
 similarmap(m::ConstantMap, ::Type{T}) where {T} = ConstantMap{T}(constant(m))
 similarmap(m::ConstantMap, ::Type{T}, ::Type{U}) where {T,U} = ConstantMap{T,U}(m.c)

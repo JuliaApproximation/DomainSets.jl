@@ -146,12 +146,11 @@ default_isequaldomain(d1, d2) = d1===d2
 
 ==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))
 
-# This hash is obtained from a command: hash(rand(10))
-domainsets_hash = 0xaa2cdea713ff0eef
-
 # Associated with == we have to define the hashes of domains
 # Since equality is based in `simplify`, so should hash be. To that end we
 # are forced to intercept hash to call simplify, and in order to avoid a stack
 # overflow we call a different function `domainhash`. This implies that all
 # concrete domains should implement `domainhash`.
 hash(d::Domain, h::UInt) = domainhash(simplify(d), h)
+
+domainhash(d) = domainhash(d, zero(UInt))

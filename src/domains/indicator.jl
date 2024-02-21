@@ -40,6 +40,7 @@ convert(::Type{IndicatorFunction}, d) =
 
 isequaldomain(d1::IndicatorFunction, d2::IndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2)
+domainhash(d1::IndicatorFunction, h::UInt) = hashrec("IndicatorFunction", indicatorfunction(d1), h)
 
 intersectdomain1(d1::IndicatorFunction, d2) = BoundedIndicatorFunction(d1.f, d2)
 intersectdomain2(d1, d2::IndicatorFunction) = BoundedIndicatorFunction(d2.f, d1)

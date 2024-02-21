@@ -43,8 +43,8 @@ convert(::Type{Map}, m) = WrappedMap(m)
 convert(::Type{Map{T}}, m) where {T} = WrappedMap{T}(m)
 convert(::Type{Map{T}}, m::WrappedMap) where {T} = WrappedMap{T}(m.map)
 
-==(m1::WrappedMap, m2::Function) = m1.map == m2
-==(m1::Function, m2::WrappedMap) = m1 == m2.map
+isequalmap(m1::WrappedMap, m2::Function) = m1.map == m2
+isequalmap(m1::Function, m2::WrappedMap) = m1 == m2.map
 
 Display.displaystencil(m::WrappedMap{T}) where {T} =
 	["WrappedMap{$T}(", supermap(m), ")"]

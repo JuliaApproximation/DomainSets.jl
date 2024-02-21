@@ -68,5 +68,5 @@ mapsum(map1::AbstractAffineMap, map2::AbstractAffineMap) =
     AffineMap(matrix(map1)+matrix(map2), vector(map1)+vector(map2))
 
 
-==(m1::ProductMap, m2::IdentityMap) = all(map(isidentity, components(m1)))
-==(m1::IdentityMap, m2::ProductMap) = m2 == m1
+isequalmap(m1::ProductMap, m2::IdentityMap) = all(map(isidentity, components(m1)))
+isequalmap(m1::IdentityMap, m2::ProductMap) = isequalmap(m2, m1)
