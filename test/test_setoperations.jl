@@ -39,7 +39,7 @@
         @test setdiffdomain(uniondomain(0..1, 2..3), 1.3..1.5) == uniondomain(0..1, 2..3)
         @test setdiffdomain(uniondomain(0..1, 2..3), 0.0..1.0) == 2..3
         @test setdiffdomain(UnionDomain(0..1, 0..1), 0.0..1.0) === EmptySpace{Float64}()
-        @test setdiffdomain(0.0..1.0, uniondomain(0..1, 2..3)) == 2..3
+        @test setdiffdomain(0.0..1.0, uniondomain(0..1, 2..3)) == EmptySpace{Float64}()
         @test setdiffdomain(0.0..1.0, uniondomain(1..1.5, 2..3)) == Interval{:closed,:open}(0..1)
 
         # union with non-Domain type that implements domain interface

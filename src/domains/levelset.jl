@@ -18,7 +18,7 @@ show(io::IO, d::AbstractLevelSet) =
 
 isequaldomain(d1::AbstractLevelSet, d2::AbstractLevelSet) = levelfun(d1)==levelfun(d2) &&
     level(d1)==level(d2)
-hash(d::AbstractLevelSet, h::UInt) = hashrec("AbstractLevelSet", levelfun(d), level(d), h)
+domainhash(d::AbstractLevelSet, h::UInt) = hashrec("AbstractLevelSet", levelfun(d), level(d), h)
 
 "The domain defined by `f(x)=0` for a given function `f`."
 struct ZeroSet{T,F} <: AbstractLevelSet{T}
@@ -61,7 +61,7 @@ show(io::IO, d::AbstractSublevelSet{T,:open}) where {T} =
 
 isequaldomain(d1::AbstractSublevelSet, d2::AbstractSublevelSet) = levelfun(d1)==levelfun(d2) &&
     level(d1)==level(d2)
-hash(d::AbstractSublevelSet, h::UInt) =
+domainhash(d::AbstractSublevelSet, h::UInt) =
     hashrec("AbstractSublevelSet", levelfun(d), level(d), h)
 
 "The domain where `f(x) <= 0` (or `f(x) < 0`)."
@@ -115,7 +115,7 @@ show(io::IO, d::AbstractSuperlevelSet{T,:open}) where {T} =
 
 isequaldomain(d1::AbstractSuperlevelSet, d2::AbstractSuperlevelSet) =
     levelfun(d1)==levelfun(d2) && level(d1)==level(d2)
-hash(d::AbstractSuperlevelSet, h::UInt) =
+domainhash(d::AbstractSuperlevelSet, h::UInt) =
     hashrec("AbstractSuperlevelSet", levelfun(d), level(d), h)
 
 

@@ -48,7 +48,7 @@ mapped_domain(map::Map, d::EmptySpace) = EmptySpace{codomaintype(map)}()
 isequaldomain(d1::EmptySpace, d2::EmptySpace) = true
 isequaldomain1(d1::EmptySpace, d2) = isempty(d2)
 isequaldomain2(d1, d2::EmptySpace) = isempty(d1)
-hash(d::EmptySpace, h::UInt) = hash("EmptySpace", h)
+domainhash(d::EmptySpace, h::UInt) = hash("EmptySpace", h)
 
 mapto1(d1::EmptySpace{T}, d2) where {T} =
     isempty(d2) ? StaticIdentityMap{T}() : throw(ArgumentError("Can't map empty to non-empty domain"))
@@ -117,7 +117,7 @@ map_domain(m::AbstractAffineMap{T}, d::FullSpace{T}) where {T} = d
 isequaldomain(d1::FullSpace, d2::FullSpace) = true
 isequaldomain1(d1::FullSpace, d2) = isfullspace(d2)
 isequaldomain2(d1, d2::FullSpace) = isfullspace(d1)
-hash(d::FullSpace, h::UInt) = hash("FullSpace", h)
+domainhash(d::FullSpace, h::UInt) = hash("FullSpace", h)
 
 
 convert(::Type{Domain}, ::Type{T}) where T = FullSpace{T}()

@@ -20,7 +20,7 @@ pointval(d::Point) = d.x
 
 isequaldomain(d1::Point, d2::Point) = pointval(d1) == pointval(d2)
 isequaldomain(d1::Point, x::Number) = pointval(d1) == x
-hash(d::Point, h::UInt) = hashrec("Point", pointval(d), h)
+domainhash(d::Point, h::UInt) = hashrec("Point", pointval(d), h)
 
 indomain(x, d::Point) = x == pointval(d)
 isempty(::Point) = false

@@ -37,6 +37,7 @@ function test_generic_domain(d)
         end
     end
     @test isequaldomain(canonicaldomain(DomainSets.Equal(), d), d)
+    @test hash(d) == hash(DomainSets.simplify(d))
     if hascanonicaldomain(d)
         cd = canonicaldomain(d)
         @test mapfrom_canonical(d) == mapto(cd, d)

@@ -67,8 +67,8 @@ indomain(x, d::BoundedIndicatorFunction) = in(x, boundingdomain(d)) && d.f(x)
 
 isequaldomain(d1::BoundedIndicatorFunction, d2::BoundedIndicatorFunction) =
     indicatorfunction(d1)==indicatorfunction(d2) && boundingdomain(d1)==boundingdomain(d2)
-hash(d::BoundedIndicatorFunction, h::UInt) =
-    hashrec(indicatorfunction(d), boundingdomain(d), h)
+domainhash(d::BoundedIndicatorFunction, h::UInt) =
+    hashrec("BoundedIndicatorFunction", indicatorfunction(d), boundingdomain(d), h)
 
 similardomain(d::BoundedIndicatorFunction, ::Type{T}) where {T} =
     BoundedIndicatorFunction(d.f, convert_eltype(T, d.domain))

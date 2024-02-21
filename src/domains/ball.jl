@@ -54,7 +54,7 @@ isempty(d::OpenBall) = radius(d) == 0
 
 isequaldomain(d1::Ball, d2::Ball) = isclosedset(d1)==isclosedset(d2) &&
     radius(d1)==radius(d2) && center(d1)==center(d2)
-hash(d::Ball, h::UInt) = hashrec("Ball", isclosedset(d), radius(d), center(d), h)
+domainhash(d::Ball, h::UInt) = hashrec("Ball", isclosedset(d), radius(d), center(d), h)
 
 function issubset_domain(d1::Ball, d2::Ball)
     if dimension(d1) == dimension(d2)
@@ -308,7 +308,7 @@ choice(d::Sphere) = center(d) + unitvector(d, 1)
 
 isequaldomain(d1::Sphere, d2::Sphere) =
     radius(d1)==radius(d2) && center(d1)==center(d2)
-hash(d::Sphere, h::UInt) = hashrec("Sphere", radius(d), center(d))
+domainhash(d::Sphere, h::UInt) = hashrec("Sphere", radius(d), center(d), h)
 
 "A hypersphere in a fixed N-dimensional Euclidean space."
 const EuclideanSphere{N,T} = Sphere{SVector{N,T}}
