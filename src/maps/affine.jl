@@ -1,6 +1,4 @@
 
-import Base: convert
-
 
 """
 An affine map has the general form `y = A*x + b`.
