@@ -367,4 +367,10 @@ function test_product_domains()
         @test boundingbox(MappedDomain(LinearMap(1/2), 2..3)) == 4.0..6.0
         @test boundingbox(MappedDomain(LinearMap(1/2), (2..3)^2)) == (4.0..6.0)^2
     end
+
+    @testset "VcatDomain == bug" begin
+        x = VcatDomain(0.0:0.5:2.0, [1,3,4])
+        y = VcatDomain(0.0:0.5:2.0, [1,3,4])
+        @test x == y
+    end
 end
