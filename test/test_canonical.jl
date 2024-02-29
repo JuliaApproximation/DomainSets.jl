@@ -30,7 +30,7 @@
     @test mapfrom_canonical(iso, d2) isa DomainSets.NumberToVector
     @test mapto_canonical(iso, d2) isa DomainSets.VectorToNumber
 
-    @test_throws ErrorException mapto(UnitCircle(), UnitDisk())
+    @test_throws ArgumentError mapto(UnitCircle(), UnitDisk())
     @test mapto(UnitInterval(), UnitInterval()) isa IdentityMap
     @test mapto(UnitInterval(), ChebyshevInterval()) isa AffineMap
 

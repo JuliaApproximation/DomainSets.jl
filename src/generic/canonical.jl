@@ -125,9 +125,9 @@ mapto1(d1, d2) =
     hasparameterization(d1) ? mapto(parameterdomain(d1), d2) ∘ mapto_parameterdomain(d1) : mapto2(d1, d2)
 # simplify the second argument
 mapto2(d1, d2) =
-    hasparameterization(d2) ? mapfrom_parameterdomain(d2) ∘ mapto(d1, parameterdomain(d2)) : no_known_mapto(d1,d2)
+    hasparameterization(d2) ? mapfrom_parameterdomain(d2) ∘ mapto(d1, parameterdomain(d2)) : default_mapto(d1,d2)
 
-no_known_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : error("No map known between $(d1) and $(d2).")
+default_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : throw(ArgumentError("No map known between $(d1) and $(d2)."))
 
 
 
@@ -143,7 +143,9 @@ isequaldomain(d1, d2) = isequaldomain1(d1, d2)
 isequaldomain1(d1, d2) = simplifies(d1) ? isequaldomain(simplify(d1), d2) : isequaldomain2(d1, d2)
 isequaldomain2(d1, d2) = simplifies(d2) ? isequaldomain(d1, simplify(d2)) : default_isequaldomain(d1, d2)
 default_isequaldomain(d1, d2) = d1 === d2
-isequaldomain(d1::AbstractArray, d2::AbstractArray) = d1 ⊆ d2 && d2 ⊆ d1 # Can't use == since order doesnlt matter
+
+# Can't use == for arrays etcetera since order doesn't matter
+isequaldomain(d1::BaseDomainType, d2::BaseDomainType) = d1 ⊆ d2 && d2 ⊆ d1
 
 ==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))
 

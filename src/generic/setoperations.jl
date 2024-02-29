@@ -19,6 +19,8 @@ default_issubset_domain(d1, d2) = d1 == d2
 issubset1(d1::Number, d2) = in(d1, d2)
 issubset1(d1::AbstractArray, d2) = all(in(d2), d1)
 issubset1(d1::AbstractSet, d2) = all(in(d2), d1)
+# use Julia's implementation for Julia types
+issubset_domain(d1::BaseDomainType, d2::BaseDomainType) = issubset(d1, d2)
 
 
 ############################
@@ -70,6 +72,7 @@ function default_uniondomain(d1, d2)
 		UnionDomain(d1, d2)
 	end
 end
+uniondomain(d1::BaseDomainType, d2::BaseDomainType) = union(d1, d2)
 
 uniondomain(d1, d2, d3) = _ud3(promote_domains(d1, d2, d3)...)
 _ud3(d1, d2, d3) =
@@ -216,6 +219,7 @@ function default_intersectdomain(d1, d2)
 		IntersectDomain(d1, d2)
 	end
 end
+intersectdomain(d1::BaseDomainType, d2::BaseDomainType) = intersect(d1, d2)
 
 intersectdomain(d1, d2, d3) = _id3(promote_domains(d1, d2, d3)...)
 _id3(d1, d2, d3) =
@@ -328,6 +332,7 @@ function default_setdiffdomain(d1, d2)
 		SetdiffDomain(d1, d2)
 	end
 end
+setdiffdomain(d1::BaseDomainType, d2::BaseDomainType) = setdiff(d1, d2)
 
 # avoid nested difference domains
 setdiffdomain1(d1::SetdiffDomain, d2) = setdiffdomain(d1.domains[1], uniondomain(d2, d1.domains[2]))

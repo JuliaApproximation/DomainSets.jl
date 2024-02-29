@@ -73,7 +73,7 @@
         @test uniondomain([0,1], 0..1) == 0..1
 
         @test uniondomain([0,1], [0.0,1.0]) == [0,1]
-        @test uniondomain([0,2], [0.0,1.0]) isa UnionDomain
+        @test isequaldomain(uniondomain([0,2], [0.0,1.0]), [0.0,2.0,1.0])
 
         # larger union expressions
         @test uniondomain(0..1, 1..3, Point(0.4), 2..5, FullSpace(), Point(-0.2)) isa FullSpace
@@ -155,7 +155,8 @@
         @test intersectdomain(0..1, [0,1]) == [0,1]
         @test intersectdomain([0,1], 0..1) == [0,1]
         @test intersectdomain([0,1], [0.0,1.0]) == [0,1]
-        @test intersectdomain([0,2], [0.0,1.0]) isa IntersectDomain
+        @test intersectdomain([0,2], [0.0,1.0]) == [0.0]
+        @test isempty(intersectdomain([0,2], Set(3:7)))
 
         @test IntersectDomain(UnitDisk(), UnitSquare()) == IntersectDomain(UnitSquare(), UnitDisk())
 

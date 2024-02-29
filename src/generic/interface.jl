@@ -69,6 +69,7 @@ DomainStyle(::Type{<:Number}) = IsDomain()
 DomainStyle(::Type{<:AbstractSet}) = IsDomain()
 DomainStyle(::Type{<:AbstractArray}) = IsDomain()
 
+BaseDomainType = Union{<:Number,<:AbstractSet,<:AbstractArray}
 
 """
     domain(d)
