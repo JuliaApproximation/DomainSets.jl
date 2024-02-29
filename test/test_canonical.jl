@@ -1,3 +1,8 @@
+
+struct MyDomain{T} <: Domain{T}
+    somefield::T
+end
+
 @testset "canonical domains" begin
     d1 = 2..3.0
 
@@ -76,5 +81,10 @@
         @test mapfrom_canonical(ctype, d) isa IdentityMap
         @test mapfrom_canonical(ctype, d, 2.5) == 2.5
         @test mapto_canonical(ctype, d, 2.5) == 2.5
+    end
+
+    @testset "domainhash" begin
+        mydomain = MyDomain(2.0)
+        @test hash(mydomain) == DomainSets.domainhash(mydomain)
     end
 end
