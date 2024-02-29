@@ -155,3 +155,7 @@ isequaldomain(d1::AbstractArray, d2::AbstractArray) = d1 ⊆ d2 && d2 ⊆ d1 # C
 hash(d::Domain, h::UInt) = domainhash(simplify(d), h)
 
 domainhash(d) = domainhash(d, zero(UInt))
+
+# Provide a default implementation which agrees with the fallback in Base
+# at time of writing. However, concrete domains should implement domainhash.
+domainhash(d, h::UInt) = Base.hash_uint(3h - objectid(d))
