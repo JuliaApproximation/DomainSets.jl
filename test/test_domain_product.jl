@@ -264,10 +264,10 @@ function test_product_domains()
         @test Rectangle((0..1, 2..3)) isa Rectangle{SVector{2,Int}}
         @test Rectangle{SVector{2,Float64}}((0..1, 2..3)) isa Rectangle{SVector{2,Float64}}
 
-        @test_throws ErrorException Rectangle(UnitCircle(), UnitDisk())
-        @test_throws ErrorException Rectangle(OpenInterval(1,2), 3..4)
-        @test_throws ErrorException Rectangle{SVector{2,Float64}}(UnitCircle(), UnitDisk())
-        @test_throws ErrorException Rectangle(0.0, 1.0)
+        @test_throws ArgumentError Rectangle(UnitCircle(), UnitDisk())
+        @test_throws ArgumentError Rectangle(OpenInterval(1,2), 3..4)
+        @test_throws ArgumentError Rectangle{SVector{2,Float64}}(UnitCircle(), UnitDisk())
+        @test_throws ArgumentError Rectangle(0.0, 1.0)
 
         bnd = boundary(Rectangle([1,2],[3,4]))
         @test [1,3] ∈ bnd
@@ -372,5 +372,7 @@ function test_product_domains()
         x = VcatDomain(0.0:0.5:2.0, [1,3,4])
         y = VcatDomain(0.0:0.5:2.0, [1,3,4])
         @test x == y
+        @test isequaldomain(5, [5.0])
+        @test isequaldomain(Set([5.0]), [5.0])
     end
 end

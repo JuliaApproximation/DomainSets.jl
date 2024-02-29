@@ -186,7 +186,7 @@ include("maps/basic.jl")
 include("maps/affine.jl")
 include("maps/arithmetics.jl")
 
-include("generic/core.jl")
+include("generic/interface.jl")
 include("generic/domain.jl")
 include("generic/geometry.jl")
 include("generic/canonical.jl")

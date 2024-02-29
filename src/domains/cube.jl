@@ -296,7 +296,7 @@ Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
 Rectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
     Rectangle(SVector{N,T}(a), SVector{N,T}(b))
 Rectangle(a::T, b::T) where {T<:Number} =
-	error("Rectangles have to be constructed from vectors or tuples, not numbers.")
+	throw(ArgumentError("Rectangles have to be constructed from vectors or tuples, not numbers."))
 
 Rectangle(domains::Tuple) = Rectangle(domains...)
 Rectangle(domains::ClosedInterval...) = Rectangle(promote_domains(domains)...)
@@ -305,7 +305,7 @@ Rectangle(domains::ClosedInterval{T}...) where {T} =
 Rectangle(domains::AbstractVector{<:ClosedInterval}) =
     Rectangle(map(leftendpoint, domains), map(rightendpoint, domains))
 Rectangle(domains::Domain...) =
-    error("The Rectangle constructor expects two points or a list of intervals (closed).")
+    throw(ArgumentError("The Rectangle constructor expects two points or a list of intervals (closed)."))
 
 Rectangle{T}(domains::Tuple) where {T} = Rectangle{T}(domains...)
 Rectangle{T}(domains::ClosedInterval...) where {T} =
@@ -313,7 +313,7 @@ Rectangle{T}(domains::ClosedInterval...) where {T} =
 Rectangle{T}(domains::AbstractVector{<:ClosedInterval}) where {T} =
     Rectangle{T}(map(leftendpoint, domains), map(rightendpoint, domains))
 Rectangle{T}(domains::Domain...) where {T} =
-    error("The Rectangle constructor expects two points or a list of intervals (closed).")
+    throw(ArgumentError("The Rectangle constructor expects two points or a list of intervals (closed)."))
 
 ProductDomain(domains::ClosedInterval{<:Number}...) = Rectangle(domains...)
 ProductDomain(domains::AbstractVector{<:ClosedInterval{<:Number}}) =
