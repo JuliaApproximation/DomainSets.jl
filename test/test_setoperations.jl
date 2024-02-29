@@ -66,6 +66,7 @@
         @test !issubset_domain([0,1,2], 0..1)
         @test issubset_domain(Set([0,1]), 0..1)
         @test !issubset_domain(Set([0,2]), 0..1)
+        @test issubset_domain([0,1], 0:5)
 
         @test uniondomain() == EmptySpace{Any}()
         @test uniondomain(0..1) == 0..1
