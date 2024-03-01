@@ -157,4 +157,4 @@ isequaldomain(d1::BaseDomainType, d2::BaseDomainType) = d1 ⊆ d2 && d2 ⊆ d1
 hash(d::Domain, h::UInt) = domainhash(simplify(d), h)
 
 domainhash(d) = domainhash(d, zero(UInt))
-domainhash(d, h::UInt) = @invoke hash(d::Any, h::UInt)
+domainhash(d, h::UInt) = invoke(hash, Tuple{Any,UInt}, d, h)
