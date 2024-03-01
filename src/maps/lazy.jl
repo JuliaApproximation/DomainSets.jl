@@ -46,6 +46,8 @@ convert(::Type{Map{T}}, m::WrappedMap) where {T} = WrappedMap{T}(m.map)
 isequalmap(m1::WrappedMap, m2::Function) = m1.map == m2
 isequalmap(m1::Function, m2::WrappedMap) = m1 == m2.map
 
+map_hash(m::WrappedMap, h::UInt) = map_hash("WrappedMap", supermap(m), h)
+
 Display.displaystencil(m::WrappedMap{T}) where {T} =
 	["WrappedMap{$T}(", supermap(m), ")"]
 show(io::IO, mime::MIME"text/plain", m::WrappedMap) = composite_show(io, mime, m)

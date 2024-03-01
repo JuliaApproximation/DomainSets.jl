@@ -150,14 +150,11 @@ isequaldomain(d1::BaseDomainType, d2::BaseDomainType) = d1 ⊆ d2 && d2 ⊆ d1
 ==(d1::AnyDomain, d2::AnyDomain) = isequaldomain(domain(d1), domain(d2))
 
 # Associated with == we have to define the hashes of domains
-# Since equality is based in `simplify`, so should hash be. To that end we
-# are forced to intercept hash to call simplify, and in order to avoid a stack
-# overflow we call a different function `domainhash`. This implies that all
-# concrete domains should implement `domainhash`.
+# Since equality is based on `simplify`, so should hash be. To that end we
+# are forced to intercept hash to call simplify. In order to avoid a stack
+# overflow we call a different function `domainhash`, for which we provide
+# a fallback by invoking the implementation in Base.
 hash(d::Domain, h::UInt) = domainhash(simplify(d), h)
 
 domainhash(d) = domainhash(d, zero(UInt))
-
-# Provide a default implementation which agrees with the fallback in Base
-# at time of writing. However, concrete domains should implement domainhash.
-domainhash(d, h::UInt) = Base.hash_uint(3h - objectid(d))
+domainhash(d, h::UInt) = @invoke hash(d::Any, h::UInt)

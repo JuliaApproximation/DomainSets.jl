@@ -188,6 +188,8 @@ function test_generic_map(m)
         b = vector(m)
         @test m(x) == A*x+b
     end
+
+    @test hash(m) == DomainSets.map_hash(m)
 end
 
 function test_isomorphisms(T)

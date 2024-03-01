@@ -57,3 +57,6 @@ The two-argument function applies the right inverse to the point `x`.
 """
 rightinverse(m) = inverse(m)
 rightinverse(m, x) = inverse(m, x)
+
+isequalmap(m1::LazyInverse, m2::LazyInverse) = isequalmap(supermap(m1), supermap(m2))
+map_hash(m::LazyInverse, h::UInt) = hashrec("LazyInverse", supermap(m), h)
