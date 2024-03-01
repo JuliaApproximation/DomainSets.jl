@@ -147,7 +147,7 @@ default_isequalmap(m1, m2) = m1===m2
 
 hash(m::AbstractMap, h::UInt) = map_hash(m, h)
 map_hash(m) = map_hash(m, zero(UInt))
-map_hash(m, h::UInt) = @invoke hash(m::Any, h::UInt)
+map_hash(m, h::UInt) = invoke(hash, Tuple{Any,UInt}, m, h)
 
 # Display routines
 map_stencil(m, x) = [Display.SymbolObject(m), '(', x, ')']
