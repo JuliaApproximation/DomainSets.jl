@@ -53,6 +53,9 @@ function test_product_domains()
         @test SA[0.5,0.5,0.8] ∈ d3
         @test SA[-1.1,0.3,0.1] ∉ d3
         @test choice(d3) ∈ d3
+
+        v = SA[0.1,0.2,0.3]
+        @test map_domain(Translation(v), productdomain(UnitDisk(), UnitInterval())) isa VcatDomain
     end
     @testset "mixed intervals" begin
         d = (0..1) × (0.0..1)

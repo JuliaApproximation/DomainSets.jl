@@ -121,8 +121,9 @@ function map_domain(linmap::GenericLinearMap{SVector{N,S},A}, domain::ProductDom
 end
 
 function map_domain(transmap::Translation{SVector{N,S}}, domain::ProductDomain{SVector{N,T}}) where {N,S,T}
-	vec = unsafe_vector(transmap)
-	ProductDomain{SVector{N,promote_type(S,T)}}(map( (d,v) -> d .+ v, components(domain), vec))
+    vec = unsafe_vector(transmap)
+    ProductDomain{SVector{N,promote_type(S,T)}}(
+            map( (d,v) -> d .+ v, components(domain), tointernalpoint(domain, vec)))
 end
 
 
