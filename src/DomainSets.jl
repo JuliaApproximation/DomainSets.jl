@@ -14,7 +14,7 @@ using StaticArrays
 import Base:
     ==, isapprox,
     # Set operations
-    setdiff, in, isempty, issubset,
+    setdiff, in, isempty, issubset, intersect, union, &, \,
     # Arrays
     eltype, hash, isreal,
     # Types, promotions and conversions
