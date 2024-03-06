@@ -1,6 +1,6 @@
 # The union, intersection and difference of domains are represented with lazy domains.
 
-Base.issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
+issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
 
 issubset_domain(d1, d2) =
 	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
@@ -53,7 +53,7 @@ composition(d::UnionDomain) = Combination()
 combine(d::UnionDomain, results) = reduce(|, results)
 
 # Make d1 ∪ d2 invoke `uniondomain` if the arguments are domains
-Base.union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
+union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
 
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
@@ -197,7 +197,7 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 
 
 # Make d1 ∩ d2 invoke `intersectdomain` if the arguments are Domains
-Base.intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
+intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
 
 intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
@@ -254,7 +254,7 @@ end
 intersectdomain1(d1::UnionDomain, d2) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
 intersectdomain2(d1, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
 
-Base.:&(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
+(&)(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 	if compatibleproductdims(d1, d2)
@@ -310,7 +310,7 @@ similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
 
 # use \ as a synomym for setdiff, in the context of domains (though, generically,
 # \ means left division in Julia)
-Base.:\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
 # Make setdiff invoke `setdiffdomain` if the arguments are domains
 setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
