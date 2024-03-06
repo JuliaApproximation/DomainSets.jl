@@ -213,4 +213,6 @@ include("applications/coordinates.jl")
 include("applications/random.jl")
 include("applications/rotation.jl")
 
+include("deprecated.jl")
+
 end # module
