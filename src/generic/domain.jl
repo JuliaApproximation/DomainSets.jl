@@ -30,10 +30,10 @@ convert_eltype(::Type{T}, d::Domain) where {T} = convert(Domain{T}, d)
 convert_eltype(::Type{T}, d) where {T} = _convert_eltype(T, d, domaineltype(d), DomainStyle(d))
 _convert_eltype(::Type{T}, d, ::Type{T}, ::IsDomain) where {T} = d
 _convert_eltype(::Type{T}, d, ::Type{S}, ::IsDomain) where {S,T} =
-    error("Don't know how to convert the `eltype` of $(d).")
+    throw(ArgumentError("Don't know how to convert the `eltype` of $(d)."))
 _convert_eltype(::Type{T}, d, ::Type{T}, ::NotDomain) where {T} = d
 _convert_eltype(::Type{T}, d, ::Type{S}, ::NotDomain) where {S,T} =
-    error("Convert eltype: argument given is not a domain.")
+    throw(ArgumentError("Convert eltype: argument given is not a domain."))
 
 
 "A `EuclideanDomain` is any domain whose eltype is `<:StaticVector{N,T}`."

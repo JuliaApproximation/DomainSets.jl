@@ -145,7 +145,7 @@ end
 VcatDomain{N,T}(domains::Union{AbstractVector,Tuple}) where {N,T} = VcatDomain{N,T}(domains...)
 function VcatDomain{N,T}(domains...) where {N,T}
 	DIM = map(dimension,domains)
-	VcatDomain{N,T,DIM}(convert_numtype.(domains, T)...)
+	VcatDomain{N,T,DIM}(convert_numtype.(T, domains)...)
 end
 
 VcatDomain{N,T,DIM}(domains...) where {N,T,DIM} =

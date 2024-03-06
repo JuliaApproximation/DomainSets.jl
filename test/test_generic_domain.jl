@@ -20,7 +20,7 @@ function test_generic_domain(d)
         @test convert_eltype(eltype(d), d) == d
         @test convert_eltype(widen_eltype(eltype(d)), d) == d
     end
-    @test prectype(convert_prectype(d, BigFloat)) == BigFloat
+    @test prectype(convert_prectype(BigFloat, 2)) == BigFloat
 
     if !isempty(d)
         x = choice(d)
@@ -141,7 +141,7 @@ end
         @test DomainSets.iscompatiblepair(0, Set([1.0, 2, 3]))
 
         @test DomainSets.convert_eltype(Float64, Set([1,2])) isa Set{Float64}
-        @test_throws ErrorException DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
+        @test_throws ArgumentError DomainSets.convert_eltype(Float64, (1,2)) isa NTuple{2,Float64}
         @test DomainSets.convert_eltype(Int, (1,2)) == (1,2)
     end
 

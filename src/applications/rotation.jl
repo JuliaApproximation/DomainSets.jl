@@ -37,7 +37,7 @@ isreal(m::CartToPolarMap) = true
 
 convert(::Type{Map{SVector{2,T}}}, ::CartToPolarMap) where {T} = CartToPolarMap{T}()
 
-==(m1::CartToPolarMap, m2::CartToPolarMap) = true
+isequalmap(m1::CartToPolarMap, m2::CartToPolarMap) = true
 
 
 """
@@ -64,7 +64,7 @@ isreal(m::PolarToCartMap) = true
 
 convert(::Type{Map{SVector{2,T}}}, ::PolarToCartMap) where {T} = PolarToCartMap{T}()
 
-==(m1::PolarToCartMap, m2::PolarToCartMap) = true
+isequalmap(m1::PolarToCartMap, m2::PolarToCartMap) = true
 
 
 #############################

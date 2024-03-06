@@ -6,8 +6,16 @@ using CompositeTypes.Indexing
 const io = IOBuffer()
 const textmime = MIME"text/plain"()
 
+# First run the test suite of submodule FunctionMaps.jl
+println("#############################")
+println("# Tests of FunctionMaps.jl")
+println("#############################")
+include("../src/modules/FunctionMaps.jl/test/runtests.jl")
+
+println("#############################")
+println("# Tests of DomainSets.jl")
+println("#############################")
 include("test_common.jl")
-include("test_maps.jl")
 include("test_generic_domain.jl")
 include("test_specific_domains.jl")
 include("test_canonical.jl")

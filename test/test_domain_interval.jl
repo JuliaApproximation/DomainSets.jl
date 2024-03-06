@@ -355,11 +355,11 @@ function test_intervals()
     @testset "mapping between intervals" begin
         @test canonicaldomain(UnitInterval()) == UnitInterval()
         m = mapto(2..3, ChebyshevInterval())
-        @test isaffine(m)
+        @test isaffinemap(m)
         @test m(2) ≈ -1
         @test m(3) ≈ 1
         m2 = mapto(4.0..6, 2..3)
-        @test isaffine(m2)
+        @test isaffinemap(m2)
         @test m2(4) ≈ 2
         @test m2(6) ≈ 3
 

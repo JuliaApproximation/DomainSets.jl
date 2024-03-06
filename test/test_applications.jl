@@ -1,4 +1,6 @@
 
+using DomainSets: isreal
+
 function test_rotation_map(T)
     ϕ = T(pi)/4
     m = rotation_map(ϕ)
@@ -21,27 +23,27 @@ function test_rotation_map(T)
     phi = T(rand())
     psi = T(rand())
     m2 = rotation_map(theta)
-    test_generic_map(m2)
+    FunctionMapsTests.test_generic_map(m2)
     m3 = rotation_map(phi, theta, psi)
-    test_generic_map(m3)
+    FunctionMapsTests.test_generic_map(m3)
 
-    r = suitable_point_to_map(m2)
+    r = FunctionMapsTests.suitable_point_to_map(m2)
     @test norm(m2(r))≈norm(r)
 
-    r = suitable_point_to_map(m3)
+    r = FunctionMapsTests.suitable_point_to_map(m3)
     @test norm(m3(r))≈norm(r)
-    @test islinear(m3)
+    @test islinearmap(m3)
 end
 
 function test_cart_polar_map(T)
     m1 = CartToPolarMap{T}()
-    test_generic_map(m1)
-    @test !islinear(m1)
+    FunctionMapsTests.test_generic_map(m1)
+    @test !islinearmap(m1)
     @test isreal(m1)
 
     m2 = PolarToCartMap{T}()
-    test_generic_map(m2)
-    @test !islinear(m2)
+    FunctionMapsTests.test_generic_map(m2)
+    @test !islinearmap(m2)
     @test isreal(m2)
 
     @test inverse(m1) == m2
@@ -122,4 +124,10 @@ end
 @testset "applications" begin
     test_applications(Float64)
     test_applications(BigFloat)
+
+    # Test an additional composite map
+    m1 = LinearMap(SMatrix{2,2}(1,2,3,4.0))
+    m2 = CartToPolarMap()
+    cmap = m1 ∘ m2 ∘ m1
+    FunctionMapsTests.test_generic_map(cmap)
 end

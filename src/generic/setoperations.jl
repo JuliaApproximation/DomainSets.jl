@@ -198,8 +198,6 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 
 # Make d1 ∩ d2 invoke `intersectdomain` if the arguments are Domains
 Base.intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
-# Three lines below to be removed in future breaking version
-Base.intersect(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1), domain(d2))
 
 intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
@@ -256,7 +254,7 @@ end
 intersectdomain1(d1::UnionDomain, d2) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
 intersectdomain2(d1, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
 
-(&)(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
+Base.:&(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 	if compatibleproductdims(d1, d2)
@@ -315,7 +313,7 @@ similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
 Base.:\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
 # Make setdiff invoke `setdiffdomain` if the arguments are domains
-Base.setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = simplifies(d1) ? setdiffdomain(simplify(d1), d2) : setdiffdomain2(d1, d2)
