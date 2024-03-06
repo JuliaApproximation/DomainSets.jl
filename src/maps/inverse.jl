@@ -1,10 +1,4 @@
 
-# We no longer use the syntax inv(m), because `inv` should be a multiplicative
-# inverse, and we are interested in the inverse of the map as a function.
-import Base: inv
-@deprecate inv(m::AbstractMap) inverse(m)
-
-
 "A lazy inverse stores a map `m` and returns `inverse(m, x)`."
 struct LazyInverse{T,M} <: SimpleLazyMap{T}
 	map	::	M

@@ -19,6 +19,8 @@ import Base:
     eltype, hash, isreal,
     # Types, promotions and conversions
     convert, promote,
+    # for maps (both deprecated and to be removed)
+    size, inv,
     # Display
     show
 
@@ -69,8 +71,6 @@ export AffineMap, Translation, LinearMap,
 
 
 ## Generic domains
-
-@deprecate point_in_domain(d) choice(d)
 
 # from generic/domain.jl
 export Domain, EuclideanDomain, VectorDomain,

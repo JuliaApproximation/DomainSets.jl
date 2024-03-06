@@ -114,11 +114,6 @@ isvectorvalued_type(::Type{T}) where {T} = false
 isvectorvalued(m) =
     isvectorvalued_type(domaintype(m)) && isvectorvalued_type(codomaintype(m))
 
-import Base: size
-@deprecate size(m::AbstractMap) mapsize(m)
-@deprecate size(m::AbstractMap, i) mapsize(m, i)
-@deprecate issquare(m::AbstractMap) issquaremap(m)
-
 # mapsize should be defined for vector valued maps
 # The size of a map equals the size of its jacobian
 # The jacobian can be a number, a vector, an adjoint vector, or a matrix

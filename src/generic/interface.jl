@@ -13,9 +13,6 @@ export Domain,
     AnyDomain,
     checkdomain
 
-# AsDomain was defined in versions 0.7 and 0.7.1, and then replaced by DomainRef
-@deprecate AsDomain(d) DomainRef(d)
-
 """
     domaineltype(d)
 

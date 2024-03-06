@@ -1,7 +1,6 @@
 # The union, intersection and difference of domains are represented with lazy domains.
 
 Base.issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
-@deprecate issubset(d1::AnyDomain, d2) issubset(d1, DomainRef(d2))
 
 issubset_domain(d1, d2) =
 	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
@@ -42,12 +41,10 @@ The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways
 """
 UnionDomain() = throw(ArgumentError("Can't create an empty UnionDomain."))
 UnionDomain(domains...) = UnionDomain(domains)
-@deprecate UnionDomain(domain::Domain) UnionDomain((domain,))
 UnionDomain(domains) = _UnionDomain(promote_domains(domains))
 _UnionDomain(domains) = _UnionDomain(domaineltype(first(domains)), domains)
 
 UnionDomain{T}(domains...) where {T} = UnionDomain{T}(domains)
-@deprecate UnionDomain{T}(domain::Domain) where {T} UnionDomain{T}((domain,))
 UnionDomain{T}(domains) where {T} = _UnionDomain(T, convert_eltype.(T, domains))
 _UnionDomain(::Type{T}, domains) where {T} = UnionDomain{T,typeof(domains)}(domains)
 
@@ -57,8 +54,6 @@ combine(d::UnionDomain, results) = reduce(|, results)
 
 # Make d1 ∪ d2 invoke `uniondomain` if the arguments are domains
 Base.union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
-@deprecate union(d1::AnyDomain, d2, domains...) union(d1, DomainRef(d2), domains...)
-@deprecate union(d1, d2::AnyDomain, domains...) union(DomainRef(d1), d2, domains...)
 
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
@@ -189,12 +184,10 @@ The `IntersectDomain` constructor can be invoked in one of three ways:
 - or with any iterable list of domains: IntersectDomain(domains)
 """
 IntersectDomain(domains...) = IntersectDomain(domains)
-@deprecate IntersectDomain(domain::Domain) IntersectDomain((domain,))
 IntersectDomain(domains) = _IntersectDomain(promote_domains(domains))
 _IntersectDomain(domains) = IntersectDomain{domaineltype(first(domains))}(domains)
 
 IntersectDomain{T}(domains...) where {T} = IntersectDomain{T}(domains)
-@deprecate IntersectDomain{T}(domain::Domain) where T IntersectDomain((domain,))
 IntersectDomain{T}(domains) where {T} = _IntersectDomain(T, convert_eltype.(T, domains))
 _IntersectDomain(::Type{T}, domains) where {T} = IntersectDomain{T,typeof(domains)}(domains)
 
@@ -207,8 +200,6 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 Base.intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
 # Three lines below to be removed in future breaking version
 Base.intersect(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1), domain(d2))
-@deprecate intersect(d1, d2::AnyDomain) intersect(DomainRef(d1), d2)
-@deprecate intersect(d1::AnyDomain, d2) intersect(d1, DomainRef(d2))
 
 intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
@@ -265,7 +256,7 @@ end
 intersectdomain1(d1::UnionDomain, d2) = uniondomain(intersectdomain.(d1.domains, Ref(d2))...)
 intersectdomain2(d1, d2::UnionDomain) = uniondomain(intersectdomain.(Ref(d1), d2.domains)...)
 
-Base.:&(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
+(&)(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1),domain(d2))
 
 function intersectdomain(d1::ProductDomain, d2::ProductDomain)
 	if compatibleproductdims(d1, d2)
@@ -322,13 +313,9 @@ similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
 # use \ as a synomym for setdiff, in the context of domains (though, generically,
 # \ means left division in Julia)
 Base.:\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
-@deprecate \(d1::AnyDomain, d2) d1 \ DomainRef(d2)
-@deprecate \(d1, d2::AnyDomain) DomainRef(d1) \ d2
 
 # Make setdiff invoke `setdiffdomain` if the arguments are domains
 Base.setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
-@deprecate setdiff(d1::AnyDomain, d2) setdiff(d1, DomainRef(d2))
-@deprecate setdiff(d1, d2::AnyDomain) setdiff(DomainRef(d1), d2)
 
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = simplifies(d1) ? setdiffdomain(simplify(d1), d2) : setdiffdomain2(d1, d2)

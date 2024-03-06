@@ -62,10 +62,6 @@ broadcasted(::DomainSetStyle, ::typeof(approx_in), A, d::AnyDomain, tol) =
 
 broadcasted(::DomainSetStyle, ::typeof(∉), A, d::AnyDomain) = A .∉ Ref(domain(d))
 
-@deprecate broadcast_in(A, d::Domain) vectorized_in(A, d)
-@deprecate broadcast_approx_in(A, d::Domain) vectorized_approx_in(A, d)
-@deprecate broadcast_approx_in(A, d::Domain, tol) vectorized_approx_in(A, d, tol)
-
 "Vectorized version of `in`: apply `x ∈ d` to all elements of `A`."
 vectorized_in(A, d) = in.(A, Ref(d))
 
