@@ -1,20 +1,4 @@
 
-using DomainSets.FunctionMaps: ScalarAffineMap,
-    VectorAffineMap,
-    StaticAffineMap,
-    GenericAffineMap,
-    ScalarLinearMap,
-    VectorLinearMap,
-    StaticLinearMap,
-    GenericLinearMap,
-    ScalarTranslation,
-    VectorTranslation,
-    StaticTranslation,
-    GenericTranslation,
-    TupleProductMap,
-    WrappedMap
-
-
 maps_to_test(T) = [
     StaticIdentityMap{T}(),
     VectorIdentityMap{T}(10),
@@ -37,7 +21,8 @@ maps_to_test(T) = [
     LinearMap(randvec(T, 2, 2)),
     LinearMap(randvec(T, 2)),
     LinearMap(randvec(T, 2, 2)) ∘ AffineMap(T(1.2), randvec(T, 2)),
-    mapfrom_parameterdomain(T(5) * ComplexUnitCircle{T}() .+ T(2))
+    AffineMap(5.0, 2.0) ∘ VectorToComplex{T}() ∘ UnitCircleMap{T}(),
+    LinearMap(SMatrix{2,2}(1,2,3,T(4))) ∘ CartToPolarMap{T}() ∘ LinearMap(SMatrix{2,2}(1,2,3,T(4))),
     # Interval{Any}(0.0, 1.0)
 ]
 
@@ -50,9 +35,9 @@ suitable_point_to_map(m::Map, ::Type{SVector{N,T}}) where {N,T} = SVector{N,T}(r
 suitable_point_to_map(m::Map, ::Type{T}) where {T<:Number} = rand(T)
 suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, mapsize(m,2))
 
-suitable_point_to_map(m::DomainSets.ProductMap) =
+suitable_point_to_map(m::ProductMap) =
     map(suitable_point_to_map, components(m))
-suitable_point_to_map(m::DomainSets.VcatMap{T,M,N}) where {T,M,N} =
+suitable_point_to_map(m::VcatMap{T,M,N}) where {T,M,N} =
     SVector{N,T}(rand(T,N))
 
 suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
@@ -124,7 +109,7 @@ function test_composite_map(T)
     c = T(2)
     d = T(3)
     ma = StaticIdentityMap{T}()
-    mb = DomainSets.interval_map(a, b, c, d)
+    mb = interval_map(a, b, c, d)
 
     r = suitable_point_to_map(ma)
     m1 = ma∘mb
@@ -148,13 +133,13 @@ function test_composite_map(T)
     @test ComposedMap(m5[Component(1:2)]...) == m5
     @test_throws BoundsError m5[Component(3)]
 
-    m6 = DomainSets.multiply_map(ma,ma)
+    m6 = multiply_map(ma,ma)
     @test m6(one(T)/2) == one(T)/4
-    @test jacobian(m6) isa DomainSets.SumMap
+    @test jacobian(m6) isa SumMap
     @test jacobian(m6)(one(T)) == 2
     @test jacobian(m6, one(T)) == 2
 
-    m7 = DomainSets.sum_map(ma,ma)
+    m7 = sum_map(ma,ma)
     @test m7(one(T)) == 2
     @test jacobian(m7) isa ConstantMap
     @test jacobian(m7, one(T)) == 2
@@ -164,20 +149,20 @@ function test_composite_map(T)
     @test mapsize(ComposedMap(LinearMap(rand(T,2,2)),LinearMap(rand(T,2)'),LinearMap(2))) == (1,2)
     @test mapsize(ComposedMap(LinearMap(one(T)),LinearMap(one(T)))) == ()
 
-    @test DomainSets.composedmap() == ()
-    @test DomainSets.composedmap(ma) == ma
-    @test DomainSets.composedmap(ma,ma) == ma
-    @test DomainSets.composedmap(ma,ma,ma) == ma
+    @test composedmap() == ()
+    @test composedmap(ma) == ma
+    @test composedmap(ma,ma) == ma
+    @test composedmap(ma,ma,ma) == ma
 
-    @test DomainSets.composite_jacobian(ma) == jacobian(ma)
+    @test composite_jacobian(ma) == jacobian(ma)
 
-    @test DomainSets.multiply_map() == ()
-    @test DomainSets.multiply_map(ma) == ma
-    @test DomainSets.multiply_map(ma,ma)(2*one(T)) == 4
-    @test DomainSets.multiply_map(ma,ma,ma)(2*one(T)) == 8
+    @test multiply_map() == ()
+    @test multiply_map(ma) == ma
+    @test multiply_map(ma,ma)(2*one(T)) == 4
+    @test multiply_map(ma,ma,ma)(2*one(T)) == 8
 
-    @test DomainSets.sum_jacobian() == ()
-    @test DomainSets.sum_jacobian(ma) == jacobian(ma)
+    @test sum_jacobian() == ()
+    @test sum_jacobian(ma) == jacobian(ma)
 end
 
 function test_mixed_maps()

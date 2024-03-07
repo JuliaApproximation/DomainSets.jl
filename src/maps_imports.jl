@@ -67,6 +67,7 @@ using .FunctionMaps:
 	VectorAffineMap, StaticAffineMap,
 	# arithmetics.jl
 	affine_composition,
+	interval_map, bounded_interval_map,
 	# basic.jl
 	IdentityMap, isidentity, isidentitymap,
 	StaticIdentityMap, DynamicIdentityMap,
@@ -74,6 +75,9 @@ using .FunctionMaps:
 	ConstantMap, isconstantmap, mapconstant,
 	isconstant, constant,
 	ZeroMap, UnityMap, FixedConstantMap,
+	# coordinates.jl
+	CartToPolarMap, PolarToCartMap,
+	UnitCircleMap, AngleMap, UnitDiskMap,
 	# common.jl
 	StaticTypes,
 	hashrec,

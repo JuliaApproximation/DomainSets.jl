@@ -72,3 +72,66 @@ sum_map(map1::AbstractAffineMap, map2::AbstractAffineMap) =
 
 isequalmap(m1::ProductMap, m2::IdentityMap) = all(map(isidentitymap, components(m1)))
 isequalmap(m1::IdentityMap, m2::ProductMap) = isequalmap(m2, m1)
+
+
+"""
+Map the interval `[a,b]` to the interval `[c,d]`.
+
+This function deals with infinite intervals, and the type of the
+map returned may depend on the value (finiteness) of the given endpoints.
+"""
+interval_map(a, b, c, d) = interval_map(promote(a,b,c,d)...)
+
+function interval_map(a::T, b::T, c::T, d::T) where {T}
+    FT = float(T)
+    if isfinite(a) && isfinite(b) && isfinite(c) && isfinite(d)
+        bounded_interval_map(a, b, c, d)
+    elseif isfinite(a) && !isfinite(b) && isfinite(c) && !isfinite(d)
+        # (a,Inf) to (c,Inf)
+        AffineMap(one(FT), c-a)
+    elseif isfinite(a) && !isfinite(b) && !isfinite(c) && isfinite(d)
+        # (a,Inf) to (Inf,d)
+        AffineMap(-one(FT), d+a)
+    elseif !isfinite(a) && isfinite(b) && isfinite(c) && !isfinite(d)
+        # (Inf,b) to (c,Inf)
+        AffineMap(-one(FT), c+b)
+    elseif !isfinite(a) && isfinite(b) && !isfinite(c) && isfinite(d)
+        # (Inf,b) to (Inf,d)
+        AffineMap(one(FT), d-b)
+    elseif !isfinite(a) && !isfinite(b) && !isfinite(c) && !isfinite(d)
+        if (a < 0) && (b > 0) && (c < 0) && (d > 0)
+            # (-Inf,Inf) to (-Inf,Inf)
+            StaticIdentityMap{FT}()
+        elseif (a < 0) && (b > 0) && (c > 0) && (d < 0)
+            # (-Inf,Inf) to (Inf,-Inf)
+            LinearMap(-one(FT))
+        elseif (a > 0) && (b < 0) && (c < 0) && (d > 0)
+            # (Inf,-Inf) to (-Inf,Inf)
+            LinearMap(-one(FT))
+        elseif (a > 0) && (b < 0) && (c > 0) && (d < 0)
+            # (Inf,-Inf) to (Inf,-Inf)
+            StaticIdentityMap{FT}()
+        elseif (a > 0) && (b > 0) && (c > 0) && (d > 0)
+            # (Inf,Inf) to (Inf,Inf)
+            StaticIdentityMap{FT}()
+        elseif (a < 0) && (b < 0) && (c < 0) && (d < 0)
+            # (-Inf,-Inf) to (-Inf,-Inf)
+            StaticIdentityMap{FT}()
+        elseif (a < 0) && (b < 0) && (c > 0) && (d > 0)
+            # (-Inf,-Inf) to (Inf,Inf)
+            LinearMap(-one(FT))
+        elseif (a > 0) && (b > 0) && (c < 0) && (d < 0)
+            # (Inf,Inf) to (-Inf,-Inf)
+            LinearMap(-one(FT))
+        else
+            throw(ArgumentError("Requested affine map is unbounded"))
+        end
+    else
+        throw(ArgumentError("Requested affine map is unbounded"))
+    end
+end
+
+"Like interval_map, but guaranteed to return a scalar affine map."
+bounded_interval_map(a, b, c, d) = bounded_interval_map(promote(a,b,c,d)...)
+bounded_interval_map(a::T, b::T, c::T, d::T) where {T} =
+    AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))

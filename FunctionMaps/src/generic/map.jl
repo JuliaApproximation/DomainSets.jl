@@ -50,6 +50,8 @@ convert(::Type{TypedMap{T,U}}, m::TypedMap) where {T,U} = similarmap(m, T, U)
 
 convert_domaintype(::Type{T}, map::Map{T}) where {T} = map
 convert_domaintype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{U}, map)
+convert_domaintype(::Type{Any}, map) = map
+convert_domaintype(::Type{Any}, map::Map{T}) where T = map
 
 convert_numtype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{to_numtype(U,T)}, map)
 convert_prectype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{to_prectype(U,T)}, map)

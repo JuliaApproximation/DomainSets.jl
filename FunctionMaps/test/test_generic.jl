@@ -1,6 +1,3 @@
-using DomainSets.FunctionMaps:
-    convert_domaintype, convert_codomaintype
-
 function generic_map_tests(T)
     for map in maps_to_test(T)
         @test prectype(map) == T
@@ -61,7 +58,7 @@ function test_generic_map(m)
         @test m(x) == A*x+b
     end
 
-    @test hash(m) == DomainSets.map_hash(m)
+    @test hash(m) == map_hash(m)
 end
 
 function test_generic_inverse(m)
@@ -78,7 +75,7 @@ function test_generic_inverse(m)
         @test inverse(m)(y) ≈ x
         @test inverse(m, y) ≈ x
         @test m\y ≈ x
-        @test DomainSets.LazyInverse(m)(y) ≈ inverse(m, y)
+        @test LazyInverse(m)(y) ≈ inverse(m, y)
     end
     if M >= N && numtype(m)!=BigFloat
         leftinverse(m, y)      # trigger exception outside test if not implemented
@@ -114,7 +111,7 @@ function test_generic_jacobian(m)
     @test size(j) == mapsize(m)
     if j isa AbstractArray{Float64}
         y = similar(j)
-        DomainSets.jacobian!(y, m, x)
+        jacobian!(y, m, x)
         @test y ≈ jac(x)
     end
     if issquarematrix(jac(x))
@@ -137,6 +134,7 @@ function test_generic_functionality()
     @test convert_domaintype(Float64, m) isa ScalarLinearMap{Float64}
     @test convert_domaintype(Complex{Float64}, m) isa ScalarLinearMap{Complex{Float64}}
     @test convert_domaintype(SVector{2,BigFloat}, m) isa GenericLinearMap{SVector{2, BigFloat}, BigFloat}
+    @test convert_domaintype(Any, m) === m
     @test convert_codomaintype(Float64, m) isa ScalarLinearMap{Float64}
     @test convert_codomaintype(Complex{Float64}, m) isa ScalarLinearMap{Complex{Float64}}
     @test_throws ArgumentError convert_codomaintype(SVector{2,BigFloat}, m)

@@ -1,9 +1,9 @@
 module FunctionMapsTests
 
 using Test, LinearAlgebra, StaticArrays
-
-using DomainSets, DomainSets.FunctionMaps
 using CompositeTypes, CompositeTypes.Indexing
+
+include("using_fmaps.jl")
 
 include("test_common.jl")
 include("test_interface.jl")

@@ -60,7 +60,10 @@ rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), map
 
 composedmap() = ()
 composedmap(m) = m
-composedmap(m1, m2) = composedmap1(m1, m2)
+function composedmap(m1, m2)
+    T = promote_type(codomaintype(m1), domaintype(m2))
+    composedmap1(convert_codomaintype(T, m1), convert_domaintype(T, m2))
+end
 composedmap1(m1, m2) = composedmap2(m1, m2)
 composedmap2(m1, m2) = default_composedmap(m1, m2)
 default_composedmap(m1, m2) = ComposedMap(m1, m2)
@@ -69,8 +72,14 @@ composedmap(m1, m2, maps...) = composedmap(composedmap(m1, m2), maps...)
 
 composedmap(m1::ComposedMap, m2::ComposedMap) =
     ComposedMap(components(m1)..., components(m2)...)
-composedmap1(m1::ComposedMap, m2) = ComposedMap(components(m1)..., m2)
-composedmap2(m1, m2::ComposedMap) = ComposedMap(m1, components(m2)...)
+function composedmap1(m1::ComposedMap, m2)
+    T = promote_type(codomaintype(m1), domaintype(m2))
+    ComposedMap(components(m1)..., convert_domaintype(T, m2))
+end
+function composedmap2(m1, m2::ComposedMap)
+    T = promote_type(codomaintype(m1), domaintype(m2))
+    ComposedMap(convert_codomaintype(T, m1), components(m2)...)
+end
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
 Base.:∘(map1::AbstractMap, map2::AbstractMap) = composedmap(map2, map1)

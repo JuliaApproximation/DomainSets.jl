@@ -6,7 +6,7 @@ using LinearAlgebra
 using Random
 using StaticArrays
 
-include("modules/FunctionMaps.jl/src/FunctionMaps.jl")
+include("../FunctionMaps/src/FunctionMaps.jl")
 
 ################################
 ## Exhaustive list of imports

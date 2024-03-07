@@ -52,6 +52,7 @@ include("generic/product.jl")
 include("generic/isomorphism.jl")
 include("types/basic.jl")
 include("types/affine.jl")
+include("types/coordinates.jl")
 include("types/arithmetics.jl")
 
 include("deprecated.jl")

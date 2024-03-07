@@ -1,29 +1,29 @@
 function test_affine_maps(T)
     A = rand(T,2,2)
-    @test DomainSets.to_matrix(Vector{T}, A) == A
-    @test DomainSets.to_matrix(T, 2) == 2
-    @test DomainSets.to_matrix(SVector{2,T}, 2) == SMatrix{2,2}(2,0,0,2)
-    @test DomainSets.to_matrix(SVector{2,T}, LinearAlgebra.I) == SMatrix{2,2}(1,0,0,1)
-    @test DomainSets.to_matrix(Vector{T}, 2) == UniformScaling(2)
-    @test DomainSets.to_matrix(Vector{T}, LinearAlgebra.I) == LinearAlgebra.I
+    @test FunctionMaps.to_matrix(Vector{T}, A) == A
+    @test FunctionMaps.to_matrix(T, 2) == 2
+    @test FunctionMaps.to_matrix(SVector{2,T}, 2) == SMatrix{2,2}(2,0,0,2)
+    @test FunctionMaps.to_matrix(SVector{2,T}, LinearAlgebra.I) == SMatrix{2,2}(1,0,0,1)
+    @test FunctionMaps.to_matrix(Vector{T}, 2) == UniformScaling(2)
+    @test FunctionMaps.to_matrix(Vector{T}, LinearAlgebra.I) == LinearAlgebra.I
     # test fallback with nonsensical call
-    @test DomainSets.to_matrix(Tuple{Int}, 2) == 2
+    @test FunctionMaps.to_matrix(Tuple{Int}, 2) == 2
 
-    @test DomainSets.to_matrix(T, A, 2) == A
-    @test DomainSets.to_matrix(T, 2, 3) == 2
-    @test DomainSets.to_matrix(T, UniformScaling(2), 3) == 2
-    @test DomainSets.to_matrix(T, LinearAlgebra.I, zero(T)) isa T
-    @test DomainSets.to_matrix(SVector{2,T}, 2, SVector(1,1)) == SMatrix{2,2}(2,0,0,2)
-    @test DomainSets.to_matrix(Vector{T}, 2, [1,2]) == [2 0 ; 0 2]
+    @test FunctionMaps.to_matrix(T, A, 2) == A
+    @test FunctionMaps.to_matrix(T, 2, 3) == 2
+    @test FunctionMaps.to_matrix(T, UniformScaling(2), 3) == 2
+    @test FunctionMaps.to_matrix(T, LinearAlgebra.I, zero(T)) isa T
+    @test FunctionMaps.to_matrix(SVector{2,T}, 2, SVector(1,1)) == SMatrix{2,2}(2,0,0,2)
+    @test FunctionMaps.to_matrix(Vector{T}, 2, [1,2]) == [2 0 ; 0 2]
 
-    @test DomainSets.to_vector(T, 2) == 0
-    @test DomainSets.to_vector(SVector{2,T}, 2) == SVector(0,0)
-    @test DomainSets.to_vector(Vector{T}, A) == [0,0]
-    @test DomainSets.to_vector(T, 2, 3) == 3
+    @test FunctionMaps.to_vector(T, 2) == 0
+    @test FunctionMaps.to_vector(SVector{2,T}, 2) == SVector(0,0)
+    @test FunctionMaps.to_vector(Vector{T}, A) == [0,0]
+    @test FunctionMaps.to_vector(T, 2, 3) == 3
 
     if T != BigFloat    # BigFloat's make pinv fail for StaticArrays
-        @test DomainSets.matrix_pinv(SMatrix{2,2}(rand(T),rand(T),rand(T),rand(T))) isa SMatrix{2,2}
-        @test DomainSets.matrix_pinv(SVector(rand(T),rand(T))) isa Transpose{T,SVector{2,T}}
+        @test FunctionMaps.matrix_pinv(SMatrix{2,2}(rand(T),rand(T),rand(T),rand(T))) isa SMatrix{2,2}
+        @test FunctionMaps.matrix_pinv(SVector(rand(T),rand(T))) isa Transpose{T,SVector{2,T}}
     end
 
     test_linearmap(T)
@@ -74,7 +74,7 @@ function test_linearmap(T)
     @test m4 isa LinearMap{Vector{T}}
     @test m4([1,2]) ==  A * [1,2]
     y = zeros(T,2)
-    @test (DomainSets.applymap!(y, m4, [1,2]); y == A * [1,2])
+    @test (FunctionMaps.applymap!(y, m4, [1,2]); y == A * [1,2])
     @test jacobian(m4, [1,2]) == A
 
     m5 = LinearMap{Vector{T}}(UniformScaling(2*one(T)))
@@ -166,7 +166,7 @@ function test_affinemap(T)
     @test mapsize(m3) == (2,2)
     @test m3([1,2]) ==  2 * [1,2] + [1,2]
     y = zeros(T,2)
-    @test (DomainSets.applymap!(y, m3, [1,2]); y == m3([1,2]))
+    @test (FunctionMaps.applymap!(y, m3, [1,2]); y == m3([1,2]))
     @test jacobian(m3, [1,2]) == [2 0; 0 2]
     @test jacdet(m3, [1,2]) == 4
 

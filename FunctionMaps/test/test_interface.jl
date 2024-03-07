@@ -1,8 +1,4 @@
 
-using DomainSets.FunctionMaps:
-    MapStyle, IsMap, NotMap,
-    functionmap, checkmap
-
 struct MySimpleMap end
 FunctionMaps.MapStyle(::Type{MySimpleMap}) = IsMap()
 

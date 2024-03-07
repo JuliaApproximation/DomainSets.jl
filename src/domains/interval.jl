@@ -130,69 +130,6 @@ similardomain(::ChebyshevInterval, ::Type{T}) where {T} = ChebyshevInterval{T}()
 
 Base.:-(d::ChebyshevInterval) = d
 
-
-interval_map(a, b, c, d) = interval_map(promote(a,b,c,d)...)
-
-"""
-Map the interval `[a,b]` to the interval `[c,d]`.
-
-This function deals with infinite intervals, and the type of the
-map returned may depend on the value (finiteness) of the given endpoints.
-"""
-function interval_map(a::T, b::T, c::T, d::T) where {T}
-    FT = float(T)
-    if isfinite(a) && isfinite(b) && isfinite(c) && isfinite(d)
-        bounded_interval_map(a, b, c, d)
-    elseif isfinite(a) && !isfinite(b) && isfinite(c) && !isfinite(d)
-        # (a,Inf) to (c,Inf)
-        AffineMap(one(FT), c-a)
-    elseif isfinite(a) && !isfinite(b) && !isfinite(c) && isfinite(d)
-        # (a,Inf) to (Inf,d)
-        AffineMap(-one(FT), d+a)
-    elseif !isfinite(a) && isfinite(b) && isfinite(c) && !isfinite(d)
-        # (Inf,b) to (c,Inf)
-        AffineMap(-one(FT), c+b)
-    elseif !isfinite(a) && isfinite(b) && !isfinite(c) && isfinite(d)
-        # (Inf,b) to (Inf,d)
-        AffineMap(one(FT), d-b)
-    elseif !isfinite(a) && !isfinite(b) && !isfinite(c) && !isfinite(d)
-        if (a < 0) && (b > 0) && (c < 0) && (d > 0)
-            # (-Inf,Inf) to (-Inf,Inf)
-            StaticIdentityMap{FT}()
-        elseif (a < 0) && (b > 0) && (c > 0) && (d < 0)
-            # (-Inf,Inf) to (Inf,-Inf)
-            LinearMap(-one(FT))
-        elseif (a > 0) && (b < 0) && (c < 0) && (d > 0)
-            # (Inf,-Inf) to (-Inf,Inf)
-            LinearMap(-one(FT))
-        elseif (a > 0) && (b < 0) && (c > 0) && (d < 0)
-            # (Inf,-Inf) to (Inf,-Inf)
-            StaticIdentityMap{FT}()
-        elseif (a > 0) && (b > 0) && (c > 0) && (d > 0)
-            # (Inf,Inf) to (Inf,Inf)
-            StaticIdentityMap{FT}()
-        elseif (a < 0) && (b < 0) && (c < 0) && (d < 0)
-            # (-Inf,-Inf) to (-Inf,-Inf)
-            StaticIdentityMap{FT}()
-        elseif (a < 0) && (b < 0) && (c > 0) && (d > 0)
-            # (-Inf,-Inf) to (Inf,Inf)
-            LinearMap(-one(FT))
-        elseif (a > 0) && (b > 0) && (c < 0) && (d < 0)
-            # (Inf,Inf) to (-Inf,-Inf)
-            LinearMap(-one(FT))
-        else
-            throw(ArgumentError("Requested affine map is unbounded"))
-        end
-    else
-        throw(ArgumentError("Requested affine map is unbounded"))
-    end
-end
-
-"Like interval_map, but guaranteed to return a scalar affine map."
-bounded_interval_map(a, b, c, d) = bounded_interval_map(promote(a,b,c,d)...)
-bounded_interval_map(a::T, b::T, c::T, d::T) where {T} =
-    AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
-
 mapto(d1::D, d2::D) where {D <: FixedInterval} = identitymap(d1)
 mapto(d1::AbstractInterval, d2::AbstractInterval) =
     interval_map(leftendpoint(d1), rightendpoint(d1), leftendpoint(d2), rightendpoint(d2))

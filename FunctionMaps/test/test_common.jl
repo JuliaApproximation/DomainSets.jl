@@ -1,10 +1,3 @@
-using DomainSets.FunctionMaps:
-    convert_numtype,
-    convert_prectype,
-    promote_numtype,
-    promote_prectype,
-    euclideandimension
-
 function test_dimension()
     @test euclideandimension(Int) == 1
     @test euclideandimension(Float64) == 1

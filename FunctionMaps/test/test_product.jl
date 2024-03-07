@@ -1,6 +1,6 @@
 function test_product_map(T)
     ma = StaticIdentityMap{T}()
-    mb = DomainSets.interval_map(T(0), T(1), T(2), T(3))
+    mb = interval_map(T(0), T(1), T(2), T(3))
 
     r1 = suitable_point_to_map(ma)
     r2 = suitable_point_to_map(ma)
@@ -32,28 +32,17 @@ function test_product_map(T)
     @test m5(x) ≈ SVector(component(m5,1)(SVector(x[1],x[2]))...,component(m5,2)(x[3]))
 
     m6 = ProductMap([ma,mb])
-    @test m6 isa DomainSets.VectorProductMap
+    @test m6 isa VectorProductMap
     @test mapsize(m6) == (2,2)
-    @test convert(Map{SVector{2,T}}, m6) isa DomainSets.VcatMap
+    @test convert(Map{SVector{2,T}}, m6) isa VcatMap
     test_generic_map(m6)
-
-    d1 = ProductDomain(T(1)..T(2), T(1)..T(2))
-    d2 = ProductDomain(T(2)..T(4), T(2)..T(4))
-    @test mapto(d1, d2) isa DomainSets.VcatMap
-    @test jacobian(mapto(d1,d2)) isa ConstantMap
-    @test jacdet(mapto(d1,d2)) == ConstantMap{SVector{2,T}}(4)
-    d1v = ProductDomain([T(1)..T(2), T(1)..T(2)])
-    d2v = ProductDomain([T(2)..T(4), T(2)..T(4)])
-    @test mapto(d1v, d2v) isa DomainSets.VectorProductMap
-    @test jacobian(mapto(d1v,d2v)) isa ConstantMap
-    @test jacdet(mapto(d1v,d2v)) == ConstantMap{Vector{T}}(4)
 
     @test components(productmap(LinearMap(1), LinearMap(one(T)))) isa Tuple{<:Map{T},<:Map{T}}
 
     # test a non-rectangular product map
     m_rect = AffineMap(SA[one(T) 2; 3 4; 5 6], SA[one(T),one(T),zero(T)])
     pm = productmap(m_rect, m_rect)
-    @test pm isa DomainSets.VcatMap{T,6,4,(3,3),(2,2)}
+    @test pm isa VcatMap{T,6,4,(3,3),(2,2)}
     @test jacobian(pm, SA[one(T),0,0,0]) isa SMatrix{6,4,T}
     @test diffvolume(pm, SA[one(T),0,0,0]) == 24
 end

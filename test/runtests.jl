@@ -10,7 +10,7 @@ const textmime = MIME"text/plain"()
 println("#############################")
 println("# Tests of FunctionMaps.jl")
 println("#############################")
-include("../src/modules/FunctionMaps.jl/test/runtests.jl")
+include("../FunctionMaps/test/runtests2.jl")
 
 println("#############################")
 println("# Tests of DomainSets.jl")

@@ -1,7 +1,7 @@
 function test_isomorphisms(T)
-    m1 = DomainSets.VectorToNumber{T}()
+    m1 = FunctionMaps.VectorToNumber{T}()
     @test m1(SA[1.0]) == 1.0
-    m1b = DomainSets.NumberToVector{T}()
+    m1b = FunctionMaps.NumberToVector{T}()
     @test inverse(m1) == m1b
     @test inverse(m1, 0.4) == m1b(0.4)
     @test inverse(m1b) == m1
@@ -16,9 +16,9 @@ function test_isomorphisms(T)
     @test jacobian(m1) isa ConstantMap
     @test jacobian(m1b) isa ConstantMap
 
-    m2 = DomainSets.VectorToComplex{T}()
+    m2 = FunctionMaps.VectorToComplex{T}()
     @test m2(SA[one(T), one(T)]) == 1 + im
-    m2b = DomainSets.ComplexToVector{T}()
+    m2b = FunctionMaps.ComplexToVector{T}()
     @test inverse(m2) == m2b
     @test inverse(m2, zero(T)+0im) == m2b(zero(T)+0im)
     @test inverse(m2b) == m2
@@ -29,8 +29,8 @@ function test_isomorphisms(T)
     @test mapsize(m2 ∘ m2b) == ()
     @test mapsize(m2b ∘ m2) == (2,2)
 
-    m3 = DomainSets.VectorToTuple{2,T}()
-    m3b = DomainSets.TupleToVector{2,T}()
+    m3 = FunctionMaps.VectorToTuple{2,T}()
+    m3b = FunctionMaps.TupleToVector{2,T}()
     @test m3(SA[one(T), one(T)]) == (one(T),one(T))
     @test inverse(m3b, SA[one(T), one(T)]) == (one(T),one(T))
     @test inverse(m3) == m3b
@@ -38,8 +38,8 @@ function test_isomorphisms(T)
     @test m3b( (one(T),one(T)) ) == SA[one(T),one(T)]
     @test inverse(m3, (one(T),one(T)) ) == SA[one(T),one(T)]
 
-    m4 = DomainSets.NestedToFlat{3,T,Tuple{Tuple{T,T},T},(2,1)}()
-    m4b = DomainSets.FlatToNested{3,T,Tuple{Tuple{T,T},T},(2,1)}()
+    m4 = FunctionMaps.NestedToFlat{3,T,Tuple{Tuple{T,T},T},(2,1)}()
+    m4b = FunctionMaps.FlatToNested{3,T,Tuple{Tuple{T,T},T},(2,1)}()
     x4 = ([T(1),T(2)],T(3))
     y4 = T[1,2,3]
     @test m4(x4) == y4
@@ -70,11 +70,11 @@ function test_identity_map(T)
     @test jacobian(i1) isa ConstantMap
     @test jacobian(i1, 1) == 1
     @test jacdet(i1, 1) == 1
-    m1 = convert(DomainSets.AbstractAffineMap{T}, i1)
+    m1 = convert(FunctionMaps.AbstractAffineMap{T}, i1)
     @test m1 isa LinearMap{T}
     @test jacdet(m1, 1) == 1
-    @test convert(DomainSets.AbstractAffineMap, i1) isa LinearMap{T}
-    m2 = convert(DomainSets.LinearMap{T}, i1)
+    @test convert(FunctionMaps.AbstractAffineMap, i1) isa LinearMap{T}
+    m2 = convert(FunctionMaps.LinearMap{T}, i1)
     @test m2 isa LinearMap{T}
     @test jacdet(m2, 1) == 1
 
@@ -90,7 +90,7 @@ end
 function test_basic_maps(T)
     @test UnityMap{SVector{2,Float64}}() == UnityMap{SVector{2,Float64},Float64}()
     @test hash(ConstantMap(2)) == hash(ConstantMap(2.0))
-    @test DomainSets.absmap(ConstantMap(-2)) == ConstantMap(2)
+    @test FunctionMaps.absmap(ConstantMap(-2)) == ConstantMap(2)
 end
 
 function test_wrapped_maps(T)
@@ -107,7 +107,7 @@ function test_wrapped_maps(T)
     @test convert(Map, cos) isa WrappedMap
     @test convert(Map{BigFloat}, m1) isa WrappedMap{BigFloat}
 
-    @test convert(Map{T}, cos) isa DomainSets.WrappedMap{T,typeof(cos)}
+    @test convert(Map{T}, cos) isa FunctionMaps.WrappedMap{T,typeof(cos)}
 
     @test convert(Map, LinearAlgebra.I) isa GenericLinearMap{Vector{Any}}
     @test convert(Map{Vector{T}}, LinearAlgebra.I) isa GenericLinearMap{Vector{T}}
