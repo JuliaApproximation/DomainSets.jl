@@ -47,3 +47,7 @@ using FunctionMaps: ScalarAffineMap,
 using FunctionMaps:
     to_matrix, to_vector,
     matrix_pinv
+
+# for test_arithmetics.jl
+using FunctionMaps:
+    interval_map, bounded_interval_map

@@ -362,22 +362,6 @@ function test_intervals()
         @test isaffinemap(m2)
         @test m2(4) ≈ 2
         @test m2(6) ≈ 3
-
-        @test DomainSets.interval_map(1.0, Inf, 2.0, Inf) == AffineMap(1.0, 1.0)
-        @test DomainSets.interval_map(1.0, Inf, Inf, 2.0) == AffineMap(-1.0, 3.0)
-        @test DomainSets.interval_map(Inf, 1.0, 2.0, Inf) == AffineMap(-1.0, 3.0)
-        @test DomainSets.interval_map(Inf, 1.0, Inf, 2.0) == AffineMap(1.0, 1.0)
-        @test DomainSets.interval_map(-Inf, Inf, -Inf, Inf) == IdentityMap()
-        @test DomainSets.interval_map(-Inf, Inf, Inf, -Inf) == LinearMap(-1)
-        @test DomainSets.interval_map(Inf, -Inf, -Inf, Inf) == LinearMap(-1)
-        @test DomainSets.interval_map(Inf, -Inf, Inf, -Inf) == IdentityMap()
-        @test DomainSets.interval_map(Inf, Inf, Inf, Inf) == IdentityMap()
-        @test DomainSets.interval_map(-Inf, -Inf, -Inf, -Inf) == IdentityMap()
-        @test DomainSets.interval_map(Inf, Inf, -Inf, -Inf) == LinearMap(-1)
-        @test DomainSets.interval_map(-Inf, -Inf, Inf, Inf) == LinearMap(-1)
-        @test_throws ArgumentError DomainSets.interval_map(-Inf, Inf, -Inf, -Inf)
-        @test_throws ArgumentError DomainSets.interval_map(-1, 1, -1, Inf)
-        @test_throws ArgumentError DomainSets.interval_map(-1, 1, -1, Inf)
     end
 
     @test DomainSets.isinterval(0..1)

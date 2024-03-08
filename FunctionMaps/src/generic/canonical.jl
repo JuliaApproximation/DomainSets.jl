@@ -26,7 +26,9 @@ canonicalmap(::Equal, m) = m
 equalmap(m) = canonicalmap(Equal(), m)
 hasequalmap(m) = hascanonicalmap(Equal(), m)
 
+"Simplify the given map to an equal map."
 simplify(m) = equalmap(m)
+"Does the map simplify?"
 simplifies(m) = hasequalmap(m)
 
 "Convert the given map to a map defined in FunctionMaps.jl."
@@ -43,7 +45,7 @@ canonicalmap(::Equivalent, m::Map{SVector{1,T}}) where {T} = convert(Map{T}, m)
 canonicalmap(::Equivalent, m::Map{NTuple{N,T}}) where {N,T} = convert(Map{SVector{N,T}}, m)
 
 equivalentmap(m) = canonicalmap(Equivalent(), m)
-
+hasequivalentmap(m) = hascanonicalmap(Equivalent(), m)
 
 "Canonical types used to translate between packages."
 abstract type CanonicalExtensionType <: CanonicalType

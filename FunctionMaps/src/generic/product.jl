@@ -81,6 +81,13 @@ mapsize(m::ProductMap) = (sum(t->mapsize(t,1), components(m)), sum(t->mapsize(t,
 isequalmap(m1::ProductMap, m2::ProductMap) = all(map(isequalmap, components(m1), components(m2)))
 map_hash(m::ProductMap, h::UInt) = hashrec("ProductMap", collect(components(m)), h)
 
+canonicalmap(m::ProductMap) = any(map(hascanonicalmap, factors(m))) ?
+	ProductMap(map(canonicalmap, factors(m))) : m
+canonicalmap(::Equal, m::ProductMap) = any(map(hasequalmap, factors(m))) ?
+	ProductMap(map(equalmap, factors(m))) : m
+canonicalmap(::Equivalent, m::ProductMap) = any(map(hasequivalentmap, factors(m))) ?
+	ProductMap(map(equivalentmap, factors(m))) : m
+
 Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊗')
 Display.displaystencil(m::ProductMap) = composite_displaystencil(m)
 show(io::IO, mime::MIME"text/plain", m::ProductMap) = composite_show(io, mime, m)

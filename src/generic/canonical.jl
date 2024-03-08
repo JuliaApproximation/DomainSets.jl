@@ -36,9 +36,7 @@ mapfrom_canonical(d, x) = mapfrom_canonical(d)(x)
 mapto_canonical(d) = leftinverse(mapfrom_canonical(d))
 mapto_canonical(d, x) = mapto_canonical(d)(x)
 
-
-"Supertype of kinds of canonical domains."
-abstract type CanonicalType end
+# For definition of CanonicalType: see FunctionMaps
 
 canonicaldomain(ctype::CanonicalType, d) = d
 hascanonicaldomain(ctype::CanonicalType, d) = !(d === canonicaldomain(ctype, d))
@@ -50,13 +48,17 @@ mapfrom_canonical(ctype::CanonicalType, d, x) = mapfrom_canonical(ctype, d)(x)
 mapto_canonical(ctype::CanonicalType, d, x) = mapto_canonical(ctype, d)(x)
 
 
-"A canonical domain that is equal but simpler (e.g. a 1-dimensional ball is an interval)."
-struct Equal <: CanonicalType end
-
 canonicaldomain(::Equal, d) = d
 mapfrom_canonical(::Equal, d) = identitymap(d)
 mapto_canonical(::Equal, d) = leftinverse(mapfrom_canonical(Equal(), d))
 
+"""
+Return a canonical domain that is equal, but simpler. For example,
+a 1-dimensional ball is an interval.
+
+A domain and its `equaldomain` are always equal domains according to
+`isequaldomain`.
+"""
 equaldomain(d) = canonicaldomain(Equal(), d)
 hasequaldomain(d) = hascanonicaldomain(Equal(), d)
 mapfrom_equaldomain(d) = mapfrom_canonical(Equal(), d)
@@ -64,7 +66,9 @@ mapto_equaldomain(d) = mapto_canonical(Equal(), d)
 mapfrom_equaldomain(d, x) = mapfrom_canonical(Equal(), d, x)
 mapto_equaldomain(d, x) = mapto_canonical(Equal(), d, x)
 
+"Simplify the given domain to an equal domain."
 simplify(d) = equaldomain(d)
+"Does the domain simplify?"
 simplifies(d) = hasequaldomain(d)
 
 "Convert the given domain to a domain defined in DomainSets.jl."

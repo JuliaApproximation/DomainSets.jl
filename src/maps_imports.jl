@@ -4,6 +4,9 @@
 
 using .FunctionMaps:
 	MapRef,
+	# canonical.jl
+	CanonicalType, CanonicalExtensionType,
+	Equal, Equivalent,
 	# composite.jl
 	ComposedMap, similarmap, codomaintype, applymap,
 	applymap_rec, mapsize, jacobian, backpropagate,
@@ -97,8 +100,4 @@ import .FunctionMaps:
 	numtype,
 	factors,
 	isreal,
-	isequalmap,
-	mapsize, applymap,
-	jacobian, jacobian!, diffvolume,
-	leftinverse, rightinverse, inverse,
 	tointernalpoint, toexternalpoint, compatibleproductdims

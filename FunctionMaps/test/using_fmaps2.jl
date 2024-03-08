@@ -47,3 +47,7 @@ using DomainSets.FunctionMaps: ScalarAffineMap,
 using DomainSets.FunctionMaps:
     to_matrix, to_vector,
     matrix_pinv
+
+# for test_arithmetics.jl
+using DomainSets.FunctionMaps:
+    interval_map, bounded_interval_map
