@@ -236,7 +236,7 @@ end
 
 ScalarLinearMap(A::Number) = ScalarLinearMap{typeof(A)}(A)
 
-isreal(m::ScalarLinearMap{T}) where {T} = isreal(T)
+isreal(m::ScalarLinearMap{T}) where {T} = isrealtype(T)
 
 show(io::IO, m::ScalarLinearMap) = show_scalar_linear_map(io, m.A)
 show_scalar_linear_map(io, A::Real) = print(io, "x -> $(A) * x")
@@ -298,7 +298,7 @@ struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
 end
 
-isreal(m::ScalarTranslation{T}) where {T} = isreal(T)
+isreal(m::ScalarTranslation{T}) where {T} = isrealtype(T)
 
 show(io::IO, m::ScalarTranslation) = show_scalar_translation(io, m.b)
 show_scalar_translation(io, b::Real) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
@@ -480,7 +480,7 @@ end
 
 ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
-isreal(m::ScalarAffineMap{T}) where {T} = isreal(T)
+isreal(m::ScalarAffineMap{T}) where {T} = isrealtype(T)
 
 show(io::IO, m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
 show_scalar_affine_map(io, A::Real, b::Real) = print(io, "x -> $(A) * x", b < 0 ? " - " : " + ", abs(b))

@@ -1,4 +1,5 @@
 using DomainSets:
+    isrealtype,
     convert_eltype,
     domaineltype,
     domain_numtype,

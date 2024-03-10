@@ -18,7 +18,7 @@ inverse(m::IdentityMap) = m
 inverse(m::IdentityMap, x) = x
 
 islinearmap(::IdentityMap) = true
-isreal(::IdentityMap{T}) where {T} = isreal(T)
+isreal(::IdentityMap{T}) where {T} = isrealtype(T)
 
 isidentitymap(::IdentityMap) = true
 isidentitymap(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
@@ -95,7 +95,7 @@ isconstantmap(m::AbstractMap) = false
 isconstantmap(m::ConstantMap) = true
 
 isreal(m::ConstantMap{T,U}) where {T,U} =
-    isreal(T) && isreal(U) && isreal(mapconstant(m))
+    isrealtype(T) && isrealtype(U) && isreal(mapconstant(m))
 
 mapsize(m::ConstantMap) = _constant_mapsize(m, mapconstant(m))
 _constant_mapsize(m::ConstantMap{T,U}, c) where {T<:Number,U<:Number} = ()

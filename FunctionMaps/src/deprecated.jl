@@ -6,6 +6,8 @@ isconstant(m::Map) = isconstantmap(m)
 constant(m::Map) = mapconstant(m)
 isidentity(m::Map) = isidentitymap(m)
 
+isreal(::Type{T}) where T = isrealtype(T)
+
 matrix(m::Map) = affinematrix(m)
 vector(m::Map) = affinevector(m)
 

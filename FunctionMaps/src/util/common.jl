@@ -1,7 +1,7 @@
 
-isreal(::Type{<:Real}) = true
-isreal(::Type{<:Complex}) = false
-isreal(::Type{T}) where {T} = isreal(eltype(T))
+isrealtype(::Type{<:Real}) = true
+isrealtype(::Type{<:Complex}) = false
+isrealtype(::Type{T}) where {T} = isrealtype(eltype(T))
 
 const StaticTypes = Union{Number,<:StaticVector{N} where N,<:NTuple{N,Any} where N}
 

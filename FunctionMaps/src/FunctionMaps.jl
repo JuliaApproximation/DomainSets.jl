@@ -24,6 +24,8 @@ export Map, MapRef,
     inverse, leftinverse, rightinverse,
     mapsize, jacobian, jacdet, diffvolume,
     isreal
+# from generic/canonical.jl
+export canonicalmap
 # from generic/composite.jl
 export composedmap
 # from generic/product.jl

@@ -6,6 +6,7 @@ using .FunctionMaps:
 	MapRef,
 	# canonical.jl
 	CanonicalType, CanonicalExtensionType,
+	canonicalextensiontype,
 	Equal, Equivalent,
 	# composite.jl
 	ComposedMap, similarmap, codomaintype, applymap,
@@ -82,6 +83,7 @@ using .FunctionMaps:
 	CartToPolarMap, PolarToCartMap,
 	UnitCircleMap, AngleMap, UnitDiskMap,
 	# common.jl
+	isrealtype,
 	StaticTypes,
 	hashrec,
 	euclideandimension,
