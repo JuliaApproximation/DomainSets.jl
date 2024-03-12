@@ -146,8 +146,8 @@ Convert the `b` in the affine map `A*x` or `A*x+b` with domaintype `T` to a vect
 """
 to_vector(::Type{T}, A) where {T} = zero(T)
 to_vector(::Type{T}, A::SVector{M,S}) where {T,M,S} = zero(SVector{M,S})
-to_vector(::Type{T}, A::SMatrix{M,N,S}) where {T<:AbstractVector,M,N,S} = zero(SVector{M,S})
-to_vector(::Type{T}, A::AbstractArray) where {T<:AbstractVector} = zeros(eltype(T),size(A,1))
+to_vector(::Type{T}, A::SMatrix{M,N,S}) where {T,M,N,S} = zero(SVector{M,S})
+to_vector(::Type{T}, A::AbstractArray) where {T} = zeros(eltype(T),size(A,1))
 to_vector(::Type{T}, A, b) where {T} = b
 
 

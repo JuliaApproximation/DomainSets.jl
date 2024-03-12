@@ -102,7 +102,7 @@ struct MulMap{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-MulMap(maps::Map{T}...) where {T} = MulMap{T}(maps...)
+MulMap(map1::Map{T}, maps::Map{T}...) where {T} = MulMap{T}(map1, maps...)
 MulMap{T}(maps::Map{T}...) where {T} = MulMap{T,typeof(maps)}(maps)
 MulMap{T}(maps...) where {T} = _mulmap(T, convert.(Map{T}, maps)...)
 _mulmap(::Type{T}, maps...) where {T} = MulMap{T,typeof(maps)}(maps)
@@ -148,7 +148,7 @@ struct SumMap{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-SumMap(maps::Map{T}...) where {T} = SumMap{T}(maps...)
+SumMap(map1::Map{T}, maps::Map{T}...) where {T} = SumMap{T}(map1, maps...)
 SumMap{T}(maps::Map{T}...) where {T} = SumMap{T,typeof(maps)}(maps)
 SumMap{T}(maps...) where {T} = _summap(T, convert.(Map{T}, maps)...)
 _summap(::Type{T}, maps...) where {T} = SumMap{T,typeof(maps)}(maps)

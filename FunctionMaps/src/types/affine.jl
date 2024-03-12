@@ -396,6 +396,9 @@ similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
 convert(::Type{AffineMap}, m) = (@assert isaffinemap(m); AffineMap(affinematrix(m), affinevector(m)))
 convert(::Type{AffineMap{T}}, m) where {T} = (@assert isaffinemap(m); AffineMap{T}(affinematrix(m), affinevector(m)))
+# avoid ambiguity errors with convert(::Type{T}, x::T) in Base:
+convert(::Type{AffineMap}, m::AffineMap) = m
+convert(::Type{AffineMap{T}}, m::AffineMap{T}) where T = m
 
 # If y = A*x+b, then x = inv(A)*(y-b) = inv(A)*y - inv(A)*b
 inverse(m::AffineMap) = (@assert issquaremap(m); AffineMap(inv(m.A), -inv(m.A)*m.b))
@@ -536,6 +539,9 @@ StaticAffineMap{T}(A::SMatrix{M,N,T}, b::AbstractVector) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
 StaticAffineMap{T}(A::SMatrix{M,N,T}, b::SVector{M,T}) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
+# line below catches ambiguity error
+StaticAffineMap{T}(A::SMatrix{M1,N,T}, b::SVector{M2,T}) where {T,N,M1,M2} =
+    throw(ArgumentError("Non-matching dimensions"))
 StaticAffineMap{T,N}(A::AbstractMatrix, b::AbstractVector) where {T,N} =
     StaticAffineMap{T,N,N}(A, b)
 StaticAffineMap{T,N}(A::SMatrix{M,N}, b::AbstractVector) where {T,N,M} =

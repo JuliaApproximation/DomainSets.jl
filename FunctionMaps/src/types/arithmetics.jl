@@ -21,15 +21,19 @@ composedmap1(m1::ConstantMap{T}, m2::ZeroMap{S,U}) where {S,T,U} = ZeroMap{T,U}(
 
 multiply_map1(m1::ZeroMap, m2) = m1
 multiply_map2(m1, m2::ZeroMap) = m2
-multiply_map2(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =
+multiply_map2(m1, m2::ConstantMap) = _constant_multiply_map(m1, m2)
+_constant_multiply_map(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =
     ConstantMap{promote_type(S,T)}(mapconstant(m1)*mapconstant(m2))
+_constant_multiply_map(m1, m2::ConstantMap) = default_multiply_map(m1, m2)
 
 multiply_map(m1::Function, m2::Function) = t -> m1(t)*m2(t)
 
 sum_map1(m1::ZeroMap, m2) = m2
 sum_map2(m1, m2::ZeroMap) = m1
-sum_map2(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =
+sum_map2(m1, m2::ConstantMap) = _constant_sum_map(m1, m2)
+_constant_sum_map(m1::ConstantMap{T}, m2::ConstantMap{S}) where {S,T} =
     ConstantMap{promote_type(S,T)}(mapconstant(m1)+mapconstant(m2))
+_constant_sum_map(m1, m2::ConstantMap) = default_sum_map(m1, m2)
 
 ## Affine maps
 

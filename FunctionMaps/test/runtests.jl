@@ -5,6 +5,8 @@ using CompositeTypes, CompositeTypes.Indexing
 
 include("using_fmaps.jl")
 
+include("aqua.jl")
+
 include("test_common.jl")
 include("test_interface.jl")
 

@@ -179,7 +179,7 @@ mapsize(m::VectorProductMap) = (length(m.maps), length(m.maps))
 A `TupleProductMap` is a product map with all components collected in a tuple.
 There is no vector-valued function associated with this map.
 """
-struct TupleProductMap{T,MM} <: ProductMap{T}
+struct TupleProductMap{T<:Tuple,MM} <: ProductMap{T}
     maps    ::  MM
 end
 
@@ -190,8 +190,8 @@ function TupleProductMap(maps::Tuple)
 	TupleProductMap{T}(maps)
 end
 
-TupleProductMap{T}(maps::Vector) where {T} = TupleProductMap{T}(maps...)
-TupleProductMap{T}(maps...) where {T} = TupleProductMap{T}(maps)
+TupleProductMap{T}(maps::Vector) where {T<:Tuple} = TupleProductMap{T}(maps...)
+TupleProductMap{T}(maps...) where {T<:Tuple} = TupleProductMap{T}(maps)
 function TupleProductMap{T}(maps::NTuple{N,<:AbstractMap}) where {N,T <: Tuple}
 	Tmaps = map((t,d) -> convert(Map{t},d), tuple(T.parameters...), maps)
 	TupleProductMap{T,typeof(Tmaps)}(Tmaps)

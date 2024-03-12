@@ -34,6 +34,7 @@ codomaintype(::Type{M}, ::Type{Any}) where {M} = Any
 codomaintype(M::Type{<:AbstractMap}, ::Type{T}) where {T} = Base.promote_op(applymap, M, T)
 codomaintype(M::Type{<:AbstractMap}, ::Type{Any}) = Any
 codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
+codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{Any}) where {T,U} = U
 
 prectype(::Type{<:Map{T}}) where T = prectype(T)
 numtype(::Type{<:Map{T}}) where T = numtype(T)
