@@ -1,6 +1,6 @@
 # The union, intersection and difference of domains are represented with lazy domains.
 
-Base.issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
+issubset(d1::AnyDomain, d2::AnyDomain) = issubset_domain(domain(d1), domain(d2))
 
 issubset_domain(d1, d2) =
 	promotable_domains(d1, d2) && issubset1(promote_domains(d1, d2)...)
@@ -53,7 +53,7 @@ composition(d::UnionDomain) = Combination()
 combine(d::UnionDomain, results) = reduce(|, results)
 
 # Make d1 ∪ d2 invoke `uniondomain` if the arguments are domains
-Base.union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
+union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
 
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
@@ -197,9 +197,7 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 
 
 # Make d1 ∩ d2 invoke `intersectdomain` if the arguments are Domains
-Base.intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
-# Three lines below to be removed in future breaking version
-Base.intersect(d1::AnyDomain, d2::AnyDomain) = intersectdomain(domain(d1), domain(d2))
+intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
 
 intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
@@ -304,7 +302,7 @@ combine(d::SetdiffDomain, results) = results[1] & !results[2]
 
 # It is difficult to calculate approximate membership exactly, but we can at
 # least not enlarge the subtracted domain by invoking in rather than approx_in on it.
-_approx_indomain(x, d::SetdiffDomain, comp::Combination, domains, tolerance) =
+_composite_approx_indomain(x, d::SetdiffDomain, tolerance, comp::Combination, domains) =
     approx_in(x, domains[1], tolerance) & !in(x, domains[2])
 
 similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
@@ -312,10 +310,10 @@ similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
 
 # use \ as a synomym for setdiff, in the context of domains (though, generically,
 # \ means left division in Julia)
-Base.:\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+\(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
 # Make setdiff invoke `setdiffdomain` if the arguments are domains
-Base.setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
+setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = simplifies(d1) ? setdiffdomain(simplify(d1), d2) : setdiffdomain2(d1, d2)

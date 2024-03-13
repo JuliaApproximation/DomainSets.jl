@@ -66,19 +66,20 @@ struct Product <: LazyComposedMap end
 
 composition(d::CompositeDomain) = NoComposedMap()
 
-indomain(x, d::CompositeDomain) = _indomain(tointernalpoint(d, x), d, composition(d), components(d))
-_indomain(x, d, ::NoComposedMap, domains) = in(x, domains[1])
-_indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
-_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
+indomain(x, d::CompositeDomain) =
+	_composite_indomain(tointernalpoint(d, x), d, composition(d), components(d))
+_composite_indomain(x, d, ::NoComposedMap, domains) = in(x, domains[1])
+_composite_indomain(x, d, ::Combination, domains) = combine(d, map(d->in(x, d), domains))
+_composite_indomain(x, d, ::Product, domains) = mapreduce(in, &, x, domains)
 
 approx_indomain(x, d::CompositeDomain, tolerance) =
-	_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), components(d))
+	_composite_approx_indomain(tointernalpoint(d, x), d, tolerance, composition(d), components(d))
 
-_approx_indomain(x, d, tolerance, ::NoComposedMap, domains) =
+_composite_approx_indomain(x, d, tolerance, ::NoComposedMap, domains) =
     approx_in(x, domains[1], tolerance)
-_approx_indomain(x, d, tolerance, ::Combination, domains) =
+_composite_approx_indomain(x, d, tolerance, ::Combination, domains) =
     combine(d, map(d -> approx_in(x, d, tolerance), domains))
-_approx_indomain(x, d, tolerance, ::Product, domains) =
+_composite_approx_indomain(x, d, tolerance, ::Product, domains) =
     mapreduce((u,v)->approx_in(u, v, tolerance), &, x, domains)
 
 choice(d::SimpleLazyDomain) = toexternalpoint(d, choice(superdomain(d)))

@@ -1,9 +1,8 @@
 
-
 """
 An affine map has the general form `y = A*x + b`.
 
-We use `matrix(m)` and `vector(m)` to denote `A` and `b` respectively. Concrete
+We use `affinematrix(m)` and `affinevector(m)` to denote `A` and `b` respectively. Concrete
 subtypes include linear maps of the form `y = A*x` and translations of the
 form `y = x + b`.
 """
@@ -13,75 +12,76 @@ unsafe_matrix(m::AbstractAffineMap) = m.A
 unsafe_vector(m::AbstractAffineMap) = m.b
 
 "Return the matrix `A` in the affine map `Ax+b`."
-matrix(m::AbstractAffineMap) = to_matrix(domaintype(m), unsafe_matrix(m), unsafe_vector(m))
+affinematrix(m::AbstractAffineMap) = to_matrix(domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 
 "Return the vector `b` in the affine map `Ax+b`."
-vector(m::AbstractAffineMap) = to_vector(domaintype(m), unsafe_matrix(m), unsafe_vector(m))
+affinevector(m::AbstractAffineMap) = to_vector(domaintype(m), unsafe_matrix(m), unsafe_vector(m))
 
-applymap(m::AbstractAffineMap, x) = _applymap(m, x, unsafe_matrix(m), unsafe_vector(m))
-_applymap(m::AbstractAffineMap, x, A, b) = A*x + b
+applymap(m::AbstractAffineMap, x) = _affine_applymap(m, x, unsafe_matrix(m), unsafe_vector(m))
+_affine_applymap(m, x, A, b) = A*x + b
 
-applymap!(y, m::AbstractAffineMap, x) = _applymap!(y, m, x, unsafe_matrix(m), unsafe_vector(m))
-function _applymap!(y, m::AbstractAffineMap, x, A, b)
+applymap!(y, m::AbstractAffineMap, x) = _affine_applymap!(y, m, x, unsafe_matrix(m), unsafe_vector(m))
+function _affine_applymap!(y, m, x, A, b)
     mul!(y, A, x)
     y .+= b
     y
 end
 
-isreal(m::AbstractAffineMap) = _isreal(m, unsafe_matrix(m), unsafe_vector(m))
-_isreal(m::AbstractAffineMap, A, b) = isreal(A) && isreal(b)
+isreal(m::AbstractAffineMap) = _affine_isreal(m, unsafe_matrix(m), unsafe_vector(m))
+_affine_isreal(m, A, b) = isreal(A) && isreal(b)
 
-jacobian(m::AbstractAffineMap{T}) where {T} = ConstantMap{T}(matrix(m))
-jacobian(m::AbstractAffineMap, x) = matrix(m)
+jacobian(m::AbstractAffineMap{T}) where {T} = ConstantMap{T}(affinematrix(m))
+jacobian(m::AbstractAffineMap, x) = affinematrix(m)
 
-jacdet(m::AbstractAffineMap, x) = _jacdet(m, x, unsafe_matrix(m))
-_jacdet(m::AbstractAffineMap, x, A) = det(A)
-_jacdet(m::AbstractAffineMap, x::Number, A::UniformScaling) = A.λ
-_jacdet(m::AbstractAffineMap, x::AbstractVector, A::Number) = A^length(x)
-_jacdet(m::AbstractAffineMap, x::AbstractVector, A::UniformScaling) = A.λ^length(x)
+jacdet(m::AbstractAffineMap, x) = _affine_jacdet(m, x, unsafe_matrix(m))
+_affine_jacdet(m, x, A) = det(A)
+_affine_jacdet(m, x::Number, A::UniformScaling) = A.λ
+_affine_jacdet(m, x::AbstractVector, A::Number) = A^length(x)
+_affine_jacdet(m, x::AbstractVector, A::UniformScaling) = A.λ^length(x)
 
 function diffvolume(m::AbstractAffineMap{T}) where T
     J = jacobian(m)
-    c = sqrt(det(vector(J)'*vector(J)))
+    c = sqrt(det(affinevector(J)'*affinevector(J)))
     ConstantMap{T}(c)
 end
 
-islinear(m::AbstractMap) = false
-islinear(m::AbstractAffineMap) = _islinear(m, unsafe_vector(m))
-_islinear(m::AbstractAffineMap, b) = all(b .== 0)
+islinearmap(m::AbstractMap) = false
+islinearmap(m::AbstractAffineMap) = _affine_islinearmap(m, unsafe_vector(m))
+_affine_islinearmap(m, b) = all(b .== 0)
 
-isaffine(m::AbstractMap) = islinear(m) || isconstant(m)
-isaffine(m::AbstractAffineMap) = true
+isaffinemap(m) = false
+isaffinemap(m::Map) = islinearmap(m) || isconstantmap(m)
+isaffinemap(m::AbstractAffineMap) = true
 
 isequalmap(m1::AbstractAffineMap, m2::AbstractAffineMap) =
-    matrix(m1) == matrix(m2) && vector(m1) == vector(m2)
+    affinematrix(m1) == affinematrix(m2) && affinevector(m1) == affinevector(m2)
 
 isequalmap(m1::AbstractAffineMap, m2::IdentityMap) =
-    islinear(m1) && matrix(m1) == matrix(m2)
+    islinearmap(m1) && affinematrix(m1) == affinematrix(m2)
 isequalmap(m1::IdentityMap, m2::AbstractAffineMap) = isequalmap(m2, m1)
 
-map_hash(m::AbstractAffineMap, h::UInt) = hashrec("AbstractAffineMap", matrix(m), vector(m), h)
+map_hash(m::AbstractAffineMap, h::UInt) = hashrec("AbstractAffineMap", affinematrix(m), affinevector(m), h)
 
 mapsize(m::AbstractAffineMap) = _affine_mapsize(m, domaintype(m), unsafe_matrix(m), unsafe_vector(m))
-_affine_mapsize(m::AbstractAffineMap, T, A::AbstractArray, b) = size(A)
-_affine_mapsize(m::AbstractAffineMap, T, A::AbstractVector, b::AbstractVector) = (length(A),)
-_affine_mapsize(m::AbstractAffineMap, T, A::Number, b::Number) = ()
-_affine_mapsize(m::AbstractAffineMap, T, A::Number, b::AbstractVector) = (length(b),length(b))
-_affine_mapsize(m::AbstractAffineMap, T, A::UniformScaling, b::Number) = ()
-_affine_mapsize(m::AbstractAffineMap, T, A::UniformScaling, b) = (length(b),length(b))
+_affine_mapsize(m, T, A::AbstractArray, b) = size(A)
+_affine_mapsize(m, T, A::AbstractVector, b::AbstractVector) = (length(A),)
+_affine_mapsize(m, T, A::Number, b::Number) = ()
+_affine_mapsize(m, T, A::Number, b::AbstractVector) = (length(b),length(b))
+_affine_mapsize(m, T, A::UniformScaling, b::Number) = ()
+_affine_mapsize(m, T, A::UniformScaling, b) = (length(b),length(b))
 
 
 Display.displaystencil(m::AbstractAffineMap) = vcat(["x -> "], map_stencil(m, 'x'))
 show(io::IO, mime::MIME"text/plain", m::AbstractAffineMap) = composite_show(io, mime, m)
 
-map_stencil(m::AbstractAffineMap, x) = _map_stencil(m, x, unsafe_matrix(m), unsafe_vector(m))
-_map_stencil(m::AbstractAffineMap, x, A, b) = [A, " * ", x, " + ", b]
-_map_stencil(m::AbstractAffineMap, x, A, b::Real) =
+map_stencil(m::AbstractAffineMap, x) = _affine_map_stencil(m, x, unsafe_matrix(m), unsafe_vector(m))
+_affine_map_stencil(m, x, A, b) = [A, " * ", x, " + ", b]
+_affine_map_stencil(m, x, A, b::Real) =
     b >= 0 ? [A, " * ", x, " + ", b] :  [A, " * ", x, " - ", abs(b)]
 
-map_stencil_broadcast(m::AbstractAffineMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m), unsafe_vector(m))
-_map_stencil_broadcast(m::AbstractAffineMap, x, A, b) = [A, " .* ", x, " .+ ", b]
-_map_stencil_broadcast(m::AbstractAffineMap, x, A::Number, b) = [A, " * ", x, " .+ ", b]
+map_stencil_broadcast(m::AbstractAffineMap, x) = _affine_map_stencil_broadcast(m, x, unsafe_matrix(m), unsafe_vector(m))
+_affine_map_stencil_broadcast(m, x, A, b) = [A, " .* ", x, " .+ ", b]
+_affine_map_stencil_broadcast(m, x, A::Number, b) = [A, " * ", x, " .+ ", b]
 
 Display.object_parentheses(m::AbstractAffineMap) = true
 Display.stencil_parentheses(m::AbstractAffineMap) = true
@@ -97,13 +97,13 @@ Concrete subtypes may differ in how `A` is represented.
 abstract type LinearMap{T} <: AbstractAffineMap{T} end
 
 mapsize(m::LinearMap) = _linearmap_size(m, domaintype(m), unsafe_matrix(m))
-_linearmap_size(m::LinearMap, T, A) = size(A)
-_linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {T<:Number} = ()
-_linearmap_size(m::LinearMap, ::Type{T}, A::AbstractVector) where {T<:Number} = (length(A),)
-_linearmap_size(m::LinearMap, ::Type{T}, A::Number) where {N,T<:StaticVector{N}} = (N,N)
+_linearmap_size(m, T, A) = size(A)
+_linearmap_size(m, ::Type{T}, A::Number) where {T<:Number} = ()
+_linearmap_size(m, ::Type{T}, A::AbstractVector) where {T<:Number} = (length(A),)
+_linearmap_size(m, ::Type{T}, A::Number) where {N,T<:StaticVector{N}} = (N,N)
 
-matrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
-vector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
+affinematrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
+affinevector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
 
 LinearMap(A::Number) = ScalarLinearMap(A)
 LinearMap(A::SMatrix) = StaticLinearMap(A)
@@ -121,18 +121,18 @@ LinearMap{T}(A) where {T} = GenericLinearMap{T}(A)
 LinearMap(a::Number...) = LinearMap(promote(a...))
 LinearMap(a::NTuple{N,T}) where {N,T <: Number} = LinearMap{SVector{N,T}}(Diagonal(SVector{N,T}(a)))
 
-applymap(m::LinearMap, x) = _applymap(m, x, unsafe_matrix(m))
-_applymap(m::LinearMap, x, A) = A*x
+applymap(m::LinearMap, x) = _linear_applymap(m, x, unsafe_matrix(m))
+_linear_applymap(m, x, A) = A*x
 
-applymap!(y, m::LinearMap, x) = _applymap!(y, m, x, unsafe_matrix(m))
-_applymap!(y, m::LinearMap, x, A) = mul!(y, A, x)
+applymap!(y, m::LinearMap, x) = _linear_applymap!(y, m, x, unsafe_matrix(m))
+_linear_applymap!(y, m, x, A) = mul!(y, A, x)
 
-islinear(m::LinearMap) = true
+islinearmap(m::LinearMap) = true
 
-isreal(m::LinearMap) = _isreal(m, unsafe_matrix(m))
-_isreal(m::LinearMap, A) = isreal(A)
+isreal(m::LinearMap) = _linear_isreal(m, unsafe_matrix(m))
+_linear_isreal(m, A) = isreal(A)
 
-isequalmap(m1::LinearMap, m2::LinearMap) = matrix(m1) == matrix(m2)
+isequalmap(m1::LinearMap, m2::LinearMap) = affinematrix(m1) == affinematrix(m2)
 
 # inverse should be called only on square maps, otherwise use
 # leftinverse or rightinverse in order to use pinv instead of inv
@@ -168,9 +168,9 @@ convert(::Type{AbstractAffineMap{T}}, m::StaticIdentityMap) where {T} = convert(
 
 
 map_stencil(m::LinearMap, x) = [unsafe_matrix(m), " * ", x]
-map_stencil_broadcast(m::LinearMap, x) = _map_stencil_broadcast(m, x, unsafe_matrix(m))
-_map_stencil_broadcast(m::LinearMap, x, A) = [A, " .* ", x]
-_map_stencil_broadcast(m::LinearMap, x, A::Number) = [A, " * ", x]
+map_stencil_broadcast(m::LinearMap, x) = _linear_map_stencil_broadcast(m, x, unsafe_matrix(m))
+_linear_map_stencil_broadcast(m, x, A) = [A, " .* ", x]
+_linear_map_stencil_broadcast(m, x, A::Number) = [A, " * ", x]
 
 
 "A `GenericLinearMap` is a linear map `y = A*x` for any type of `A`."
@@ -178,14 +178,18 @@ struct GenericLinearMap{T,AA} <: LinearMap{T}
     A   ::  AA
 end
 
-GenericLinearMap(A) = GenericLinearMap{Any}(A)
-GenericLinearMap(A::Number) = GenericLinearMap{typeof(A)}(A)
-GenericLinearMap(A::AbstractMatrix{T}) where {T} =
-    GenericLinearMap{Vector{T}}(A)
-GenericLinearMap(A::SMatrix{M,N,T}) where {M,N,T} =
-    GenericLinearMap{SVector{N,T}}(A)
-GenericLinearMap(A::AbstractVector{T}) where {T} =
-    GenericLinearMap{T}(A)
+"""
+What is the suggested domaintype for a generic linear map `A*x` with
+the given argument 'A'?
+"""
+glm_domaintype(A) = Any
+glm_domaintype(A::Number) = typeof(A)
+glm_domaintype(A::AbstractMatrix{T}) where T = Vector{T}
+glm_domaintype(A::SMatrix{M,N,T}) where {M,N,T} = SVector{N,T}
+glm_domaintype(A::AbstractVector{T}) where {T} = T
+glm_domaintype(A::Diagonal{T,SVector{N,T}}) where {N,T} = SVector{N,T}
+
+GenericLinearMap(A) = GenericLinearMap{glm_domaintype(A)}(A)
 
 # Allow any A
 GenericLinearMap{T}(A) where {T} = GenericLinearMap{T,typeof(A)}(A)
@@ -232,7 +236,7 @@ end
 
 ScalarLinearMap(A::Number) = ScalarLinearMap{typeof(A)}(A)
 
-isreal(m::ScalarLinearMap{T}) where {T} = isreal(T)
+isreal(m::ScalarLinearMap{T}) where {T} = isrealtype(T)
 
 show(io::IO, m::ScalarLinearMap) = show_scalar_linear_map(io, m.A)
 show_scalar_linear_map(io, A::Real) = print(io, "x -> $(A) * x")
@@ -275,26 +279,26 @@ convert(::Type{Map{SVector{N,T}}}, m::VectorLinearMap) where {N,T} = StaticLinea
 abstract type Translation{T} <: AbstractAffineMap{T} end
 
 # unsafe_matrix(m::Translation) = I
-matrix(m::Translation) = to_matrix(domaintype(m), LinearAlgebra.I, unsafe_vector(m))
-vector(m::Translation) = unsafe_vector(m)
+affinematrix(m::Translation) = to_matrix(domaintype(m), LinearAlgebra.I, unsafe_vector(m))
+affinevector(m::Translation) = unsafe_vector(m)
 
 mapsize(m::Translation) = _translation_mapsize(m, domaintype(m), unsafe_vector(m))
-_translation_mapsize(m::Translation, ::Type{T}, b::Number) where {T} = ()
-_translation_mapsize(m::Translation, ::Type{T}, b) where {T} = (length(b),length(b))
+_translation_mapsize(m, ::Type{T}, b::Number) where {T} = ()
+_translation_mapsize(m, ::Type{T}, b) where {T} = (length(b),length(b))
 
-map_stencil(m::Translation, x) = _map_stencil(m, x, unsafe_vector(m))
-_map_stencil(m::Translation, x, b) = [x, " + ", b]
-_map_stencil(m::Translation, x, b::Real) =
+map_stencil(m::Translation, x) = _translation_map_stencil(m, x, unsafe_vector(m))
+_translation_map_stencil(m, x, b) = [x, " + ", b]
+_translation_map_stencil(m, x, b::Real) =
     b >= 0 ? [x, " + ", b] : [x, " - ", abs(b)]
-map_stencil_broadcast(m::Translation, x) = _map_stencil_broadcast(m, x, unsafe_vector(m))
-_map_stencil_broadcast(m::Translation, x, b) = [x, " .+ ", b]
+map_stencil_broadcast(m::Translation, x) = _translation_map_stencil_broadcast(m, x, unsafe_vector(m))
+_translation_map_stencil_broadcast(m, x, b) = [x, " .+ ", b]
 
 "Translation by a scalar value."
 struct ScalarTranslation{T} <: Translation{T}
     b   ::  T
 end
 
-isreal(m::ScalarTranslation{T}) where {T} = isreal(T)
+isreal(m::ScalarTranslation{T}) where {T} = isrealtype(T)
 
 show(io::IO, m::ScalarTranslation) = show_scalar_translation(io, m.b)
 show_scalar_translation(io, b::Real) = print(io, "x -> x", b < 0 ? " - " : " + ", abs(b))
@@ -335,10 +339,10 @@ isequalmap(m1::Translation, m2::Translation) = unsafe_vector(m1)==unsafe_vector(
 
 similarmap(m::Translation, ::Type{T}) where {T} = Translation{T}(m.b)
 
-applymap(m::Translation, x) = _applymap(m, x, unsafe_vector(m))
-_applymap(m::Translation, x, b) = x + b
-applymap!(y, m::Translation, x) = _applymap!(y, m, x, unsafe_vector(m))
-_applymap!(y, m::Translation, x, b) = y .= x .+ m.b
+applymap(m::Translation, x) = _translation_applymap(m, x, unsafe_vector(m))
+_translation_applymap(m, x, b) = x + b
+applymap!(y, m::Translation, x) = _translation_applymap!(y, m, x, unsafe_vector(m))
+_translation_applymap!(y, m, x, b) = y .= x .+ m.b
 
 inverse(m::Translation{T}) where {T} = Translation{T}(-m.b)
 inverse(m::Translation, x) = x - m.b
@@ -390,8 +394,11 @@ AffineMap{T}(A, b) where {T} = GenericAffineMap{T}(A, b)
 
 similarmap(m::AffineMap, ::Type{T}) where {T} = AffineMap{T}(m.A, m.b)
 
-convert(::Type{AffineMap}, m) = (@assert isaffine(m); AffineMap(matrix(m), vector(m)))
-convert(::Type{AffineMap{T}}, m) where {T} = (@assert isaffine(m); AffineMap{T}(matrix(m), vector(m)))
+convert(::Type{AffineMap}, m) = (@assert isaffinemap(m); AffineMap(affinematrix(m), affinevector(m)))
+convert(::Type{AffineMap{T}}, m) where {T} = (@assert isaffinemap(m); AffineMap{T}(affinematrix(m), affinevector(m)))
+# avoid ambiguity errors with convert(::Type{T}, x::T) in Base:
+convert(::Type{AffineMap}, m::AffineMap) = m
+convert(::Type{AffineMap{T}}, m::AffineMap{T}) where T = m
 
 # If y = A*x+b, then x = inv(A)*(y-b) = inv(A)*y - inv(A)*b
 inverse(m::AffineMap) = (@assert issquaremap(m); AffineMap(inv(m.A), -inv(m.A)*m.b))
@@ -476,7 +483,7 @@ end
 
 ScalarAffineMap(A, b) = ScalarAffineMap(promote(A, b)...)
 
-isreal(m::ScalarAffineMap{T}) where {T} = isreal(T)
+isreal(m::ScalarAffineMap{T}) where {T} = isrealtype(T)
 
 show(io::IO, m::ScalarAffineMap) = show_scalar_affine_map(io, m.A, m.b)
 show_scalar_affine_map(io, A::Real, b::Real) = print(io, "x -> $(A) * x", b < 0 ? " - " : " + ", abs(b))
@@ -532,6 +539,9 @@ StaticAffineMap{T}(A::SMatrix{M,N,T}, b::AbstractVector) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
 StaticAffineMap{T}(A::SMatrix{M,N,T}, b::SVector{M,T}) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
+# line below catches ambiguity error
+StaticAffineMap{T}(A::SMatrix{M1,N,T}, b::SVector{M2,T}) where {T,N,M1,M2} =
+    throw(ArgumentError("Non-matching dimensions"))
 StaticAffineMap{T,N}(A::AbstractMatrix, b::AbstractVector) where {T,N} =
     StaticAffineMap{T,N,N}(A, b)
 StaticAffineMap{T,N}(A::SMatrix{M,N}, b::AbstractVector) where {T,N,M} =

@@ -18,6 +18,9 @@ generator_domain(f, iter::Base.Iterators.Filter) =
 # Example: Domain(x*y>0 for (x,y) in UnitDisk())
 generator_domain(f, iter::Base.Iterators.ProductIterator) =
     generator_productdomain(f, iter.iterators)
+# avoids ambiguity warning by Aqua, method is never called
+generator_domain(f::typeof(identity), iter::Base.Iterators.ProductIterator) =
+    generator_productdomain(f, iter.iterators)
 
 function generator_productdomain(f, iterators)
     domain = TupleProductDomain(iterators)

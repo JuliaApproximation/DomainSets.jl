@@ -56,6 +56,7 @@ center(d::ProductDomain) = toexternalpoint(d, map(center, components(d)))
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
 VcatEltype = Union{Type{<:Number},Type{<:SVector}}
 
+ProductDomain() = throw(ArgumentError("Empty product domain"))
 ProductDomain(domains...) = _ProductDomain(domains, map(domaineltype, domains)...)
 _ProductDomain(domains, types...) = TupleProductDomain(domains...)
 _ProductDomain(domains, types::VcatEltype...) = VcatDomain(domains...)
@@ -145,7 +146,7 @@ end
 VcatDomain{N,T}(domains::Union{AbstractVector,Tuple}) where {N,T} = VcatDomain{N,T}(domains...)
 function VcatDomain{N,T}(domains...) where {N,T}
 	DIM = map(dimension,domains)
-	VcatDomain{N,T,DIM}(convert_numtype.(domains, T)...)
+	VcatDomain{N,T,DIM}(convert_numtype.(T, domains)...)
 end
 
 VcatDomain{N,T,DIM}(domains...) where {N,T,DIM} =

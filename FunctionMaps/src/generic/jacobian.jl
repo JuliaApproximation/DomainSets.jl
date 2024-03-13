@@ -19,8 +19,8 @@ show(io::IO, mime::MIME"text/plain", m::LazyJacobian) = composite_show(io, mime,
 Return the jacobian map. The two-argument version evaluates the jacobian
 at a point `x`.
 """
-jacobian(m::AbstractMap) = LazyJacobian(m)
-jacobian!(y, m::AbstractMap, x) = y .= jacobian(m, x)
+jacobian(m) = LazyJacobian(m)
+jacobian!(y, m, x) = y .= jacobian(m, x)
 
 
 "A `DeterminantMap` returns the determinant of the result of a given map."
@@ -33,19 +33,19 @@ DeterminantMap{T}(m) where {T} = DeterminantMap{T,typeof(m)}(m)
 DeterminantMap{T}(m::Map{T}) where {T} = DeterminantMap{T,typeof(m)}(m)
 DeterminantMap{T}(m::Map{S}) where {S,T} = DeterminantMap{T}(convert(Map{T}, m))
 
-determinantmap(m::AbstractMap) = DeterminantMap(m)
+determinantmap(m) = DeterminantMap(m)
 
 applymap(m::DeterminantMap, x) = det(supermap(m)(x))
 
 
 """
-    jacdet(m::AbstractMap[, x])
+    jacdet(m[, x])
 
 Return the determinant of the jacobian as a map. The two-argument version
 evaluates the jacobian determinant at a point `x`.
 """
-jacdet(m::AbstractMap) = determinantmap(jacobian(m))
-jacdet(m::AbstractMap, x) = det(jacobian(m, x))
+jacdet(m) = determinantmap(jacobian(m))
+jacdet(m, x) = det(jacobian(m, x))
 
 
 "An `AbsMap` returns the absolute value of the result of a given map."
@@ -58,7 +58,7 @@ AbsMap{T}(m) where {T} = AbsMap{T,typeof(m)}(m)
 AbsMap{T}(m::Map{T}) where {T} = AbsMap{T,typeof(m)}(m)
 AbsMap{T}(m::Map{S}) where {S,T} = AbsMap{T}(convert(Map{T}, m))
 
-absmap(m::AbstractMap) = AbsMap(m)
+absmap(m) = AbsMap(m)
 
 applymap(m::AbsMap, x) = abs(supermap(m)(x))
 
@@ -146,13 +146,13 @@ Convert the `b` in the affine map `A*x` or `A*x+b` with domaintype `T` to a vect
 """
 to_vector(::Type{T}, A) where {T} = zero(T)
 to_vector(::Type{T}, A::SVector{M,S}) where {T,M,S} = zero(SVector{M,S})
-to_vector(::Type{T}, A::SMatrix{M,N,S}) where {T<:AbstractVector,M,N,S} = zero(SVector{M,S})
-to_vector(::Type{T}, A::AbstractArray) where {T<:AbstractVector} = zeros(eltype(T),size(A,1))
+to_vector(::Type{T}, A::SMatrix{M,N,S}) where {T,M,N,S} = zero(SVector{M,S})
+to_vector(::Type{T}, A::AbstractArray) where {T} = zeros(eltype(T),size(A,1))
 to_vector(::Type{T}, A, b) where {T} = b
 
 
 "Return a zero matrix of the same size as the map."
-zeromatrix(m::AbstractMap) = zeromatrix(m, domaintype(m), codomaintype(m))
+zeromatrix(m) = zeromatrix(m, domaintype(m), codomaintype(m))
 zeromatrix(m, ::Type{T}, ::Type{U}) where {T,U} = zeros(numtype(T),mapsize(m))
 zeromatrix(m, ::Type{T}, ::Type{U}) where {T<:Number,U<:Number} = zero(promote_type(T,U))
 zeromatrix(m, ::Type{T}, ::Type{U}) where {N,T<:StaticVector{N},U<:Number} =
@@ -166,14 +166,14 @@ zeromatrix(m, ::Type{T}, ::Type{U}) where {T<:AbstractVector,U<:Number} =
 
 
 "Return a zero vector of the same size as the codomain of the map."
-zerovector(m::AbstractMap) = zerovector(m, codomaintype(m))
-zerovector(m::AbstractMap, ::Type{U}) where {U} = zero(U)
-zerovector(m::AbstractMap, ::Type{StaticVector{M,T}}) where {M,T} = zero(SVector{M,T})
+zerovector(m) = zerovector(m, codomaintype(m))
+zerovector(m, ::Type{U}) where {U} = zero(U)
+zerovector(m, ::Type{StaticVector{M,T}}) where {M,T} = zero(SVector{M,T})
 # If the output type is a vector, the map itself should store the size information.
-zerovector(m::AbstractMap, ::Type{<:AbstractVector{T}}) where {T} = zeros(T, mapsize(m,1))
+zerovector(m, ::Type{<:AbstractVector{T}}) where {T} = zeros(T, mapsize(m,1))
 
 "Return an identity matrix with the same size as the map."
-identitymatrix(m::AbstractMap) = identitymatrix(m, codomaintype(m))
-identitymatrix(m::AbstractMap, ::Type{T}) where {T} = one(T)
-identitymatrix(m::AbstractMap, ::Type{<:StaticVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
-identitymatrix(m::AbstractMap, ::Type{<:AbstractVector{T}}) where {T} = Diagonal{T}(ones(mapsize(m,1)))
+identitymatrix(m) = identitymatrix(m, codomaintype(m))
+identitymatrix(m, ::Type{T}) where {T} = one(T)
+identitymatrix(m, ::Type{<:StaticVector{N,T}}) where {N,T} = one(SMatrix{N,N,T})
+identitymatrix(m, ::Type{<:AbstractVector{T}}) where {T} = Diagonal{T}(ones(mapsize(m,1)))

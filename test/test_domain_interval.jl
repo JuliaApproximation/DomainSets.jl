@@ -355,29 +355,13 @@ function test_intervals()
     @testset "mapping between intervals" begin
         @test canonicaldomain(UnitInterval()) == UnitInterval()
         m = mapto(2..3, ChebyshevInterval())
-        @test isaffine(m)
+        @test isaffinemap(m)
         @test m(2) ≈ -1
         @test m(3) ≈ 1
         m2 = mapto(4.0..6, 2..3)
-        @test isaffine(m2)
+        @test isaffinemap(m2)
         @test m2(4) ≈ 2
         @test m2(6) ≈ 3
-
-        @test DomainSets.interval_map(1.0, Inf, 2.0, Inf) == AffineMap(1.0, 1.0)
-        @test DomainSets.interval_map(1.0, Inf, Inf, 2.0) == AffineMap(-1.0, 3.0)
-        @test DomainSets.interval_map(Inf, 1.0, 2.0, Inf) == AffineMap(-1.0, 3.0)
-        @test DomainSets.interval_map(Inf, 1.0, Inf, 2.0) == AffineMap(1.0, 1.0)
-        @test DomainSets.interval_map(-Inf, Inf, -Inf, Inf) == IdentityMap()
-        @test DomainSets.interval_map(-Inf, Inf, Inf, -Inf) == LinearMap(-1)
-        @test DomainSets.interval_map(Inf, -Inf, -Inf, Inf) == LinearMap(-1)
-        @test DomainSets.interval_map(Inf, -Inf, Inf, -Inf) == IdentityMap()
-        @test DomainSets.interval_map(Inf, Inf, Inf, Inf) == IdentityMap()
-        @test DomainSets.interval_map(-Inf, -Inf, -Inf, -Inf) == IdentityMap()
-        @test DomainSets.interval_map(Inf, Inf, -Inf, -Inf) == LinearMap(-1)
-        @test DomainSets.interval_map(-Inf, -Inf, Inf, Inf) == LinearMap(-1)
-        @test_throws ArgumentError DomainSets.interval_map(-Inf, Inf, -Inf, -Inf)
-        @test_throws ArgumentError DomainSets.interval_map(-1, 1, -1, Inf)
-        @test_throws ArgumentError DomainSets.interval_map(-1, 1, -1, Inf)
     end
 
     @test DomainSets.isinterval(0..1)
@@ -609,6 +593,7 @@ function test_intervals()
         @test OpenInterval(0,1) ∩ RealLine() == OpenInterval(0,1)
         @test RealLine() ∩ (0..1) == (0..1)
         @test RealLine() ∩ OpenInterval(0,1) == OpenInterval(0,1)
+        @test RealLine() ∩ RealLine() == RealLine()
 
         @test UnitInterval() ∪ ChebyshevInterval() === ChebyshevInterval()
         @test ChebyshevInterval() ∪ UnitInterval() === ChebyshevInterval()
@@ -624,6 +609,8 @@ function test_intervals()
         @test PositiveRealLine() ∪ NonnegativeRealLine() === NonnegativeRealLine()
         @test NonpositiveRealLine() ∪ NegativeHalfLine() === NonpositiveRealLine()
         @test NegativeHalfLine() ∪ NonpositiveRealLine() === NonpositiveRealLine()
+        @test NonpositiveRealLine() ∪ NonpositiveRealLine() === NonpositiveRealLine()
+        @test RealLine() ∪ RealLine() === RealLine()
         @test uniondomain(0..1, RealLine()) === RealLine()
         @test uniondomain(OpenInterval(0,1), RealLine()) === RealLine()
         @test uniondomain(RealLine(), 0..1) === RealLine()

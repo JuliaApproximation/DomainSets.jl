@@ -1,11 +1,11 @@
 
+
 "A lazy inverse stores a map `m` and returns `inverse(m, x)`."
 struct LazyInverse{T,M} <: SimpleLazyMap{T}
 	map	::	M
 end
 
-LazyInverse(m::AbstractMap) = LazyInverse{codomaintype(m)}(m)
-LazyInverse(m) = LazyInverse{Float64}(m)
+LazyInverse(m) = LazyInverse{codomaintype(m)}(m)
 LazyInverse{T}(m) where {T} = LazyInverse{T,typeof(m)}(m)
 
 applymap(m::LazyInverse, x) = inverse(supermap(m), x)

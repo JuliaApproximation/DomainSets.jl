@@ -25,19 +25,19 @@ compatibleproductdims(d1::ProductMap, d2::ProductMap) =
 	mapsize(d1) == mapsize(d2) &&
 		all(map(==, map(mapsize, components(d1)), map(mapsize, components(d2))))
 
-isconstant(m::ProductMap) = mapreduce(isconstant, &, components(m))
-islinear(m::ProductMap) = mapreduce(islinear, &, components(m))
-isaffine(m::ProductMap) = mapreduce(isaffine, &, components(m))
+isconstantmap(m::ProductMap) = mapreduce(isconstantmap, &, components(m))
+islinearmap(m::ProductMap) = mapreduce(islinearmap, &, components(m))
+isaffinemap(m::ProductMap) = mapreduce(isaffinemap, &, components(m))
 
-matrix(m::ProductMap) = toexternalmatrix(m, map(matrix, components(m)))
-vector(m::ProductMap) = toexternalpoint(m, map(vector, components(m)))
-constant(m::ProductMap) = toexternalpoint(m, map(constant, components(m)))
+affinematrix(m::ProductMap) = toexternalmatrix(m, map(affinematrix, components(m)))
+affinevector(m::ProductMap) = toexternalpoint(m, map(affinevector, components(m)))
+mapconstant(m::ProductMap) = toexternalpoint(m, map(mapconstant, components(m)))
 
 jacobian(m::ProductMap, x) =
 	toexternalmatrix(m, map(jacobian, components(m), tointernalpoint(m, x)))
 function jacobian(m::ProductMap{T}) where {T}
-	if isaffine(m)
-		ConstantMap{T}(matrix(m))
+	if isaffinemap(m)
+		ConstantMap{T}(affinematrix(m))
 	else
 		LazyJacobian(m)
 	end
@@ -53,13 +53,15 @@ toexternalpoint(m::ProductMap, y) = y
 applymap(m::ProductMap, x) =
 	toexternalpoint(m, map(applymap, components(m), tointernalpoint(m, x)))
 
-productmap(map1, map2) = productmap1(map1, map2)
-productmap1(map1, map2) = productmap2(map1, map2)
-productmap2(map1, map2) = ProductMap(map1, map2)
-productmap(map1::ProductMap, map2::ProductMap) =
-	ProductMap(components(map1)..., components(map2)...)
-productmap1(map1::ProductMap, map2) = ProductMap(components(map1)..., map2)
-productmap2(map1, map2::ProductMap) = ProductMap(map1, components(map2)...)
+productmap(m1, m2) = productmap1(m1, m2)
+productmap1(m1, m2) = productmap2(m1, m2)
+productmap2(m1, m2) = default_productmap(m1, m2)
+default_productmap(m1, m2) = ProductMap(m1, m2)
+
+productmap(m1::ProductMap, m2::ProductMap) =
+	ProductMap(components(m1)..., components(m2)...)
+productmap1(m1::ProductMap, m2) = ProductMap(components(m1)..., m2)
+productmap2(m1, m2::ProductMap) = ProductMap(m1, components(m2)...)
 
 for op in (:inverse, :leftinverse, :rightinverse)
     @eval $op(m::ProductMap) = ProductMap(map($op, components(m)))
@@ -78,6 +80,13 @@ mapsize(m::ProductMap) = (sum(t->mapsize(t,1), components(m)), sum(t->mapsize(t,
 
 isequalmap(m1::ProductMap, m2::ProductMap) = all(map(isequalmap, components(m1), components(m2)))
 map_hash(m::ProductMap, h::UInt) = hashrec("ProductMap", collect(components(m)), h)
+
+canonicalmap(m::ProductMap) = any(map(hascanonicalmap, factors(m))) ?
+	ProductMap(map(canonicalmap, factors(m))) : m
+canonicalmap(::Equal, m::ProductMap) = any(map(hasequalmap, factors(m))) ?
+	ProductMap(map(equalmap, factors(m))) : m
+canonicalmap(::Equivalent, m::ProductMap) = any(map(hasequivalentmap, factors(m))) ?
+	ProductMap(map(equivalentmap, factors(m))) : m
 
 Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊗')
 Display.displaystencil(m::ProductMap) = composite_displaystencil(m)
@@ -108,7 +117,7 @@ VcatMap{T,M,N}(maps::Union{Tuple,Vector}) where {T,M,N} = VcatMap{T,M,N}(maps...
 function VcatMap{T,M,N}(maps...) where {T,M,N}
 	DIM1 = map(t->mapsize(t,1), maps)
 	DIM2 = map(t->mapsize(t,2), maps)
-	VcatMap{T,M,N,DIM1,DIM2}(convert_numtype.(maps, Ref(T))...)
+	VcatMap{T,M,N,DIM1,DIM2}(convert_numtype.(Ref(T), maps)...)
 end
 
 VcatMap{T,M,N,DIM1,DIM2}(maps...) where {T,M,N,DIM1,DIM2} =
@@ -147,14 +156,14 @@ struct VectorProductMap{T<:AbstractVector,M} <: ProductMap{T}
     maps    ::  Vector{M}
 end
 
-VectorProductMap(maps::AbstractMap...) = VectorProductMap(maps)
+VectorProductMap(maps...) = VectorProductMap(maps)
 VectorProductMap(maps) = VectorProductMap(collect(maps))
 function VectorProductMap(maps::Vector)
 	T = mapreduce(numtype, promote_type, maps)
 	VectorProductMap{Vector{T}}(maps)
 end
 
-VectorProductMap{T}(maps::AbstractMap...) where {T} = VectorProductMap{T}(maps)
+VectorProductMap{T}(maps...) where {T} = VectorProductMap{T}(maps)
 VectorProductMap{T}(maps) where {T} = VectorProductMap{T}(collect(maps))
 function VectorProductMap{T}(maps::Vector) where {T}
 	Tmaps = convert.(Map{eltype(T)}, maps)
@@ -170,7 +179,7 @@ mapsize(m::VectorProductMap) = (length(m.maps), length(m.maps))
 A `TupleProductMap` is a product map with all components collected in a tuple.
 There is no vector-valued function associated with this map.
 """
-struct TupleProductMap{T,MM} <: ProductMap{T}
+struct TupleProductMap{T<:Tuple,MM} <: ProductMap{T}
     maps    ::  MM
 end
 
@@ -181,8 +190,8 @@ function TupleProductMap(maps::Tuple)
 	TupleProductMap{T}(maps)
 end
 
-TupleProductMap{T}(maps::Vector) where {T} = TupleProductMap{T}(maps...)
-TupleProductMap{T}(maps...) where {T} = TupleProductMap{T}(maps)
+TupleProductMap{T}(maps::Vector) where {T<:Tuple} = TupleProductMap{T}(maps...)
+TupleProductMap{T}(maps...) where {T<:Tuple} = TupleProductMap{T}(maps)
 function TupleProductMap{T}(maps::NTuple{N,<:AbstractMap}) where {N,T <: Tuple}
 	Tmaps = map((t,d) -> convert(Map{t},d), tuple(T.parameters...), maps)
 	TupleProductMap{T,typeof(Tmaps)}(Tmaps)

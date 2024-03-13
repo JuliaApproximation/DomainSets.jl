@@ -416,7 +416,6 @@ include("test_domain_simplex.jl")
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
         @test cos.(0..1.0) isa MappedDomain
         @test isempty(MappedDomain(LinearMap(2.0), EmptySpace()))
-        @test map_domain(cos, 0..1.0) isa MappedDomain
         @test mapped_domain(acos, 0..1.0) isa MappedDomain
 
         # Test chaining of maps

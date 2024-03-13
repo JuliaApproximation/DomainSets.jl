@@ -6,8 +6,21 @@ using CompositeTypes.Indexing
 const io = IOBuffer()
 const textmime = MIME"text/plain"()
 
+println("#############################")
+println("# Aqua automated tests")
+println("#############################")
+include("aqua.jl")
+
+# First run the test suite of submodule FunctionMaps.jl
+println("#############################")
+println("# Tests of FunctionMaps.jl")
+println("#############################")
+include("../FunctionMaps/test/runtests2.jl")
+
+println("#############################")
+println("# Tests of DomainSets.jl")
+println("#############################")
 include("test_common.jl")
-include("test_maps.jl")
 include("test_generic_domain.jl")
 include("test_specific_domains.jl")
 include("test_canonical.jl")

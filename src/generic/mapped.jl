@@ -79,55 +79,46 @@ forward_map(d::MappedDomain, x) = rightinverse(d.invmap, x)
 inverse_map(d::MappedDomain) = d.invmap
 inverse_map(d::MappedDomain, y) = d.invmap(y)
 
-"Map a domain with the inverse of the given map"
-map_domain(map, domain) = _map_domain(map, checkdomain(domain))
-
-# Fallback: we don't know anything about map, just try to invert
-_map_domain(map, domain) = mapped_domain(inverse(map), domain)
-_map_domain(map::Map{T}, domain::Domain{T}) where {T} =
-    mapped_domain(inverse(map), domain)
-# If map is a Map{T}, then verify and if necessary update T
-function _map_domain(map::Map, domain)
-    U = codomaintype(map, domaineltype(domain))
-    if U == Union{}
-        error("incompatible types of $(map) and $(domain)")
-    end
-    mapped_domain(inverse(convert(Map{U}, map)), convert_eltype(U, domain))
-end
+"Map a domain with the inverse of the given map."
+map_domain(map, domain) = map_domain1(map, domain)
+map_domain1(map, domain) = map_domain2(map, domain)
+map_domain2(map, domain) = default_map_domain(map, domain)
+default_map_domain(map, domain) = mapped_domain(leftinverse(map), domain)
 
 isequaldomain(a::MappedDomain, b::MappedDomain) =
     isequalmap(a.invmap, b.invmap) && isequaldomain(superdomain(a), superdomain(b))
 domainhash(d::MappedDomain, h::UInt) = hashrec("MappedDomain", d.invmap, hash(superdomain(d)))
 
-"Make a mapped domain with the given inverse map"
-mapped_domain(invmap, domain) = _mapped_domain(invmap, checkdomain(domain))
+"Make a mapped domain with the given inverse map."
+mapped_domain(invmap, domain) = mapped_domain1(invmap, domain)
+mapped_domain1(invmap, domain) = mapped_domain2(invmap, domain)
+mapped_domain2(invmap, domain) = default_mapped_domain(invmap, domain)
 
-# We face the same task as in the constructor: attempt to identify T
-# Here, we are more flexible, and attempt to do more conversions. We assume
-# that users invoking the MappedDomain constructor know what they are doing,
-# but users invoking mapped_domain just expect it to work.
+function default_mapped_domain(invmap, domain)
+    T = promote_type(codomaintype(invmap), domaineltype(domain))
+    MappedDomain{T}(convert_codomaintype(T, invmap), domain)
+end
 
-# - we don't know anything about invmap, just pass it on
-_mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
-# - invmap is a Map{T}: its codomaintype should match the eltype of the domain
-# -- first, update the numtype
-_mapped_domain(invmap::Map, domain) =
-    _mapped_domain(invmap, domain, promote_type(numtype(invmap),domain_numtype(domain)))
-_mapped_domain(invmap, domain, ::Type{U}) where {U} =
-    _mapped_domain2(convert_numtype(invmap,U), convert_numtype(domain,U))
-# -- then, ensure the codomaintype of the map equals the element type of the domain
-_mapped_domain2(invmap, domain) = _mapped_domain2(invmap, domain, codomaintype(invmap), domaineltype(domain))
-# --- it's okay
-_mapped_domain2(invmap, domain, ::Type{T}, ::Type{T}) where {T} =
-    MappedDomain(invmap, domain)
-# --- it's not okay: attempt to convert the map (triggers e.g. when combining a scalar
-#        LinearMap with a vector domain)
-_mapped_domain2(invmap, domain, ::Type{S}, ::Type{T}) where {S,T} =
-    MappedDomain(convert(Map{T}, invmap), domain)
+# We make a special case for linear mappings like 2 .* d, when d contains vectors
+mapped_domain1(invmap::LinearMap{<:Number}, domain::Domain{T}) where {T<:AbstractVector} =
+    mapped_domain(Map{T}(invmap), domain)
+# allow some mixing of SVector and Vector
+mapped_domain1(invmap::Map{SVector{N,T}}, domain) where {N,T} =
+    _vector_mapped_domain1(invmap, domain)
+_vector_mapped_domain1(invmap::Map{SVector{N,T}}, domain::Domain{Vector{U}}) where {N,T,U} =
+    mapped_domain(invmap, convert(Domain{SVector{N,promote_type(T,U)}}, domain))
+_vector_mapped_domain1(invmap::Map{SVector{N,T}}, domain) where {N,T} =
+    mapped_domain2(invmap, domain)
+
+mapped_domain2(invmap, domain::Domain{SVector{N,T}}) where {N,T} =
+    _vector_mapped_domain2(invmap, domain)
+_vector_mapped_domain2(invmap::Map{Vector{U}}, domain::Domain{SVector{N,T}}) where {N,T,U} =
+    mapped_domain(convert(Map{SVector{N,promote_type(T,U)}}, invmap), domain)
+_vector_mapped_domain2(invmap, domain::Domain{SVector{N,T}}) where {N,T} =
+    default_mapped_domain(invmap, domain)
 
 # Avoid nested mapping domains, construct a composite map instead
-# This assumes that the map types can be combined using \circ
-mapped_domain(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
+mapped_domain2(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))
 
 boundary(d::MappedDomain) = _boundary(d, boundary(superdomain(d)), inverse_map(d))
 _boundary(d::MappedDomain, superbnd, invmap) = MappedDomain(invmap, superbnd)

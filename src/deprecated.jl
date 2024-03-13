@@ -1,4 +1,7 @@
 
+@deprecate convert_prectype(d::Domain, ::Type{T}) where {T} convert_prectype(T, d)
+@deprecate convert_numtype(d::Domain, ::Type{T}) where {T} convert_numtype(T, d)
+
 @deprecate point_in_domain(d) choice(d)
 
 @deprecate broadcast_in(A, d::Domain) vectorized_in(A, d)

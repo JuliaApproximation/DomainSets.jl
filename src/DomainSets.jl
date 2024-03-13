@@ -6,6 +6,7 @@ using LinearAlgebra
 using Random
 using StaticArrays
 
+include("../FunctionMaps/src/FunctionMaps.jl")
 
 ################################
 ## Exhaustive list of imports
@@ -49,8 +50,10 @@ export prectype, numtype,
 
 ## Maps
 
+include("maps_imports.jl")
+
 # from maps/map.jl
-export AbstractMap, Map, TypedMap,
+export AbstractMap, Map, MapRef, TypedMap,
     applymap, isequalmap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
@@ -63,12 +66,13 @@ export ProductMap, productmap
 export IdentityMap,
     StaticIdentityMap, VectorIdentityMap,
     ZeroMap, UnityMap, ConstantMap,
-    isconstant, constant
+    isconstant, constant,
+    isconstantmap, mapconstant
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
-    matrix, vector,
-    islinear, isaffine
-
+    affinematrix, affinevector,
+    islinear, isaffine,
+    islinearmap, isaffinemap
 
 ## Generic domains
 
@@ -174,17 +178,6 @@ export rotation_map,
     CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
-
-include("maps/map.jl")
-include("maps/lazy.jl")
-include("maps/inverse.jl")
-include("maps/jacobian.jl")
-include("maps/composite.jl")
-include("maps/product.jl")
-include("maps/isomorphism.jl")
-include("maps/basic.jl")
-include("maps/affine.jl")
-include("maps/arithmetics.jl")
 
 include("generic/interface.jl")
 include("generic/domain.jl")

@@ -60,16 +60,26 @@ rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), map
 
 composedmap() = ()
 composedmap(m) = m
-composedmap(m1, m2) = composedmap1(m1, m2)
+function composedmap(m1, m2)
+    T = promote_type(codomaintype(m1), domaintype(m2))
+    composedmap1(convert_codomaintype(T, m1), convert_domaintype(T, m2))
+end
 composedmap1(m1, m2) = composedmap2(m1, m2)
-composedmap2(m1, m2) = ComposedMap(m1, m2)
+composedmap2(m1, m2) = default_composedmap(m1, m2)
+default_composedmap(m1, m2) = ComposedMap(m1, m2)
 
 composedmap(m1, m2, maps...) = composedmap(composedmap(m1, m2), maps...)
 
 composedmap(m1::ComposedMap, m2::ComposedMap) =
     ComposedMap(components(m1)..., components(m2)...)
-composedmap1(m1::ComposedMap, m2) = ComposedMap(components(m1)..., m2)
-composedmap2(m1, m2::ComposedMap) = ComposedMap(m1, components(m2)...)
+function composedmap1(m1::ComposedMap, m2)
+    T = promote_type(codomaintype(m1), domaintype(m2))
+    ComposedMap(components(m1)..., convert_domaintype(T, m2))
+end
+function composedmap2(m1, m2::ComposedMap)
+    T = promote_type(codomaintype(m1), domaintype(m2))
+    ComposedMap(convert_codomaintype(T, m1), components(m2)...)
+end
 
 # Arguments to ∘ should be reversed before passing on to mapcompose
 Base.:∘(map1::AbstractMap, map2::AbstractMap) = composedmap(map2, map1)
@@ -92,7 +102,7 @@ struct MulMap{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-MulMap(maps::Map{T}...) where {T} = MulMap{T}(maps...)
+MulMap(map1::Map{T}, maps::Map{T}...) where {T} = MulMap{T}(map1, maps...)
 MulMap{T}(maps::Map{T}...) where {T} = MulMap{T,typeof(maps)}(maps)
 MulMap{T}(maps...) where {T} = _mulmap(T, convert.(Map{T}, maps)...)
 _mulmap(::Type{T}, maps...) where {T} = MulMap{T,typeof(maps)}(maps)
@@ -105,7 +115,8 @@ multiply_map() = ()
 multiply_map(m) = m
 multiply_map(m1, m2) = multiply_map1(m1, m2)
 multiply_map1(m1, m2) = multiply_map2(m1, m2)
-multiply_map2(m1, m2) = MulMap(m1, m2)
+multiply_map2(m1, m2) = default_multiply_map(m1, m2)
+default_multiply_map(m1, m2) = MulMap(m1, m2)
 
 multiply_map(m1, m2, maps...) = multiply_map(multiply_map(m1, m2), maps...)
 
@@ -137,7 +148,7 @@ struct SumMap{T,MAPS} <: CompositeLazyMap{T}
     maps    ::  MAPS
 end
 
-SumMap(maps::Map{T}...) where {T} = SumMap{T}(maps...)
+SumMap(map1::Map{T}, maps::Map{T}...) where {T} = SumMap{T}(map1, maps...)
 SumMap{T}(maps::Map{T}...) where {T} = SumMap{T,typeof(maps)}(maps)
 SumMap{T}(maps...) where {T} = _summap(T, convert.(Map{T}, maps)...)
 _summap(::Type{T}, maps...) where {T} = SumMap{T,typeof(maps)}(maps)
@@ -150,7 +161,8 @@ sum_map() = ()
 sum_map(m) = m
 sum_map(m1, m2) = sum_map1(m1, m2)
 sum_map1(m1, m2) = sum_map2(m1, m2)
-sum_map2(m1, m2) = SumMap(m1, m2)
+sum_map2(m1, m2) = default_sum_map(m1, m2)
+default_sum_map(m1, m2) = SumMap(m1, m2)
 
 sum_map(m1, m2, maps...) = sum_map(sum_map(m1, m2), maps...)
 

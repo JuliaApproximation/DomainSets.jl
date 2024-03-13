@@ -55,7 +55,7 @@ end
 
     @test mapfrom_canonical(OpenInterval(2.0,Inf))(0.0) == 2.0
     @test mapfrom_canonical(OpenInterval(-Inf,2.0))(0.0) == 2.0
-    @test DomainSets.isidentity(mapfrom_canonical(OpenInterval(-Inf,Inf)))
+    @test DomainSets.isidentitymap(mapfrom_canonical(OpenInterval(-Inf,Inf)))
     @test mapfrom_canonical(OpenInterval(Inf,-Inf))(2.0) == -2.0
     @test mapfrom_canonical(Interval{:closed,:open}(2.0,Inf))(0.0) == 2.0
     @test mapfrom_canonical(Interval{:closed,:open}(2.0,4.0))(-1.0) == 2.0

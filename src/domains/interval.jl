@@ -130,69 +130,6 @@ similardomain(::ChebyshevInterval, ::Type{T}) where {T} = ChebyshevInterval{T}()
 
 Base.:-(d::ChebyshevInterval) = d
 
-
-interval_map(a, b, c, d) = interval_map(promote(a,b,c,d)...)
-
-"""
-Map the interval `[a,b]` to the interval `[c,d]`.
-
-This function deals with infinite intervals, and the type of the
-map returned may depend on the value (finiteness) of the given endpoints.
-"""
-function interval_map(a::T, b::T, c::T, d::T) where {T}
-    FT = float(T)
-    if isfinite(a) && isfinite(b) && isfinite(c) && isfinite(d)
-        bounded_interval_map(a, b, c, d)
-    elseif isfinite(a) && !isfinite(b) && isfinite(c) && !isfinite(d)
-        # (a,Inf) to (c,Inf)
-        AffineMap(one(FT), c-a)
-    elseif isfinite(a) && !isfinite(b) && !isfinite(c) && isfinite(d)
-        # (a,Inf) to (Inf,d)
-        AffineMap(-one(FT), d+a)
-    elseif !isfinite(a) && isfinite(b) && isfinite(c) && !isfinite(d)
-        # (Inf,b) to (c,Inf)
-        AffineMap(-one(FT), c+b)
-    elseif !isfinite(a) && isfinite(b) && !isfinite(c) && isfinite(d)
-        # (Inf,b) to (Inf,d)
-        AffineMap(one(FT), d-b)
-    elseif !isfinite(a) && !isfinite(b) && !isfinite(c) && !isfinite(d)
-        if (a < 0) && (b > 0) && (c < 0) && (d > 0)
-            # (-Inf,Inf) to (-Inf,Inf)
-            StaticIdentityMap{FT}()
-        elseif (a < 0) && (b > 0) && (c > 0) && (d < 0)
-            # (-Inf,Inf) to (Inf,-Inf)
-            LinearMap(-one(FT))
-        elseif (a > 0) && (b < 0) && (c < 0) && (d > 0)
-            # (Inf,-Inf) to (-Inf,Inf)
-            LinearMap(-one(FT))
-        elseif (a > 0) && (b < 0) && (c > 0) && (d < 0)
-            # (Inf,-Inf) to (Inf,-Inf)
-            StaticIdentityMap{FT}()
-        elseif (a > 0) && (b > 0) && (c > 0) && (d > 0)
-            # (Inf,Inf) to (Inf,Inf)
-            StaticIdentityMap{FT}()
-        elseif (a < 0) && (b < 0) && (c < 0) && (d < 0)
-            # (-Inf,-Inf) to (-Inf,-Inf)
-            StaticIdentityMap{FT}()
-        elseif (a < 0) && (b < 0) && (c > 0) && (d > 0)
-            # (-Inf,-Inf) to (Inf,Inf)
-            LinearMap(-one(FT))
-        elseif (a > 0) && (b > 0) && (c < 0) && (d < 0)
-            # (Inf,Inf) to (-Inf,-Inf)
-            LinearMap(-one(FT))
-        else
-            throw(ArgumentError("Requested affine map is unbounded"))
-        end
-    else
-        throw(ArgumentError("Requested affine map is unbounded"))
-    end
-end
-
-"Like interval_map, but guaranteed to return a scalar affine map."
-bounded_interval_map(a, b, c, d) = bounded_interval_map(promote(a,b,c,d)...)
-bounded_interval_map(a::T, b::T, c::T, d::T) where {T} =
-    AffineMap((d-c)/(b-a), c - a*(d-c)/(b-a))
-
 mapto(d1::D, d2::D) where {D <: FixedInterval} = identitymap(d1)
 mapto(d1::AbstractInterval, d2::AbstractInterval) =
     interval_map(leftendpoint(d1), rightendpoint(d1), leftendpoint(d2), rightendpoint(d2))
@@ -458,6 +395,7 @@ intersectdomain(d1::AbstractInterval{T}, d2::RealLine{T}) where {T} = d1
 intersectdomain(d1::TypedEndpointsInterval{L,R,T}, d2::RealLine{T}) where {L,R,T} = d1
 intersectdomain(d1::RealLine{T}, d2::AbstractInterval{T}) where {T} = d2
 intersectdomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T} = d2
+intersectdomain(d1::RealLine{T}, d2::RealLine{T}) where {T} = d1
 
 
 # [0,1] ∪ [-1,1] = [-1,1]
@@ -477,11 +415,13 @@ uniondomain(d1::NonnegativeRealLine{T}, d2::PositiveRealLine{T}) where {T} = d1
 uniondomain(d1::PositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = d2
 uniondomain(d1::NonpositiveRealLine{T}, d2::NegativeHalfLine{T}) where {T} = d1
 uniondomain(d1::NegativeHalfLine{T}, d2::NonpositiveRealLine{T}) where {T} = d2
+uniondomain(d1::NonpositiveRealLine{T}, d2::NonpositiveRealLine{T}) where {T} = d1
 # [a,b] ∪ (-∞,∞) = (-∞,∞)
 uniondomain(d1::AbstractInterval{T}, d2::RealLine{T}) where {T} = d2
 uniondomain(d1::TypedEndpointsInterval{L,R,T}, d2::RealLine{T}) where {L,R,T} = d2
 uniondomain(d1::RealLine{T}, d2::AbstractInterval{T}) where {T} = d1
 uniondomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T} = d1
+uniondomain(d1::RealLine{T}, d2::RealLine{T}) where {T} = d1
 
 
 # [0,1] ∖ [-1,1] = {}

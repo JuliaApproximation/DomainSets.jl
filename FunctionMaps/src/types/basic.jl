@@ -17,20 +17,20 @@ applymap!(y, map::IdentityMap, x) = y .= x
 inverse(m::IdentityMap) = m
 inverse(m::IdentityMap, x) = x
 
-islinear(::IdentityMap) = true
-isreal(::IdentityMap{T}) where {T} = isreal(T)
+islinearmap(::IdentityMap) = true
+isreal(::IdentityMap{T}) where {T} = isrealtype(T)
 
-isidentity(::IdentityMap) = true
-isidentity(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
+isidentitymap(::IdentityMap) = true
+isidentitymap(m::Map{T}) where {T} = m == StaticIdentityMap{T}()
 
 mapsize(m::IdentityMap{T}) where {T<:Number} = ()
 mapsize(m::IdentityMap{T}) where {T} = (euclideandimension(T),euclideandimension(T))
 
-matrix(m::IdentityMap) = identitymatrix(m)
-vector(m::IdentityMap) = zerovector(m)
+affinematrix(m::IdentityMap) = identitymatrix(m)
+affinevector(m::IdentityMap) = zerovector(m)
 
-jacobian(m::IdentityMap) = ConstantMap(matrix(m))
-jacobian(m::IdentityMap, x) = matrix(m)
+jacobian(m::IdentityMap) = ConstantMap(affinematrix(m))
+jacobian(m::IdentityMap, x) = affinematrix(m)
 
 jacdet(m::IdentityMap, x) = 1
 
@@ -89,37 +89,37 @@ map_hash(m::DynamicIdentityMap, h::UInt) = hashrec("DynamicIdentityMap", m.dimen
 "The supertype of constant maps from `T` to `U`."
 abstract type ConstantMap{T,U} <: TypedMap{T,U} end
 
-applymap(m::ConstantMap, x) = constant(m)
+applymap(m::ConstantMap, x) = mapconstant(m)
 
-isconstant(m::AbstractMap) = false
-isconstant(m::ConstantMap) = true
+isconstantmap(m::AbstractMap) = false
+isconstantmap(m::ConstantMap) = true
 
 isreal(m::ConstantMap{T,U}) where {T,U} =
-    isreal(T) && isreal(U) && isreal(constant(m))
+    isrealtype(T) && isrealtype(U) && isreal(mapconstant(m))
 
-mapsize(m::ConstantMap) = _constant_mapsize(m, constant(m))
+mapsize(m::ConstantMap) = _constant_mapsize(m, mapconstant(m))
 _constant_mapsize(m::ConstantMap{T,U}, c) where {T<:Number,U<:Number} = ()
 _constant_mapsize(m::ConstantMap{T,U}, c) where {T<:Number,U} = (length(c),)
 _constant_mapsize(m::ConstantMap{T,U}, c) where {T,U<:Number} = (1,euclideandimension(T))
 _constant_mapsize(m::ConstantMap{T,U}, c) where {T,U} = (length(c), euclideandimension(T))
 
-matrix(m::ConstantMap) = zeromatrix(m)
-vector(m::ConstantMap) = constant(m)
+affinematrix(m::ConstantMap) = zeromatrix(m)
+affinevector(m::ConstantMap) = mapconstant(m)
 
-jacobian(m::ConstantMap{T}) where {T} = ConstantMap{T}(matrix(m))
-jacobian(m::ConstantMap, x) = matrix(m)
+jacobian(m::ConstantMap{T}) where {T} = ConstantMap{T}(affinematrix(m))
+jacobian(m::ConstantMap, x) = affinematrix(m)
 
 jacdet(::ConstantMap, x) = 0
 
-determinantmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(det(constant(m)))
-absmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(abs(constant(m)))
+determinantmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(det(mapconstant(m)))
+absmap(m::ConstantMap{T}) where {T} = ConstantMap{T}(abs(mapconstant(m)))
 
 diffvolume(m::ConstantMap{T,U}) where {T,U} = ZeroMap{T,U}()
 
-isequalmap(m1::ConstantMap, m2::ConstantMap) = constant(m1)==constant(m2)
-map_hash(m::ConstantMap, h::UInt) = hashrec("ConstantMap", constant(m), h)
+isequalmap(m1::ConstantMap, m2::ConstantMap) = mapconstant(m1)==mapconstant(m2)
+map_hash(m::ConstantMap, h::UInt) = hashrec("ConstantMap", mapconstant(m), h)
 
-similarmap(m::ConstantMap, ::Type{T}) where {T} = ConstantMap{T}(constant(m))
+similarmap(m::ConstantMap, ::Type{T}) where {T} = ConstantMap{T}(mapconstant(m))
 similarmap(m::ConstantMap, ::Type{T}, ::Type{U}) where {T,U} = ConstantMap{T,U}(m.c)
 
 ConstantMap() = ConstantMap{Float64}()
@@ -129,7 +129,7 @@ ConstantMap{T}(c) where {T} = FixedConstantMap{T}(c)
 ConstantMap{T,U}() where {T,U} = UnityMap{T,U}()
 ConstantMap{T,U}(c) where {T,U} = FixedConstantMap{T,U}(c)
 
-show(io::IO, m::ConstantMap{T}) where {T} = print(io, "x -> $(constant(m))")
+show(io::IO, m::ConstantMap{T}) where {T} = print(io, "x -> $(mapconstant(m))")
 Display.object_parentheses(m::ConstantMap) = true
 
 
@@ -137,7 +137,7 @@ Display.object_parentheses(m::ConstantMap) = true
 struct ZeroMap{T,U} <: ConstantMap{T,U}
 end
 ZeroMap{T}() where {T} = ZeroMap{T,T}()
-constant(m::ZeroMap{T,U}) where {T,U} = zero(U)
+mapconstant(m::ZeroMap{T,U}) where {T,U} = zero(U)
 similarmap(m::ZeroMap{S,U}, ::Type{T}) where {T,S,U} = ZeroMap{T,U}()
 similarmap(m::ZeroMap, ::Type{T}, ::Type{U}) where {T,U} = ZeroMap{T,U}()
 
@@ -146,7 +146,7 @@ similarmap(m::ZeroMap, ::Type{T}, ::Type{U}) where {T,U} = ZeroMap{T,U}()
 struct UnityMap{T,U} <: ConstantMap{T,U}
 end
 UnityMap{T}() where {T} = UnityMap{T,real(numtype(T))}()
-constant(m::UnityMap{T,U}) where {T,U} = one(U)
+mapconstant(m::UnityMap{T,U}) where {T,U} = one(U)
 similarmap(m::UnityMap{S,U}, ::Type{T}) where {T,S,U} = UnityMap{T,U}()
 similarmap(m::UnityMap, ::Type{T}, ::Type{U}) where {T,U} = UnityMap{T,U}()
 
@@ -157,4 +157,4 @@ struct FixedConstantMap{T,U} <: ConstantMap{T,U}
 end
 FixedConstantMap{T}(c::U) where {T,U} = FixedConstantMap{T,U}(c)
 FixedConstantMap(c::T) where {T} = FixedConstantMap{T}(c)
-constant(m::FixedConstantMap) = m.c
+mapconstant(m::FixedConstantMap) = m.c

@@ -137,8 +137,8 @@ function test_balls()
     @test !isempty(D)
 
     @test canonicaldomain(D) == UnitDisk()
-    @test matrix(mapfrom_canonical(D)) == [2 0; 0 2]
-    @test vector(mapfrom_canonical(D)) == [0; 0]
+    @test affinematrix(mapfrom_canonical(D)) == [2 0; 0 2]
+    @test affinevector(mapfrom_canonical(D)) == [0; 0]
     @test parameterdomain(D) == UnitSquare()
     @test mapfrom_parameterdomain(D)([0.2,0.4]) ∈ D
     @test boundingbox(D) == (-2.0..2.0)^2
@@ -318,8 +318,8 @@ function test_spheres()
     @test approx_in(SA[3.,1.], C)
 
     @test canonicaldomain(C) == UnitCircle()
-    @test matrix(mapfrom_canonical(C)) == [2 0; 0 2]
-    @test vector(mapfrom_canonical(C)) == [1; 1]
+    @test affinematrix(mapfrom_canonical(C)) == [2 0; 0 2]
+    @test affinevector(mapfrom_canonical(C)) == [1; 1]
     @test parameterdomain(C) == UnitInterval()
     @test mapfrom_parameterdomain(C) isa ComposedMap
     @test mapfrom_parameterdomain(C)(0.5) ≈ [-1; 1]
@@ -367,21 +367,19 @@ function test_spheres()
     @test boundingbox(D4) == ProductDomain([cheb, cheb, cheb, cheb])
 
     ## sphere points
-    x_sphere = [0.1,0.2,1-(0.1)^2-(0.4)^2]
+    x_sphere = [0.1,0.2,sqrt(1-(0.1)^2-(0.2)^2)]
     p1 = DomainSets.EuclideanSpherePoint(x_sphere)
-    @test DomainSets.domain(p1) == UnitSphere(3)
+    @test domain(p1) == UnitSphere(3)
     @test DomainSets.point(p1) == x_sphere
-    @test p1 ∈ UnitSphere()
     @test p1 ∈ UnitSphere(3)
-    @test p1 ∈ DomainSets.domain(p1)
 
     p2 = DomainSets.EuclideanSpherePoint(SVector{3}(x_sphere))
-    @test DomainSets.domain(p2) === UnitSphere()
+    @test domain(p2) === UnitSphere()
     @test DomainSets.point(p2) == x_sphere
-    @test p2 ∈ UnitSphere()
+    @test p2 ∈ UnitSphere(Val(3))
 
     p3 = DomainSets.SphericalCoordinate(0.4, 0.5)
-    @test DomainSets.domain(p3) === UnitSphere()
+    @test domain(p3) === UnitSphere()
     @test p3 ∈ UnitSphere()
     @test approx_in(DomainSets.point(p3), UnitSphere())
 end

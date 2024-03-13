@@ -11,16 +11,19 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 julia = "1.6"
+Aqua = "0.8"
 CompositeTypes = "0.1.2"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
 Random = "1"
 StableRNGs = "1"
 StaticArrays = "0.12.2, 1"
+Test = "1"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "StableRNGs"]
+test = ["Test", "Aqua", "StableRNGs"]

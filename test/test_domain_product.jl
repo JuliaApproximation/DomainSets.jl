@@ -370,6 +370,18 @@ function test_product_domains()
         @test boundingbox(MappedDomain(LinearMap(1/2), 2..3)) == 4.0..6.0
         @test boundingbox(MappedDomain(LinearMap(1/2), (2..3)^2)) == (4.0..6.0)^2
     end
+    @testset "product mapto" begin
+        d1 = ProductDomain(1.0..2.0, 1.0..2.0)
+        d2 = ProductDomain(2.0..4.0, 2.0..4.0)
+        @test mapto(d1, d2) isa DomainSets.VcatMap
+        @test jacobian(mapto(d1,d2)) isa ConstantMap
+        @test jacdet(mapto(d1,d2)) == DomainSets.ConstantMap{SVector{2,Float64}}(4.0)
+        d1v = ProductDomain([1.0..2.0, 1.0..2.0])
+        d2v = ProductDomain([2.0..4.0, 2.0..4.0])
+        @test mapto(d1v, d2v) isa DomainSets.VectorProductMap
+        @test jacobian(mapto(d1v,d2v)) isa DomainSets.ConstantMap
+        @test jacdet(mapto(d1v,d2v)) == DomainSets.ConstantMap{Vector{Float64}}(4.0)
+    end
 
     @testset "VcatDomain == bug" begin
         x = VcatDomain(0.0:0.5:2.0, [1,3,4])

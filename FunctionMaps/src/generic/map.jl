@@ -22,23 +22,26 @@ domaintype(::Type{M}) where {M} = Any
 domaintype(::Type{<:Map{T}}) where {T} = T
 
 """
-    codomaintype(m[, S])
+    codomaintype(m[, T])
 
-What is the codomain type of the function map `m`, given that `S` is its domain type?
+What is the codomain type of the function map `m`, given that `T` is its domain type?
 """
 codomaintype(m) = codomaintype(m, domaintype(m))
 codomaintype(m, ::Type{T}) where {T} = codomaintype(typeof(m), T)
 
 codomaintype(::Type{M}, ::Type{T}) where {M,T} = Any
+codomaintype(::Type{M}, ::Type{Any}) where {M} = Any
 codomaintype(M::Type{<:AbstractMap}, ::Type{T}) where {T} = Base.promote_op(applymap, M, T)
+codomaintype(M::Type{<:AbstractMap}, ::Type{Any}) = Any
 codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
+codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{Any}) where {T,U} = U
 
 prectype(::Type{<:Map{T}}) where T = prectype(T)
 numtype(::Type{<:Map{T}}) where T = numtype(T)
 
-isreal(m::AbstractMap) = isreal(domaintype(m)) && isreal(codomaintype(m))
-isreal(::UniformScaling{T}) where {T} = isreal(T)
-isreal(::Type{UniformScaling{T}}) where {T} = isreal(T)
+isreal(m::AbstractMap) = isrealtype(domaintype(m)) && isrealtype(codomaintype(m))
+isreal(::UniformScaling{T}) where {T} = isrealtype(T)
+isreal(::Type{UniformScaling{T}}) where {T} = isrealtype(T)
 
 convert(::Type{AbstractMap}, m::AbstractMap) = m
 convert(::Type{Map{T}}, m::Map{T}) where {T} = m
@@ -46,11 +49,31 @@ convert(::Type{Map{T}}, m::Map{S}) where {S,T} = similarmap(m, T)
 convert(::Type{TypedMap{T,U}}, m::TypedMap{T,U}) where {T,U} = m
 convert(::Type{TypedMap{T,U}}, m::TypedMap) where {T,U} = similarmap(m, T, U)
 
-convert_domaintype(map::Map{T}, ::Type{T}) where {T} = map
-convert_domaintype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{U}, map)
+convert_domaintype(::Type{T}, map::Map{T}) where {T} = map
+convert_domaintype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{U}, map)
+convert_domaintype(::Type{Any}, map) = map
+convert_domaintype(::Type{Any}, map::Map{T}) where T = map
 
-convert_numtype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_numtype(T,U)}, map)
-convert_prectype(map::Map{T}, ::Type{U}) where {T,U} = convert(Map{to_prectype(T,U)}, map)
+convert_numtype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{to_numtype(U,T)}, map)
+convert_prectype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{to_prectype(U,T)}, map)
+
+convert_codomaintype(::Type{U}, map) where U =
+    _convert_codomaintype(U, map, domaintype(map), codomaintype(map))
+# types match: we can return map
+_convert_codomaintype(::Type{U}, map, ::Type{T}, ::Type{U}) where {T,U} = map
+# types don't match: we first convert the numtype
+_convert_codomaintype(::Type{U}, map, ::Type{T}, ::Type{V}) where {T,U,V} =
+    _convert_codomaintype2(U, convert_numtype(numtype(U), map))
+_convert_codomaintype2(::Type{U}, map::Map) where U =
+    _convert_codomaintype2(U, map, domaintype(map), codomaintype(map))
+# types match this time around: we can return map
+_convert_codomaintype2(::Type{U}, map, ::Type{T}, ::Type{U}) where {T,U} = map
+# types don't match: we can't do this automatically
+_convert_codomaintype2(::Type{U}, map, ::Type{T}, ::Type{V}) where {T,U,V} =
+    throw(ArgumentError("Don't know how to convert the codomain type of $(map) to $(U)."))
+
+convert_codomaintype(::Type{Any}, map) = map
+
 
 # Users may call a map, concrete subtypes specialize the `applymap` function
 (m::AbstractMap)(x) = applymap(m, x)
@@ -98,11 +121,11 @@ promote_maps() = ()
 promote_maps(m1) = m1
 function promote_maps(m1, m2)
     T = promote_type(domaintype(m1), domaintype(m2))
-    convert_domaintype(m1, T), convert_domaintype(m2, T)
+    convert_domaintype(T, m1), convert_domaintype(T, m2)
 end
 function promote_maps(m1, m2, m3, maps...)
     T = mapreduce(domaintype, promote_type, (m1,m2,m3,maps...))
-    convert_domaintype.((m1,m2,m3,maps...), T)
+    convert_domaintype.(T, (m1,m2,m3,maps...))
 end
 
 isvectorvalued_type(::Type{T}) where {T<:Number} = true
@@ -132,17 +155,6 @@ is_scalar_to_vector(m) = mapsize(m) isa Tuple{Int}
 is_vector_to_scalar(m) = mapsize(m) isa Tuple{Int,Int} && codomaintype(m)<:Number
 is_scalar_to_scalar(m) = mapsize(m) == ()
 is_vector_to_vector(m) = mapsize(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m)
-
-==(m1::AbstractMap, m2::AbstractMap) = isequalmap(m1, m2)
-
-isequalmap(m1, m2) = isequalmap1(m1, m2)
-isequalmap1(m1, m2) = isequalmap2(m1, m2)
-isequalmap2(m1, m2) = default_isequalmap(m1, m2)
-default_isequalmap(m1, m2) = m1===m2
-
-hash(m::AbstractMap, h::UInt) = map_hash(m, h)
-map_hash(m) = map_hash(m, zero(UInt))
-map_hash(m, h::UInt) = invoke(hash, Tuple{Any,UInt}, m, h)
 
 # Display routines
 map_stencil(m, x) = [Display.SymbolObject(m), '(', x, ')']
