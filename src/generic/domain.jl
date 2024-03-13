@@ -59,16 +59,19 @@ _iscompatiblepair(x, d, ::Type{S}, ::Type{T}, ::Type{Any}) where {S,T} = false
 _iscompatiblepair(x, d, ::Type{S}, ::Type{Any}, ::Type{Any}) where {S} = true
 
 # Some generic cases where we can be sure:
-iscompatiblepair(x::SVector{N}, ::EuclideanDomain{N}) where {N} = true
-iscompatiblepair(x::SVector{N}, ::EuclideanDomain{M}) where {N,M} = false
-iscompatiblepair(x::AbstractVector, ::EuclideanDomain{N}) where {N} = length(x)==N
+_iscompatiblepair(x, d, ::Type{<:StaticVector{N}}, ::Type{<:StaticVector{N}}) where N = true
+_iscompatiblepair(x, d, ::Type{<:StaticVector{N}}, ::Type{<:StaticVector{M}}) where {N,M} = false
+_iscompatiblepair(x, d, ::Type{<:AbstractVector}, ::Type{<:StaticVector{N}}) where N =
+    length(x) == N
 
 # Note: there are cases where this warning reveals a bug, and cases where it is
 # annoying. In cases where it is annoying, the domain may want to specialize `in`.
-compatible_or_false(x, domain) =
+compatible_or_false(x, domain) = _compatible_or_false(x, domain)
+_compatible_or_false(x, domain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of point: $(typeof(x)) and domain eltype: $(domaineltype(domain)). Returning false."; false)
-
-compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
+# indirection to _compatible_or_false enables fallback below without ambiguity
+# if some concrete domain type specializes compatible_or_false
+_compatible_or_false(x::AbstractVector, domain::AbstractVectorDomain) =
     iscompatiblepair(x, domain) ? true : (@warn "`in`: incompatible combination of vector with length $(length(x)) and domain '$(domain)' with dimension $(dimension(domain)). Returning false."; false)
 
 

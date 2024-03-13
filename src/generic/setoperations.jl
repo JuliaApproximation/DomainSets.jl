@@ -302,7 +302,7 @@ combine(d::SetdiffDomain, results) = results[1] & !results[2]
 
 # It is difficult to calculate approximate membership exactly, but we can at
 # least not enlarge the subtracted domain by invoking in rather than approx_in on it.
-_approx_indomain(x, d::SetdiffDomain, comp::Combination, domains, tolerance) =
+_composite_approx_indomain(x, d::SetdiffDomain, tolerance, comp::Combination, domains) =
     approx_in(x, domains[1], tolerance) & !in(x, domains[2])
 
 similardomain(d::SetdiffDomain, ::Type{T}) where {T} =

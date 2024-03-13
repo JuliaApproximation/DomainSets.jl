@@ -395,6 +395,7 @@ intersectdomain(d1::AbstractInterval{T}, d2::RealLine{T}) where {T} = d1
 intersectdomain(d1::TypedEndpointsInterval{L,R,T}, d2::RealLine{T}) where {L,R,T} = d1
 intersectdomain(d1::RealLine{T}, d2::AbstractInterval{T}) where {T} = d2
 intersectdomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T} = d2
+intersectdomain(d1::RealLine{T}, d2::RealLine{T}) where {T} = d1
 
 
 # [0,1] ∪ [-1,1] = [-1,1]
@@ -414,11 +415,13 @@ uniondomain(d1::NonnegativeRealLine{T}, d2::PositiveRealLine{T}) where {T} = d1
 uniondomain(d1::PositiveRealLine{T}, d2::NonnegativeRealLine{T}) where {T} = d2
 uniondomain(d1::NonpositiveRealLine{T}, d2::NegativeHalfLine{T}) where {T} = d1
 uniondomain(d1::NegativeHalfLine{T}, d2::NonpositiveRealLine{T}) where {T} = d2
+uniondomain(d1::NonpositiveRealLine{T}, d2::NonpositiveRealLine{T}) where {T} = d1
 # [a,b] ∪ (-∞,∞) = (-∞,∞)
 uniondomain(d1::AbstractInterval{T}, d2::RealLine{T}) where {T} = d2
 uniondomain(d1::TypedEndpointsInterval{L,R,T}, d2::RealLine{T}) where {L,R,T} = d2
 uniondomain(d1::RealLine{T}, d2::AbstractInterval{T}) where {T} = d1
 uniondomain(d1::RealLine{T}, d2::TypedEndpointsInterval{L,R,T}) where {L,R,T} = d1
+uniondomain(d1::RealLine{T}, d2::RealLine{T}) where {T} = d1
 
 
 # [0,1] ∖ [-1,1] = {}

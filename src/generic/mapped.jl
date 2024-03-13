@@ -103,10 +103,19 @@ end
 mapped_domain1(invmap::LinearMap{<:Number}, domain::Domain{T}) where {T<:AbstractVector} =
     mapped_domain(Map{T}(invmap), domain)
 # allow some mixing of SVector and Vector
-mapped_domain1(invmap::Map{SVector{N,T}}, domain::Domain{Vector{U}}) where {N,T,U} =
+mapped_domain1(invmap::Map{SVector{N,T}}, domain) where {N,T} =
+    _vector_mapped_domain1(invmap, domain)
+_vector_mapped_domain1(invmap::Map{SVector{N,T}}, domain::Domain{Vector{U}}) where {N,T,U} =
     mapped_domain(invmap, convert(Domain{SVector{N,promote_type(T,U)}}, domain))
-mapped_domain2(invmap::Map{Vector{U}}, domain::Domain{SVector{N,T}}) where {N,T,U} =
+_vector_mapped_domain1(invmap::Map{SVector{N,T}}, domain) where {N,T} =
+    mapped_domain2(invmap, domain)
+
+mapped_domain2(invmap, domain::Domain{SVector{N,T}}) where {N,T} =
+    _vector_mapped_domain2(invmap, domain)
+_vector_mapped_domain2(invmap::Map{Vector{U}}, domain::Domain{SVector{N,T}}) where {N,T,U} =
     mapped_domain(convert(Map{SVector{N,promote_type(T,U)}}, invmap), domain)
+_vector_mapped_domain2(invmap, domain::Domain{SVector{N,T}}) where {N,T} =
+    default_mapped_domain(invmap, domain)
 
 # Avoid nested mapping domains, construct a composite map instead
 mapped_domain2(invmap, d::MappedDomain) = mapped_domain(inverse_map(d) ∘ invmap, superdomain(d))

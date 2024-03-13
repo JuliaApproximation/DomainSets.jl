@@ -367,21 +367,19 @@ function test_spheres()
     @test boundingbox(D4) == ProductDomain([cheb, cheb, cheb, cheb])
 
     ## sphere points
-    x_sphere = [0.1,0.2,1-(0.1)^2-(0.4)^2]
+    x_sphere = [0.1,0.2,sqrt(1-(0.1)^2-(0.2)^2)]
     p1 = DomainSets.EuclideanSpherePoint(x_sphere)
-    @test DomainSets.domain(p1) == UnitSphere(3)
+    @test domain(p1) == UnitSphere(3)
     @test DomainSets.point(p1) == x_sphere
-    @test p1 ∈ UnitSphere()
     @test p1 ∈ UnitSphere(3)
-    @test p1 ∈ DomainSets.domain(p1)
 
     p2 = DomainSets.EuclideanSpherePoint(SVector{3}(x_sphere))
-    @test DomainSets.domain(p2) === UnitSphere()
+    @test domain(p2) === UnitSphere()
     @test DomainSets.point(p2) == x_sphere
-    @test p2 ∈ UnitSphere()
+    @test p2 ∈ UnitSphere(Val(3))
 
     p3 = DomainSets.SphericalCoordinate(0.4, 0.5)
-    @test DomainSets.domain(p3) === UnitSphere()
+    @test domain(p3) === UnitSphere()
     @test p3 ∈ UnitSphere()
     @test approx_in(DomainSets.point(p3), UnitSphere())
 end

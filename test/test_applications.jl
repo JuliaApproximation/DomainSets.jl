@@ -115,10 +115,22 @@ function test_rng_consistency(set)
     @test rand(rng1, set) == rand(rng2, set)
 end
 
+function test_coordinates()
+    p1 = DomainSets.EuclideanSpherePoint(SA[1/sqrt(3),1/sqrt(3),1/sqrt(3)])
+    @test p1 ∈ UnitSphere(Val(3))
+    p2 = DomainSets.EuclideanSpherePoint([1/sqrt(3),1/sqrt(3),1/sqrt(3)])
+    @test p2 ∈ UnitSphere(3)
+    p3 = DomainSets.SphericalCoordinate(0.4, 0.5)
+    @test p3 ∈ UnitSphere(Val(3))
+    @test DomainSets.SphericalCoordinate(1, 0.5) isa DomainSets.SphericalCoordinate{Float64}
+    @test DomainSets.SphericalCoordinate(1, 2) isa DomainSets.SphericalCoordinate{Float64}
+end
+
 function test_applications(T)
     test_rotation_map(T)
     test_cart_polar_map(T)
     test_rand(T)
+    test_coordinates()
 end
 
 @testset "applications" begin
