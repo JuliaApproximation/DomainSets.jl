@@ -4,11 +4,12 @@ on:
   push:
     branches:
       - 'master'
-    tags: '[v*]'
+    tags: '*'
   pull_request:
 
 jobs:
   build:
+    name: Documentation
     permissions:
       contents: write
       statuses: write
