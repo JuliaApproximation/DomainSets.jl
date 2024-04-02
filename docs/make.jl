@@ -1,10 +1,11 @@
-using DomainSets
 using Documenter
+using DomainSets
+using DomainSets.FunctionMaps
 
 DocMeta.setdocmeta!(DomainSets, :DocTestSetup, :(using DomainSets); recursive=true)
 
 makedocs(;
-    modules=[DomainSets],
+    modules=[DomainSets,DomainSets.FunctionMaps],
     authors="Daan Huybrechs <daan.huybrechs@kuleuven.be> and contributors",
     sitename="DomainSets.jl",
     format=Documenter.HTML(;
@@ -17,7 +18,8 @@ makedocs(;
         "Euclidean geometry" => "geometry.md",
         "Set operations" => "setoperations.md",
         "Public API Reference" => "api.md",
-        "Internal API Reference" => "internal.md"
+        "Internal API Reference" => "internal.md",
+        "FunctionMaps.jl" => "maps.md"
     ],
 )
 
