@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · DomainSets.jl</title><meta name="title" content="Examples · DomainSets.jl"/><meta property="og:title" content="Examples · DomainSets.jl"/><meta property="twitter:title" content="Examples · DomainSets.jl"/><meta name="description" content="Documentation for DomainSets.jl."/><meta property="og:description" content="Documentation for DomainSets.jl."/><meta property="twitter:description" content="Documentation for DomainSets.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DomainSets.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Examples</a></li><li><a class="tocitem" href="../geometry/">Euclidean geometry</a></li><li><a class="tocitem" href="../setoperations/">Set operations</a></li><li><a class="tocitem" href="../api/">Public API Reference</a></li><li><a class="tocitem" href="../internal/">Internal API Reference</a></li><li><a class="tocitem" href="../maps/">FunctionMaps.jl</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaApproximation/DomainSets.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaApproximation/DomainSets.jl/blob/main/docs/src/examples.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><h3 id="Intervals"><a class="docs-heading-anchor" href="#Intervals">Intervals</a><a id="Intervals-1"></a><a class="docs-heading-anchor-permalink" href="#Intervals" title="Permalink"></a></h3><p>DomainSets.jl uses <a href="https://github.com/JuliaMath/IntervalSets.jl">IntervalSets.jl</a> for closed and open intervals. In addition, it defines a few standard intervals.</p><pre><code class="language-julia hljs">julia&gt; using DomainSets
+
+julia&gt; UnitInterval()
+0.0..1.0 (Unit)
+
+julia&gt; ChebyshevInterval()
+-1.0..1.0 (Chebyshev)
+
+julia&gt; HalfLine()
+0.0..Inf (closed–open) (HalfLine)</code></pre><h3 id="Rectangles"><a class="docs-heading-anchor" href="#Rectangles">Rectangles</a><a id="Rectangles-1"></a><a class="docs-heading-anchor-permalink" href="#Rectangles" title="Permalink"></a></h3><p>Rectangles can be constructed as a product of intervals, where the elements of the domain are <code>SVector{2}</code>:</p><pre><code class="language-julia hljs">julia&gt; using DomainSets: ×
+
+julia&gt; (-1..1) × (0..3) × (4.0..5.0)
+(-1.0..1.0) × (0.0..3.0) × (4.0..5.0)
+
+julia&gt; [1,2] in (-1..1) × (0..3)
+true
+
+julia&gt; UnitInterval()^3
+UnitCube()</code></pre><h3 id="Circles-and-Spheres"><a class="docs-heading-anchor" href="#Circles-and-Spheres">Circles and Spheres</a><a id="Circles-and-Spheres-1"></a><a class="docs-heading-anchor-permalink" href="#Circles-and-Spheres" title="Permalink"></a></h3><p>A <code>UnitSphere</code>  contains <code>x</code> if <code>norm(x) == 1</code>. The unit sphere is N-dimensional, and its dimension is specified with the constructor. The element types are <code>SVector{N,T}</code> when the dimension is specified as <code>Val(3)</code>, and they are <code>Vector{T}</code> when the dimension is specified by an integer value instead:</p><pre><code class="language-julia hljs">julia&gt; using StaticArrays
+
+julia&gt; SA[0,0,1.0] in UnitSphere(Val(3))
+true
+
+julia&gt; [0.0,1.0,0.0,0.0] in UnitSphere(4)
+true</code></pre><p><code>UnitSphere</code> itself is an abstract type, hence the examples above return concrete types <code>&lt;:UnitSphere</code>. The intended element type can also be explicitly specified with the <code>UnitSphere{T}</code> constructor:</p><pre><code class="language-julia hljs">julia&gt; typeof(UnitSphere{SVector{3,BigFloat}}())
+EuclideanUnitSphere{3, BigFloat} (alias for StaticUnitSphere{SArray{Tuple{3}, BigFloat, 1, 3}})
+
+julia&gt; typeof(UnitSphere{Vector{Float32}}(6))
+VectorUnitSphere{Float32} (alias for DynamicUnitSphere{Array{Float32, 1}})</code></pre><p>Without arguments, <code>UnitSphere()</code> defaults to a 3D domain with <code>SVector{3,Float64}</code> elements. Similarly, there is a special case <code>UnitCircle</code> in 2D:</p><pre><code class="language-julia hljs">julia&gt; SVector(1,0) in UnitCircle()
+true</code></pre><h3 id="Disks-and-Balls"><a class="docs-heading-anchor" href="#Disks-and-Balls">Disks and Balls</a><a id="Disks-and-Balls-1"></a><a class="docs-heading-anchor-permalink" href="#Disks-and-Balls" title="Permalink"></a></h3><p>A <code>UnitBall</code>  contains <code>x</code> if <code>norm(x) ≤ 1</code>. As with <code>UnitSphere</code>, the dimension is specified via the constructor by type or by value:</p><pre><code class="language-julia hljs">julia&gt; SVector(0.1,0.2,0.3) in UnitBall(Val(3))
+true
+
+julia&gt; [0.1,0.2,0.3,-0.1] in UnitBall(4)
+true</code></pre><p>By default <code>N=3</code>, but <code>UnitDisk</code> is a special case in 2D, and so are <code>ComplexUnitDisk</code> and <code>ComplexUnitCircle</code> in the complex plane:</p><pre><code class="language-julia hljs">julia&gt; SVector(0.1,0.2) in UnitDisk()
+true
+
+julia&gt; 0.5+0.2im ∈ ComplexUnitDisk()
+true</code></pre><p><code>UnitBall</code> itself is an abstract type, hence the examples above return concrete types <code>&lt;:UnitBall</code>. The types are similar to those associated with <code>UnitSphere</code>. Like intervals, balls can also be open or closed:</p><pre><code class="language-julia hljs">julia&gt; EuclideanUnitBall{3,Float64,:open}()
+the 3-dimensional open unit ball</code></pre><h3 id="Product-domains"><a class="docs-heading-anchor" href="#Product-domains">Product domains</a><a id="Product-domains-1"></a><a class="docs-heading-anchor-permalink" href="#Product-domains" title="Permalink"></a></h3><p>The cartesian product of domains is constructed with the <code>ProductDomain</code> or <code>ProductDomain{T}</code> constructor. This abstract constructor returns concrete types best adapted to the arguments given.</p><p>If <code>T</code> is not given, <code>ProductDomain</code> makes a suitable choice based on the arguments. If all arguments are Euclidean, i.e., their element types are numbers or static vectors, then the product is a Euclidean domain as well:</p><pre><code class="language-julia hljs">julia&gt; ProductDomain(0..2, UnitCircle())
+0.0..2.0 x the unit circle
+
+julia&gt; eltype(ans)
+SVector{3, Float64} (alias for SArray{Tuple{3}, Float64, 1, 3})</code></pre><p>The elements of the interval and the unit circle are flattened into a single vector, much like the <code>vcat</code> function. The result is a <code>VcatDomain</code>.</p><p>If a <code>Vector</code> of domains is given, the element type is a <code>Vector</code> as well:</p><pre><code class="language-julia hljs">julia&gt; 1:5 in ProductDomain([0..i for i in 1:5])
+true</code></pre><p>In other cases, the points are concatenated into a tuple and membership is evaluated element-wise:</p><pre><code class="language-julia hljs">julia&gt; (&quot;a&quot;, 0.4) ∈ ProductDomain([&quot;a&quot;,&quot;b&quot;], 0..1)
+true</code></pre><p>Some arguments are recognized and return a more specialized product domain. Examples are the unit box and more general hyperrectangles:</p><pre><code class="language-julia hljs">julia&gt; ProductDomain(UnitInterval(), UnitInterval())
+0.0..1.0 (Unit) x 0.0..1.0 (Unit)
+
+julia&gt; ProductDomain(0..2, 4..5, 6..7.0)
+0.0..2.0 x 4.0..5.0 x 6.0..7.0
+
+julia&gt; typeof(ans)
+Rectangle{SVector{3, Float64}}</code></pre><h3 id="Union,-intersection,-and-setdiff-of-domains"><a class="docs-heading-anchor" href="#Union,-intersection,-and-setdiff-of-domains">Union, intersection, and setdiff of domains</a><a id="Union,-intersection,-and-setdiff-of-domains-1"></a><a class="docs-heading-anchor-permalink" href="#Union,-intersection,-and-setdiff-of-domains" title="Permalink"></a></h3><p>Domains can be unioned and intersected together:</p><pre><code class="language-julia hljs">julia&gt; d = UnitCircle() ∪ 2UnitCircle();
+
+julia&gt; in.([SVector(1,0),SVector(0,2), SVector(1.5,1.5)], d)
+3-element BitArray{1}:
+ 1
+ 1
+ 0
+
+julia&gt; d = UnitCircle() ∩ (2UnitCircle() .+ SVector(1.0,0.0))
+the intersection of 2 domains:
+	1.	: the unit circle
+	2.	: A mapped domain based on the unit circle
+
+julia&gt; SVector(1,0) in d
+false
+
+julia&gt; SVector(-1,0) in d
+true</code></pre><h3 id="Level-sets"><a class="docs-heading-anchor" href="#Level-sets">Level sets</a><a id="Level-sets-1"></a><a class="docs-heading-anchor-permalink" href="#Level-sets" title="Permalink"></a></h3><p>A domain can be defined by the level sets of a function. The domains of all points <code>[x,y]</code> for which <code>x*y = 1</code> or <code>x*y &gt;= 1</code> are represented as follows:</p><pre><code class="language-julia hljs">julia&gt; d = LevelSet{SVector{2,Float64}}(prod, 1.0)
+level set f(x) = 1.0 with f = prod
+
+julia&gt; [0.5,2] ∈ d
+true
+
+julia&gt; SuperlevelSet{SVector{2,Float64}}(prod, 1.0)
+superlevel set f(x) &gt;= 1.0 with f = prod</code></pre><p>There is also <code>SublevelSet</code>, and there are the special cases <code>ZeroSet</code>, <code>SubzeroSet</code> and <code>SuperzeroSet</code>.</p><h3 id="Indicator-functions"><a class="docs-heading-anchor" href="#Indicator-functions">Indicator functions</a><a id="Indicator-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Indicator-functions" title="Permalink"></a></h3><p>A domain can be defined by an indicator function or a characteristic function. This is a function <code>f(x)</code> which evaluates to true or false, depending on whether or not the point <code>x</code> belongs to the domain.</p><pre><code class="language-julia hljs">julia&gt; d = IndicatorFunction{Float64}( t -&gt;  cos(t) &gt; 0)
+indicator domain defined by function f = #5
+
+julia&gt; 0.5 ∈ d, 3.1 ∈ d
+(true, false)</code></pre><p>This enables generator syntax to define domains:</p><pre><code class="language-julia hljs">julia&gt; d = Domain(x&gt;0 for x in -1..1)
+indicator function bounded by: -1..1
+
+julia&gt; 0.5 ∈ d, -0.5 ∈ d
+(true, false)
+
+julia&gt; d = Domain( x*y &gt; 0 for (x,y) in UnitDisk())
+indicator function bounded by: the 2-dimensional closed unit ball
+
+julia&gt; [0.2, 0.3] ∈ d, [0.2, -0.3] ∈ d
+(true, false)
+
+julia&gt; d = Domain( x+y+z &gt; 0 for (x,y,z) in ProductDomain(UnitDisk(), 0..1))
+indicator function bounded by: the 2-dimensional closed unit ball x 0..1
+
+julia&gt; [0.3,0.2,0.5] ∈ d
+true</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../geometry/">Euclidean geometry »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.3.0 on <span class="colophon-date" title="Tuesday 2 April 2024 16:23">Tuesday 2 April 2024</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
