@@ -30,6 +30,7 @@ function test_balls()
     # and then the Ball constructor
     @test Ball() isa UnitBall
     @test Ball(1.0, 2.0) isa DomainSets.GenericBall{Float64}
+    @test Ball(1.0, Point(2.0)) isa DomainSets.GenericBall{Float64}
     @test Ball{Float64}() isa UnitBall{Float64}
     @test Ball{Float64,:open}() isa UnitBall{Float64,:open}
     @test Ball(1.0) == DomainSets.GenericBall{SVector{3,Float64},:closed}(1.0)
@@ -41,6 +42,7 @@ function test_balls()
     @test_throws MethodError Ball{Vector{Float64}}(1.0)
     @test Ball(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
     @test Ball{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
+    @test Ball{Vector{Float64}}(1.0, Point([1,2,3])) isa DomainSets.GenericBall{Vector{Float64},:closed,Float64}
 
     # the Disk constructor
     @test typeof(Disk()) == EuclideanUnitBall{2,Float64,:closed}
@@ -236,6 +238,7 @@ function test_spheres()
     # and the generic sphere constructor
     @test Sphere() isa UnitSphere
     @test Sphere(1.0, 2.0) isa DomainSets.GenericSphere{Float64}
+    @test Sphere(1.0, Point(2.0)) isa DomainSets.GenericSphere{Float64}
     @test Sphere{Float64}() isa UnitSphere{Float64}
     @test Sphere(1.0) == DomainSets.GenericSphere{SVector{3,Float64}}(1.0)
     @test hash(Sphere(1.0)) == hash(DomainSets.GenericSphere{SVector{3,Float64}}(1.0))
@@ -244,6 +247,7 @@ function test_spheres()
     @test_throws MethodError Sphere{Vector{Float64}}(1.0)
     @test Sphere(1.0, [1,2,3]) isa DomainSets.GenericSphere{Vector{Float64},Float64}
     @test Sphere{Vector{Float64}}(1.0, [1,2,3]) isa DomainSets.GenericSphere{Vector{Float64},Float64}
+    @test Sphere{Vector{Float64}}(1.0, Point([1,2,3])) isa DomainSets.GenericSphere{Vector{Float64},Float64}
 
     @test map_domain(AffineMap(2, [1,2,3]), UnitSphere()) isa DomainSets.GenericSphere
     @test map_domain(AffineMap(2, 3), UnitSphere{Float64}()) isa DomainSets.GenericSphere

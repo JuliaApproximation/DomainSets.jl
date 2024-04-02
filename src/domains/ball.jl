@@ -225,6 +225,11 @@ GenericBall{T}(radius, center) where {T} = GenericBall{T,:closed}(radius, center
 GenericBall{T,C}(radius) where {T,C} = GenericBall{T,C}(radius, zero(T))
 GenericBall{T,C}(radius, center) where {T,C} = GenericBall{T,C,eltype(T)}(radius, center)
 
+GenericBall(radius::S, center::Point) where {S<:Number} =
+    GenericBall(radius, pointval(center))
+GenericBall{T,C}(radius, center::Point) where {T,C} =
+    GenericBall{T,C}(radius, pointval(center))
+
 radius(d::GenericBall) = d.radius
 center(d::GenericBall) = d.center
 
@@ -421,6 +426,11 @@ GenericSphere(radius::S, center::T) where {S<:Number,T<:AbstractVector} =
 GenericSphere{T}(radius) where {T} = GenericSphere{T}(radius, zero(T))
 GenericSphere{T}(radius, center) where {T} =
     GenericSphere{T,eltype(T)}(radius, center)
+
+GenericSphere(radius::S, center::Point) where {S<:Number} =
+    GenericSphere(radius, pointval(center))
+GenericSphere{T}(radius, center::Point) where {T} =
+    GenericSphere{T}(radius, pointval(center))
 
 radius(d::GenericSphere) = d.radius
 center(d::GenericSphere) = d.center
