@@ -1,14 +1,4 @@
-# DomainSets.jl
-
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/dev)
-[![Build Status](https://github.com/JuliaApproximation/DomainSets.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/DomainSets.jl/actions)
-[![Coverage Status](https://codecov.io/gh/JuliaApproximation/DomainSets.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/DomainSets.jl)
-[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-
-DomainSets.jl is a package designed to represent simple infinite sets. The package makes it easy to represent sets, verify membership of the set, compare sets and construct new sets from existing ones. Domains are considered equivalent if they describe the same set, regardless of their type.
-
-## Examples
+# Examples
 
 ### Intervals
 
@@ -228,19 +218,3 @@ indicator function bounded by: the 2-dimensional closed unit ball x 0..1
 julia> [0.3,0.2,0.5] ∈ d
 true
 ```
-
-### The domain interface
-
-A domain is any type that implements the functions `eltype` and `in`. If
-`d` is an instance of a type that implements the domain interface, then
-the domain consists of all `x` that is an `eltype(d)` such that `x in d`
-returns true.
-
-Domains often represent continuous mathematical domains, for example, a domain
-`d`  representing the interval `[0,1]` would have `eltype(d) == Int` but still
-have `0.2 in d` return true.
-
-### The `Domain` type
-
-DomainSets.jl contains an abstract type `Domain{T}`. All subtypes of `Domain{T}`
-must implement the domain interface, and in addition support `convert(Domain{T}, d)`.

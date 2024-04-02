@@ -35,6 +35,8 @@ struct UnionDomain{T,DD} <: CompositeDomain{T}
 end
 
 """
+	UnionDomain(domains...)
+
 The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways:
 - with a list of arguments: `UnionDomain(d1, d2, ...)`
 - or with an iterable list of domains: `UnionDomain(domains)`
@@ -55,6 +57,11 @@ combine(d::UnionDomain, results) = reduce(|, results)
 # Make d1 ∪ d2 invoke `uniondomain` if the arguments are domains
 union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
 
+"""
+	uniondomain(d1, d2[, domains...])
+
+Return a domain that agrees with the mathematical union of the arguments.
+"""
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
 uniondomain(d1, d2) = uniondomain1(promote_domains(d1, d2)...)
