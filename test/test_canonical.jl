@@ -22,6 +22,14 @@ end
     @test mapfrom_canonical(d1, 0.4) ≈ 2.7
     @test mapto_canonical(d1, 2.7) ≈ 0.4
 
+    # test simplify beyond equaldomain
+    @test hasequaldomain(UnitBall{Float64}())
+    @test !hasequaldomain(2*UnitBall{Float64}())
+    @test DomainSets.simplifies(2*UnitBall{Float64}())
+    @test DomainSets.simplifies(2*UnitBall{Float64}() .+ 1)
+    @test DomainSets.simplify(2*UnitBall{Float64}() .+ 1) isa Interval
+    @test (2*UnitBall{Float64}() .+ 1) == -1..3
+
     iso = DomainSets.Isomorphic()
     @test !hascanonicaldomain(iso, d1)
     @test canonicaldomain(iso, d1) === d1

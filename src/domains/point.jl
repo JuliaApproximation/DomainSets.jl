@@ -29,9 +29,13 @@ approx_indomain(x, d::Point, tolerance) = norm(x-pointval(d)) <= tolerance
 
 dimension(d::Point{<:AbstractVector}) = length(pointval(d))
 
-canonicaldomain(d::Point{T}) where {T<:StaticTypes} = Point(zero(T))
+# The canonical domain of a point is a point at the origin.
+# To avoid StackOverflow in hascanonicaldomain, for points already at the origin
+# we return the original point
+canonicaldomain(d::Point{T}) where {T<:StaticTypes} =
+    iszero(d.x) ? d : Point(zero(T))
 canonicaldomain(d::Point{T}) where {T<:AbstractVector} =
-    Point(zeros(eltype(T),dimension(d)))
+    iszero(d.x) ? d : Point(zeros(eltype(T),dimension(d)))
 
 mapfrom_canonical(d::Point) = Translation(pointval(d))
 

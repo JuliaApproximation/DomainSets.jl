@@ -1,6 +1,6 @@
 
 """
-    canonicaldomain([ctype::CanonicalType, ]domain)
+    canonicaldomain([ctype::CanonicalType, ]d)
 
 Return an associated canonical domain, if any, of the given domain.
 
@@ -12,10 +12,18 @@ maps between domains and with finding parameterizations.
 
 If a domain implements a canonical domain, it should also implement
 `mapfrom_canonical` and `mapto_canonical`.
+
+See also: [`mapfrom_canonical`](@ref), [`mapto_canonical`](@ref).
 """
 canonicaldomain(d) = d
 
-"Does the domain have a canonical domain?"
+"""
+    hascanonicaldomain([ctype::CanonicalType, ]d)
+
+Does the domain have a canonical domain?
+
+See also: [`canonicaldomain`](@ref).
+"""
 hascanonicaldomain(d) = !(d === canonicaldomain(d))
 
 identitymap(d) = IdentityMap{domaineltype(d)}(dimension(d))
@@ -28,11 +36,23 @@ Return a map to a domain `d` from its canonical domain.
 If a second argument `x` is given, the map is evaluated at that point.
 The point `x` should be a point in the canonical domain of `d`, and the
 result is a point in `d`.
+
+See also: [`mapto_canonical`](@ref), [`canonicaldomain`](@ref).
 """
 mapfrom_canonical(d) = identitymap(d)
 mapfrom_canonical(d, x) = mapfrom_canonical(d)(x)
 
-"Return a map from the domain to its canonical domain."
+"""
+    mapto_canonical(d[, x])
+
+Return a map from a domain `d` to its canonical domain.
+
+If a second argument `x` is given, the map is evaluated at that point.
+The point `x` should be a point in the domain `d`, and the
+result is a point in the canonical domain.
+
+See also: [`mapfrom_canonical`](@ref), [`canonicaldomain`](@ref).
+"""
 mapto_canonical(d) = leftinverse(mapfrom_canonical(d))
 mapto_canonical(d, x) = mapto_canonical(d)(x)
 
@@ -53,6 +73,8 @@ mapfrom_canonical(::Equal, d) = identitymap(d)
 mapto_canonical(::Equal, d) = leftinverse(mapfrom_canonical(Equal(), d))
 
 """
+    equaldomain(domain)
+
 Return a canonical domain that is equal, but simpler. For example,
 a 1-dimensional ball is an interval.
 
@@ -60,23 +82,53 @@ A domain and its `equaldomain` are always equal domains according to
 `isequaldomain`.
 """
 equaldomain(d) = canonicaldomain(Equal(), d)
-hasequaldomain(d) = hascanonicaldomain(Equal(), d)
-mapfrom_equaldomain(d) = mapfrom_canonical(Equal(), d)
-mapto_equaldomain(d) = mapto_canonical(Equal(), d)
-mapfrom_equaldomain(d, x) = mapfrom_canonical(Equal(), d, x)
-mapto_equaldomain(d, x) = mapto_canonical(Equal(), d, x)
 
-"Simplify the given domain to an equal domain."
-simplify(d) = equaldomain(d)
-"Does the domain simplify?"
-simplifies(d) = hasequaldomain(d)
+"""
+    hasequaldomain(d)
+
+Does the domain have a known equal domain?
+"""
+hasequaldomain(d) = hascanonicaldomain(Equal(), d)
+
+# these definitions should be removed because equal domains are never mapped
+@deprecate mapfrom_equaldomain(d) mapfrom_canonical(Equal(), d)
+@deprecate mapto_equaldomain(d) mapto_canonical(Equal(), d)
+@deprecate mapfrom_equaldomain(d, x) mapfrom_canonical(Equal(), d, x)
+@deprecate mapto_equaldomain(d, x) mapto_canonical(Equal(), d, x)
+
+"""
+    simplify(domain)
+
+Simplify the given domain to an equal domain.
+"""
+function simplify(d)
+    if hasequaldomain(d)
+        equaldomain(d)
+    elseif hasparameterization(d) && hasequaldomain(parameterdomain(d))
+        map_domain(mapfrom_parameterdomain(d), simplify(parameterdomain(d)))
+    else
+        d
+    end
+end
+
+"""
+    simplifies(domain)
+
+Does the domain simplify?
+"""
+simplifies(d) = hasequaldomain(d) ||
+    (hasparameterization(d) && hasequaldomain(parameterdomain(d)))
 
 "Convert the given domain to a domain defined in DomainSets.jl."
 todomainset(d::Domain) = d
 todomainset(d::DomainRef) = todomainset(domain(d))
 
 
-"A canonical domain that is isomorphic but may have different element type."
+"""
+    Isomorphic <: CanonicalType
+
+An isomorphic canonical domain is a domain that is the same up to an isomorphism.
+"""
 struct Isomorphic <: CanonicalType end
 
 canonicaldomain(::Isomorphic, d) = canonicaldomain(Equal(), d)
