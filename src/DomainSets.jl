@@ -156,8 +156,9 @@ export Ball, UnitBall,
     VectorUnitSphere, EuclideanUnitSphere,
     Disk, UnitDisk, VectorUnitDisk,
     UnitCircle, VectorUnitCircle,
-    ComplexUnitCircle, ComplexUnitDisk,
     ellipse, ellipse_shape, cylinder
+# from domains/complex.jl
+export ComplexUnitCircle, ComplexUnitDisk
 # from domains/cube.jl
 export UnitCube,
     StaticUnitCube, DynamicUnitCube,
@@ -196,6 +197,7 @@ include("domains/point.jl")
 include("domains/interval.jl")
 include("domains/simplex.jl")
 include("domains/ball.jl")
+include("domains/complex.jl")
 include("domains/cube.jl")
 include("domains/indicator.jl")
 include("domains/boundingbox.jl")

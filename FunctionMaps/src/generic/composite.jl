@@ -58,12 +58,17 @@ rightinverse(m::ComposedMap, x) = rightinverse_rec(x, reverse(components(m))...)
 rightinverse_rec(x) = x
 rightinverse_rec(x, map1, maps...) = rightinverse_rec(rightinverse(map1, x), maps...)
 
+
+promote_composing_maps(m1, m2) =
+    _promote_composing_maps(codomaintype(m1), domaintype(m2), m1, m2)
+function _promote_composing_maps(::Type{S}, ::Type{T}, m1, m2) where {S,T}
+    U = promote_type(S, T)
+    convert_codomaintype(U, m1), convert_domaintype(U, m2)
+end
+
 composedmap() = ()
 composedmap(m) = m
-function composedmap(m1, m2)
-    T = promote_type(codomaintype(m1), domaintype(m2))
-    composedmap1(convert_codomaintype(T, m1), convert_domaintype(T, m2))
-end
+composedmap(m1, m2) = composedmap1(promote_composing_maps(m1, m2)...)
 composedmap1(m1, m2) = composedmap2(m1, m2)
 composedmap2(m1, m2) = default_composedmap(m1, m2)
 default_composedmap(m1, m2) = ComposedMap(m1, m2)

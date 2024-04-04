@@ -142,7 +142,10 @@ function test_balls()
     @test affinematrix(mapfrom_canonical(D)) == [2 0; 0 2]
     @test affinevector(mapfrom_canonical(D)) == [0; 0]
     @test parameterdomain(D) == UnitSquare()
+    @test parameterdomain(UnitBall(2)) == UnitSquare()
+    @test parameterdomain(UnitBall(3)) == UnitBall(3)
     @test mapfrom_parameterdomain(D)([0.2,0.4]) ∈ D
+    @test mapfrom_parameterdomain(UnitBall(2))([0.2,0.4]) ∈ UnitBall(2)
     @test boundingbox(D) == (-2.0..2.0)^2
 
     D = 2UnitDisk() .+ SA[1.0,1.0]
@@ -285,7 +288,11 @@ function test_spheres()
     @test isclosedset(C)
     @test !isopenset(C)
     @test parameterdomain(C) == UnitInterval()
+    @test parameterdomain(UnitSphere(2)) == UnitInterval()
+    @test parameterdomain(UnitSphere(3)) == UnitSphere(3)
     @test hasparameterization(C)
+    @test hasparameterization(UnitSphere(2))
+
     p = parameterization(C)
     @test mapsize(p) == (2,)
     x = applymap(p, 1/2)

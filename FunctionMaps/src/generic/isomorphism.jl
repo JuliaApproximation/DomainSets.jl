@@ -61,9 +61,9 @@ end
     VectorToComplex()
     VectorToComplex{T}()
 
-The map ``[a;b] → a+bi`` from ``ℝ^2`` to ``ℂ``.
+Map a length 2 vector ``[a;b]`` to the complex number ``a+bi``.
 
-See also: [`FunctionMaps.ComplexToVector`](@ref).
+See also: [`ComplexToVector`](@ref).
 """
 VectorToComplex() = VectorToComplex{Float64}()
 
@@ -71,9 +71,9 @@ VectorToComplex() = VectorToComplex{Float64}()
     ComplexToVector()
     ComplexToVector{T}()
 
-Map a complex number ``z=a+bi`` to the length 2 vector ``[a; b]``.
+Map a complex number ``a+bi`` to the length 2 vector ``[a; b]``.
 
-See also: [`FunctionMaps.VectorToComplex`](@ref).
+See also: [`VectorToComplex`](@ref).
 """
 ComplexToVector() = ComplexToVector{Float64}()
 

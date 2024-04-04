@@ -79,7 +79,11 @@ forward_map(d::MappedDomain, x) = rightinverse(d.invmap, x)
 inverse_map(d::MappedDomain) = d.invmap
 inverse_map(d::MappedDomain, y) = d.invmap(y)
 
-"Map a domain with the inverse of the given map."
+"""
+    map_domain(map, domain)
+
+Map a domain with the inverse of the given map.
+"""
 map_domain(map, domain) = map_domain1(map, domain)
 map_domain1(map, domain) = map_domain2(map, domain)
 map_domain2(map, domain) = default_map_domain(map, domain)
@@ -89,7 +93,11 @@ isequaldomain(a::MappedDomain, b::MappedDomain) =
     isequalmap(a.invmap, b.invmap) && isequaldomain(superdomain(a), superdomain(b))
 domainhash(d::MappedDomain, h::UInt) = hashrec("MappedDomain", d.invmap, hash(superdomain(d)))
 
-"Make a mapped domain with the given inverse map."
+"""
+    mapped_domain(invmap, domain)
+
+Make a mapped domain with the given inverse map.
+"""
 mapped_domain(invmap, domain) = mapped_domain1(invmap, domain)
 mapped_domain1(invmap, domain) = mapped_domain2(invmap, domain)
 mapped_domain2(invmap, domain) = default_mapped_domain(invmap, domain)
@@ -170,7 +178,11 @@ isequaldomain(d1::ParametricDomain, d2::ParametricDomain) =
     isequalmap(forward_map(d1), forward_map(d2)) && isequaldomain(superdomain(d1), superdomain(d2))
 domainhash(d::ParametricDomain, h::UInt) = hashrec("ParametricDomain", forward_map(d), superdomain(d), h)
 
-"Return the domain that results from mapping the given domain."
+"""
+    parametric_domain(fmap, domain)
+
+The domain that results from mapping the given domain.
+"""
 parametric_domain(fmap, domain) = ParametricDomain(fmap, domain)
 parametric_domain(fmap, domain::ParametricDomain) =
     parametric_domain(fmap ∘ forward_map(domain), superdomain(domain))

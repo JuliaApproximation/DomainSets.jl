@@ -184,6 +184,9 @@ similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T} =
 const UnitDisk{T} = UnitBall{SVector{2,T},:closed}
 UnitDisk() = UnitDisk{Float64}()
 
+canonicaldomain(::Parameterization, d::UnitDisk{T}) where {T} = UnitSquare{T}()
+mapfrom_canonical(::Parameterization, d::UnitDisk{T}) where {T} = UnitDiskMap{T}()
+
 const Disk{T} = Ball{SVector{2,T},:closed}
 Disk() = Disk{Float64}()
 Disk(radius::Number) = Disk(float(radius))
@@ -232,6 +235,11 @@ similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T} =
     DynamicUnitBall{T,C}(dimension(d))
 similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
     StaticUnitBall{T,C}()
+
+canonicaldomain(::Parameterization, d::VectorUnitBall{T}) where {T} =
+    dimension(d) == 2 ? UnitSquare{T}() : d
+mapfrom_canonical(::Parameterization, d::VectorUnitBall{T}) where {T} =
+    dimension(d) == 2 ? UnitDiskMap{T}() : identitymap(d)
 
 
 "A `GenericBall` is a ball with a given radius and center."
@@ -421,6 +429,10 @@ EuclideanUnitSphere{N}() where {N} = EuclideanUnitSphere{N,Float64}()
 const UnitCircle{T} = UnitSphere{SVector{2,T}}
 UnitCircle() = UnitCircle{Float64}()
 
+canonicaldomain(::Parameterization, d::UnitCircle{T}) where {T} = UnitInterval{T}()
+mapfrom_canonical(::Parameterization, d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
+
+
 "The unit sphere with variable dimension."
 struct DynamicUnitSphere{T} <: UnitSphere{T}
     dimension   ::  Int
@@ -447,6 +459,10 @@ similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} =
 similardomain(d::DynamicUnitSphere, ::Type{T}) where {T <: StaticTypes} =
     StaticUnitSphere{T}()
 
+canonicaldomain(::Parameterization, d::VectorUnitSphere{T}) where {T} =
+    dimension(d) == 2 ? UnitInterval{T}() : d
+mapfrom_canonical(::Parameterization, d::VectorUnitSphere{T}) where {T} =
+    dimension(d) == 2 ? UnitCircleMap{T}() : identitymap(d)
 
 
 "A `GenericSphere` is a sphere with a given radius and center."
@@ -550,50 +566,3 @@ ellipse(a::T, b::T) where {T <: Number} = LinearMap(a, b).(UnitCircle{T}())
 "Create an ellipse-shaped domain with semi-axes lengths `a` and `b` respectively."
 ellipse_shape(a::Number, b::Number) = ellipse_shape(promote(a,b)...)
 ellipse_shape(a::T, b::T) where {T <: Number} = LinearMap(a, b).(UnitDisk{T}())
-
-canonicaldomain(::Parameterization, d::UnitCircle{T}) where {T} = UnitInterval{T}()
-mapfrom_canonical(::Parameterization, d::UnitCircle{T}) where {T} = UnitCircleMap{T}()
-
-canonicaldomain(::Parameterization, d::UnitDisk{T}) where {T} = UnitSquare{T}()
-mapfrom_canonical(::Parameterization, d::UnitDisk{T}) where {T} = UnitDiskMap{T}()
-
-
-## The complex plane
-
-"""
-    ComplexUnitCircle()
-    ComplexUnitCircle{T}()
-
-The unit circle in the complex plane.
-"""
-const ComplexUnitCircle{T} = StaticUnitSphere{Complex{T}}
-
-"""
-    ComplexUnitDisk()
-    ComplexUnitDisk{T}()
-    ComplexUnitDisk{T,C}()
-
-The unit disk in the complex plane. The disk is open when `C=:open` and closed
-when `C=:closed`.
-"""
-const ComplexUnitDisk{T,C} = StaticUnitBall{Complex{T},C}
-
-ComplexUnitCircle() = ComplexUnitCircle{Float64}()
-ComplexUnitDisk() = ComplexUnitDisk{Float64}()
-ComplexUnitDisk{T}() where {T} = ComplexUnitDisk{T,:closed}()
-
-show(io::IO, d::ComplexUnitCircle{Float64}) = print(io, "ComplexUnitCircle()")
-show(io::IO, d::ComplexUnitDisk{Float64,:closed}) = print(io, "ComplexUnitDisk()")
-show(io::IO, d::ComplexUnitDisk{Float64,:open}) = print(io, "ComplexUnitDisk()  (open)")
-show(io::IO, d::ComplexUnitDisk{T,:closed}) where {T} = print(io, "ComplexUnitDisk{$(T)}()")
-show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} = print(io, "ComplexUnitDisk{$(T)}()  (open)")
-
-canonicaldomain(::Parameterization, d::ComplexUnitCircle{T}) where {T} =
-    UnitInterval{T}()
-mapfrom_canonical(::Parameterization, d::ComplexUnitCircle{T}) where {T} =
-    VectorToComplex{T}() ∘ UnitCircleMap{T}()
-
-canonicaldomain(::Parameterization, d::ComplexUnitDisk{T}) where {T} =
-    UnitSquare{T}()
-mapfrom_canonical(::Parameterization, d::ComplexUnitDisk{T}) where {T} =
-    VectorToComplex{T}() ∘ UnitDiskMap{T}()

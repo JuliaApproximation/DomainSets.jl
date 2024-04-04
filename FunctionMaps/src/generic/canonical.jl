@@ -19,7 +19,11 @@ canonicalmap(ctype::CanonicalType, m) = m
 hascanonicalmap(ctype::CanonicalType, m) = !(m === canonicalmap(ctype, m))
 
 
-"A canonical object that is equal but simpler."
+"""
+    Equal <: CanonicalType
+
+A canonical object that is equal but simpler.
+"""
 struct Equal <: CanonicalType end
 
 canonicalmap(::Equal, m) = m
@@ -36,7 +40,11 @@ tofunctionmap(m::Map) = m
 tofunctionmap(m::MapRef) = tofunctionmap(functionmap(m))
 
 
-"A canonical object that is equivalent but may have different type."
+"""
+    Equivalent <: CanonicalType
+
+A canonical object that is equivalent but may have different type.
+"""
 struct Equivalent <: CanonicalType end
 
 canonicalmap(::Equivalent, m) = canonicalmap(Equal(), m)
@@ -47,7 +55,11 @@ canonicalmap(::Equivalent, m::Map{NTuple{N,T}}) where {N,T} = convert(Map{SVecto
 equivalentmap(m) = canonicalmap(Equivalent(), m)
 hasequivalentmap(m) = hascanonicalmap(Equivalent(), m)
 
-"Canonical types used to translate between packages."
+"""
+    CanonicalExtensionType <: CanonicalType
+
+Canonical types used to translate between packages.
+"""
 abstract type CanonicalExtensionType <: CanonicalType
 end
 

@@ -76,10 +76,13 @@ mapto_canonical(::Equal, d) = leftinverse(mapfrom_canonical(Equal(), d))
     equaldomain(domain)
 
 Return a canonical domain that is equal, but simpler. For example,
-a 1-dimensional ball is an interval.
+a 1-dimensional ball is an interval. This function is equivalent to
+`canonicaldomain(Equal(), d)`.
 
 A domain and its `equaldomain` are always equal domains according to
 `isequaldomain`.
+
+See also: [`canonicaldomain`](@ref).
 """
 equaldomain(d) = canonicaldomain(Equal(), d)
 
@@ -147,7 +150,11 @@ mapfrom_canonical(::Isomorphic, d::Domain{NTuple{N,T}}) where {N,T} =
 
 
 
-"A parameter domain that can be mapped to the domain."
+"""
+    Parameterization <: CanonicalType
+
+A parametric canonical domain can be parameterized from a simpler domain.
+"""
 struct Parameterization <: CanonicalType end
 
 canonicaldomain(ctype::Parameterization, d) =
@@ -157,22 +164,51 @@ mapfrom_canonical(ctype::Parameterization, d) =
 mapto_canonical(ctype::Parameterization, d) = leftinverse(mapfrom_canonical(ctype, d))
 
 # We define some convenience functions:
-"Return a parameter domain which supports a `parameterization`."
+"""
+    parameterdomain(d)
+
+A domain from which `d` can be parameterized.
+"""
 parameterdomain(d) = canonicaldomain(Parameterization(), d)
 
-"Return a parameterization of the given domain."
+"""
+    parameterization(d)
+
+A map from the parameter domain of `d` to `d`.
+"""
 parameterization(d) = mapfrom_canonical(Parameterization(), d)
 
-"Does the domain have a parameterization?"
+"""
+    hasparameterization(d)
+
+Does the domain have a parameterization?
+"""
 hasparameterization(d) = hascanonicaldomain(Parameterization(), d)
 
+"""
+    mapfrom_parameterdomain(d[, x])
+
+Convenience alias for `mapfrom_canonical(Paramaterization(), d[, x])`.
+"""
 mapfrom_parameterdomain(d) = mapfrom_canonical(Parameterization(), d)
+
+"""
+    mapto_parameterdomain(d[, x])
+
+Convenience alias for `mapto_canonical(Paramaterization(), d[, x])`.
+
+See also: [`mapfrom_parameterdomain`](@ref).
+"""
 mapto_parameterdomain(d) = mapto_canonical(Parameterization(), d)
 mapfrom_parameterdomain(d, x) = mapfrom_canonical(Parameterization(), d, x)
 mapto_parameterdomain(d, x) = mapto_canonical(Parameterization(), d, x)
 
 
-"Return a map from domain `d1` to domain `d2`."
+"""
+    mapto(d1, d2)
+
+Return a map from domain `d1` to domain `d2`.
+"""
 mapto(d1, d2) = mapto1(d1, d2)
 mapto(d1::D, d2::D) where {D} = d1 == d2 ? identitymap(d1) : mapto1(d1,d2)
 
