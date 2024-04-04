@@ -177,6 +177,9 @@ function test_intervals()
         @test 0 ∉ d_open
         @test interior(d) == d_open
         @test closure(d_open) == d
+
+        show(io, HalfLine())
+        @test String(take!(io)) == "0.0 .. Inf (closed-open) (HalfLine)"
     end
     @testset "NegativeHalfLine" begin
         d = NegativeHalfLine{T}()
@@ -246,6 +249,9 @@ function test_intervals()
         @test 0 ∈ d_closed
         @test interior(d_closed) == d
         @test closure(d) == d_closed
+
+        show(io, NegativeHalfLine())
+        @test String(take!(io)) == "-Inf .. 0.0 (open) (NegativeHalfLine)"
     end
 
     @testset "RealLine" begin

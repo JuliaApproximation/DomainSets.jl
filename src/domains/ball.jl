@@ -31,7 +31,18 @@ isclosedset(::ClosedBall) = true
 isclosedset(::OpenBall) = false
 isopenset(d::Ball) = !isclosedset(d)
 
-# Convenience constructors for the abstract type
+"""
+    Ball(radius = 1[, center])
+    Ball{T,C=:closed}(radius = 1[, center])
+
+Return a concrete subtype of `Ball` which represents a ball with the given
+radius and center, the given eltype `T`, and which is open or closed.
+
+The default center is the origin. In case both radius and center are omitted,
+a subtype of `UnitBall` is returned, whose concrete type depends on `T`.
+
+A ball represents a volume. For the boundary of a ball, see [`Sphere()`](@ref).
+"""
 Ball() = UnitBall()
 Ball{T}() where {T} = UnitBall{T}()
 Ball{T,C}() where {T,C} = UnitBall{T,C}()
@@ -87,7 +98,13 @@ distance_to(d::Ball, x) = x ∈ d ? zero(prectype(d)) : norm(x-center(d))-radius
 choice(d::Ball) = center(d)
 
 
-"The unit ball."
+"""
+    UnitBall([dim::Int])
+    UnitBall{T}([dim::Int])
+    UnitBall{T,C=:closed}([dim::Int])
+
+The volume of all points of type `T`.
+"""
 abstract type UnitBall{T,C} <: Ball{T,C} end
 
 radius(::UnitBall) = 1
@@ -128,7 +145,13 @@ convert(::Type{SublevelSet{T}}, d::UnitBall{S,C}) where {T,S,C} =
     SublevelSet{T,C}(norm, radius(d))
 
 
-"The unit ball with fixed dimension(s) specified by the element type."
+"""
+    StaticUnitBall()
+    StaticUnitBall{T}()
+    StaticUnitBall{T,C=:closed}()
+
+The open or closed unit ball with static dimension determined by the element type.
+"""
 struct StaticUnitBall{T,C} <: UnitBall{T,C}
 end
 
@@ -176,7 +199,14 @@ convert(::Type{Interval}, d::StaticUnitBall{T,:open}) where {T <: Number} =
 canonicaldomain(::Equal, d::StaticUnitBall{T}) where {T<:Number} = convert(Interval, d)
 
 
-"The unit ball with variable dimension stored in a data field."
+"""
+    DynamicUnitBall(dim::Int)
+    DynamicUnitBall{T}(dim::Int)
+    DynamicUnitBall{T,C=:closed}(dim::Int)
+
+The open or closed unit ball with variable dimension. Typically the element
+type is a `Vector{T}` and `dim` specifies the length of the vectors.
+"""
 struct DynamicUnitBall{T,C} <: UnitBall{T,C}
     dimension   ::  Int
 
@@ -292,7 +322,18 @@ indomain(x, d::Sphere) = norm(x-center(d)) == radius(d)
 approx_indomain(x, d::Sphere, tolerance) =
     radius(d)-tolerance <= norm(x-center(d)) <= radius(d)+tolerance
 
-# Convenience constructors for the abstract type
+"""
+    Sphere(radius = 1[, center])
+    Sphere{T}(radius = 1[, center])
+
+Return a concrete subtype of `Sphere` which represents a sphere with the given
+radius and center, and the given eltype `T`.
+
+The default center is the origin. In case both radius and center are omitted,
+a subtype of `UnitSphere` is returned, whose concrete type depends on `T`.
+
+A sphere represents the boundary of a ball. For the volume, see [`Ball()`](@ref).
+"""
 Sphere() = UnitSphere()
 Sphere{T}() where {T} = UnitSphere{T}()
 Sphere(radius::Number) = GenericSphere(radius)
@@ -519,7 +560,22 @@ mapfrom_canonical(::Parameterization, d::UnitDisk{T}) where {T} = UnitDiskMap{T}
 
 ## The complex plane
 
+"""
+    ComplexUnitCircle()
+    ComplexUnitCircle{T}()
+
+The unit circle in the complex plane.
+"""
 const ComplexUnitCircle{T} = StaticUnitSphere{Complex{T}}
+
+"""
+    ComplexUnitDisk()
+    ComplexUnitDisk{T}()
+    ComplexUnitDisk{T,C}()
+
+The unit disk in the complex plane. The disk is open when `C=:open` and closed
+when `C=:closed`.
+"""
 const ComplexUnitDisk{T,C} = StaticUnitBall{Complex{T},C}
 
 ComplexUnitCircle() = ComplexUnitCircle{Float64}()

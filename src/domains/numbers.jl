@@ -61,11 +61,11 @@ const ℝ = RealNumbers()
 "The set of complex numbers."
 const ℂ = ComplexNumbers()
 
-"The space ℝ^1."
+"The Euclidean space ``ℝ^1``."
 const ℝ1 = VcatDomain(ℝ)
-"The space ℝ^2."
+"The Euclidean space ``ℝ^2``."
 const ℝ2 = VcatDomain(ℝ, ℝ)
-"The space ℝ^3."
+"The Euclidean space ``ℝ^3``."
 const ℝ3 = VcatDomain(ℝ, ℝ, ℝ)
-"The space ℝ^4."
+"The Euclidean space ``ℝ^4``."
 const ℝ4 = VcatDomain(ℝ, ℝ, ℝ, ℝ)

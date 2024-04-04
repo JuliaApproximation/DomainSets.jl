@@ -1,16 +1,38 @@
 
-"An isomorphism is a bijection between types that preserves norms."
+"""
+    Isomorphism{T,U} <: TypedMap{T,U}
+
+An isomorphism is a bijection between types that preserves norms.
+"""
 abstract type Isomorphism{T,U} <: TypedMap{T,U} end
 
 show(io::IO, m::Isomorphism{T,U}) where {T,U} = print(io, "x : $(T) -> x : $(U)")
 Display.object_parentheses(m::Isomorphism) = true
 
-"Map a length 1 vector `x` to `x[1]`."
 struct VectorToNumber{T} <: Isomorphism{SVector{1,T},T}
 end
-"Map a number `x` to a length 1 vector `[x]`."
 struct NumberToVector{T} <: Isomorphism{T,SVector{1,T}}
 end
+
+"""
+    VectorToNumber()
+    VectorToNumber{T}()
+
+Map a length 1 vector `x` to the number `x[1]`.
+
+See also: [`NumberToVector`](@ref).
+"""
+VectorToNumber() = VectorToNumber{Float64}()
+
+"""
+    NumberToVector()
+    NumberToVector{T}()
+
+Map a number `x` to the length 1 vector `[x]`.
+
+See also: [`VectorToNumber`](@ref).
+"""
+NumberToVector() = NumberToVector{Float64}()
 
 mapsize(::VectorToNumber) = (1,1)
 mapsize(::NumberToVector) = (1,)
@@ -30,12 +52,30 @@ jacobian(::NumberToVector{T}, x) where {T} = SVector(one(T))
 jacobian(::NumberToVector{T}) where {T} = ConstantMap{T}(SVector(one(T)))
 
 
-"Map a length 2 vector `x` to `x[1] + im*x[2]`."
 struct VectorToComplex{T} <: Isomorphism{SVector{2,T},Complex{T}}
 end
-"Map a complex number `x` to the length 2 vector `[real(x); imag(x)]`."
 struct ComplexToVector{T} <: Isomorphism{Complex{T},SVector{2,T}}
 end
+
+"""
+    VectorToComplex()
+    VectorToComplex{T}()
+
+The map ``[a;b] → a+bi`` from ``ℝ^2`` to ``ℂ``.
+
+See also: [`FunctionMaps.ComplexToVector`](@ref).
+"""
+VectorToComplex() = VectorToComplex{Float64}()
+
+"""
+    ComplexToVector()
+    ComplexToVector{T}()
+
+Map a complex number ``z=a+bi`` to the length 2 vector ``[a; b]``.
+
+See also: [`FunctionMaps.VectorToComplex`](@ref).
+"""
+ComplexToVector() = ComplexToVector{Float64}()
 
 mapsize(::VectorToComplex) = (1,2)
 mapsize(::ComplexToVector) = (2,)

@@ -1,6 +1,8 @@
 # Examples
 
-### Intervals
+These are the same examples as those in the README of the package repository.
+
+## Intervals
 
 DomainSets.jl uses [IntervalSets.jl](https://github.com/JuliaMath/IntervalSets.jl) for closed and open intervals. In addition, it defines a few standard intervals.
 
@@ -17,7 +19,7 @@ julia> HalfLine()
 0.0..Inf (closed–open) (HalfLine)
 ```
 
-### Rectangles
+## Rectangles
 
 Rectangles can be constructed as a product of intervals, where the elements of the domain
 are `SVector{2}`:
@@ -35,7 +37,7 @@ julia> UnitInterval()^3
 UnitCube()
 ```
 
-### Circles and Spheres
+## Circles and Spheres
 
 A `UnitSphere`  contains `x` if `norm(x) == 1`. The unit sphere is N-dimensional,
 and its dimension is specified with the constructor. The element types are
@@ -70,7 +72,7 @@ true
 
 
 
-### Disks and Balls
+## Disks and Balls
 
 A `UnitBall`  contains `x` if `norm(x) ≤ 1`. As with `UnitSphere`, the dimension
 is specified via the constructor by type or by value:
@@ -99,7 +101,7 @@ the 3-dimensional open unit ball
 ```
 
 
-### Product domains
+## Product domains
 
 The cartesian product of domains is constructed with the `ProductDomain` or
 `ProductDomain{T}` constructor. This abstract constructor returns concrete types
@@ -144,7 +146,7 @@ Rectangle{SVector{3, Float64}}
 ```
 
 
-### Union, intersection, and setdiff of domains
+## Union, intersection, and setdiff of domains
 
 Domains can be unioned and intersected together:
 ```julia
@@ -169,7 +171,7 @@ true
 ```
 
 
-### Level sets
+## Level sets
 
 A domain can be defined by the level sets of a function. The domains of all
 points `[x,y]` for which `x*y = 1` or `x*y >= 1` are represented as follows:
@@ -186,7 +188,7 @@ superlevel set f(x) >= 1.0 with f = prod
 There is also `SublevelSet`, and there are the special cases `ZeroSet`,
 `SubzeroSet` and `SuperzeroSet`.
 
-### Indicator functions
+## Indicator functions
 
 A domain can be defined by an indicator function or a characteristic function.
 This is a function `f(x)` which evaluates to true or false, depending on whether or

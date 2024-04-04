@@ -139,7 +139,19 @@ default_mapto(d1, d2) = d1 == d2 ? identitymap(d1) : throw(ArgumentError("No map
 # We generically define the equality of Domains, using the framework
 # of canonical domains.
 
-"Are the two given domains equal?"
+"""
+    isequaldomain(d1, d2)
+
+Are the two given domains equal?
+
+Domains are considered equal if their membership functions return the same
+output for the same input.
+
+It is not always possible to verify this automatically. If the result is `true`,
+then the domains are guaranteed to be equal. If the result is `false`, then
+either the domains are not equal or they are equal but the implementation fails
+to recognize this.
+"""
 isequaldomain(d1, d2) = isequaldomain1(d1, d2)
 isequaldomain1(d1, d2) = simplifies(d1) ? isequaldomain(simplify(d1), d2) : isequaldomain2(d1, d2)
 isequaldomain2(d1, d2) = simplifies(d2) ? isequaldomain(d1, simplify(d2)) : default_isequaldomain(d1, d2)

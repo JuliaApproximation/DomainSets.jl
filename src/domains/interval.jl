@@ -108,7 +108,12 @@ Return an interval that is similar to the given interval, but with endpoints
 similar_interval(d::ClosedFixedInterval{T}, a::S, b::S) where {S,T} =
     ClosedInterval{promote_type(T,S)}(a, b)
 
-"The closed unit interval [0,1]."
+"""
+    UnitInterval()
+    UnitInterval{T=Float64}()
+
+The closed unit interval `[0,1]`.
+"""
 struct UnitInterval{T} <: ClosedFixedInterval{T} end
 
 UnitInterval() = UnitInterval{Float64}()
@@ -118,7 +123,12 @@ endpoints(d::UnitInterval{T}) where {T} = (zero(T), one(T))
 similardomain(::UnitInterval, ::Type{T}) where {T} = UnitInterval{T}()
 
 
-"The closed interval [-1,1]."
+"""
+    ChebyshevInterval()
+    ChebyshevInterval{T=Float64}()
+
+The closed interval `[-1,1]`.
+"""
 struct ChebyshevInterval{T} <: ClosedFixedInterval{T}
 end
 
@@ -183,13 +193,32 @@ end
 mapfrom_canonical(d::AbstractInterval) = mapto(canonicaldomain(d), d)
 
 
-"The positive halfline `[0,∞)` or `(0,∞)`, left-closed or left-open."
+"""
+    HalfLine()
+    HalfLine{T=Float64,C=:closed}()
+
+The positive halfline `[0,∞)` when `C` is `:closed` or `(0,∞)` when `C` is
+`:open`. The interval is always open at infinity.
+
+See also: [`NonnegativeRealLine`](@ref), [`PositiveRealLine`](@ref).
+"""
 struct HalfLine{T,C} <: FixedInterval{C,:open,T} end
 HalfLine() = HalfLine{Float64}()
 HalfLine{T}() where {T} = HalfLine{Float64,:closed}()
 
+"""
+    NonnegativeRealLine{T=Float64}()
+
+The closed positive halfline `[0,∞)`.
+"""
 const NonnegativeRealLine{T} = HalfLine{T,:closed}
+"""
+    PositiveRealLine{T=Float64}()
+
+The open positive halfline `(0,∞)`.
+"""
 const PositiveRealLine{T} = HalfLine{T,:open}
+
 NonnegativeRealLine() = NonnegativeRealLine{Float64}()
 PositiveRealLine() = PositiveRealLine{Float64}()
 
@@ -216,12 +245,30 @@ choice(d::NonnegativeRealLine) = zero(domaineltype(d))
 choice(d::PositiveRealLine) = one(domaineltype(d))
 
 
-"The negative halfline `(-∞,0]` or `(-∞,0)`, right-closed or right-open."
+"""
+    NegativeHalfLine()
+    NegativeHalfLine{T=Float64,C=:closed}()
+
+The negative halfline `(-∞,0]` when `C` is `:closed` or `(-∞,0)` when `C` is
+`:open`. The interval is always open at minus infinity.
+
+See also: [`NonpositiveRealLine`](@ref), [`NegativeRealLine`](@ref).
+"""
 struct NegativeHalfLine{T,C} <: FixedInterval{:open,C,T} end
 NegativeHalfLine() = NegativeHalfLine{Float64}()
 NegativeHalfLine{T}() where {T} = NegativeHalfLine{T,:open}()
 
+"""
+    NonpositiveRealLine{T=Float64}()
+
+The closed negative halfline `(-∞,0]`.
+"""
 const NonpositiveRealLine{T} = NegativeHalfLine{T,:closed}
+"""
+    NegativeRealLine{T=Float64}()
+
+The open negative halfline `(-∞,0)`.
+"""
 const NegativeRealLine{T} = NegativeHalfLine{T,:open}
 NonpositiveRealLine() = NonpositiveRealLine{Float64}()
 NegativeRealLine() = NegativeRealLine{Float64}()
@@ -482,6 +529,10 @@ end
 function show(io::IO, d::RealLine)
     print(io, Interval(d))
     print(io, " (RealLine)")
+end
+function show(io::IO, d::NegativeHalfLine)
+    print(io, Interval(d))
+    print(io, " (NegativeHalfLine)")
 end
 
 

@@ -160,7 +160,13 @@ const VectorCube{T} = Cube{Vector{T}}
 iscompatiblepair(x::AbstractVector, d::VectorCube) = length(x) == dimension(d)
 
 
-"The unit cube is the domain `[0,1]^d`."
+"""
+	UnitCube()
+	UnitCube(::Val{N=3})
+	UnitCube(dim::Int)
+
+The `d`-dimensional domain ``[0,1]^d``.
+"""
 abstract type UnitCube{T} <: Cube{T} end
 
 component(d::UnitCube, i::Int) =
@@ -194,6 +200,12 @@ const EuclideanUnitCube{N,T} = StaticUnitCube{SVector{N,T}}
 
 EuclideanUnitCube{N}() where {N} = EuclideanUnitCube{N,Float64}()
 
+"""
+	UnitSquare()
+	UnitSquare{T=Float64}()
+
+The domain ``[0,1]^2``.
+"""
 const UnitSquare{T} = EuclideanUnitCube{2,T}
 
 
@@ -275,8 +287,14 @@ Display.object_parentheses(d::UnitSquare) = false
 Display.object_parentheses(d::VectorUnitCube{Float64}) = false
 
 
+"""
+	Rectangle(a, b)
+	Rectangle(domains::ClosedInterval...)
+	Rectangle{T}(domains::ClosedInterval...)
 
-"An N-dimensional rectangle is the cartesian product of closed intervals."
+A rectangular domain in `n` dimensions with extrema determined by the vectors
+or points `a` and `b` or by the endpoints of the given intervals.
+"""
 struct Rectangle{T} <: HyperRectangle{T}
     a   ::  T
     b   ::  T
@@ -292,9 +310,10 @@ component(d::Rectangle, i::Int) = ClosedInterval(d.a[i],d.b[i])
 components(d::Rectangle) = map(ClosedInterval, d.a, d.b)
 
 Rectangle(a, b) = Rectangle(promote(a,b)...)
-Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
 Rectangle(a::NTuple{N,T}, b::NTuple{N,T}) where {N,T} =
     Rectangle(SVector{N,T}(a), SVector{N,T}(b))
+Rectangle(a::Point, b::Point) = Rectangle(pointval(a), pointval(b))
+Rectangle(a::T, b::T) where {T} = Rectangle{T}(a, b)
 Rectangle(a::T, b::T) where {T<:Number} =
 	throw(ArgumentError("Rectangles have to be constructed from vectors or tuples, not numbers."))
 

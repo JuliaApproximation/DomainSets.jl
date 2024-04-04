@@ -15,10 +15,22 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Examples" => "examples.md",
-        "Euclidean geometry" => "geometry.md",
         "Set operations" => "setoperations.md",
-        "Public API Reference" => "api.md",
-        "Internal API Reference" => "internal.md",
+        "Specific domains" => Any[
+            "Euclidean geometry" => "geometry.md",
+            "Function approximation" => "approximation.md",
+            "Complex analysis" => "complex.md",
+            "Numbers" => "numbers.md"
+        ],
+        "Design principles" => Any[
+            "The domain interface" => "interface.md",
+            "Equality of domains" => "equality.md",
+            "Canonical domains" => "canonical.md"
+        ],
+        "API" => Any[
+            "Public API Reference" => "api.md",
+            "Internal API Reference" => "internal.md"
+        ],
         "FunctionMaps.jl" => "maps.md"
     ],
 )

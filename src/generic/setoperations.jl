@@ -28,19 +28,17 @@ issubset_domain(d1::BaseDomainType, d2::BaseDomainType) = issubset(d1, d2)
 ############################
 
 """
-A `UnionDomain` represents the union of a set of domains.
+	UnionDomain(domains...)
+	UnionDomain{T}(domains...)
+
+The lazy union of the given domains.
+
+See also: [`uniondomain`](@ref).
 """
 struct UnionDomain{T,DD} <: CompositeDomain{T}
 	domains	::	DD
 end
 
-"""
-	UnionDomain(domains...)
-
-The `UnionDomain` and `UnionDomain{T}` constructors can be invoked in three ways:
-- with a list of arguments: `UnionDomain(d1, d2, ...)`
-- or with an iterable list of domains: `UnionDomain(domains)`
-"""
 UnionDomain() = throw(ArgumentError("Can't create an empty UnionDomain."))
 UnionDomain(domains...) = UnionDomain(domains)
 UnionDomain(domains) = _UnionDomain(promote_domains(domains))
@@ -58,9 +56,11 @@ combine(d::UnionDomain, results) = reduce(|, results)
 union(domains::AnyDomain...) =	uniondomain(map(domain, domains)...)
 
 """
-	uniondomain(d1, d2[, domains...])
+	uniondomain(domains...)
 
 Return a domain that agrees with the mathematical union of the arguments.
+
+See also: [`UnionDomain`](@ref).
 """
 uniondomain() = emptyspace(Any)
 uniondomain(d1) = d1
@@ -179,17 +179,17 @@ setdiffdomain2(d1, d2::UnionDomain) =
 
 
 """
-An `IntersectDomain` represents the intersection of a set of domains.
+	IntersectDomain(domains...)
+	IntersectDomain{T}(domains...)
+
+The lazy intersection of an iterable list of domains.
+
+See also: [`intersectdomain`](@ref).
 """
 struct IntersectDomain{T,DD} <: CompositeDomain{T}
     domains ::  DD
 end
 
-"""
-The `IntersectDomain` constructor can be invoked in one of three ways:
-- with a list of arguments: IntersectDomain(d1, d2, ...)
-- or with any iterable list of domains: IntersectDomain(domains)
-"""
 IntersectDomain(domains...) = IntersectDomain(domains)
 IntersectDomain(domains) = _IntersectDomain(promote_domains(domains))
 _IntersectDomain(domains) = IntersectDomain{domaineltype(first(domains))}(domains)
@@ -206,6 +206,14 @@ combine(d::IntersectDomain, results) = reduce(&, results)
 # Make d1 ∩ d2 invoke `intersectdomain` if the arguments are Domains
 intersect(domains::AnyDomain...) = intersectdomain(map(domain, domains)...)
 
+"""
+	intersectdomain(domains...)
+
+Return a domain which agrees with the mathematical intersection of the given
+domains.
+
+See also: [`IntersectDomain`](@ref).
+"""
 intersectdomain() = emptyspace(Any)
 intersectdomain(d1) = d1
 intersectdomain(d1, d2) = intersectdomain1(promote_domains(d1, d2)...)
@@ -290,7 +298,14 @@ show(io::IO, d::IntersectDomain) = Display.composite_show_compact(io, d)
 #########################################
 
 
-"A `SetdiffDomain` represents the difference between two domains."
+"""
+	SetdiffDomain(d1, d2)
+	SetdiffDomain{T}(d1, d2)
+
+The lazy set difference of the given domains.
+
+See also: [`setdiffdomain`](@ref).
+"""
 struct SetdiffDomain{T,DD} <: CompositeDomain{T}
     domains	::	DD
 	function SetdiffDomain{T,DD}(domains::DD) where {T,DD}
@@ -322,6 +337,13 @@ similardomain(d::SetdiffDomain, ::Type{T}) where {T} =
 # Make setdiff invoke `setdiffdomain` if the arguments are domains
 setdiff(d1::AnyDomain, d2::AnyDomain) = setdiffdomain(domain(d1), domain(d2))
 
+"""
+	setdiffdomain(d1, d2)
+
+Return a domain which agrees with the mathematical difference of the given domains.
+
+See also: [`SetdiffDomain`](@ref).
+"""
 setdiffdomain(d1, d2) = setdiffdomain1(promote_domains(d1, d2)...)
 setdiffdomain1(d1, d2) = simplifies(d1) ? setdiffdomain(simplify(d1), d2) : setdiffdomain2(d1, d2)
 setdiffdomain2(d1, d2) = simplifies(d2) ? setdiffdomain(d1, simplify(d2)) : default_setdiffdomain(d1, d2)

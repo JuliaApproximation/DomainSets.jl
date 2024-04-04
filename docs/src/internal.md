@@ -6,6 +6,8 @@ and macros in `DomainSets.jl`.
 !!! warning
     Unexported functions and types are subject to change across different
     releases of the package, even if the release is said to be non-breaking.
+    This overview is useful to better understand or to help develop the
+    internals of DomainSets.
 
 ## Constants
 

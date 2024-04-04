@@ -263,6 +263,7 @@ function test_product_domains()
         @test choice(d6) ∈ d6
 
         @test Rectangle( SA[1,2], SA[2.0,3.0]) isa Rectangle{SVector{2,Float64}}
+        @test Rectangle( Point(SA[1,2]), Point(SA[2.0,3.0])) isa Rectangle{SVector{2,Float64}}
         @test Rectangle([0..1, 2..3]) isa Rectangle{Vector{Int}}
         @test Rectangle((0..1, 2..3)) isa Rectangle{SVector{2,Int}}
         @test Rectangle{SVector{2,Float64}}((0..1, 2..3)) isa Rectangle{SVector{2,Float64}}

@@ -1,5 +1,16 @@
 # FunctionMaps.jl
 
+## What is FunctionMaps.jl
+
+`FunctionMaps` is a submodule of `DomainSets` as of version `0.7.10`. The
+module collects all functionality in the package that relates to functions in
+the sense of a map between spaces. It defines properties such as the `jacobian`
+etcetera.
+
+The module is expected to be moved into a separate package in the future and will
+be independently documented.
+
+
 ## Public API Reference
 
 ### Constants
