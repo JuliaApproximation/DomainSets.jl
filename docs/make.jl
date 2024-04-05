@@ -15,13 +15,13 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Examples" => "examples.md",
-        "Set operations" => "setoperations.md",
         "Specific domains" => Any[
             "Euclidean geometry" => "geometry.md",
             "Function approximation" => "approximation.md",
             "Complex analysis" => "complex.md",
             "Numbers" => "numbers.md"
         ],
+        "Set operations" => "setoperations.md",
         "Design principles" => Any[
             "The domain interface" => "interface.md",
             "Equality of domains" => "equality.md",

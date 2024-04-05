@@ -2,7 +2,7 @@
 """
 	abstract type ProductDomain{T}
 
-A `ProductDomain` represents the cartesian product of other domains.
+Represents the cartesian product of other domains.
 """
 abstract type ProductDomain{T} <: CompositeDomain{T} end
 

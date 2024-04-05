@@ -11,24 +11,38 @@ isclosedset(::Simplex{T,:open}) where {T} = false
 
 isopenset(d::Simplex) = !isclosedset(d)
 
-"The unit simplex is a polytope with the origin and all unit vectors as vertices."
+"""
+    UnitSimplex{T,C}
+
+A polytope with the origin and all unit vectors as vertices.
+"""
 abstract type UnitSimplex{T,C} <: Simplex{T,C} end
 
 const ClosedUnitSimplex{T} = UnitSimplex{T,:closed}
 const OpenUnitSimplex{T} = UnitSimplex{T,:open}
 
-UnitSimplex(n::Int) = DynamicUnitSimplex(n)
-UnitSimplex(::Val{N}) where {N} = EuclideanUnitSimplex{N}()
+"""
+    UnitSimplex([dim::Int])
+    UnitSimplex{T}([dim::Int])
+    UnitSimplex{T,C=:closed}([dim::Int])
 
-UnitSimplex{T}(n::Int) where {T <: StaticTypes} = StaticUnitSimplex{T}(n)
+The open or closed volume of all points of type `x`, for which the sum of
+components is smaller than (or equal to) 1.
+
+The unit simplex has the origin and all Euclidean unit vector as vertices.
+"""
+UnitSimplex(::Val{N} = Val(3)) where {N} = EuclideanUnitSimplex{N}()
+UnitSimplex(dim::Int) = DynamicUnitSimplex(dim)
+
+UnitSimplex{T}(dim::Int) where {T <: StaticTypes} = StaticUnitSimplex{T}(dim)
 UnitSimplex{T}(::Val{N}) where {N,T} = StaticUnitSimplex{T}(Val(N))
 UnitSimplex{T}() where {T <: StaticTypes} = StaticUnitSimplex{T}()
-UnitSimplex{T}(n::Int) where {T} = DynamicUnitSimplex{T}(n)
+UnitSimplex{T}(dim::Int) where {T} = DynamicUnitSimplex{T}(dim)
 
-UnitSimplex{T,C}(n::Int) where {T <: StaticTypes,C} = StaticUnitSimplex{T,C}(n)
+UnitSimplex{T,C}(dim::Int) where {T <: StaticTypes,C} = StaticUnitSimplex{T,C}(dim)
 UnitSimplex{T,C}(::Val{N}) where {N,T,C} = StaticUnitSimplex{T,C}(Val(N))
 UnitSimplex{T,C}() where {T <: StaticTypes,C} = StaticUnitSimplex{T,C}()
-UnitSimplex{T,C}(n::Int) where {T,C} = DynamicUnitSimplex{T,C}(n)
+UnitSimplex{T,C}(dim::Int) where {T,C} = DynamicUnitSimplex{T,C}(dim)
 
 insimplex_closed(x) = mapreduce( t-> t >= 0, &, x) && norm(x,1) <= 1
 insimplex_open(x) = mapreduce( t-> t > 0, &, x) && norm(x,1) < 1
@@ -72,13 +86,13 @@ StaticUnitSimplex(::Val{N}) where {N} = StaticUnitSimplex{SVector{N,Float64}}()
 
 StaticUnitSimplex{T}() where {T} = StaticUnitSimplex{T,:closed}()
 
-StaticUnitSimplex{T}(n::Int) where {T} =
-    (@assert n == euclideandimension(T); StaticUnitSimplex{T}())
+StaticUnitSimplex{T}(dim::Int) where {T} =
+    (@assert dim == euclideandimension(T); StaticUnitSimplex{T}())
 StaticUnitSimplex{T}(::Val{N}) where {N,T} =
     (@assert N == euclideandimension(T); StaticUnitSimplex{T}())
 
-StaticUnitSimplex{T,C}(n::Int) where {T,C} =
-    (@assert n == euclideandimension(T); StaticUnitSimplex{T,C}())
+StaticUnitSimplex{T,C}(dim::Int) where {T,C} =
+    (@assert dim == euclideandimension(T); StaticUnitSimplex{T,C}())
 StaticUnitSimplex{T,C}(::Val{N}) where {N,T,C} =
     (@assert N == euclideandimension(T); StaticUnitSimplex{T,C}())
 
@@ -103,13 +117,13 @@ boundary(d::StaticUnitSimplex{T}) where {T<:Number} = boundary(AbstractInterval(
 struct DynamicUnitSimplex{T,C} <: UnitSimplex{T,C}
     dimension   ::  Int
 
-    DynamicUnitSimplex{T,C}(n::Int) where {T,C} = new(n)
-    DynamicUnitSimplex{T,C}(n::Int) where {T<:StaticTypes,C} =
-        (@assert n == euclideandimension(T); new(n))
+    DynamicUnitSimplex{T,C}(dim::Int) where {T,C} = new(dim)
+    DynamicUnitSimplex{T,C}(dim::Int) where {T<:StaticTypes,C} =
+        (@assert dim == euclideandimension(T); new(dim))
 end
 
-DynamicUnitSimplex(n::Int) = DynamicUnitSimplex{Vector{Float64}}(n)
-DynamicUnitSimplex{T}(n::Int) where {T} = DynamicUnitSimplex{T,:closed}(n)
+DynamicUnitSimplex(dim::Int) = DynamicUnitSimplex{Vector{Float64}}(dim)
+DynamicUnitSimplex{T}(dim::Int) where {T} = DynamicUnitSimplex{T,:closed}(dim)
 
 dimension(d::DynamicUnitSimplex) = d.dimension
 

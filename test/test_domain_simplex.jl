@@ -1,4 +1,5 @@
 function test_simplex()
+    @test UnitSimplex() isa EuclideanUnitSimplex{3,Float64}
     @test UnitSimplex(2) isa VectorUnitSimplex{Float64}
     @test UnitSimplex(Val(2)) isa EuclideanUnitSimplex{2,Float64}
     @test UnitSimplex{Float64}() isa StaticUnitSimplex{Float64}

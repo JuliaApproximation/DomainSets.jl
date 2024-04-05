@@ -115,7 +115,7 @@ TupleProductDomain
 Rectangle
 ```
 
-## Union of sets
+## Set union
 
 The mathematical union of two sets is guaranteed by `uniondomain`, while a lazy
 union is returned by `UnionDomain`.

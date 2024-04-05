@@ -11,8 +11,10 @@
 #   EuclideanUnitBall (StaticUnitBall), VectorUnitBall (DynamicUnitBall).
 
 """
-Supertype of balls for which elements satisfy `norm(x) < radius(ball)` (open ball)
-or `norm(x) <= radius(ball)` (closed ball).
+    Ball{T,C} <: Domain{T}
+
+Abstract supertype for volumes of elements satisfying `norm(x-center(ball)) < radius(ball)`
+(open ball) or `norm(x-center(ball)) <= radius(ball)` (closed ball).
 """
 abstract type Ball{T,C} <: Domain{T} end
 
@@ -98,30 +100,30 @@ distance_to(d::Ball, x) = x ∈ d ? zero(prectype(d)) : norm(x-center(d))-radius
 choice(d::Ball) = center(d)
 
 
-"""
-    UnitBall([dim::Int])
-    UnitBall{T}([dim::Int])
-    UnitBall{T,C=:closed}([dim::Int])
-
-The volume of all points of type `T`.
-"""
 abstract type UnitBall{T,C} <: Ball{T,C} end
 
 radius(::UnitBall) = 1
 center(d::UnitBall{T}) where {T<:StaticTypes} = zero(T)
 
-UnitBall(n::Int) = DynamicUnitBall(n)
-UnitBall(::Val{N} = Val(3)) where {N} = EuclideanUnitBall{N}()
+"""
+    UnitBall([dim::Int])
+    UnitBall{T}([dim::Int])
+    UnitBall{T,C=:closed}([dim::Int])
 
-UnitBall{T}(n::Int) where {T <: StaticTypes} = StaticUnitBall{T}(n)
+The open or closed volume of all points of type `T` with norm smaller than (or equal to) 1.
+"""
+UnitBall(::Val{N} = Val(3)) where {N} = EuclideanUnitBall{N}()
+UnitBall(dim::Int) = DynamicUnitBall(dim)
+
+UnitBall{T}(dim::Int) where {T <: StaticTypes} = StaticUnitBall{T}(dim)
 UnitBall{T}(::Val{N}) where {N,T} = StaticUnitBall{T}(Val(N))
 UnitBall{T}() where {T <: StaticTypes} = StaticUnitBall{T}()
-UnitBall{T}(n::Int) where {T} = DynamicUnitBall{T}(n)
+UnitBall{T}(dim::Int) where {T} = DynamicUnitBall{T}(dim)
 
-UnitBall{T,C}(n::Int) where {T <: StaticTypes,C} = StaticUnitBall{T,C}(n)
+UnitBall{T,C}(dim::Int) where {T <: StaticTypes,C} = StaticUnitBall{T,C}(dim)
 UnitBall{T,C}(::Val{N}) where {N,T,C} = StaticUnitBall{T,C}(Val(N))
 UnitBall{T,C}() where {T <: StaticTypes,C} = StaticUnitBall{T,C}()
-UnitBall{T,C}(n::Int) where {T,C} = DynamicUnitBall{T,C}(n)
+UnitBall{T,C}(dim::Int) where {T,C} = DynamicUnitBall{T,C}(dim)
 
 const ClosedUnitBall{T} = UnitBall{T,:closed}
 const OpenUnitBall{T} = UnitBall{T,:open}
@@ -160,13 +162,13 @@ StaticUnitBall(::Val{N}) where {N} = StaticUnitBall{SVector{N,Float64}}()
 
 StaticUnitBall{T}() where {T} = StaticUnitBall{T,:closed}()
 
-StaticUnitBall{T}(n::Int) where {T} =
-    (@assert n == euclideandimension(T); StaticUnitBall{T}())
+StaticUnitBall{T}(dim::Int) where {T} =
+    (@assert dim == euclideandimension(T); StaticUnitBall{T}())
 StaticUnitBall{T}(::Val{N}) where {N,T} =
     (@assert N == euclideandimension(T); StaticUnitBall{T}())
 
-StaticUnitBall{T,C}(n::Int) where {T,C} =
-    (@assert n == euclideandimension(T); StaticUnitBall{T,C}())
+StaticUnitBall{T,C}(dim::Int) where {T,C} =
+    (@assert dim == euclideandimension(T); StaticUnitBall{T,C}())
 StaticUnitBall{T,C}(::Val{N}) where {N,T,C} =
     (@assert N == euclideandimension(T); StaticUnitBall{T,C}())
 
@@ -181,6 +183,12 @@ similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T<:StaticTypes} =
 similardomain(d::StaticUnitBall{S,C}, ::Type{T}) where {S,C,T} =
     DynamicUnitBall{T,C}(dimension(d))
 
+"""
+    UnitDisk()
+    UnitDisk{T=Float64}()
+
+The closed unit disk in 2D, with element type `SVector{2,T}`.
+"""
 const UnitDisk{T} = UnitBall{SVector{2,T},:closed}
 UnitDisk() = UnitDisk{Float64}()
 
@@ -213,13 +221,13 @@ type is a `Vector{T}` and `dim` specifies the length of the vectors.
 struct DynamicUnitBall{T,C} <: UnitBall{T,C}
     dimension   ::  Int
 
-    DynamicUnitBall{T,C}(n::Int) where {T,C} = new(n)
-    DynamicUnitBall{T,C}(n::Int) where {T<:StaticTypes,C} =
-        (@assert n == euclideandimension(T); new(n))
+    DynamicUnitBall{T,C}(dim::Int) where {T,C} = new(dim)
+    DynamicUnitBall{T,C}(dim::Int) where {T<:StaticTypes,C} =
+        (@assert dim == euclideandimension(T); new(dim))
 end
 
-DynamicUnitBall(n::Int) = DynamicUnitBall{Vector{Float64}}(n)
-DynamicUnitBall{T}(n::Int) where {T} = DynamicUnitBall{T,:closed}(n)
+DynamicUnitBall(dim::Int) = DynamicUnitBall{Vector{Float64}}(dim)
+DynamicUnitBall{T}(dim::Int) where {T} = DynamicUnitBall{T,:closed}(dim)
 
 dimension(d::DynamicUnitBall) = d.dimension
 
@@ -228,7 +236,7 @@ center(d::DynamicUnitBall{T}) where {T} = zeros(eltype(T), dimension(d))
 "The unit ball with vector elements of a given dimension."
 const VectorUnitBall{T,C} = DynamicUnitBall{Vector{T},C}
 
-VectorUnitBall(n::Int = 3) = VectorUnitBall{Float64}(n)
+VectorUnitBall(dim::Int = 3) = VectorUnitBall{Float64}(dim)
 VectorUnitDisk() = VectorUnitBall(2)
 
 similardomain(d::DynamicUnitBall{S,C}, ::Type{T}) where {S,C,T} =
@@ -384,13 +392,20 @@ approx_indomain(x, d::UnitSphere, tolerance) =
     1-tolerance <= norm(x) <= 1+tolerance
 
 
-UnitSphere(n::Int) = DynamicUnitSphere(n)
-UnitSphere(::Val{N} = Val(3)) where {N} = EuclideanUnitSphere{N}()
+"""
+    UnitSphere([dim::Int])
+    UnitSphere{T}([dim::Int])
+    UnitSphere{T,C=:closed}([dim::Int])
 
-UnitSphere{T}(n::Int) where {T <: StaticTypes} = StaticUnitSphere{T}(n)
+The set of all points of type `T` with norm 1.
+"""
+UnitSphere(::Val{N} = Val(3)) where {N} = EuclideanUnitSphere{N}()
+UnitSphere(dim::Int) = DynamicUnitSphere(dim)
+
+UnitSphere{T}(dim::Int) where {T <: StaticTypes} = StaticUnitSphere{T}(dim)
 UnitSphere{T}(::Val{N}) where {N,T} = StaticUnitSphere{T}(Val(N))
 UnitSphere{T}() where {T <: StaticTypes} = StaticUnitSphere{T}()
-UnitSphere{T}(n::Int) where {T} = DynamicUnitSphere{T}(n)
+UnitSphere{T}(dim::Int) where {T} = DynamicUnitSphere{T}(dim)
 
 isequaldomain(d1::UnitSphere, d2::UnitSphere) = dimension(d1)==dimension(d2)
 
@@ -408,8 +423,8 @@ end
 StaticUnitSphere() = StaticUnitSphere{Float64}()
 StaticUnitSphere(::Val{N}) where {N} = StaticUnitSphere{SVector{N,Float64}}()
 
-StaticUnitSphere{T}(n::Int) where {T} =
-    (@assert n == euclideandimension(T); StaticUnitSphere{T}())
+StaticUnitSphere{T}(dim::Int) where {T} =
+    (@assert dim == euclideandimension(T); StaticUnitSphere{T}())
 StaticUnitSphere{T}(::Val{N}) where {N,T} =
     (@assert N == euclideandimension(T); StaticUnitSphere{T}())
 
@@ -425,7 +440,12 @@ const EuclideanUnitSphere{N,T} = StaticUnitSphere{SVector{N,T}}
 EuclideanUnitSphere{N}() where {N} = EuclideanUnitSphere{N,Float64}()
 
 
-"The unit circle in 2D."
+"""
+    UnitCircle()
+    UnitCircle{T=Float64}()
+
+The unit circle in 2D, with element type `SVector{2,T}`.
+"""
 const UnitCircle{T} = UnitSphere{SVector{2,T}}
 UnitCircle() = UnitCircle{Float64}()
 
@@ -437,12 +457,12 @@ mapfrom_canonical(::Parameterization, d::UnitCircle{T}) where {T} = UnitCircleMa
 struct DynamicUnitSphere{T} <: UnitSphere{T}
     dimension   ::  Int
 
-    DynamicUnitSphere{T}(n::Int) where {T} = new(n)
-    DynamicUnitSphere{T}(n::Int) where {T<:StaticTypes} =
-        (@assert n == euclideandimension(T); new(n))
+    DynamicUnitSphere{T}(dim::Int) where {T} = new(dim)
+    DynamicUnitSphere{T}(dim::Int) where {T<:StaticTypes} =
+        (@assert dim == euclideandimension(T); new(dim))
 end
 
-DynamicUnitSphere(n::Int) = DynamicUnitSphere{Vector{Float64}}(n)
+DynamicUnitSphere(dim::Int) = DynamicUnitSphere{Vector{Float64}}(dim)
 
 dimension(d::DynamicUnitSphere) = d.dimension
 
@@ -451,7 +471,7 @@ center(d::DynamicUnitSphere{T}) where {T} = zeros(eltype(T), dimension(d))
 "The unit sphere with vector elements of a given dimension."
 const VectorUnitSphere{T} = DynamicUnitSphere{Vector{T}}
 
-VectorUnitSphere(n::Int = 3) = VectorUnitSphere{Float64}(n)
+VectorUnitSphere(dim::Int = 3) = VectorUnitSphere{Float64}(dim)
 VectorUnitCircle() = VectorUnitSphere(2)
 
 similardomain(d::DynamicUnitSphere, ::Type{T}) where {T} =

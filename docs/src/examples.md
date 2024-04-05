@@ -2,7 +2,7 @@
 
 These are the same examples as those in the README of the package repository.
 
-## Intervals
+## Intervals from IntervalSets
 
 DomainSets.jl uses [IntervalSets.jl](https://github.com/JuliaMath/IntervalSets.jl) for closed and open intervals. In addition, it defines a few standard intervals.
 
@@ -101,7 +101,7 @@ the 3-dimensional open unit ball
 ```
 
 
-## Product domains
+## Cartesian products
 
 The cartesian product of domains is constructed with the `ProductDomain` or
 `ProductDomain{T}` constructor. This abstract constructor returns concrete types
