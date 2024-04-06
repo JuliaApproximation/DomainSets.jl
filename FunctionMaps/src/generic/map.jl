@@ -61,14 +61,18 @@ convert_codomaintype(::Type{U}, map) where U =
     _convert_codomaintype(U, map, domaintype(map), codomaintype(map))
 # types match: we can return map
 _convert_codomaintype(::Type{U}, map, ::Type{T}, ::Type{U}) where {T,U} = map
-# types don't match: we first convert the numtype
+# ...or, outputs are vectors with the same eltype: that's good enough, further
+# conversion might be unnecessary and expensive
+_convert_codomaintype(::Type{<:AbstractVector{S}}, map, ::Type{T}, ::Type{<:AbstractVector{S}}) where {T,S} = map
+# no match yet: we now try to convert the numtype
 _convert_codomaintype(::Type{U}, map, ::Type{T}, ::Type{V}) where {T,U,V} =
     _convert_codomaintype2(U, convert_numtype(numtype(U), map))
 _convert_codomaintype2(::Type{U}, map::Map) where U =
     _convert_codomaintype2(U, map, domaintype(map), codomaintype(map))
-# types match this time around: we can return map
+# better match this time around: we can return map
 _convert_codomaintype2(::Type{U}, map, ::Type{T}, ::Type{U}) where {T,U} = map
-# types don't match: we can't do this automatically
+_convert_codomaintype2(::Type{<:AbstractVector{S}}, map, ::Type{T}, ::Type{<:AbstractVector{S}}) where {T,S} = map
+# still no match: we can't do this automatically
 _convert_codomaintype2(::Type{U}, map, ::Type{T}, ::Type{V}) where {T,U,V} =
     throw(ArgumentError("Don't know how to convert the codomain type of $(map) to $(U)."))
 

@@ -124,8 +124,8 @@ Convert the `A` in the affine map `A*x` or `A*x+b` with domaintype `T` to a matr
 to_matrix(::Type{T}, A) where {T} = A
 to_matrix(::Type{T}, A::AbstractMatrix) where {T} = A
 to_matrix(::Type{T}, A::NumberLike) where {T<:Number} = A
-to_matrix(::Type{SVector{N,T}}, A::Number) where {N,T} = A * one(SMatrix{N,N,T})
-to_matrix(::Type{SVector{N,T}}, A::UniformScaling) where {N,T} = A.λ * one(SMatrix{N,N,T})
+to_matrix(::Type{<:StaticVector{N,T}}, A::Number) where {N,T} = A * one(SMatrix{N,N,T})
+to_matrix(::Type{<:StaticVector{N,T}}, A::UniformScaling) where {N,T} = A.λ * one(SMatrix{N,N,T})
 to_matrix(::Type{T}, A::Number) where {T<:AbstractVector} = A * I
 to_matrix(::Type{T}, A::UniformScaling) where {T<:Number} = one(T)
 to_matrix(::Type{T}, A::UniformScaling) where {T<:AbstractVector} = A
@@ -135,7 +135,7 @@ to_matrix(::Type{T}, A::AbstractMatrix, b) where {T} = A
 to_matrix(::Type{T}, A::Number, b::Number) where {T<:Number} = A
 to_matrix(::Type{T}, A::UniformScaling{S}, b::Number) where {S,T<:Number} =
 	convert(promote_type(S,T,typeof(b)), A.λ)
-to_matrix(::Type{SVector{N,T}}, A::NumberLike, b::SVector{N,T}) where {N,T} = A * one(SMatrix{N,N,T})
+to_matrix(::Type{<:StaticVector{N,T}}, A::NumberLike, b::StaticVector{N,T}) where {N,T} = A * one(SMatrix{N,N,T})
 to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVector{S}} =
     A * Array{S,2}(I, length(b), length(b))
 
@@ -145,8 +145,8 @@ to_matrix(::Type{T}, A::NumberLike, b::AbstractVector) where {S,T<:AbstractVecto
 Convert the `b` in the affine map `A*x` or `A*x+b` with domaintype `T` to a vector.
 """
 to_vector(::Type{T}, A) where {T} = zero(T)
-to_vector(::Type{T}, A::SVector{M,S}) where {T,M,S} = zero(SVector{M,S})
-to_vector(::Type{T}, A::SMatrix{M,N,S}) where {T,M,N,S} = zero(SVector{M,S})
+to_vector(::Type{T}, A::StaticVector{M,S}) where {T,M,S} = zero(SVector{M,S})
+to_vector(::Type{T}, A::StaticMatrix{M,N,S}) where {T,M,N,S} = zero(SVector{M,S})
 to_vector(::Type{T}, A::AbstractArray) where {T} = zeros(eltype(T),size(A,1))
 to_vector(::Type{T}, A, b) where {T} = b
 

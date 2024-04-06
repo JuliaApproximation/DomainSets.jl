@@ -49,7 +49,7 @@ struct Equivalent <: CanonicalType end
 
 canonicalmap(::Equivalent, m) = canonicalmap(Equal(), m)
 
-canonicalmap(::Equivalent, m::Map{SVector{1,T}}) where {T} = convert(Map{T}, m)
+canonicalmap(::Equivalent, m::Map{<:StaticVector{1,T}}) where {T} = convert(Map{T}, m)
 canonicalmap(::Equivalent, m::Map{NTuple{N,T}}) where {N,T} = convert(Map{SVector{N,T}}, m)
 
 equivalentmap(m) = canonicalmap(Equivalent(), m)

@@ -106,14 +106,14 @@ affinematrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
 affinevector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
 
 LinearMap(A::Number) = ScalarLinearMap(A)
-LinearMap(A::SMatrix) = StaticLinearMap(A)
+LinearMap(A::StaticMatrix) = StaticLinearMap(A)
 LinearMap(A::Matrix) = VectorLinearMap(A)
 LinearMap(A) = GenericLinearMap(A)
 
 LinearMap{T}(A::Number) where {T<:Number} = _LinearMap(A, T, promote_type(T,typeof(A)))
 _LinearMap(A::Number, ::Type{T}, ::Type{T}) where {T<:Number} = ScalarLinearMap{T}(A)
 _LinearMap(A::Number, ::Type{T}, ::Type{S}) where {T<:Number,S} = GenericLinearMap{T}(A)
-LinearMap{T}(A::SMatrix{M,N}) where {M,N,S,T <: SVector{N,S}} = StaticLinearMap{S}(A)
+LinearMap{T}(A::StaticMatrix{M,N}) where {M,N,S,T <: StaticVector{N,S}} = StaticLinearMap{S}(A)
 LinearMap{T}(A::Matrix) where {S,T <: Vector{S}} = VectorLinearMap{S}(A)
 LinearMap{T}(A) where {T} = GenericLinearMap{T}(A)
 
@@ -185,9 +185,9 @@ the given argument 'A'?
 glm_domaintype(A) = Any
 glm_domaintype(A::Number) = typeof(A)
 glm_domaintype(A::AbstractMatrix{T}) where T = Vector{T}
-glm_domaintype(A::SMatrix{M,N,T}) where {M,N,T} = SVector{N,T}
+glm_domaintype(A::StaticMatrix{M,N,T}) where {M,N,T} = SVector{N,T}
 glm_domaintype(A::AbstractVector{T}) where {T} = T
-glm_domaintype(A::Diagonal{T,SVector{N,T}}) where {N,T} = SVector{N,T}
+glm_domaintype(A::Diagonal{T,<:StaticVector{N,T}}) where {N,T} = SVector{N,T}
 
 GenericLinearMap(A) = GenericLinearMap{glm_domaintype(A)}(A)
 
@@ -260,14 +260,27 @@ end
 StaticLinearMap(A::AbstractMatrix{T}) where {T} =
     StaticLinearMap{T}(A)
 
-StaticLinearMap{T}(A::SMatrix{M,N,S}) where {M,N,T,S} =
+StaticLinearMap{T}(A::StaticMatrix{M,N,S}) where {M,N,T,S} =
     StaticLinearMap{T}(convert(AbstractMatrix{T}, A))
-StaticLinearMap{T}(A::SMatrix{M,N,T}) where {M,N,T} =
+StaticLinearMap{T}(A::StaticMatrix{M,N,T}) where {M,N,T} =
     StaticLinearMap{T,M,N}(A)
 StaticLinearMap{T,N,M}(A::AbstractMatrix) where {T,N,M} =
     StaticLinearMap{T,N,M,M*N}(A)
 
 convert(::Type{Map{SVector{N,T}}}, m::VectorLinearMap) where {N,T} = StaticLinearMap{T,N,N}(m.A)
+
+
+# Implement the interface for abstract arrays,
+# representing the linear map x->A*x
+MapStyle(A::AbstractArray) = IsMap()
+
+applymap(A::AbstractArray, x) = A*x
+mapsize(A::AbstractArray) = size(A)
+
+inverse(A::AbstractMatrix) = inv(A)
+inverse(A::AbstractMatrix, x) = A \ x
+
+jacobian(A::AbstractMatrix) = ConstantMap{glm_domaintype(A)}(A)
 
 
 ##########################
@@ -326,7 +339,7 @@ Translation(b::Vector) = VectorTranslation(b)
 Translation(b) = GenericTranslation(b)
 
 Translation{T}(b::Number) where {T<:Number} = ScalarTranslation{T}(b)
-Translation{T}(b::AbstractVector) where {N,S,T<:SVector{N,S}} = StaticTranslation{S,N}(b)
+Translation{T}(b::AbstractVector) where {N,S,T<:StaticVector{N,S}} = StaticTranslation{S,N}(b)
 Translation{T}(b::Vector) where {S,T<:Vector{S}} = VectorTranslation{S}(b)
 Translation{T}(b) where {T} = GenericTranslation{T}(b)
 
@@ -352,8 +365,6 @@ ScalarTranslation(b::Number) = ScalarTranslation{typeof(b)}(b)
 StaticTranslation(b::AbstractVector{T}) where {T} = StaticTranslation{T}(b)
 
 StaticTranslation{T}(b::StaticVector{N}) where {N,T} =
-    StaticTranslation{T,N}(b)
-StaticTranslation{T}(b::SVector{N,T}) where {N,T} =
     StaticTranslation{T,N}(b)
 
 VectorTranslation(b::AbstractVector{T}) where {T} = VectorTranslation{T}(b)
@@ -381,7 +392,7 @@ Concrete subtypes differ in how `A` and `b` are represented.
 abstract type AffineMap{T} <: AbstractAffineMap{T} end
 
 AffineMap(A::Number, b::Number) = ScalarAffineMap(A, b)
-AffineMap(A::SMatrix, b::SVector) = StaticAffineMap(A, b)
+AffineMap(A::StaticMatrix, b::StaticVector) = StaticAffineMap(A, b)
 AffineMap(A::Matrix, b::Vector) = VectorAffineMap(A, b)
 AffineMap(A::UniformScaling{Bool}, b::Number) = ScalarAffineMap(one(b), b)
 AffineMap(A, b) = GenericAffineMap(A, b)
@@ -435,9 +446,9 @@ GenericAffineMap(A::AbstractVector{S}, b::AbstractVector{T}) where {S,T} =
     GenericAffineMap{promote_type(S,T)}(A, b)
 GenericAffineMap(A::AbstractArray{S}, b::AbstractVector{T}) where {S,T} =
     GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
-GenericAffineMap(A::SMatrix{M,N,S}, b::StaticVector{M,T}) where {M,N,S,T} =
+GenericAffineMap(A::StaticMatrix{M,N,S}, b::StaticVector{M,T}) where {M,N,S,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
-GenericAffineMap(A::SMatrix{M,N,S}, b::AbstractVector{T}) where {M,N,S,T} =
+GenericAffineMap(A::StaticMatrix{M,N,S}, b::AbstractVector{T}) where {M,N,S,T} =
     GenericAffineMap{SVector{N,promote_type(S,T)}}(A, b)
 GenericAffineMap(A::S, b::AbstractVector{T}) where {S<:Number,T} =
     GenericAffineMap{Vector{promote_type(S,T)}}(A, b)
@@ -455,8 +466,8 @@ GenericAffineMap{T}(A::AbstractVector{S}, b::AbstractVector{U}) where {T<:Number
 GenericAffineMap{T}(A::AbstractVector{T}, b::AbstractVector{T}) where {T<:Number} =
     GenericAffineMap{T,typeof(A),typeof(b)}(A, b)
 GenericAffineMap{T}(A::Number, b) where {T} = GenericAffineMap{T,eltype(T),typeof(b)}(A, b)
-GenericAffineMap{T}(A::Number, b::AbstractVector) where {N,S,T <: SVector{N,S}} =
-    GenericAffineMap{T,S,SVector{N,S}}(convert(S,A), SVector{N,S}(b))
+GenericAffineMap{T}(A::Number, b::AbstractVector) where {N,S,T <: StaticVector{N,S}} =
+    GenericAffineMap{T,S,SVector{N,S}}(A, b)
 # Promote element types of abstract arrays
 GenericAffineMap{T}(A::AbstractArray, b::AbstractVector) where {S,T<:AbstractVector{S}} =
     GenericAffineMap{T}(convert(AbstractArray{eltype(T)},A), convert(AbstractVector{eltype(T)}, b))
@@ -531,20 +542,20 @@ StaticAffineMap{T}(A::AbstractMatrix, b::AbstractVector) where {T} =
     StaticAffineMap{T}(convert(AbstractMatrix{T}, A), convert(AbstractVector{T}, b))
 
 # - then, we determine N and/or M, from the arguments
-function StaticAffineMap{T}(A::AbstractMatrix{T}, b::SVector{M,T}) where {T,M}
+function StaticAffineMap{T}(A::AbstractMatrix{T}, b::StaticVector{M,T}) where {T,M}
     @assert size(A) == (M,M)
     StaticAffineMap{T,M,M}(A, b)
 end
-StaticAffineMap{T}(A::SMatrix{M,N,T}, b::AbstractVector) where {T,N,M} =
+StaticAffineMap{T}(A::StaticMatrix{M,N,T}, b::AbstractVector) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
-StaticAffineMap{T}(A::SMatrix{M,N,T}, b::SVector{M,T}) where {T,N,M} =
+StaticAffineMap{T}(A::StaticMatrix{M,N,T}, b::StaticVector{M,T}) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
 # line below catches ambiguity error
-StaticAffineMap{T}(A::SMatrix{M1,N,T}, b::SVector{M2,T}) where {T,N,M1,M2} =
+StaticAffineMap{T}(A::StaticMatrix{M1,N,T}, b::StaticVector{M2,T}) where {T,N,M1,M2} =
     throw(ArgumentError("Non-matching dimensions"))
 StaticAffineMap{T,N}(A::AbstractMatrix, b::AbstractVector) where {T,N} =
     StaticAffineMap{T,N,N}(A, b)
-StaticAffineMap{T,N}(A::SMatrix{M,N}, b::AbstractVector) where {T,N,M} =
+StaticAffineMap{T,N}(A::StaticMatrix{M,N}, b::AbstractVector) where {T,N,M} =
     StaticAffineMap{T,N,M}(A, b)
 
 # - finally invoke the constructor (and implicitly convert the data if necessary)

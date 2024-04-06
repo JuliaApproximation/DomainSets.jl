@@ -8,10 +8,10 @@ abstract type ProductMap{T} <: CompositeLazyMap{T} end
 components(m::ProductMap) = m.maps
 factors(d::ProductMap) = components(d)
 
-VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
+VcatMapElement = Union{Map{<:StaticVector},Map{<:Number}}
 
 ProductMap(maps::Tuple) = ProductMap(maps...)
-ProductMap(maps::SVector) = ProductMap(maps...)
+ProductMap(maps::StaticVector) = ProductMap(maps...)
 ProductMap(maps...) = TupleProductMap(maps...)
 ProductMap(maps::VcatMapElement...) = VcatMap(maps...)
 ProductMap(maps::AbstractVector) = VectorProductMap(maps)

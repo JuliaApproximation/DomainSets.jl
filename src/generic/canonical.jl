@@ -138,9 +138,9 @@ canonicaldomain(::Isomorphic, d) = canonicaldomain(Equal(), d)
 mapfrom_canonical(::Isomorphic, d) = mapfrom_canonical(Equal(), d)
 mapto_canonical(::Isomorphic, d) = leftinverse(mapfrom_canonical(Isomorphic(), d))
 
-canonicaldomain(::Isomorphic, d::Domain{SVector{1,T}}) where {T} =
+canonicaldomain(::Isomorphic, d::Domain{<:StaticVector{1,T}}) where {T} =
     convert(Domain{T}, d)
-mapfrom_canonical(::Isomorphic, d::Domain{SVector{1,T}}) where {T} =
+mapfrom_canonical(::Isomorphic, d::Domain{<:StaticVector{1,T}}) where {T} =
     NumberToVector{T}()
 
 canonicaldomain(::Isomorphic, d::Domain{NTuple{N,T}}) where {N,T} =

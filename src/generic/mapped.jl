@@ -102,27 +102,31 @@ mapped_domain(invmap, domain) = mapped_domain1(invmap, domain)
 mapped_domain1(invmap, domain) = mapped_domain2(invmap, domain)
 mapped_domain2(invmap, domain) = default_mapped_domain(invmap, domain)
 
-function default_mapped_domain(invmap, domain)
+function default_mapped_domain(invmap::Map, domain)
     T = promote_type(codomaintype(invmap), domaineltype(domain))
-    MappedDomain{T}(convert_codomaintype(T, invmap), domain)
+    invmap2 = convert_codomaintype(T, invmap)
+    T2 = codomaintype(invmap2) # might differ from T if T is not a concrete type
+    MappedDomain{T2}(invmap2, domain)
 end
+default_mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
+
 
 # We make a special case for linear mappings like 2 .* d, when d contains vectors
 mapped_domain1(invmap::LinearMap{<:Number}, domain::Domain{T}) where {T<:AbstractVector} =
     mapped_domain(Map{T}(invmap), domain)
 # allow some mixing of SVector and Vector
-mapped_domain1(invmap::Map{SVector{N,T}}, domain) where {N,T} =
+mapped_domain1(invmap::Map{<:StaticVector{N,T}}, domain) where {N,T} =
     _vector_mapped_domain1(invmap, domain)
-_vector_mapped_domain1(invmap::Map{SVector{N,T}}, domain::Domain{Vector{U}}) where {N,T,U} =
+_vector_mapped_domain1(invmap::Map{<:StaticVector{N,T}}, domain::Domain{Vector{U}}) where {N,T,U} =
     mapped_domain(invmap, convert(Domain{SVector{N,promote_type(T,U)}}, domain))
-_vector_mapped_domain1(invmap::Map{SVector{N,T}}, domain) where {N,T} =
+_vector_mapped_domain1(invmap::Map{<:StaticVector{N,T}}, domain) where {N,T} =
     mapped_domain2(invmap, domain)
 
-mapped_domain2(invmap, domain::Domain{SVector{N,T}}) where {N,T} =
+mapped_domain2(invmap, domain::Domain{<:StaticVector{N,T}}) where {N,T} =
     _vector_mapped_domain2(invmap, domain)
-_vector_mapped_domain2(invmap::Map{Vector{U}}, domain::Domain{SVector{N,T}}) where {N,T,U} =
+_vector_mapped_domain2(invmap::Map{Vector{U}}, domain::Domain{<:StaticVector{N,T}}) where {N,T,U} =
     mapped_domain(convert(Map{SVector{N,promote_type(T,U)}}, invmap), domain)
-_vector_mapped_domain2(invmap, domain::Domain{SVector{N,T}}) where {N,T} =
+_vector_mapped_domain2(invmap, domain::Domain{<:StaticVector{N,T}}) where {N,T} =
     default_mapped_domain(invmap, domain)
 
 # Avoid nested mapping domains, construct a composite map instead

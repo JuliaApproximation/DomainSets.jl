@@ -23,7 +23,7 @@ function corners(d::HyperRectangle)
 end
 
 # map the interval [a,b] to a cube defined by c (bottom-left) and d (top-right)
-cube_face_map(a::Number, b::Number, c::SVector{2}, d::SVector{2}) = AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
+cube_face_map(a::Number, b::Number, c::StaticVector{2}, d::StaticVector{2}) = AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
 function cube_face_map(a::Number, b::Number, c::Vector, d::Vector)
 	@assert length(c) == length(d) == 2
 	AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
@@ -31,7 +31,7 @@ end
 
 # map the cube defined by a and b, to the cube defined by c and d,
 # where the dimension of c and d is one larger, and one of the coordinates (dim) is fixed to dimval.
-function cube_face_map(a::SVector{M}, b::SVector{M}, c::SVector{N}, d::SVector{N}, dim, dimval) where {N,M}
+function cube_face_map(a::StaticVector{M}, b::StaticVector{M}, c::StaticVector{N}, d::StaticVector{N}, dim, dimval) where {N,M}
 	@assert N == M+1
 	T = promote_type(eltype(a),eltype(c))
 	A = MMatrix{N,M,T}(undef)
@@ -82,7 +82,7 @@ end
 # The boundary of a rectangle is a collection of mapped lower-dimensional rectangles.
 # Dimension 2 is a special case, because the lower dimension is 1 where we use
 # scalars instead of vectors
-function boundary(d::HyperRectangle{SVector{2,T}}) where {T}
+function boundary(d::HyperRectangle{<:StaticVector{2,T}}) where {T}
 	left = leftendpoint(d)
 	right = rightendpoint(d)
 	x1 = left[1]; y1 = left[2]; x2 = right[1]; y2 = right[2]
@@ -97,7 +97,7 @@ function boundary(d::HyperRectangle{SVector{2,T}}) where {T}
 	UnionDomain(faces)
 end
 
-function boundary(d::HyperRectangle{SVector{N,T}}) where {N,T}
+function boundary(d::HyperRectangle{<:StaticVector{N,T}}) where {N,T}
 	left2 = leftendpoint(d)
 	right2 = rightendpoint(d)
 	d_unit = UnitCube{SVector{N-1,T}}()
@@ -192,7 +192,7 @@ similardomain(d::StaticUnitCube, ::Type{T}) where {T<:StaticTypes} =
 similardomain(d::StaticUnitCube, ::Type{T}) where {T} =
     DynamicUnitCube{T}(dimension(d))
 
-components(d::StaticUnitCube{SVector{N,T}}) where {N,T} =
+components(d::StaticUnitCube{<:StaticVector{N,T}}) where {N,T} =
     ntuple(x->UnitInterval{T}(), Val(N))
 
 "The unit cube in a fixed N-dimensional space."
@@ -247,26 +247,26 @@ UnitCube{T}(n::Int) where {T} = DynamicUnitCube{T}(n)
 UnitCube(domains::UnitInterval...) = UnitCube(domains)
 UnitCube(domains::NTuple{N,UnitInterval{T}}) where {N,T} =
     UnitCube{SVector{N,T}}(domains)
-UnitCube(domains::SVector{N,UnitInterval{T}}) where {N,T} =
+UnitCube(domains::StaticVector{N,UnitInterval{T}}) where {N,T} =
     UnitCube{SVector{N,T}}(domains)
 
 UnitCube{T}(domains::UnitInterval...) where {T} = UnitCube{T}(domains)
 UnitCube{T}(domain::NTuple{N,<:UnitInterval}) where {N,T<:SVector{N}} =
     StaticUnitCube{T}()
-UnitCube{T}(domain::SVector{N,<:UnitInterval}) where {N,T<:SVector{N}} =
+UnitCube{T}(domain::StaticVector{N,<:UnitInterval}) where {N,T<:StaticVector{N}} =
     StaticUnitCube{T}()
 
 # Constructor: careful about ambiguities with FixedInterval arguments below
 ProductDomain(domains::UnitInterval...) = UnitCube(domains...)
 ProductDomain(domains::NTuple{N,<:UnitInterval}) where {N} = UnitCube(domains)
-ProductDomain(domains::SVector{N,<:UnitInterval}) where {N} = UnitCube(domains)
+ProductDomain(domains::StaticVector{N,<:UnitInterval}) where {N} = UnitCube(domains)
 ProductDomain(domains::AbstractVector{<:UnitInterval{T}}) where {T} =
     VectorUnitCube{T}(length(domains))
-ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:SVector{N,S}} =
+ProductDomain{T}(domains::UnitInterval...) where {N,S,T<:StaticVector{N,S}} =
 	UnitCube{T}(domains...)
-ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} =
+ProductDomain{T}(domains::NTuple{N,<:UnitInterval}) where {N,S,T<:StaticVector{N,S}} =
 	UnitCube{T}(domains)
-ProductDomain{T}(domains::SVector{N,<:UnitInterval}) where {N,S,T<:SVector{N,S}} =
+ProductDomain{T}(domains::StaticVector{N,<:UnitInterval}) where {N,S,T<:StaticVector{N,S}} =
 	UnitCube{T}(domains)
 ProductDomain{T}(domains::AbstractVector{<:UnitInterval}) where {S,T<:Vector{S}} =
 	VectorUnitCube{S}(length(domains))
@@ -356,7 +356,7 @@ volume(d::FixedIntervalProduct{N,T,D}) where {N,T,D} = volume(D())^N
 
 FixedIntervalProduct(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
 	FixedIntervalProduct{N,eltype(D),D}()
-FixedIntervalProduct(domains::SVector{N,D}) where {N,D <: FixedInterval} =
+FixedIntervalProduct(domains::StaticVector{N,D}) where {N,D <: FixedInterval} =
 	FixedIntervalProduct{N,eltype(D),D}()
 
 const ChebyshevProductDomain{N,T} = FixedIntervalProduct{N,T,ChebyshevInterval{T}}
@@ -367,11 +367,11 @@ ProductDomain(domains::D...) where {D <: FixedInterval} =
 	FixedIntervalProduct(domains)
 ProductDomain(domains::NTuple{N,D}) where {N,D <: FixedInterval} =
 	FixedIntervalProduct(domains)
-ProductDomain(domains::SVector{N,<:FixedInterval}) where {N} =
+ProductDomain(domains::StaticVector{N,<:FixedInterval}) where {N} =
 	FixedIntervalProduct(domains)
-ProductDomain{T}(domains::D...) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
+ProductDomain{T}(domains::D...) where {N,S,T<:StaticVector{N,S},D <: FixedInterval} =
 	FixedIntervalProduct(convert_eltype.(Ref(S), domains))
-ProductDomain{T}(domains::NTuple{N,D}) where {N,S,T<:SVector{N,S},D <: FixedInterval} =
+ProductDomain{T}(domains::NTuple{N,D}) where {N,S,T<:StaticVector{N,S},D <: FixedInterval} =
 	FixedIntervalProduct(convert_eltype.(Ref(S), domains))
-ProductDomain{T}(domains::SVector{N,<:FixedInterval}) where {N,T<:SVector{N}} =
+ProductDomain{T}(domains::StaticVector{N,<:FixedInterval}) where {N,T<:StaticVector{N}} =
 	FixedIntervalProduct(domains)

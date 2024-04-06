@@ -570,13 +570,13 @@ closure(d::DynamicUnitBall{T}) where {T} = DynamicUnitBall{T,:closed}(dimension(
 closure(d::Ball{T}) where {T} = Ball{T,:closed}(radius(d), center(d))
 
 boundingbox(d::UnitBall{T}) where {T<:Number} = ChebyshevInterval{T}()
-boundingbox(d::UnitBall{SVector{N,T}}) where {N,T} =
+boundingbox(d::UnitBall{<:StaticVector{N,T}}) where {N,T} =
     ChebyshevProductDomain{N,T}()
 boundingbox(d::UnitBall{T}) where {T} =
     Rectangle{T}(-ones(eltype(T), dimension(d)), ones(eltype(T), dimension(d)))
 
 boundingbox(d::UnitSphere{T}) where {T<:Number} = ChebyshevInterval{T}()
-boundingbox(d::UnitSphere{SVector{N,T}}) where {N,T} =
+boundingbox(d::UnitSphere{<:StaticVector{N,T}}) where {N,T} =
     ChebyshevProductDomain{N,T}()
 boundingbox(d::UnitSphere{T}) where {T} =
     Rectangle{T}(-ones(eltype(T), dimension(d)), ones(eltype(T), dimension(d)))
