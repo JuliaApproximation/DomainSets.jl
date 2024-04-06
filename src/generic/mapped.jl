@@ -77,7 +77,7 @@ forward_map(d::MappedDomain) = rightinverse(d.invmap)
 forward_map(d::MappedDomain, x) = rightinverse(d.invmap, x)
 
 inverse_map(d::MappedDomain) = d.invmap
-inverse_map(d::MappedDomain, y) = d.invmap(y)
+inverse_map(d::MappedDomain, y) = applymap(d.invmap, y)
 
 """
     map_domain(map, domain)
@@ -163,7 +163,7 @@ similardomain(d::ParametricDomain, ::Type{T}) where {T} =
     ParametricDomain{T}(d.fmap, d.domain)
 
 forward_map(d::ParametricDomain) = d.fmap
-forward_map(d::ParametricDomain, x) = d.fmap(x)
+forward_map(d::ParametricDomain, x) = applymap(d.fmap, x)
 
 function indomain(x, d::ParametricDomain)
     # To check for membership, we can't use the inverse map because it may not exist

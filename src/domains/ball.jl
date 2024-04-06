@@ -45,15 +45,21 @@ a subtype of `UnitBall` is returned, whose concrete type depends on `T`.
 
 A ball represents a volume. For the boundary of a ball, see [`Sphere()`](@ref).
 """
-Ball() = UnitBall()
-Ball{T}() where {T} = UnitBall{T}()
-Ball{T,C}() where {T,C} = UnitBall{T,C}()
-Ball(radius::Number) = GenericBall(radius)
-Ball{T}(radius::Number) where {T} = GenericBall{T}(radius)
-Ball{T,C}(radius::Number) where {T,C} = GenericBall{T,C}(radius)
-Ball(radius::Number, center) = GenericBall(radius, center)
-Ball{T}(radius::Number, center) where {T} = GenericBall{T}(radius, center)
-Ball{T,C}(radius::Number, center) where {T,C} = GenericBall{T,C}(radius, center)
+Ball(; radius=One(), center=Origin()) = Ball(radius, center)
+Ball(radius; center=Origin()) = Ball(radius, center)
+Ball(::One, ::Origin) = UnitBall()
+Ball(radius, center) = GenericBall(radius, center)
+Ball(::One, center) = GenericBall(1, center)
+Ball(radius, center::Origin) = GenericBall(radius)
+
+Ball{T}(args...; options...) where T = Ball{T,:closed}(args...; options...)
+
+Ball{T,C}(; radius = One(), center = Origin()) where {T,C} = Ball{T,C}(radius, center)
+Ball{T,C}(radius; center=Origin()) where {T,C} = Ball{T,C}(radius, center)
+Ball{T,C}(radius, center) where {T,C} = GenericBall{T,C}(radius, center)
+Ball{T,C}(::One, ::Origin) where {T,C} = UnitBall{T,C}()
+Ball{T,C}(radius::One, center) where {T,C} = GenericBall{T,C}(1, center)
+Ball{T,C}(radius, center::Origin) where {T,C} = GenericBall{T,C}(radius)
 
 
 indomain(x, d::OpenBall) = norm(x-center(d)) < radius(d)
@@ -350,12 +356,19 @@ a subtype of `UnitSphere` is returned, whose concrete type depends on `T`.
 
 A sphere represents the boundary of a ball. For the volume, see [`Ball()`](@ref).
 """
-Sphere() = UnitSphere()
-Sphere{T}() where {T} = UnitSphere{T}()
-Sphere(radius::Number) = GenericSphere(radius)
-Sphere{T}(radius::Number) where {T} = GenericSphere{T}(radius)
-Sphere(radius::Number, center) = GenericSphere(radius, center)
-Sphere{T}(radius::Number, center) where {T} = GenericSphere{T}(radius, center)
+Sphere(; radius=One(), center=Origin()) = Sphere(radius, center)
+Sphere(radius; center=Origin()) = Sphere(radius, center)
+Sphere(::One, ::Origin) = UnitSphere()
+Sphere(radius, center) = GenericSphere(radius, center)
+Sphere(::One, center) = GenericSphere(1, center)
+Sphere(radius, center::Origin) = GenericSphere(radius)
+
+Sphere{T}(; radius = One(), center = Origin()) where T = Sphere{T}(radius, center)
+Sphere{T}(radius; center=Origin()) where T = Sphere{T}(radius, center)
+Sphere{T}(radius, center) where T = GenericSphere{T}(radius, center)
+Sphere{T}(::One, ::Origin) where T = UnitSphere{T}()
+Sphere{T}(radius::One, center) where T = GenericSphere{T}(1, center)
+Sphere{T}(radius, center::Origin) where T = GenericSphere{T}(radius)
 
 isempty(::Sphere) = false
 
