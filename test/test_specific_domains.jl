@@ -2,6 +2,7 @@ using StaticArrays, DomainSets, Test
 
 using DomainSets:
     MappedDomain,
+    ParametricDomain,
     similar_interval,
     GenericBall, GenericSphere
 
@@ -414,7 +415,7 @@ include("test_domain_simplex.jl")
     @testset "mapped_domain" begin
         @test MappedDomain(cos, 0..1.0) isa MappedDomain{Float64}
         @test MappedDomain{Float64}(cos, 0..1.0) isa MappedDomain{Float64}
-        @test cos.(0..1.0) isa MappedDomain
+        @test cos.(0..1.0) isa ParametricDomain
         @test isempty(MappedDomain(LinearMap(2.0), EmptySpace()))
         @test mapped_domain(acos, 0..1.0) isa MappedDomain
 

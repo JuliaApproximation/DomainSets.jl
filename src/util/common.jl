@@ -1,4 +1,18 @@
 
+"""
+	One()
+
+Representation of the number 1.
+"""
+const One = Val{1}
+
+"""
+	Origin()
+
+Representation of the origin.
+"""
+const Origin = Val{:origin}
+
 unitvector(d::Domain{T}, dim) where {N,S,T<:SVector{N,S}} = SVector{N,S}(ntuple(i -> i==dim, N))
 function unitvector(d::Domain{T}, dim) where {T<:AbstractVector}
     p = zeros(eltype(T), dimension(d))

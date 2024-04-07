@@ -7,7 +7,7 @@ An isomorphism is a bijection between types that preserves norms.
 abstract type Isomorphism{T,U} <: TypedMap{T,U} end
 
 show(io::IO, m::Isomorphism{T,U}) where {T,U} = print(io, "x : $(T) -> x : $(U)")
-Display.object_parentheses(m::Isomorphism) = true
+map_object_parentheses(m::Isomorphism) = true
 
 struct VectorToNumber{T} <: Isomorphism{SVector{1,T},T}
 end

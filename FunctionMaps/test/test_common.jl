@@ -32,6 +32,12 @@ function test_prectype()
     @test convert_prectype(BigFloat, 1.0+im) isa Complex{BigFloat}
     @test convert_prectype(Float64, SA[1,2]) == SA[1.0,2.0]
     @test convert_prectype(Float64, SA[1,2]) isa SVector{2,Float64}
+    @test convert_prectype(Float64, MVector(1,2)) == MVector(1.0,2.0)
+    @test convert_prectype(Float64, MVector(1,2)) isa MVector
+    @test convert_prectype(Float64, SA[1 2; 3 4]) == SA[1.0 2.0; 3.0 4.0]
+    @test convert_prectype(Float64, SA[1 2; 3 4]) isa SMatrix{2,2,Float64}
+    @test convert_prectype(Float64, MMatrix{2,2}(1, 2, 3, 4)) == SA[1.0 3.0; 2.0 4.0]
+    @test convert_prectype(Float64, MMatrix{2,2}(1, 2, 3, 4)) isa MMatrix{2,2,Float64}
     @test convert_prectype(BigFloat, SA[1,2+im]) isa SVector{2,Complex{BigFloat}}
     @test_throws ArgumentError convert_prectype(BigFloat, "a")
 
@@ -63,8 +69,14 @@ function test_numtype()
 
     @test convert_numtype(Float64, 2) == 2
     @test convert_numtype(Float64, 2) isa Float64
-    @test convert_numtype(Float64, SA[1,2]) == SA[1,2]
+    @test convert_numtype(Float64, SA[1,2]) == SA[1.0,2.0]
     @test convert_numtype(Float64, SA[1,2]) isa SVector{2,Float64}
+    @test convert_numtype(Float64, MVector(1,2)) == MVector(1.0,2.0)
+    @test convert_numtype(Float64, MVector(1,2)) isa MVector
+    @test convert_numtype(Float64, SA[1 2; 3 4]) == SA[1.0 2.0; 3.0 4.0]
+    @test convert_numtype(Float64, SA[1 2; 3 4]) isa SMatrix{2,2,Float64}
+    @test convert_numtype(Float64, MMatrix{2,2}(1, 2, 3, 4)) == SA[1.0 3.0; 2.0 4.0]
+    @test convert_numtype(Float64, MMatrix{2,2}(1, 2, 3, 4)) isa MMatrix{2,2,Float64}
     @test_throws ArgumentError convert_numtype(BigFloat, "a")
 
     @test promote_numtype(2) == 2

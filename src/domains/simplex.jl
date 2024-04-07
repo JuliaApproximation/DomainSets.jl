@@ -165,14 +165,14 @@ similardomain(d::DynamicUnitSimplex{S,C}, ::Type{T}) where {S,T,C} =
     DynamicUnitSimplex{T,C}(d.dimension)
 
 
-simplex_face_map(a::Number, b::Number, c::SVector{2}, d::SVector{2}) =
+simplex_face_map(a::Number, b::Number, c::StaticVector{2}, d::StaticVector{2}) =
 	AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
 function simplex_face_map(a::Number, b::Number, c::Vector, d::Vector)
 	@assert length(c) == length(d) == 2
 	AffineMap((d-c)/(b-a), c - (d-c)/(b-a)*a)
 end
 
-function boundary(d::StaticUnitSimplex{SVector{2,T}}) where T
+function boundary(d::StaticUnitSimplex{<:StaticVector{2,T}}) where T
     d0 = UnitInterval{T}()
 	T0 = zero(T)
 	T1 = one(T)
@@ -185,7 +185,7 @@ function boundary(d::StaticUnitSimplex{SVector{2,T}}) where T
 	UnionDomain(faces)
 end
 
-# function boundary(d::StaticUnitSimplex{SVector{N,T},:closed}) where {N,T}
+# function boundary(d::StaticUnitSimplex{<:StaticVector{N,T},:closed}) where {N,T}
 # 	left2 = infimum(d)
 # 	right2 = supremum(d)
 # 	d0 = UnitSimplex{SVector{N-1,T},:closed}()

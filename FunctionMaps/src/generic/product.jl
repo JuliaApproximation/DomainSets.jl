@@ -8,10 +8,10 @@ abstract type ProductMap{T} <: CompositeLazyMap{T} end
 components(m::ProductMap) = m.maps
 factors(d::ProductMap) = components(d)
 
-VcatMapElement = Union{Map{<:SVector},Map{<:Number}}
+VcatMapElement = Union{Map{<:StaticVector},Map{<:Number}}
 
 ProductMap(maps::Tuple) = ProductMap(maps...)
-ProductMap(maps::SVector) = ProductMap(maps...)
+ProductMap(maps::StaticVector) = ProductMap(maps...)
 ProductMap(maps...) = TupleProductMap(maps...)
 ProductMap(maps::VcatMapElement...) = VcatMap(maps...)
 ProductMap(maps::AbstractVector) = VectorProductMap(maps)
@@ -90,6 +90,8 @@ canonicalmap(::Equivalent, m::ProductMap) = any(map(hasequivalentmap, factors(m)
 
 Display.combinationsymbol(m::ProductMap) = Display.Symbol('⊗')
 Display.displaystencil(m::ProductMap) = composite_displaystencil(m)
+map_object_parentheses(m::ProductMap) = true
+map_stencil_parentheses(m::ProductMap) = true
 show(io::IO, mime::MIME"text/plain", m::ProductMap) = composite_show(io, mime, m)
 show(io::IO, m::ProductMap) = composite_show_compact(io, m)
 

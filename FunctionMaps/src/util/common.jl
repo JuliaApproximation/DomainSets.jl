@@ -86,8 +86,11 @@ Return the type to which `T` can be converted, such that the `prectype` becomes 
 to_prectype(::Type{U}, ::Type{T}) where {T,U} = throw(ArgumentError("Don't know how to convert the prectype of $(T) to $(U)."))
 to_prectype(::Type{U}, ::Type{T}) where {T <: Real,U <: Real} = U
 to_prectype(::Type{U}, ::Type{Complex{T}}) where {T <: Real,U <: Real} = Complex{U}
-to_prectype(::Type{U}, ::Type{SVector{N,T}}) where {N,T,U} = SVector{N,to_prectype(U,T)}
 to_prectype(::Type{U}, ::Type{Vector{T}}) where {T,U} = Vector{to_prectype(U,T)}
+to_prectype(::Type{U}, ::Type{<:StaticVector{N,T}}) where {N,T,U} = SVector{N,to_prectype(U,T)}
+to_prectype(::Type{U}, ::Type{MVector{N,T}}) where {N,T,U} = MVector{N,to_prectype(U,T)}
+to_prectype(::Type{U}, ::Type{<:StaticMatrix{M,N,T}}) where {M,N,T,U} = SMatrix{M,N,to_prectype(U,T)}
+to_prectype(::Type{U}, ::Type{MMatrix{M,N,T}}) where {M,N,T,U} = MMatrix{M,N,to_prectype(U,T)}
 
 """
 	promote_prectype(a, b[, ...])
@@ -136,8 +139,11 @@ Return the type to which `T` can be converted, such that the `numtype` becomes `
 """
 to_numtype(::Type{U}, ::Type{T}) where {T,U} = throw(ArgumentError("Don't know how to convert the numtype of $(T) to $(U)."))
 to_numtype(::Type{U}, ::Type{T}) where {T <: Number,U <: Number} = U
-to_numtype(::Type{U}, ::Type{SVector{N,T}}) where {N,T,U} = SVector{N,to_numtype(U,T)}
 to_numtype(::Type{U}, ::Type{Vector{T}}) where {T,U} = Vector{to_numtype(U,T)}
+to_numtype(::Type{U}, ::Type{<:StaticVector{N,T}}) where {N,T,U} = SVector{N,to_numtype(U,T)}
+to_numtype(::Type{U}, ::Type{MVector{N,T}}) where {N,T,U} = MVector{N,to_numtype(U,T)}
+to_numtype(::Type{U}, ::Type{<:StaticMatrix{M,N,T}}) where {M,N,T,U} = SMatrix{M,N,to_numtype(U,T)}
+to_numtype(::Type{U}, ::Type{MMatrix{M,N,T}}) where {M,N,T,U} = MMatrix{M,N,to_numtype(U,T)}
 
 """
 	promote_numtype(a, b[, ...])
@@ -177,7 +183,7 @@ end
 # we use matrix_pinv rather than pinv to preserve static matrices
 matrix_pinv(A) = pinv(A)
 # matrix_pinv(A::SMatrix{M,N}) where {M,N} = SMatrix{N,M}(pinv(A))
-matrix_pinv(A::SVector{N}) where {N} = convert(Transpose{Float64, SVector{N,Float64}}, pinv(A))
+matrix_pinv(A::StaticVector{N}) where {N} = convert(Transpose{Float64, SVector{N,Float64}}, pinv(A))
 
 ## Composite objects
 

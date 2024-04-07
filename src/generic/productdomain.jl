@@ -58,7 +58,7 @@ closure(d::ProductDomain) = ProductDomain(map(closure, components(d)))
 center(d::ProductDomain) = toexternalpoint(d, map(center, components(d)))
 
 VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
-VcatEltype = Union{Type{<:Number},Type{<:SVector}}
+VcatEltype = Union{Type{<:Number},Type{<:StaticVector}}
 
 """
 	ProductDomain(domains...)
@@ -134,12 +134,12 @@ for CTYPE in (Parameterization, Equal)
 end
 
 # multiplication with a scalar number
-function map_domain(linmap::GenericLinearMap{SVector{N,S},A}, domain::ProductDomain{SVector{N,T}}) where {N,S,T,A<:Number}
+function map_domain(linmap::GenericLinearMap{<:StaticVector{N,S},A}, domain::ProductDomain{<:StaticVector{N,T}}) where {N,S,T,A<:Number}
 	c = unsafe_matrix(linmap)
 	ProductDomain{SVector{N,promote_type(S,T)}}(map(d -> c .* d, components(domain)))
 end
 
-function map_domain(transmap::Translation{SVector{N,S}}, domain::ProductDomain{SVector{N,T}}) where {N,S,T}
+function map_domain(transmap::Translation{<:StaticVector{N,S}}, domain::ProductDomain{<:StaticVector{N,T}}) where {N,S,T}
     vec = unsafe_vector(transmap)
     ProductDomain{SVector{N,promote_type(S,T)}}(
             map( (d,v) -> d .+ v, components(domain), tointernalpoint(domain, vec)))
