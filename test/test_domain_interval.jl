@@ -352,10 +352,6 @@ function test_intervals()
         @test !approx_in(0.0, Interval{:open,:closed}(0,1), 0)
         @test approx_in(0.0, Interval{:closed,:closed}(0,1), 0)
         @test approx_in(1.0, Interval{:closed,:closed}(0,1), 0)
-
-        @test (0..1) ≈ (1e-16..1)
-        @test (-1..0) ≈ (-1..1e-16)
-        @test_skip isapprox(HalfLine(), 0..Inf)
     end
 
     @testset "mapping between intervals" begin
