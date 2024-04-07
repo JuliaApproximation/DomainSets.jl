@@ -1,6 +1,5 @@
 # DomainSets.jl
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/DomainSets.jl/dev)
 [![Build Status](https://github.com/JuliaApproximation/DomainSets.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/DomainSets.jl/actions)
 [![Coverage Status](https://codecov.io/gh/JuliaApproximation/DomainSets.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/DomainSets.jl)
@@ -9,6 +8,8 @@
 DomainSets.jl is a package designed to represent simple infinite sets. The package makes it easy to represent sets, verify membership of the set, compare sets and construct new sets from existing ones. Domains are considered equivalent if they describe the same set, regardless of their type.
 
 ## Examples
+
+For more information, see the [documentation](https://JuliaApproximation.github.io/DomainSets.jl/dev).
 
 ### Intervals
 
