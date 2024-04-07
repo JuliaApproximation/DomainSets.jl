@@ -45,7 +45,7 @@ broadcasted(::DomainSetStyle, m::AbstractMap, d::AnyDomain) =
     map_domain(m, domain(d))
 
 broadcasted(::DomainSetStyle, fun::Function, d::AnyDomain) =
-    map_domain(fun, domain(d))
+    parametric_domain(fun, domain(d))
 
 # Intercept broadcast applied to `in`, e.g. in.(A, d).
 # This gives domains an opportunity to provide a more efficient implementation

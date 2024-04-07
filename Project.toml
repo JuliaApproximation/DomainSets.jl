@@ -11,12 +11,12 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 Aqua = "0.8"
-CompositeTypes = "0.1.2"
+CompositeTypes = "0.1.4"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
 Random = "1"
 StableRNGs = "1"
-StaticArrays = "0.12.2, 1"
+StaticArrays = "1"
 Test = "1"
 julia = "1.6"
 

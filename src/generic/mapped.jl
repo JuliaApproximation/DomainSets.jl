@@ -39,11 +39,38 @@ show(io::IO, mime::MIME"text/plain", d::AbstractMappedDomain) = composite_show(i
 Display.displaystencil(d::AbstractMappedDomain) =
     map_stencil_broadcast(forward_map(d), superdomain(d))
 Display.object_parentheses(d::AbstractMappedDomain) =
-    Display.object_parentheses(forward_map(d))
+    FunctionMaps.map_object_parentheses(forward_map(d))
 Display.stencil_parentheses(d::AbstractMappedDomain) =
-    Display.stencil_parentheses(forward_map(d))
+    FunctionMaps.map_stencil_parentheses(forward_map(d))
 
 
+"""
+    promote_map_domain_pair(map, domain)
+
+Promote the map and the domain such that the output satisfies
+`codomaintype(map) == domaineltype(domain)`.
+"""
+promote_map_domain_pair(map, domain) =
+    _promote_map_domain_pair(map, domain, codomaintype(map), domaineltype(domain))
+_promote_map_domain_pair(map, domain, ::Type{T}, ::Type{T}) where T = map, domain
+_promote_map_domain_pair(map, domain, ::Type{S}, ::Type{T}) where {S,T} =
+    _promote_map_domain_pair(map, domain, S, T, promote_type(S,T))
+_promote_map_domain_pair(map, domain, ::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} =
+    convert_codomaintype(U, map), convert_eltype(U, domain)
+_promote_map_domain_pair(map, domain, ::Type{Any}, ::Type{T}, ::Type{Any}) where T =
+    map, domain
+_promote_map_domain_pair(map, domain, ::Type{S}, ::Type{Any}, ::Type{Any}) where S =
+    map, domain
+# ensure dimensions of static arrays match
+_promote_map_domain_pair(map, domain, S::Type{<:StaticVector{N}}, T::Type{<:StaticVector{N}}) where N =
+    _promote_map_domain_pair(map, domain, S, T, promote_type(S,T))
+_promote_map_domain_pair(map, domain, S::Type{<:StaticVector{N}}, T::Type{<:StaticVector{M}}) where {N,M} =
+    throw(ArgumentError("Map and domain have different static dimension."))
+# assume that functions are fine
+promote_map_domain_pair(map::Function, domain) = map, domain
+
+mapped_domain_eltype(invmap::Function, domain) = domaineltype(domain)
+mapped_domain_eltype(invmap, domain) = domaintype(invmap)
 
 "A `MappedDomain` stores the inverse map of a mapped domain."
 struct MappedDomain{T,F,D} <: AbstractMappedDomain{T}
@@ -51,23 +78,14 @@ struct MappedDomain{T,F,D} <: AbstractMappedDomain{T}
     domain  ::  D
 end
 
-# In the constructor, we have to decide which T to use for the MappedDomain.
-# - if we don't know anything about invmap: deduce T from the given domain
 MappedDomain(invmap, domain) =
-    MappedDomain{domaineltype(domain)}(invmap, domain)
-# - if the map is a Map{T}, use that T for the MappedDomain
-MappedDomain(invmap::Map{T}, domain) where {T} =
-    MappedDomain{T}(invmap, domain)
-# If T is given in the constructor, by all means we use that:
-MappedDomain{T}(invmap, domain) where {T} =
-    _MappedDomain(T, invmap, checkdomain(domain))
-# - in that case, if the map is a Map{S}, make sure that S matches T
-MappedDomain{T}(invmap::Map{T}, domain) where {T} =
-    _MappedDomain(T, invmap, checkdomain(domain))
-MappedDomain{T}(invmap::Map{S}, domain) where {S,T} =
-    MappedDomain{T}(convert(Map{T}, invmap), domain)
-# invoke the constructor
-_MappedDomain(::Type{T}, invmap, domain) where {T} =
+    _MappedDomain(promote_map_domain_pair(invmap, domain)...)
+_MappedDomain(invmap, domain) =
+    _MappedDomainT(mapped_domain_eltype(invmap,domain), invmap, domain)
+
+MappedDomain{T}(invmap, domain) where T =
+    _MappedDomainT(T, convert_domaintype(T, invmap), convert_eltype(T, domain))
+_MappedDomainT(::Type{T}, invmap, domain) where T =
     MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
 
 similardomain(d::MappedDomain, ::Type{T}) where {T} =
@@ -101,19 +119,11 @@ Make a mapped domain with the given inverse map.
 mapped_domain(invmap, domain) = mapped_domain1(invmap, domain)
 mapped_domain1(invmap, domain) = mapped_domain2(invmap, domain)
 mapped_domain2(invmap, domain) = default_mapped_domain(invmap, domain)
-
-function default_mapped_domain(invmap::Map, domain)
-    T = promote_type(codomaintype(invmap), domaineltype(domain))
-    invmap2 = convert_codomaintype(T, invmap)
-    T2 = codomaintype(invmap2) # might differ from T if T is not a concrete type
-    MappedDomain{T2}(invmap2, domain)
-end
 default_mapped_domain(invmap, domain) = MappedDomain(invmap, domain)
-
 
 # We make a special case for linear mappings like 2 .* d, when d contains vectors
 mapped_domain1(invmap::LinearMap{<:Number}, domain::Domain{T}) where {T<:AbstractVector} =
-    mapped_domain(Map{T}(invmap), domain)
+    mapped_domain(convert_prectype(prectype(invmap, domain), Map{T}(invmap)), domain)
 # allow some mixing of SVector and Vector
 mapped_domain1(invmap::Map{<:StaticVector{N,T}}, domain) where {N,T} =
     _vector_mapped_domain1(invmap, domain)

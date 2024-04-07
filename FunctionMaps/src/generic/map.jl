@@ -16,7 +16,11 @@ const VectorMap{T} = Map{Vector{T}}
 
 CompositeTypes.Display.displaysymbol(m::Map) = 'F'
 
-"What is the expected type of a point in the domain of the function map `m`?"
+"""
+    domaintype(m)
+
+What is the expected type of a point in the domain of the function map `m`?
+"""
 domaintype(m) = domaintype(typeof(m))
 domaintype(::Type{M}) where {M} = Any
 domaintype(::Type{<:Map{T}}) where {T} = T
@@ -163,3 +167,10 @@ is_vector_to_vector(m) = mapsize(m) isa Tuple{Int,Int} && !is_vector_to_scalar(m
 # Display routines
 map_stencil(m, x) = [Display.SymbolObject(m), '(', x, ')']
 map_stencil_broadcast(m, x) = [Display.SymbolObject(m), ".(", x, ')']
+map_stencil_broadcast(m::Function, x) = [repr(m), ".(", x, ')']
+
+Display.object_parentheses(m::Map) = map_object_parentheses(m)
+Display.stencil_parentheses(m::Map) = map_stencil_parentheses(m)
+
+map_object_parentheses(m) = false
+map_stencil_parentheses(m) = false

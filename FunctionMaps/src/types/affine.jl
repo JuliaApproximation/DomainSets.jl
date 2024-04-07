@@ -83,8 +83,8 @@ map_stencil_broadcast(m::AbstractAffineMap, x) = _affine_map_stencil_broadcast(m
 _affine_map_stencil_broadcast(m, x, A, b) = [A, " .* ", x, " .+ ", b]
 _affine_map_stencil_broadcast(m, x, A::Number, b) = [A, " * ", x, " .+ ", b]
 
-Display.object_parentheses(m::AbstractAffineMap) = true
-Display.stencil_parentheses(m::AbstractAffineMap) = true
+map_object_parentheses(m::AbstractAffineMap) = true
+map_stencil_parentheses(m::AbstractAffineMap) = true
 
 ########################
 # Linear maps: y = A*x

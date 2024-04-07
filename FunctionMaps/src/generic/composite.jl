@@ -97,6 +97,8 @@ map_hash(m::ComposedMap, h::UInt) = hashrec("ComposedMap", collect(components(m)
 Display.combinationsymbol(m::ComposedMap) = Display.Symbol('∘')
 Display.displaystencil(m::ComposedMap) =
     composite_displaystencil(m; reversecomponents=true)
+map_object_parentheses(m::ComposedMap) = true
+map_stencil_parentheses(m::ComposedMap) = true
 show(io::IO, mime::MIME"text/plain", m::ComposedMap) = composite_show(io, mime, m)
 show(io::IO, m::ComposedMap) = composite_show_compact(io, m)
 

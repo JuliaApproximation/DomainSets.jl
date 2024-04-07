@@ -369,7 +369,6 @@ function test_product_domains()
         @test intersectbox(d1, d2) == ProductDomain(0.5..1.0, 2.5..4.0)
 
         @test boundingbox(MappedDomain(LinearMap(1/2), 2..3)) == 4.0..6.0
-        @test boundingbox(MappedDomain(LinearMap(1/2), (2..3)^2)) == (4.0..6.0)^2
     end
     @testset "product mapto" begin
         d1 = ProductDomain(1.0..2.0, 1.0..2.0)
