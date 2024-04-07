@@ -14,7 +14,7 @@ show(io::IO, mime::MIME"text/plain", m::LazyJacobian) = composite_show(io, mime,
 
 
 """
-    jacobian(m::AbstractMap[, x])
+    jacobian(m[, x])
 
 Return the jacobian map. The two-argument version evaluates the jacobian
 at a point `x`.
@@ -168,7 +168,7 @@ zeromatrix(m, ::Type{T}, ::Type{U}) where {T<:AbstractVector,U<:Number} =
 "Return a zero vector of the same size as the codomain of the map."
 zerovector(m) = zerovector(m, codomaintype(m))
 zerovector(m, ::Type{U}) where {U} = zero(U)
-zerovector(m, ::Type{StaticVector{M,T}}) where {M,T} = zero(SVector{M,T})
+zerovector(m, ::Type{<:StaticVector{M,T}}) where {M,T} = zero(SVector{M,T})
 # If the output type is a vector, the map itself should store the size information.
 zerovector(m, ::Type{<:AbstractVector{T}}) where {T} = zeros(T, mapsize(m,1))
 

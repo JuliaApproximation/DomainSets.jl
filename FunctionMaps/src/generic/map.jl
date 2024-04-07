@@ -27,14 +27,11 @@ domaintype(::Type{<:Map{T}}) where {T} = T
 What is the codomain type of the function map `m`, given that `T` is its domain type?
 """
 codomaintype(m) = codomaintype(m, domaintype(m))
-codomaintype(m, ::Type{T}) where {T} = codomaintype(typeof(m), T)
-
-codomaintype(::Type{M}, ::Type{T}) where {M,T} = Any
-codomaintype(::Type{M}, ::Type{Any}) where {M} = Any
-codomaintype(M::Type{<:AbstractMap}, ::Type{T}) where {T} = Base.promote_op(applymap, M, T)
-codomaintype(M::Type{<:AbstractMap}, ::Type{Any}) = Any
-codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
-codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{Any}) where {T,U} = U
+codomaintype(m, ::Type{T}) where {T} = _codomaintype(typeof(m), T)
+_codomaintype(::Type{M}, ::Type{T}) where {M,T} = Base.promote_op(applymap, M, T)
+_codomaintype(::Type{M}, ::Type{Any}) where {M} = Any
+_codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{T}) where {T,U} = U
+_codomaintype(M::Type{<:TypedMap{T,U}}, ::Type{Any}) where {T,U} = U
 
 prectype(::Type{<:Map{T}}) where T = prectype(T)
 numtype(::Type{<:Map{T}}) where T = numtype(T)
@@ -53,6 +50,9 @@ convert_domaintype(::Type{T}, map::Map{T}) where {T} = map
 convert_domaintype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{U}, map)
 convert_domaintype(::Type{Any}, map) = map
 convert_domaintype(::Type{Any}, map::Map{T}) where T = map
+convert_domaintype(::Type{T}, map) where T = _convert_domaintype(T, map, domaintype(map))
+_convert_domaintype(::Type{T}, map, ::Type{T}) where T = map
+_convert_domaintype(::Type{U}, map, ::Type{T}) where {T,U} = Map{U}(map)
 
 convert_numtype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{to_numtype(U,T)}, map)
 convert_prectype(::Type{U}, map::Map{T}) where {T,U} = convert(Map{to_prectype(U,T)}, map)

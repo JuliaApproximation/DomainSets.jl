@@ -29,6 +29,7 @@ function test_affine_maps(T)
     test_linearmap(T)
     test_translation(T)
     test_affinemap(T)
+    test_abstractarraymap(T)
 end
 
 
@@ -210,4 +211,27 @@ function test_affinemap(T)
     @test StaticAffineMap(SMatrix{3,2,T}(1,2,3,4,5,6),SVector{3,T}(1,2,3)) isa StaticAffineMap{T,2,3,6}
 
     @test convert(Map{SVector{2,T}}, AffineMap(rand(2,2),rand(2))) isa StaticAffineMap{T,2,2,4}
+end
+
+function test_abstractarraymap(T)
+    A = rand(T, 3, 3)
+    @test FunctionMaps.MapStyle(A) isa FunctionMaps.IsMap
+    @test FunctionMaps.checkmap(A) == A
+    @test Map(A) isa LinearMap
+    @test Map(A) isa VectorLinearMap
+    @test Map(SA[1 2; 3 4]) isa StaticLinearMap
+    @test Map(Diagonal(rand(3))) isa GenericLinearMap
+    @test mapsize(A) == size(A)
+    @test applymap(A, 1:3) == A*(1:3)
+    @test islinearmap(A)
+    @test isaffinemap(A)
+    @test affinematrix(A) == A
+    @test affinevector(A) == [0,0,0]
+    @test jacobian(A) isa ConstantMap
+    @test jacobian(A, 1:3) == A
+    @test inverse(A) ≈ inv(A)
+    @test inverse(A, 1:3) ≈ A \ (1:3)
+    @test canonicalmap(A) isa LinearMap
+    @test FunctionMaps.equalmap(A) isa LinearMap
+    @test isequalmap(A, LinearMap(A))
 end

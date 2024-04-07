@@ -30,9 +30,17 @@ canonicalmap(::Equal, m) = m
 equalmap(m) = canonicalmap(Equal(), m)
 hasequalmap(m) = hascanonicalmap(Equal(), m)
 
-"Simplify the given map to an equal map."
+"""
+    simplify(m)
+
+Simplify the given map to an equal map.
+"""
 simplify(m) = equalmap(m)
-"Does the map simplify?"
+"""
+    simplifies(m)
+
+Does the map simplify?
+"""
 simplifies(m) = hasequalmap(m)
 
 "Convert the given map to a map defined in FunctionMaps.jl."
@@ -69,7 +77,11 @@ canonicalextensiontype(m) = canonicalextensiontype(typeof(m))
 
 ==(m1::Map, m2::Map) = isequalmap(m1, m2)   # Method from Base
 
-"Are the two given maps equal?"
+"""
+    isequalmap(map1, map2)
+
+Are the two given maps equal?
+"""
 isequalmap(m1, m2) = isequalmap1(m1, m2)
 isequalmap1(m1, m2) = simplifies(m1) ? isequalmap(simplify(m1), m2) : isequalmap2(m1, m2)
 isequalmap2(m1, m2) = simplifies(m2) ? isequalmap(m1, simplify(m2)) : default_isequalmap(m1, m2)

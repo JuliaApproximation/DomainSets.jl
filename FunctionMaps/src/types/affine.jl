@@ -106,14 +106,16 @@ affinematrix(m::LinearMap) = to_matrix(domaintype(m), unsafe_matrix(m))
 affinevector(m::LinearMap) = to_vector(domaintype(m), unsafe_matrix(m))
 
 LinearMap(A::Number) = ScalarLinearMap(A)
-LinearMap(A::StaticMatrix) = StaticLinearMap(A)
+LinearMap(A::SMatrix) = StaticLinearMap(A)
+LinearMap(A::MMatrix) = StaticLinearMap(A)
 LinearMap(A::Matrix) = VectorLinearMap(A)
 LinearMap(A) = GenericLinearMap(A)
 
 LinearMap{T}(A::Number) where {T<:Number} = _LinearMap(A, T, promote_type(T,typeof(A)))
 _LinearMap(A::Number, ::Type{T}, ::Type{T}) where {T<:Number} = ScalarLinearMap{T}(A)
 _LinearMap(A::Number, ::Type{T}, ::Type{S}) where {T<:Number,S} = GenericLinearMap{T}(A)
-LinearMap{T}(A::StaticMatrix{M,N}) where {M,N,S,T <: StaticVector{N,S}} = StaticLinearMap{S}(A)
+LinearMap{T}(A::SMatrix{M,N}) where {M,N,S,T <: SVector{N,S}} = StaticLinearMap{S}(A)
+LinearMap{T}(A::MMatrix{M,N}) where {M,N,S,T <: SVector{N,S}} = StaticLinearMap{S}(A)
 LinearMap{T}(A::Matrix) where {S,T <: Vector{S}} = VectorLinearMap{S}(A)
 LinearMap{T}(A) where {T} = GenericLinearMap{T}(A)
 
@@ -217,6 +219,8 @@ GenericLinearMap{T}(A::AbstractVector{T}) where {T} =
     GenericLinearMap{T,typeof(A)}(A)
 GenericLinearMap{T}(A::AbstractVector{S}) where {S,T} =
     GenericLinearMap{T}(convert(AbstractVector{T}, A))
+GenericLinearMap{T}(A::AbstractMatrix) where {T<:Number} =
+    throw(ArgumentError("Linear map with matrix A can not have scalar domaintype."))
 
 # Preserve the action on vectors with a number type
 inverse(m::GenericLinearMap{T,AA}) where {T<:AbstractVector,AA<:Number} =
@@ -274,13 +278,29 @@ convert(::Type{Map{SVector{N,T}}}, m::VectorLinearMap) where {N,T} = StaticLinea
 # representing the linear map x->A*x
 MapStyle(A::AbstractArray) = IsMap()
 
+Map(A::AbstractArray) = LinearMap(A)
+Map{T}(A::AbstractArray) where T = LinearMap{T}(A)
+
+domaintype(A::AbstractArray) = domaintype(Map(A))
+
 applymap(A::AbstractArray, x) = A*x
 mapsize(A::AbstractArray) = size(A)
+
+islinearmap(A::AbstractArray) = true
+isaffinemap(A::AbstractArray) = true
+affinematrix(A::AbstractArray) = A
+affinevector(A::AbstractArray) = zerovector(A)
 
 inverse(A::AbstractMatrix) = inv(A)
 inverse(A::AbstractMatrix, x) = A \ x
 
 jacobian(A::AbstractMatrix) = ConstantMap{glm_domaintype(A)}(A)
+jacobian(A::AbstractMatrix, x) = A
+
+canonicalmap(A::AbstractArray) = Map(A)
+canonicalmap(::Equal, A::AbstractArray) = Map(A)
+
+
 
 
 ##########################

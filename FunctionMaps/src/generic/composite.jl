@@ -15,7 +15,7 @@ codomaintype(m::ComposedMap) = codomaintype(m.maps[end])
 # Maps are applied in the order that they appear in m.maps
 applymap(m::ComposedMap, x) = applymap_rec(x, m.maps...)
 applymap_rec(x) = x
-applymap_rec(x, map1, maps...) = applymap_rec(map1(x), maps...)
+applymap_rec(x, map1, maps...) = applymap_rec(applymap(map1, x), maps...)
 
 # The size of a composite map depends on the first and the last map to be applied
 # We check whether they are scalar_to_vector, vector_to_vector, etcetera
@@ -36,10 +36,10 @@ function jacobian(m::ComposedMap, x)
     f, fd = backpropagate(x, reverse(components(m))...)
     fd
 end
-backpropagate(x, m1) = (m1(x), jacobian(m1, x))
+backpropagate(x, m1) = (applymap(m1, x), jacobian(m1, x))
 function backpropagate(x, m2, ms...)
     f, fd = backpropagate(x, ms...)
-    m2(f), jacobian(m2, f) * fd
+    applymap(m2, f), jacobian(m2, f) * fd
 end
 
 for op in (:inverse, :leftinverse, :rightinverse)
@@ -195,10 +195,10 @@ show(io::IO, mime::MIME"text/plain", m::SumMap) = composite_show(io, mime, m)
 # Define the jacobian of a composite map
 jacobian(m::ComposedMap) = composite_jacobian(reverse(components(m))...)
 composite_jacobian(map1) = jacobian(map1)
-composite_jacobian(map1, map2) = multiply_map(jacobian(map1) ∘ map2, jacobian(map2))
+composite_jacobian(map1, map2) = multiply_map(composedmap(map2, jacobian(map1)), jacobian(map2))
 function composite_jacobian(map1, map2, maps...)
     rest = ComposedMap(reverse(maps)..., map2)
-    f1 = jacobian(map1) ∘ rest
+    f1 = composedmap(rest, jacobian(map1))
     f2 = composite_jacobian(map2, maps...)
     multiply_map(f1, f2)
 end
