@@ -17,4 +17,6 @@ end
 
 Makie.convert_arguments(::Type{<:Poly}, r::Rectangle) = (convert(Rect, r),)
 
+Makie.plottype(a::Rectangle) = Poly
+
 end # module
