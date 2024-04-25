@@ -1,4 +1,5 @@
 using DomainSets, CairoMakie
 
-plot((0..1) × (1..2))
+p = plot((0..1) × (1..2))
 plot!(UnitDisk())
+p
