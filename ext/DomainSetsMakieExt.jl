@@ -2,8 +2,8 @@ module DomainSetsMakieExt
 using DomainSets
 using DomainSets.StaticArrays
 import Makie
-using DomainSets: leftendpoint, rightendpoint, Rectangle
-using Makie: Point2f, Rect, Circle, Poly, Point, Lines
+using DomainSets: leftendpoint, rightendpoint, Rectangle, HyperRectangle
+import Makie: Point2f, Rect, Circle, Poly, Point, Lines, convert_arguments, HyperSphere, Vec
 import Base: convert
 
 function convert(::Type{Vector{Point2f}}, r::Rectangle)
@@ -12,22 +12,26 @@ function convert(::Type{Vector{Point2f}}, r::Rectangle)
     Point2f[(a,c), (b,c), (b,d), (a,d)]
 end
 
-function convert(::Type{Rect}, r::Rectangle)
-    (a,c) = leftendpoint(r)
-    (b,d) = rightendpoint(r)
-    Rect(a, c, b-a, d-c)
+function convert(::Type{Makie.HyperRectangle}, r::Rectangle{<:SVector{N}}) where N
+    l = leftendpoint(r)
+    r = rightendpoint(r)
+    Rect(convert(Vec{N}, l), convert(Vec{N}, r .- l))
 end
 
-convert(::Type{Circle}, r::Sphere{<:SVector{2}}) = Circle(Point(center(r)), radius(r))
-convert(::Type{Circle}, r::Ball{<:SVector{2}}) = Circle(Point(center(r)), radius(r))
+convert(::Type{<:HyperSphere}, r::Union{Sphere{SVector{N,T}},Ball{SVector{N,T}}}) where {N,T} = HyperSphere{N,T}(Point(center(r)), radius(r))
 
-Makie.convert_arguments(::Type{<:Poly}, r::Rectangle) = (convert(Rect, r),)
-Makie.convert_arguments(::Type{<:Poly}, r::Ball{<:SVector{2}}) = (convert(Circle, r),)
-Makie.convert_arguments(::Type{<:Lines}, r::Sphere{<:SVector{2}}) = (convert(Circle, r),)
+function convert(::Type{<:HyperSphere}, r::Union{Sphere{<:AbstractVector{T}}, Ball{<:AbstractVector{T}}}) where T
+    N = length(center(r))
+    HyperSphere{N,T}(Point{N}(center(r)), radius(r))
+end
+
+convert_arguments(::Type{Plt}, r::HyperRectangle) where Plt <: Poly = convert_arguments(Plt, convert(Makie.HyperRectangle, r))
+convert_arguments(::Type{Plt}, r::Ball) where Plt <: Poly = convert_arguments(Plt, convert(HyperSphere, r))
+convert_arguments(::Type{Plt}, r::Sphere) where Plt <: Lines = convert_arguments(Plt, convert(HyperSphere, r))
 
 
-Makie.plottype(a::Rectangle) = Poly
-Makie.plottype(a::Sphere{<:SVector{2}}) = Lines
-Makie.plottype(a::Ball{<:SVector{2}}) = Poly
+Makie.plottype(a::HyperRectangle) = Poly
+Makie.plottype(a::Sphere) = Lines
+Makie.plottype(a::Ball) = Poly
 
 end # module
