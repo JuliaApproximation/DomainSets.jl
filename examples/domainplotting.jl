@@ -1,4 +1,5 @@
-using DomainSets, CairoMakie, StaticArrays
+using DomainSets, StaticArrays
+using CairoMakie: plot, plot!
 using DomainSets: Sphere
 
 
