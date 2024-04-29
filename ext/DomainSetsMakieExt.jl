@@ -6,12 +6,6 @@ using DomainSets: leftendpoint, rightendpoint, Rectangle, HyperRectangle, Point,
 import Makie: Point2f, Rect, Circle, Poly, Lines, convert_arguments, HyperSphere, Vec, Scatter, PointBased
 import Base: convert
 
-function convert(::Type{Vector{Point2f}}, r::Rectangle)
-    (a,c) = leftendpoint(r)
-    (b,d) = rightendpoint(r)
-    Point2f[(a,c), (b,c), (b,d), (a,d)]
-end
-
 function convert(::Type{Makie.HyperRectangle}, r::Rectangle{<:SVector{N}}) where N
     l = leftendpoint(r)
     r = rightendpoint(r)
