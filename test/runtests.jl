@@ -28,3 +28,11 @@ include("test_setoperations.jl")
 include("test_interface.jl")
 include("test_applications.jl")
 include("test_readme.jl")
+
+if isdefined(Base, :get_extension)
+    println("#############################")
+    println("# Tests of extensions")
+    println("#############################")
+
+    include("test_makieext.jl")
+end

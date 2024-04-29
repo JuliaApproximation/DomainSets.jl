@@ -9,6 +9,7 @@ p = plot((0..1) × (1..2))
 plot!(UnitDisk())
 plot!(Sphere(2.0, SVector(1.0, 0.5)))
 plot!(Sphere(3.0, [1.0, 0.5]))
+plot!(Point(SVector(2,3)))
 p
 
 
