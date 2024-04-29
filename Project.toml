@@ -1,6 +1,6 @@
 name = "DomainSets"
 uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
-version = "0.7.12"
+version = "0.7.13"
 
 [deps]
 CompositeTypes = "b152e2b5-7a66-4b01-a709-34e65c35f657"
@@ -9,11 +9,18 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
+[weakdeps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+
+[extensions]
+DomainSetsMakieExt = "Makie"
+
 [compat]
 Aqua = "0.8"
 CompositeTypes = "0.1.4"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
+Makie = "0.19, 0.20"
 Random = "1"
 StableRNGs = "1"
 StaticArrays = "1"
@@ -22,8 +29,9 @@ julia = "1.6"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Aqua", "StableRNGs"]
+test = ["Test", "Aqua", "Makie", "StableRNGs"]
