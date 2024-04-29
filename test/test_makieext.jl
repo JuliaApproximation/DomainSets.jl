@@ -2,7 +2,7 @@ module DomainSetsMakieTests
 using DomainSets, StaticArrays, Test
 import Makie
 import Makie: plot, Poly, Lines, Scatter
-using DomainSets: Sphere
+using DomainSets: Sphere, ×
 
 @testset "Plotting" begin
     @testset "2D" begin
