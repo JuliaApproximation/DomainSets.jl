@@ -79,6 +79,7 @@ ProductDomain(domains...) = _ProductDomain(domains, map(domaineltype, domains)..
 _ProductDomain(domains, types...) = TupleProductDomain(domains...)
 _ProductDomain(domains, types::VcatEltype...) = VcatDomain(domains...)
 ProductDomain(domains::AbstractVector) = VectorProductDomain(domains)
+ProductDomain(domains::StaticVector) = ProductDomain(domains...)
 # To create a tuple product domain, invoke ProductDomain{T}. Here, we splat
 # and this may end up creating a VcatDomain instead.
 ProductDomain(domains::Tuple) = ProductDomain(domains...)

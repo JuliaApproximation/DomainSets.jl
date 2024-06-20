@@ -330,6 +330,8 @@ function test_product_domains()
         @test String(take!(io)) == "($(0..1)) × ($(0..2)) × ($(0..3)) × ... × ($(0..20))"
         @test isopenset(interior(UnitCube()))
         @test isclosedset(closure(interior(UnitCube())))
+
+        @test ProductDomain(SVector(0..1.0, Point(0.5))) isa VcatDomain
     end
     @testset "bounding box" begin
         @test boundingbox([0.2, -0.4, 1.0]) == -0.4..1.0
