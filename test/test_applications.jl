@@ -6,15 +6,18 @@ randvec(T,m,n) = SMatrix{m,n,T}(rand(m,n))
 suitable_point_to_map(m::Map) = suitable_point_to_map(m, domaintype(m))
 suitable_point_to_map(m::Map, ::Type{SVector{N,T}}) where {N,T} = SVector{N,T}(rand(N))
 suitable_point_to_map(m::Map, ::Type{T}) where {T<:Number} = rand(T)
-suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, mapsize(m,2))
+suitable_point_to_map(m::Map, ::Type{<:AbstractVector{T}}) where {T} = rand(T, FunctionMaps.mapsize(m,2))
 suitable_point_to_map(m::FunctionMaps.ProductMap) =
     map(suitable_point_to_map, components(m))
 suitable_point_to_map(m::FunctionMaps.VcatMap{T,M,N}) where {T,M,N} =
     SVector{N,T}(rand(T,N))
 # --- end of copy
 
-suitable_point_to_map(::CartToPolarMap{T}) where {T} = randvec(T,2)
-suitable_point_to_map(::PolarToCartMap{T}) where {T} = randvec(T,2)
+suitable_point_to_map(::FunctionMaps.CartToPolarMap{T}) where {T} = randvec(T,2)
+suitable_point_to_map(::FunctionMaps.PolarToCartMap{T}) where {T} = randvec(T,2)
+
+using DomainSets: rotation_map
+using FunctionMaps: CartToPolarMap, PolarToCartMap
 
 function test_rotation_map(T)
     ϕ = T(pi)/4

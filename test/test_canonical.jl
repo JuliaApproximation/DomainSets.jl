@@ -40,8 +40,8 @@ end
 
     d2 = UnitBall(Val(1))
     @test canonicaldomain(iso, d2) == UnitBall{Float64}()
-    @test mapfrom_canonical(iso, d2) isa DomainSets.NumberToVector
-    @test mapto_canonical(iso, d2) isa DomainSets.VectorToNumber
+    @test mapfrom_canonical(iso, d2) isa FunctionMaps.NumberToVector
+    @test mapto_canonical(iso, d2) isa FunctionMaps.VectorToNumber
 
     @test_throws ArgumentError mapto(UnitCircle(), UnitDisk())
     @test mapto(UnitInterval(), UnitInterval()) isa IdentityMap
@@ -72,13 +72,6 @@ end
     @test_throws ArgumentError mapfrom_canonical(Interval{:closed,:open}(-Inf,Inf))
     @test_throws ArgumentError mapfrom_canonical(Interval{:closed,:open}(-Inf,2.0))
     @test_throws ArgumentError mapfrom_canonical(Interval{:open,:closed}(2.0,Inf))
-
-    @test DomainSets.interval_map(-Inf,Inf,-Inf,Inf) isa FunctionMaps.StaticIdentityMap
-    @test DomainSets.interval_map(Inf,-Inf,Inf,-Inf) isa FunctionMaps.StaticIdentityMap
-    @test DomainSets.interval_map(-Inf,Inf,Inf,-Inf) == LinearMap(-1)
-    @test DomainSets.interval_map(Inf,-Inf,-Inf,Inf) == LinearMap(-1)
-    @test DomainSets.interval_map(Inf,Inf,Inf,Inf) isa FunctionMaps.StaticIdentityMap
-    @test DomainSets.interval_map(-Inf,-Inf,-Inf,-Inf) isa FunctionMaps.StaticIdentityMap
 
     @testset "canonical types" begin
         struct MyCanonicalType <: DomainSets.CanonicalType

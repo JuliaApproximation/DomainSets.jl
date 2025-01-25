@@ -151,12 +151,12 @@ end
 
 # multiplication with a scalar number
 function map_domain(linmap::GenericLinearMap{<:StaticVector{N,S},A}, domain::ProductDomain{<:StaticVector{N,T}}) where {N,S,T,A<:Number}
-	c = unsafe_matrix(linmap)
+	c = FunctionMaps.unsafe_matrix(linmap)
 	ProductDomain{SVector{N,promote_type(S,T)}}(map(d -> c .* d, components(domain)))
 end
 
 function map_domain(transmap::Translation{<:StaticVector{N,S}}, domain::ProductDomain{<:StaticVector{N,T}}) where {N,S,T}
-    vec = unsafe_vector(transmap)
+    vec = FunctionMaps.unsafe_vector(transmap)
     ProductDomain{SVector{N,promote_type(S,T)}}(
             map( (d,v) -> d .+ v, components(domain), tointernalpoint(domain, vec)))
 end
@@ -257,4 +257,4 @@ end
 TupleProductDomain{T}(domains::Tuple) where {T} =
 	TupleProductDomain{T,typeof(domains)}(domains)
 
-matching_product_map(d::TupleProductDomain, maps) = TupleProductMap(maps)
+matching_product_map(d::TupleProductDomain, maps) = FunctionMaps.TupleProductMap(maps)

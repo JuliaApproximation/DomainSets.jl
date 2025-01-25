@@ -22,6 +22,19 @@ import Base:
     # Display
     show
 
+import FunctionMaps:
+	convert_eltype,
+	convert_prectype,
+	convert_numtype,
+	prectype,
+	numtype,
+	factors,
+	isrealtype,
+	tointernalpoint,
+    toexternalpoint,
+    compatibleproductdims
+
+
 import CompositeTypes: component, components
 
 import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsInterval,
@@ -30,6 +43,27 @@ import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsIn
                         infimum, supremum
 export ..
 
+using FunctionMaps:
+	CanonicalType,
+	Equal,
+	AbstractAffineMap,
+	GenericLinearMap,
+	GenericAffineMap,
+	interval_map,
+	UnitCircleMap,
+	AngleMap,
+	UnitDiskMap,
+	StaticTypes,
+	hashrec,
+	euclideandimension,
+	convert_eltype,
+	promotable_eltypes,
+	promote_prectype,
+	promote_numtype,
+	convert_fromcartesian,
+	convert_tocartesian,
+	nfactors,
+	factor
 
 ################################
 ## Exhaustive list of exports
@@ -42,10 +76,6 @@ export prectype, numtype,
     convert_numtype, promote_numtype,
     convert_prectype, promote_prectype,
     iscomposite, component, components, ncomponents
-
-## Maps
-
-include("maps_imports.jl")
 
 ## Generic domains
 
@@ -148,10 +178,6 @@ export LevelSet, ZeroSet,
 # from domain/indicator.jl
 export IndicatorFunction
 
-## Applications
-# from applications/rotation.jl
-export rotation_map,
-    CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
 
