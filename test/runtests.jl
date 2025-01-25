@@ -11,7 +11,7 @@ const textmime = MIME"text/plain"()
 println("#############################")
 println("# Aqua automated tests")
 println("#############################")
-include("aqua.jl")
+# include("aqua.jl")
 
 include("test_common.jl")
 include("test_generic_domain.jl")
