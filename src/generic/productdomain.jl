@@ -104,9 +104,24 @@ productdomain(d1::ProductDomain, d2::ProductDomain) =
 productdomain1(d1::ProductDomain, d2) = ProductDomain(factors(d1)..., d2)
 productdomain2(d1, d2::ProductDomain) = ProductDomain(d1, factors(d2)...)
 
-# Only override cross for variables of type Domain, it may have a different
-# meaning for other variables (like the vector cross product)
-cross(d::Domain...) = productdomain(d...)
+"""
+	cartesianproduct(domains...)
+
+Return the cartesian product of the given domains.
+
+The function may simplify the result in some cases. Use the `ProductDomain`
+constructor to obtain an explicit representation as a product.
+
+# Examples
+```julia
+julia> using DomainSets: ×
+
+julia> (0..1) × (2..3)
+(0 .. 1) × (2 .. 3)
+````
+"""
+cartesianproduct(d...) = productdomain(d...)
+× = cartesianproduct
 
 Base.:^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
 

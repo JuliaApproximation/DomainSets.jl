@@ -16,11 +16,9 @@ import Base:
     # Set operations
     setdiff, in, isempty, issubset, intersect, union, &, \,
     # Arrays
-    eltype, hash, isreal,
+    eltype, hash,
     # Types, promotions and conversions
     convert, promote,
-    # for maps (both deprecated and to be removed)
-    size, inv,
     # Display
     show
 
@@ -31,8 +29,6 @@ import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsIn
                         isrightopen, isrightclosed, isopenset, isclosedset,
                         infimum, supremum
 export ..
-
-import LinearAlgebra: cross, ×, pinv
 
 
 ################################
@@ -60,6 +56,7 @@ export Domain, EuclideanDomain, VectorDomain,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
     interior, closure,
+    isrealdomain,
     choice
 
 # from generic/geometry.jl
@@ -83,6 +80,7 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain, productdomain, center,
+    cartesianproduct,
     VcatDomain, VectorProductDomain, TupleProductDomain,
     factors
 
