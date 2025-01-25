@@ -26,8 +26,8 @@ jobs:
           arch: ${{ matrix.arch }}
       - name: Install dependencies
         run: |
-          julia --project=. -e 'using Pkg; Pkg.instantiate()'
           julia --project=. -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaApproximation/FunctionMaps.jl.git"))'
+          julia --project=. -e 'using Pkg; Pkg.instantiate()'
       - uses: actions/cache@v3
         env:
           cache-name: cache-artifacts
