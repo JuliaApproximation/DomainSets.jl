@@ -4,6 +4,7 @@ version = "0.7.15"
 
 [deps]
 CompositeTypes = "b152e2b5-7a66-4b01-a709-34e65c35f657"
+FunctionMaps = "a85aefff-f8ca-4649-a888-c8e5398bc76c"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -18,6 +19,7 @@ DomainSetsMakieExt = "Makie"
 [compat]
 Aqua = "0.8"
 CompositeTypes = "0.1.4"
+FunctionMaps = "0.1"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
 Makie = "0.19, 0.20, 0.21, 0.22"

@@ -2,7 +2,7 @@
 # In this file we list all functions defined in FunctionMaps that
 # were defined in the namespace of DomainSets
 
-using .FunctionMaps:
+using FunctionMaps:
 	MapRef,
 	# canonical.jl
 	CanonicalType, CanonicalExtensionType,
@@ -37,7 +37,7 @@ using .FunctionMaps:
 	supermap,
 	DerivedMap, WrappedMap,
 	# map.jl
-	AbstractMap, Map, TypedMap, EuclideanMap, VectorMap,
+	Map, TypedMap, EuclideanMap, VectorMap,
 	domaintype, codomaintype, prectype, numtype,
 	convert_domaintype, convert_codomaintype, convert_prectype, convert_numtype,
 	promote_map_point_pair,
@@ -58,10 +58,9 @@ using .FunctionMaps:
 	VectorProductMap, TupleProductMap,
 	# affine.jl
 	AbstractAffineMap,
-	unsafe_matrix, unsafe_vector, matrix, vector,
+	unsafe_matrix, unsafe_vector,
 	affinematrix, affinevector,
 	applymap!,
-	islinear, isaffine,
 	islinearmap, isaffinemap,
 	LinearMap, GenericLinearMap, ScalarLinearMap,
 	VectorLinearMap, StaticLinearMap,
@@ -73,11 +72,10 @@ using .FunctionMaps:
 	affine_composition,
 	interval_map, bounded_interval_map,
 	# basic.jl
-	IdentityMap, isidentity, isidentitymap,
+	IdentityMap, isidentitymap,
 	StaticIdentityMap, DynamicIdentityMap,
 	EuclideanIdentityMap, VectorIdentityMap,
 	ConstantMap, isconstantmap, mapconstant,
-	isconstant, constant,
 	ZeroMap, UnityMap, FixedConstantMap,
 	# coordinates.jl
 	CartToPolarMap, PolarToCartMap,
@@ -94,12 +92,12 @@ using .FunctionMaps:
 	matrix_pinv,
 	factors, nfactors, factor
 
-import .FunctionMaps:
+import FunctionMaps:
 	convert_eltype,
 	convert_prectype,
 	convert_numtype,
 	prectype,
 	numtype,
 	factors,
-	isreal,
+	isrealtype,
 	tointernalpoint, toexternalpoint, compatibleproductdims

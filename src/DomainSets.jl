@@ -5,8 +5,7 @@ using IntervalSets
 using LinearAlgebra
 using Random
 using StaticArrays
-
-include("../FunctionMaps/src/FunctionMaps.jl")
+using FunctionMaps
 
 ################################
 ## Exhaustive list of imports
@@ -51,28 +50,6 @@ export prectype, numtype,
 ## Maps
 
 include("maps_imports.jl")
-
-# from maps/map.jl
-export AbstractMap, Map, MapRef, TypedMap,
-    applymap, isequalmap,
-    domaintype, codomaintype,
-    inverse, leftinverse, rightinverse,
-    mapsize, jacobian, jacdet, diffvolume
-# from maps/composite.jl
-export ComposedMap, composedmap
-# from maps/product.jl
-export ProductMap, productmap
-# from maps/basic.jl
-export IdentityMap,
-    StaticIdentityMap, VectorIdentityMap,
-    ZeroMap, UnityMap, ConstantMap,
-    isconstant, constant,
-    isconstantmap, mapconstant
-# from maps/affine.jl
-export AffineMap, Translation, LinearMap,
-    affinematrix, affinevector,
-    islinear, isaffine,
-    islinearmap, isaffinemap
 
 ## Generic domains
 

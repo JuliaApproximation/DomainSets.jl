@@ -30,9 +30,3 @@
 
 # AsDomain was defined in versions 0.7 and 0.7.1, and then replaced by DomainRef
 @deprecate AsDomain(d) DomainRef(d)
-
-@deprecate inv(m::AbstractMap) inverse(m)
-
-@deprecate size(m::AbstractMap) mapsize(m)
-@deprecate size(m::AbstractMap, i) mapsize(m, i)
-@deprecate issquare(m::AbstractMap) issquaremap(m)
