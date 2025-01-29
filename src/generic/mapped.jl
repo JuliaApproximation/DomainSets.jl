@@ -37,7 +37,7 @@ corners(d::AbstractMappedDomain) = [forward_map(d, x) for x in corners(superdoma
 
 show(io::IO, mime::MIME"text/plain", d::AbstractMappedDomain) = composite_show(io, mime, d)
 Display.displaystencil(d::AbstractMappedDomain) =
-    map_stencil_broadcast(forward_map(d), superdomain(d))
+    FunctionMaps.map_stencil_broadcast(forward_map(d), superdomain(d))
 Display.object_parentheses(d::AbstractMappedDomain) =
     FunctionMaps.map_object_parentheses(forward_map(d))
 Display.stencil_parentheses(d::AbstractMappedDomain) =
@@ -56,10 +56,12 @@ _promote_map_domain_pair(map, domain, ::Type{T}, ::Type{T}) where T = map, domai
 _promote_map_domain_pair(map, domain, ::Type{S}, ::Type{T}) where {S,T} =
     _promote_map_domain_pair(map, domain, S, T, promote_type(S,T))
 _promote_map_domain_pair(map, domain, ::Type{S}, ::Type{T}, ::Type{U}) where {S,T,U} =
-    convert_codomaintype(U, map), convert_eltype(U, domain)
+    FunctionMaps.convert_codomaintype(U, map), convert_eltype(U, domain)
 _promote_map_domain_pair(map, domain, ::Type{Any}, ::Type{T}, ::Type{Any}) where T =
     map, domain
 _promote_map_domain_pair(map, domain, ::Type{S}, ::Type{Any}, ::Type{Any}) where S =
+    map, domain
+_promote_map_domain_pair(map, domain, ::Type{Any}, ::Type{Any}, ::Type{Any}) =
     map, domain
 # ensure dimensions of static arrays match
 _promote_map_domain_pair(map, domain, S::Type{<:StaticVector{N}}, T::Type{<:StaticVector{N}}) where N =
@@ -84,7 +86,7 @@ _MappedDomain(invmap, domain) =
     _MappedDomainT(mapped_domain_eltype(invmap,domain), invmap, domain)
 
 MappedDomain{T}(invmap, domain) where T =
-    _MappedDomainT(T, convert_domaintype(T, invmap), convert_eltype(T, domain))
+    _MappedDomainT(T, FunctionMaps.convert_domaintype(T, invmap), convert_eltype(T, domain))
 _MappedDomainT(::Type{T}, invmap, domain) where T =
     MappedDomain{T,typeof(invmap),typeof(domain)}(invmap, domain)
 

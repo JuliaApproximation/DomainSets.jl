@@ -5,8 +5,7 @@ using IntervalSets
 using LinearAlgebra
 using Random
 using StaticArrays
-
-include("../FunctionMaps/src/FunctionMaps.jl")
+using FunctionMaps
 
 ################################
 ## Exhaustive list of imports
@@ -17,13 +16,24 @@ import Base:
     # Set operations
     setdiff, in, isempty, issubset, intersect, union, &, \,
     # Arrays
-    eltype, hash, isreal,
+    eltype, hash,
     # Types, promotions and conversions
     convert, promote,
-    # for maps (both deprecated and to be removed)
-    size, inv,
     # Display
     show
+
+import FunctionMaps:
+	convert_eltype,
+	convert_prectype,
+	convert_numtype,
+	prectype,
+	numtype,
+	factors,
+	isrealtype,
+	tointernalpoint,
+    toexternalpoint,
+    compatibleproductdims
+
 
 import CompositeTypes: component, components
 
@@ -33,8 +43,27 @@ import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsIn
                         infimum, supremum
 export ..
 
-import LinearAlgebra: cross, ×, pinv
-
+using FunctionMaps:
+	CanonicalType,
+	Equal,
+	AbstractAffineMap,
+	GenericLinearMap,
+	GenericAffineMap,
+	interval_map,
+	UnitCircleMap,
+	AngleMap,
+	UnitDiskMap,
+	StaticTypes,
+	hashrec,
+	euclideandimension,
+	convert_eltype,
+	promotable_eltypes,
+	promote_prectype,
+	promote_numtype,
+	convert_fromcartesian,
+	convert_tocartesian,
+	nfactors,
+	factor
 
 ################################
 ## Exhaustive list of exports
@@ -48,32 +77,6 @@ export prectype, numtype,
     convert_prectype, promote_prectype,
     iscomposite, component, components, ncomponents
 
-## Maps
-
-include("maps_imports.jl")
-
-# from maps/map.jl
-export AbstractMap, Map, MapRef, TypedMap,
-    applymap, isequalmap,
-    domaintype, codomaintype,
-    inverse, leftinverse, rightinverse,
-    mapsize, jacobian, jacdet, diffvolume
-# from maps/composite.jl
-export ComposedMap, composedmap
-# from maps/product.jl
-export ProductMap, productmap
-# from maps/basic.jl
-export IdentityMap,
-    StaticIdentityMap, VectorIdentityMap,
-    ZeroMap, UnityMap, ConstantMap,
-    isconstant, constant,
-    isconstantmap, mapconstant
-# from maps/affine.jl
-export AffineMap, Translation, LinearMap,
-    affinematrix, affinevector,
-    islinear, isaffine,
-    islinearmap, isaffinemap
-
 ## Generic domains
 
 # from generic/domain.jl
@@ -83,6 +86,7 @@ export Domain, EuclideanDomain, VectorDomain,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
     interior, closure,
+    isrealdomain,
     choice
 
 # from generic/geometry.jl
@@ -106,6 +110,7 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain, productdomain, center,
+    cartesianproduct,
     VcatDomain, VectorProductDomain, TupleProductDomain,
     factors
 
@@ -173,10 +178,6 @@ export LevelSet, ZeroSet,
 # from domain/indicator.jl
 export IndicatorFunction
 
-## Applications
-# from applications/rotation.jl
-export rotation_map,
-    CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
 

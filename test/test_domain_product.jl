@@ -47,7 +47,7 @@ function test_product_domains()
         @test SA[-1.1,0.3] ∉ d2
 
         d3 = VcatDomain(1.05 * UnitDisk(), -1.0 .. 1.0)
-        @inferred(cross(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
+        @inferred(cartesianproduct(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
         @test d3 isa VcatDomain
         @test eltype(d3) == SVector{3,Float64}
         @test SA[0.5,0.5,0.8] ∈ d3
@@ -375,14 +375,14 @@ function test_product_domains()
     @testset "product mapto" begin
         d1 = ProductDomain(1.0..2.0, 1.0..2.0)
         d2 = ProductDomain(2.0..4.0, 2.0..4.0)
-        @test mapto(d1, d2) isa DomainSets.VcatMap
-        @test jacobian(mapto(d1,d2)) isa ConstantMap
-        @test jacdet(mapto(d1,d2)) == DomainSets.ConstantMap{SVector{2,Float64}}(4.0)
+        @test mapto(d1, d2) isa FunctionMaps.VcatMap
+        @test jacobian(mapto(d1,d2)) isa FunctionMaps.ConstantMap
+        @test jacdet(mapto(d1,d2)) == FunctionMaps.ConstantMap{SVector{2,Float64}}(4.0)
         d1v = ProductDomain([1.0..2.0, 1.0..2.0])
         d2v = ProductDomain([2.0..4.0, 2.0..4.0])
-        @test mapto(d1v, d2v) isa DomainSets.VectorProductMap
-        @test jacobian(mapto(d1v,d2v)) isa DomainSets.ConstantMap
-        @test jacdet(mapto(d1v,d2v)) == DomainSets.ConstantMap{Vector{Float64}}(4.0)
+        @test mapto(d1v, d2v) isa FunctionMaps.VectorProductMap
+        @test jacobian(mapto(d1v,d2v)) isa FunctionMaps.ConstantMap
+        @test jacdet(mapto(d1v,d2v)) == FunctionMaps.ConstantMap{Vector{Float64}}(4.0)
     end
 
     @testset "VcatDomain == bug" begin

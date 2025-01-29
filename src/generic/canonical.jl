@@ -141,12 +141,12 @@ mapto_canonical(::Isomorphic, d) = leftinverse(mapfrom_canonical(Isomorphic(), d
 canonicaldomain(::Isomorphic, d::Domain{<:StaticVector{1,T}}) where {T} =
     convert(Domain{T}, d)
 mapfrom_canonical(::Isomorphic, d::Domain{<:StaticVector{1,T}}) where {T} =
-    NumberToVector{T}()
+    FunctionMaps.NumberToVector{T}()
 
 canonicaldomain(::Isomorphic, d::Domain{NTuple{N,T}}) where {N,T} =
     convert(Domain{SVector{N,T}}, d)
 mapfrom_canonical(::Isomorphic, d::Domain{NTuple{N,T}}) where {N,T} =
-    VectorToTuple{N,T}()
+    FunctionMaps.VectorToTuple{N,T}()
 
 
 

@@ -294,7 +294,7 @@ function test_spheres()
     @test hasparameterization(UnitSphere(2))
 
     p = parameterization(C)
-    @test mapsize(p) == (2,)
+    @test FunctionMaps.mapsize(p) == (2,)
     x = applymap(p, 1/2)
     @test jacobian(p, 0.4) ≈ SA[-2pi*sin(2pi*0.4), 2pi*cos(2pi*0.4)]
     @test diffvolume(p, 0.4) ≈ 2*pi
@@ -306,7 +306,7 @@ function test_spheres()
     @test applymap(q, -x) ≈ 1
     @test rightinverse(q) == p
     @test rightinverse(q)(0) ≈ rightinverse(q, 0)
-    @test jacobian(q) isa DomainSets.LazyJacobian
+    @test jacobian(q) isa FunctionMaps.LazyJacobian
     @test jacobian(q, x) isa LinearAlgebra.Transpose{Float64,SVector{2,Float64}}
 
     @test boundingbox(C) == ProductDomain(ChebyshevInterval(), ChebyshevInterval())
@@ -332,7 +332,7 @@ function test_spheres()
     @test affinematrix(mapfrom_canonical(C)) == [2 0; 0 2]
     @test affinevector(mapfrom_canonical(C)) == [1; 1]
     @test parameterdomain(C) == UnitInterval()
-    @test mapfrom_parameterdomain(C) isa ComposedMap
+    @test mapfrom_parameterdomain(C) isa FunctionMaps.ComposedMap
     @test mapfrom_parameterdomain(C)(0.5) ≈ [-1; 1]
     @test mapfrom_parameterdomain(C, 0.5) ≈ [-1; 1]
     @test mapto_parameterdomain(C)([-1; 1]) ≈ 0.5
