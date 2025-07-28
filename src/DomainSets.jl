@@ -3,7 +3,6 @@ module DomainSets
 using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
 using IntervalSets
 using LinearAlgebra
-using Random
 using StaticArrays
 
 include("../FunctionMaps/src/FunctionMaps.jl")
@@ -205,7 +204,6 @@ include("domains/boundingbox.jl")
 include("generic/generator.jl")
 
 include("applications/coordinates.jl")
-include("applications/random.jl")
 include("applications/rotation.jl")
 
 include("deprecated.jl")
