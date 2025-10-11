@@ -1,12 +1,23 @@
-Random.gentype(::Type{<:Domain{T}}) where T = T
+module DomainSetsRandomExt
 
-Base.rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:ProductDomain}) =
-    toexternalpoint(s[], map(i->(rand(rng, i)), factors(s[])))
+using DomainSets
+using Random
 
-Base.rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:SimpleLazyDomain}) =
-    toexternalpoint(s[], rand(rng, superdomain(s[])))
+using LinearAlgebra, StaticArrays
 
-function Base.rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:Ball})
+import Random:
+    gentype,
+    rand
+
+gentype(::Type{<:Domain{T}}) where T = T
+
+rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:ProductDomain}) =
+    DomainSets.toexternalpoint(s[], map(i->(rand(rng, i)), factors(s[])))
+
+rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:DomainSets.SimpleLazyDomain}) =
+    DomainSets.toexternalpoint(s[], rand(rng, superdomain(s[])))
+
+function rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:Ball})
     # Technical details: http://extremelearning.com.au/how-to-generate-uniformly-random-points-on-n-spheres-and-n-balls/
 
     b = s[]
@@ -20,7 +31,6 @@ function Base.rand(rng::Random.AbstractRNG, s::Random.SamplerTrivial{<:Ball})
                 return r
             end
         end
-
     # for higher dimensional balls, use the "Mueller" method
     else
         u = randn_dimension(rng, eltype(b), dimension(b))
@@ -39,3 +49,5 @@ randn_dimension(rng::Random.AbstractRNG, t::Type{<:Vector}, d) = randn(rng, elty
 # Unions and intersections could be implemented with rejection sampling, but it might be inefficient
 # Sphere will require some decisions because `rand(sphere) in sphere` will usually only be approximately satisfied
 # Maps may be difficult because the map could distort the distribution so that it is not uniform.
+
+end # module
