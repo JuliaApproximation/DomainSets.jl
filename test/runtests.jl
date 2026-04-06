@@ -3,6 +3,8 @@ using Test, LinearAlgebra, StaticArrays, Random, StableRNGs
 using DomainSets
 using CompositeTypes.Indexing
 
+using DomainSets: ×
+
 const io = IOBuffer()
 const textmime = MIME"text/plain"()
 
@@ -10,12 +12,6 @@ println("#############################")
 println("# Aqua automated tests")
 println("#############################")
 include("aqua.jl")
-
-# First run the test suite of submodule FunctionMaps.jl
-println("#############################")
-println("# Tests of FunctionMaps.jl")
-println("#############################")
-include("../FunctionMaps/test/runtests2.jl")
 
 println("#############################")
 println("# Tests of DomainSets.jl")

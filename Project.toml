@@ -1,9 +1,10 @@
 name = "DomainSets"
 uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
-version = "0.7.16"
+version = "0.7.17"
 
 [deps]
 CompositeTypes = "b152e2b5-7a66-4b01-a709-34e65c35f657"
+FunctionMaps = "a85aefff-f8ca-4649-a888-c8e5398bc76c"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -19,6 +20,7 @@ DomainSetsRandomExt = "Random"
 [compat]
 Aqua = "0.8"
 CompositeTypes = "0.1.4"
+FunctionMaps = "0.1.2"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
 Makie = "0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
@@ -26,7 +28,7 @@ Random = "1"
 StableRNGs = "1"
 StaticArrays = "1"
 Test = "1"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"

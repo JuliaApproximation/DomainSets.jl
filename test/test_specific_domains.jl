@@ -449,7 +449,7 @@ include("test_domain_simplex.jl")
         @test SA[0.4, 0.4, 0.4] ∈ D
         @test SA[0.6, 0.6, 0.6] ∉ D
 
-        D = rotate((-1.5.. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0), π, π, π, SA[.35, .65, -2.])
+        D = rotate(cartesianproduct(-1.5.. 2.2, 0.5 .. 0.7, -3.0 .. -1.0), π, π, π, SA[.35, .65, -2.])
         @test SA[0.9, 0.6, -2.5] ∈ D
         @test SA[0.0, 0.6, 0.0] ∉ D
 

@@ -47,7 +47,7 @@ function test_product_domains()
         @test SA[-1.1,0.3] ∉ d2
 
         d3 = VcatDomain(1.05 * UnitDisk(), -1.0 .. 1.0)
-        @inferred(cross(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
+        @inferred(cartesianproduct(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
         @test d3 isa VcatDomain
         @test eltype(d3) == SVector{3,Float64}
         @test SA[0.5,0.5,0.8] ∈ d3
@@ -58,7 +58,7 @@ function test_product_domains()
         @test map_domain(Translation(v), productdomain(UnitDisk(), UnitInterval())) isa VcatDomain
     end
     @testset "mixed intervals" begin
-        d = (0..1) × (0.0..1)
+        d = cartesianproduct(0..1, 0.0..1)
         @test SA[0.1,0.2] ∈ d
         @test SA[0.1,1.2] ∉ d
         @test SA[1.1,1.3] ∉ d
@@ -230,16 +230,16 @@ function test_product_domains()
         @test intersect(ChebyshevInterval()^3, UnitInterval()^3) isa EuclideanUnitCube{3,Float64}
 
         #Cube
-        D = (-1.5 .. 2.2) × (0.5 .. 0.7) × (-3.0 .. -1.0)
+        D = cartesianproduct(-1.5 .. 2.2, 0.5 .. 0.7, -3.0 .. -1.0)
         @test SA[0.9, 0.6, -2.5] ∈ D
         @test SA[0.0, 0.6, 0.0] ∉ D
 
         @test issubset( (0..1)^3, (-1..2)^3 )
     end
     @testset "Rectangle" begin
-        d1 = (-1.0..1.0) × (-1.0..1.0)
+        d1 = cartesianproduct(-1.0..1.0, -1.0..1.0)
 
-        d4 = d1 × (-1.0..1.0)
+        d4 = cartesianproduct(d1, -1.0..1.0)
         @test d4 isa Rectangle
         @test SA[0.5,0.5,0.8] ∈ d4
         @test SA[-1.1,0.3,0.1] ∉ d4
@@ -250,13 +250,13 @@ function test_product_domains()
         @test d1[Component(2)] == -1..1
         @test_throws BoundsError d1[Component(3)]
 
-        d5 = (-1.0..1.)×d1
+        d5 = cartesianproduct(-1.0..1., d1)
         @test d5 isa Rectangle
         @test SA[0.,0.5,0.5] ∈ d5
         @test SA[0.,-1.1,0.3] ∉ d5
         @test choice(d5) ∈ d5
 
-        d6 = d1 × d1
+        d6 = cartesianproduct(d1, d1)
         @test d6 isa Rectangle
         @test SA[0.,0.,0.5,0.5] ∈ d6
         @test SA[0.,0.,-1.1,0.3] ∉ d6

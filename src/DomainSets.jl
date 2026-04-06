@@ -4,8 +4,7 @@ using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
 using IntervalSets
 using LinearAlgebra
 using StaticArrays
-
-include("../FunctionMaps/src/FunctionMaps.jl")
+using FunctionMaps
 
 ################################
 ## Exhaustive list of imports
@@ -32,6 +31,7 @@ import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsIn
                         infimum, supremum
 export ..
 
+# to be removed in breaking version 0.8
 import LinearAlgebra: cross, ×, pinv
 
 
@@ -56,7 +56,9 @@ export AbstractMap, Map, MapRef, TypedMap,
     applymap, isequalmap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
-    mapsize, jacobian, jacdet, diffvolume
+    mapsize, mapdim,           # mapdim is deprecated
+    jacobian, jacdet, diffvolume,
+    isrealmap
 # from maps/composite.jl
 export ComposedMap, composedmap
 # from maps/product.jl
@@ -65,12 +67,14 @@ export ProductMap, productmap
 export IdentityMap,
     StaticIdentityMap, VectorIdentityMap,
     ZeroMap, UnityMap, ConstantMap,
-    isconstant, constant,
-    isconstantmap, mapconstant
+    isconstant, constant,       # deprecated
+    isconstantmap, mapconstant,
+    isidentity, isidentitymap   # isidentity is deprecated
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     affinematrix, affinevector,
-    islinear, isaffine,
+    matrix, vector,             # deprecated aliases
+    islinear, isaffine,         # deprecated
     islinearmap, isaffinemap
 
 ## Generic domains
@@ -82,6 +86,7 @@ export Domain, EuclideanDomain, VectorDomain,
     isopenset, isclosedset, iscompact,
     boundary, ∂,
     interior, closure,
+    isrealdomain,
     choice
 
 # from generic/geometry.jl
@@ -105,6 +110,7 @@ export superdomain
 
 # from generic/productdomain.jl
 export ProductDomain, productdomain, center,
+    cartesianproduct,
     VcatDomain, VectorProductDomain, TupleProductDomain,
     factors
 
