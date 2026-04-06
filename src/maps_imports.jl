@@ -2,7 +2,7 @@
 # In this file we list all functions defined in FunctionMaps that
 # were defined in the namespace of DomainSets
 
-using .FunctionMaps:
+using FunctionMaps:
 	MapRef,
 	# canonical.jl
 	CanonicalType, CanonicalExtensionType,
@@ -37,14 +37,14 @@ using .FunctionMaps:
 	supermap,
 	DerivedMap, WrappedMap,
 	# map.jl
-	AbstractMap, Map, TypedMap, EuclideanMap, VectorMap,
+	Map, TypedMap, EuclideanMap, VectorMap,
 	domaintype, codomaintype, prectype, numtype,
 	convert_domaintype, convert_codomaintype, convert_prectype, convert_numtype,
 	promote_map_point_pair,
 	promote_and_apply, promote_maps,
 	isvectorvalued_type, isvectorvalued,
 	issquaremap, isoverdetermined, isunderdetermined,
-	isreal,
+	isrealmap,
 	is_scalar_to_vector, is_scalar_to_scalar,
 	is_vector_to_scalar, is_vector_to_vector,
 	isequalmap1, isequalmap2, default_isequalmap,
@@ -54,14 +54,13 @@ using .FunctionMaps:
 	compatibleproductdims,
 	tointernalpoint, toexternalpoint,
 	productmap, productmap1, productmap2,
-	VcatMap, mapdim, size_as_matrix, toexternalmatrix,
+	VcatMap, size_as_matrix, toexternalmatrix,
 	VectorProductMap, TupleProductMap,
 	# affine.jl
 	AbstractAffineMap,
-	unsafe_matrix, unsafe_vector, matrix, vector,
+	unsafe_matrix, unsafe_vector,
 	affinematrix, affinevector,
 	applymap!,
-	islinear, isaffine,
 	islinearmap, isaffinemap,
 	LinearMap, GenericLinearMap, ScalarLinearMap,
 	VectorLinearMap, StaticLinearMap,
@@ -73,11 +72,10 @@ using .FunctionMaps:
 	affine_composition,
 	interval_map, bounded_interval_map,
 	# basic.jl
-	IdentityMap, isidentity, isidentitymap,
+	IdentityMap, isidentitymap,
 	StaticIdentityMap, DynamicIdentityMap,
 	EuclideanIdentityMap, VectorIdentityMap,
 	ConstantMap, isconstantmap, mapconstant,
-	isconstant, constant,
 	ZeroMap, UnityMap, FixedConstantMap,
 	# coordinates.jl
 	CartToPolarMap, PolarToCartMap,
@@ -94,12 +92,24 @@ using .FunctionMaps:
 	matrix_pinv,
 	factors, nfactors, factor
 
-import .FunctionMaps:
+import FunctionMaps:
 	convert_eltype,
 	convert_prectype,
 	convert_numtype,
 	prectype,
 	numtype,
 	factors,
-	isreal,
 	tointernalpoint, toexternalpoint, compatibleproductdims
+
+# Deprecations for symbols that were renamed in FunctionMaps.jl
+const AbstractMap = Map
+@deprecate isreal(::Type{T}) where {T} isrealtype(T)
+@deprecate isreal(m::Map) isrealmap(m)
+@deprecate islinear(m::Map) islinearmap(m)
+@deprecate isaffine(m::Map) isaffinemap(m)
+@deprecate isidentity(m::Map) isidentitymap(m)
+@deprecate isconstant(m::Map) isconstantmap(m)
+@deprecate constant(m::Map) mapconstant(m)
+@deprecate matrix(m::Map) affinematrix(m)
+@deprecate vector(m::Map) affinevector(m)
+@deprecate mapdim(m::Map) mapsize(m, 2)

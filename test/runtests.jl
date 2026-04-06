@@ -11,12 +11,6 @@ println("# Aqua automated tests")
 println("#############################")
 include("aqua.jl")
 
-# First run the test suite of submodule FunctionMaps.jl
-println("#############################")
-println("# Tests of FunctionMaps.jl")
-println("#############################")
-include("../FunctionMaps/test/runtests2.jl")
-
 println("#############################")
 println("# Tests of DomainSets.jl")
 println("#############################")

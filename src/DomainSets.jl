@@ -4,8 +4,7 @@ using CompositeTypes, CompositeTypes.Display, CompositeTypes.Indexing
 using IntervalSets
 using LinearAlgebra
 using StaticArrays
-
-include("../FunctionMaps/src/FunctionMaps.jl")
+using FunctionMaps
 
 ################################
 ## Exhaustive list of imports
@@ -56,7 +55,9 @@ export AbstractMap, Map, MapRef, TypedMap,
     applymap, isequalmap,
     domaintype, codomaintype,
     inverse, leftinverse, rightinverse,
-    mapsize, jacobian, jacdet, diffvolume
+    mapsize, mapdim,           # mapdim is deprecated
+    jacobian, jacdet, diffvolume,
+    isrealmap
 # from maps/composite.jl
 export ComposedMap, composedmap
 # from maps/product.jl
@@ -65,12 +66,14 @@ export ProductMap, productmap
 export IdentityMap,
     StaticIdentityMap, VectorIdentityMap,
     ZeroMap, UnityMap, ConstantMap,
-    isconstant, constant,
-    isconstantmap, mapconstant
+    isconstant, constant,       # deprecated
+    isconstantmap, mapconstant,
+    isidentity, isidentitymap   # isidentity is deprecated
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     affinematrix, affinevector,
-    islinear, isaffine,
+    matrix, vector,             # deprecated aliases
+    islinear, isaffine,         # deprecated
     islinearmap, isaffinemap
 
 ## Generic domains
