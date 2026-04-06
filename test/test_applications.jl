@@ -15,7 +15,19 @@ function test_rotation_map(T)
     @test y[2] ≈ sqrt(T(2))/2
     @test y[3] ≈ sqrt(T(2))/2
 
-    # TODO: add more tests for a 3D rotation
+    m = rotation_map(zero(T), ϕ, zero(T))
+    x = [one(T), zero(T), zero(T)]
+    y = m(x)
+    @test y[1] ≈ sqrt(T(2))/2
+    @test y[2] ≈ 0
+    @test y[3] ≈ -sqrt(T(2))/2
+
+    m = rotation_map(zero(T), zero(T), ϕ)
+    x = [one(T), zero(T), zero(T)]
+    y = m(x)
+    @test y[1] ≈ sqrt(T(2))/2
+    @test y[2] ≈ sqrt(T(2))/2
+    @test y[3] ≈ 0
 
     theta = T(rand())
     phi = T(rand())

@@ -47,7 +47,7 @@ function test_product_domains()
         @test SA[-1.1,0.3] ∉ d2
 
         d3 = VcatDomain(1.05 * UnitDisk(), -1.0 .. 1.0)
-        @inferred(cross(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
+        @inferred(cartesianproduct(1.05 * UnitDisk(), -1.0 .. 1.0)) === d3
         @test d3 isa VcatDomain
         @test eltype(d3) == SVector{3,Float64}
         @test SA[0.5,0.5,0.8] ∈ d3

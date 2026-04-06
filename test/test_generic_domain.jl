@@ -10,8 +10,8 @@ widen_eltype(::Type{Vector{T}}) where {T<:Number} = Vector{widen(T)}
 # These tests check whether the given domain correctly implements the
 # interface of a domain.
 function test_generic_domain(d)
-    @test isreal(d) == isrealtype(domaineltype(d))
-    @test isreal(d) == isrealtype(domain_numtype(d))
+    @test isrealdomain(d) == isrealtype(domaineltype(d))
+    @test isrealdomain(d) == isrealtype(domain_numtype(d))
 
     if d isa Domain
         @test convert(Domain{eltype(d)}, d) == d
@@ -104,13 +104,8 @@ end
         @test_throws MethodError 0.5 ∈ SomeDomain()
         @test_throws MethodError approx_in(0.5, SomeDomain())
 
-        if VERSION < v"1.6-"
-            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64,Float64} and domain eltype: SArray{Tuple{2},Float64,1,2}. Returning false.") (0.5,0.2) ∈ UnitCircle()
-            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64,Float64} and domain eltype: SArray{Tuple{2},Float64,1,2}. Returning false.") approx_in((0.5,0.2), UnitCircle())
-        else
-            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") (0.5,0.2) ∈ UnitCircle()
-            @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") approx_in((0.5,0.2), UnitCircle())
-        end
+        @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") (0.5,0.2) ∈ UnitCircle()
+        @test_logs (:warn, "`in`: incompatible combination of point: Tuple{Float64, Float64} and domain eltype: SVector{2, Float64}. Returning false.") approx_in((0.5,0.2), UnitCircle())
 
         # functionality using broadcast
         @test 2 * (1..2) == 2 .* (1..2)

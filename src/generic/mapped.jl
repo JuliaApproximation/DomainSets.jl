@@ -61,6 +61,8 @@ _promote_map_domain_pair(map, domain, ::Type{Any}, ::Type{T}, ::Type{Any}) where
     map, domain
 _promote_map_domain_pair(map, domain, ::Type{S}, ::Type{Any}, ::Type{Any}) where S =
     map, domain
+_promote_map_domain_pair(map, domain, ::Type{Any}, ::Type{Any}, ::Type{Any}) =
+    map, domain
 # ensure dimensions of static arrays match
 _promote_map_domain_pair(map, domain, S::Type{<:StaticVector{N}}, T::Type{<:StaticVector{N}}) where N =
     _promote_map_domain_pair(map, domain, S, T, promote_type(S,T))

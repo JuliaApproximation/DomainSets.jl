@@ -89,7 +89,6 @@ using FunctionMaps:
 	prectype, convert_prectype, to_prectype, promote_prectype,
 	numtype, convert_numtype, to_numtype, promote_numtype,
 	convert_fromcartesian, convert_tocartesian,
-	matrix_pinv,
 	factors, nfactors, factor
 
 import FunctionMaps:

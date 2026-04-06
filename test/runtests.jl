@@ -3,6 +3,8 @@ using Test, LinearAlgebra, StaticArrays, Random, StableRNGs
 using DomainSets
 using CompositeTypes.Indexing
 
+using DomainSets: ×
+
 const io = IOBuffer()
 const textmime = MIME"text/plain"()
 

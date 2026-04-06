@@ -36,3 +36,8 @@
 @deprecate size(m::AbstractMap) mapsize(m)
 @deprecate size(m::AbstractMap, i) mapsize(m, i)
 @deprecate issquare(m::AbstractMap) issquaremap(m)
+
+# Added in v0.7.17, to be removed in v0.8
+@deprecate isreal(d::Domain) isrealdomain(d)
+LinearAlgebra.cross(d1::Domain, domains...) = linearalgebra_x_becomes_domainsets_x(d1, domains...)
+@deprecate linearalgebra_x_becomes_domainsets_x(d1::Domain, domains...) cartesianproduct(d1, domains...)
