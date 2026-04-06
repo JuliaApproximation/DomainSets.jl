@@ -149,7 +149,7 @@ identitymap(d::TypedEndpointsInterval{L,R,T}) where {L,R,T<:Integer} = IdentityM
 canonicaldomain(d::TypedEndpointsInterval{:closed,:closed,T}) where {T} =
     ChebyshevInterval{T}()
 mapfrom_canonical(d::TypedEndpointsInterval{:closed,:closed}) =
-    bounded_interval_map(-1, 1, endpoints(d)...)
+    FunctionMaps.bounded_interval_map(-1, 1, endpoints(d)...)
 
 canonicaldomain(d::FixedInterval) = d
 canonicaldomain(ctype::Equal, d::FixedInterval) = d
