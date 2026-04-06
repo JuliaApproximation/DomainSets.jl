@@ -122,7 +122,7 @@
         @test intersectdomain(0..1, 0.5..1.5) == (0..1) & (0.5..1.5)
 
         # intersection of productdomains
-        i1 = intersectdomain((-0.4..0.4)^2, (-.5 .. 0.5) × (-0.1.. 0.1))
+        i1 = intersectdomain((-0.4..0.4)^2, cartesianproduct(-.5 .. 0.5, -0.1.. 0.1))
         @test i1 == productdomain(-0.4..0.4, -0.1..0.1)
         show(io,i1)
         @test String(take!(io)) == "($(-0.4..0.4)) × ($(-0.1..0.1))"
@@ -133,8 +133,8 @@
         @test dimension(i1) == 2
         @test dimension(i2) == 2
 
-        i3 = ((-.5 .. 0.5) × (-0.1.. 0.1)) & i2
-        i4 = i2 & ((-.5 .. 0.5) × (-0.1.. 0.1))
+        i3 = cartesianproduct(-.5 .. 0.5, -0.1.. 0.1) & i2
+        i4 = i2 & cartesianproduct(-.5 .. 0.5, -0.1.. 0.1)
         i5 = i3 & i2
         @test SVector(0.,.05) ∈ i3
         @test SVector(0.,.05) ∈ i4
@@ -246,10 +246,10 @@
     end
 
     @testset "disk × interval" begin
-        d = (0.0..1) × UnitDisk()
+        d = cartesianproduct(0.0..1, UnitDisk())
         @test SVector(0.1, 0.2, 0.3) ∈ d
 
-        d = UnitDisk() × (0.0..1)
+        d = cartesianproduct(UnitDisk(), 0.0..1)
         @test SVector(0.1, 0.2, 0.3) ∈ d
     end
 

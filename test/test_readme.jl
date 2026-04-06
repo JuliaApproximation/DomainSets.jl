@@ -7,8 +7,8 @@
     @test repr(HalfLine())[1:10] == "$(0.0..Inf)"
 
     using DomainSets: ×
-    @test repr((-1..1) × (0..3) × (4.0..5.0)) == "($(-1.0..1.0)) × ($(0.0..3.0)) × ($(4.0..5.0))"
-    @test SVector(1,2) in (-1..1) × (0..3)
+    @test repr(cartesianproduct(-1..1, 0..3, 4.0..5.0)) == "($(-1.0..1.0)) × ($(0.0..3.0)) × ($(4.0..5.0))"
+    @test SVector(1,2) in cartesianproduct(-1..1, 0..3)
 
     @test SVector(0,0,1.0) in UnitSphere(Val(3))
     @test [0.0,1.0,0.0,0.0] in UnitSphere(4)

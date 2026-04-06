@@ -15,9 +15,11 @@ import Base:
     # Set operations
     setdiff, in, isempty, issubset, intersect, union, &, \,
     # Arrays
-    eltype, hash,
+    eltype, hash, isreal,
     # Types, promotions and conversions
     convert, promote,
+    # for maps (both deprecated and to be removed)
+    size, inv,
     # Display
     show
 

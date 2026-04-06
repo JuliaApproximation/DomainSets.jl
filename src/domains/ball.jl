@@ -588,9 +588,9 @@ boundingbox(d::UnitSphere{T}) where {T} =
 ################
 
 "Create a cylinder with given radius and length."
-cylinder(::Type{T} = Float64) where {T} = UnitDisk{T}() × UnitInterval{T}()
+cylinder(::Type{T} = Float64) where {T} = cartesianproduct(UnitDisk{T}(), UnitInterval{T}())
 cylinder(radius, length) = cylinder(promote(radius, length)...)
-cylinder(radius::T, length::T) where {T} = (radius .* UnitDisk{T}()) × (0..length)
+cylinder(radius::T, length::T) where {T} = cartesianproduct(radius .* UnitDisk{T}(), 0..length)
 
 "Create an ellipse curve with semi-axes lengths `a` and `b` respectively."
 ellipse(a::Number, b::Number) = ellipse(promote(a,b)...)
