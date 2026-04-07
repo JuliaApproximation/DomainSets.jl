@@ -109,6 +109,6 @@ const AbstractMap = Map
 @deprecate isidentity(m::Map) isidentitymap(m)
 @deprecate isconstant(m::Map) isconstantmap(m)
 @deprecate constant(m::Map) mapconstant(m)
-@deprecate matrix(m::Map) affinematrix(m)
-@deprecate vector(m::Map) affinevector(m)
+@deprecate matrix(m::Map) affinematrix(m) false
+@deprecate vector(m::Map) affinevector(m) false
 @deprecate mapdim(m::Map) mapsize(m, 2)
