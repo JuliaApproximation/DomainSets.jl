@@ -30,8 +30,8 @@ import FunctionMaps:
 	factors,
 	isrealtype,
 	tointernalpoint,
-    toexternalpoint,
-    compatibleproductdims
+	toexternalpoint,
+	compatibleproductdims
 
 import CompositeTypes: component, components
 
