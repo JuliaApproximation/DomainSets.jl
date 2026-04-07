@@ -73,7 +73,6 @@ export IdentityMap,
 # from maps/affine.jl
 export AffineMap, Translation, LinearMap,
     affinematrix, affinevector,
-    matrix, vector,             # deprecated aliases
     islinear, isaffine,         # deprecated
     islinearmap, isaffinemap
 
