@@ -33,14 +33,16 @@ show(io::IO, d::ComplexUnitDisk{T,:open}) where {T} = print(io, "ComplexUnitDisk
 canonicaldomain(::Parameterization, d::ComplexUnitCircle{T}) where {T} =
     UnitInterval{T}()
 mapfrom_canonical(::Parameterization, d::ComplexUnitCircle{T}) where {T} =
-    VectorToComplex{T}() ∘ UnitCircleMap{T}()
+    FunctionMaps.VectorToComplex{T}() ∘ UnitCircleMap{T}()
 
 canonicaldomain(::Isomorphic, d::ComplexUnitCircle{T}) where {T} = UnitCircle{T}()
-mapfrom_canonical(::Isomorphic, d::ComplexUnitCircle{T}) where {T} = VectorToComplex{T}()
+mapfrom_canonical(::Isomorphic, d::ComplexUnitCircle{T}) where {T} =
+    FunctionMaps.VectorToComplex{T}()
 
 canonicaldomain(::Parameterization, d::ComplexUnitDisk{T}) where {T} = UnitSquare{T}()
 mapfrom_canonical(::Parameterization, d::ComplexUnitDisk{T}) where {T} =
-    VectorToComplex{T}() ∘ UnitDiskMap{T}()
+    FunctionMaps.VectorToComplex{T}() ∘ UnitDiskMap{T}()
 
 canonicaldomain(::Isomorphic, d::ComplexUnitDisk{T}) where {T} = UnitCircle{T}()
-mapfrom_canonical(::Isomorphic, d::ComplexUnitDisk{T}) where {T} = VectorToComplex{T}()
+mapfrom_canonical(::Isomorphic, d::ComplexUnitDisk{T}) where {T} =
+    FunctionMaps.VectorToComplex{T}()

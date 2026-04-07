@@ -41,7 +41,7 @@ broadcasted(::DomainSetStyle, ::typeof(/), d::AnyDomain, a::Number) =
 broadcasted(::DomainSetStyle, ::typeof(\), a::Number, d::AnyDomain) =
     mapped_domain(LinearMap(a), domain(d))
 
-broadcasted(::DomainSetStyle, m::AbstractMap, d::AnyDomain) =
+broadcasted(::DomainSetStyle, m::Map, d::AnyDomain) =
     map_domain(m, domain(d))
 
 broadcasted(::DomainSetStyle, fun::Function, d::AnyDomain) =

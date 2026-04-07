@@ -15,13 +15,23 @@ import Base:
     # Set operations
     setdiff, in, isempty, issubset, intersect, union, &, \,
     # Arrays
-    eltype, hash, isreal,
+    eltype, hash,
     # Types, promotions and conversions
     convert, promote,
-    # for maps (both deprecated and to be removed)
-    size, inv,
     # Display
     show
+
+import FunctionMaps:
+	convert_eltype,
+	convert_prectype,
+	convert_numtype,
+	prectype,
+	numtype,
+	factors,
+	isrealtype,
+	tointernalpoint,
+    toexternalpoint,
+    compatibleproductdims
 
 import CompositeTypes: component, components
 
@@ -31,9 +41,27 @@ import IntervalSets: (..), endpoints, Domain, AbstractInterval, TypedEndpointsIn
                         infimum, supremum
 export ..
 
-# to be removed in breaking version 0.8
-import LinearAlgebra: cross, ×, pinv
-
+using FunctionMaps:
+	CanonicalType,
+	Equal,
+	AbstractAffineMap,
+	GenericLinearMap,
+	GenericAffineMap,
+	interval_map,
+	UnitCircleMap,
+	AngleMap,
+	UnitDiskMap,
+	StaticTypes,
+	hashrec,
+	euclideandimension,
+	convert_eltype,
+	promotable_eltypes,
+	promote_prectype,
+	promote_numtype,
+	convert_fromcartesian,
+	convert_tocartesian,
+	nfactors,
+	factor
 
 ################################
 ## Exhaustive list of exports
@@ -46,36 +74,6 @@ export prectype, numtype,
     convert_numtype, promote_numtype,
     convert_prectype, promote_prectype,
     iscomposite, component, components, ncomponents
-
-## Maps
-
-include("maps_imports.jl")
-
-# from maps/map.jl
-export AbstractMap, Map, MapRef, TypedMap,
-    applymap, isequalmap,
-    domaintype, codomaintype,
-    inverse, leftinverse, rightinverse,
-    mapsize, mapdim,           # mapdim is deprecated
-    jacobian, jacdet, diffvolume,
-    isrealmap
-# from maps/composite.jl
-export ComposedMap, composedmap
-# from maps/product.jl
-export ProductMap, productmap
-# from maps/basic.jl
-export IdentityMap,
-    StaticIdentityMap, VectorIdentityMap,
-    ZeroMap, UnityMap, ConstantMap,
-    isconstant, constant,       # deprecated
-    isconstantmap, mapconstant,
-    isidentity, isidentitymap   # isidentity is deprecated
-# from maps/affine.jl
-export AffineMap, Translation, LinearMap,
-    affinematrix, affinevector,
-    matrix, vector,             # deprecated aliases
-    islinear, isaffine,         # deprecated
-    islinearmap, isaffinemap
 
 ## Generic domains
 
@@ -178,10 +176,6 @@ export LevelSet, ZeroSet,
 # from domain/indicator.jl
 export IndicatorFunction
 
-## Applications
-# from applications/rotation.jl
-export rotation_map,
-    CartToPolarMap, PolarToCartMap
 
 include("util/common.jl")
 

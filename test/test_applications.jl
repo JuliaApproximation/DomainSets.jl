@@ -1,3 +1,5 @@
+using DomainSets: rotation_map
+using FunctionMaps: CartToPolarMap, PolarToCartMap
 
 function test_rotation_map(T)
     ϕ = T(pi)/4

@@ -1,6 +1,6 @@
 using Test, LinearAlgebra, StaticArrays, Random, StableRNGs
 
-using DomainSets
+using DomainSets, FunctionMaps
 using CompositeTypes.Indexing
 
 using DomainSets: ×
