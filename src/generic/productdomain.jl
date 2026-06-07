@@ -118,9 +118,21 @@ julia> using DomainSets: ×
 
 julia> (0..1) × (2..3)
 (0 .. 1) × (2 .. 3)
-````
+```
+
+!!! note
+	`cartesianproduct` requires at least v0.7.17 of DomainSets.jl.
 """
 cartesianproduct(d...) = productdomain(d...)
+
+"""
+	DomainSets.:(×)
+
+Alias for [`cartesianproduct`](@ref). Note that this differs from LinearAlgebra.:(×) that represents the cross product of vectors.
+
+!!! note
+	`×` requires at least v0.8.0 of DomainSets.jl.
+"""
 × = cartesianproduct
 
 Base.:^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
