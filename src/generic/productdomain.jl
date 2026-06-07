@@ -118,7 +118,10 @@ julia> using DomainSets: ×
 
 julia> (0..1) × (2..3)
 (0 .. 1) × (2 .. 3)
-````
+```
+
+!!! note
+	`cartesianproduct` requires at least v0.7.17 of DomainSets.jl.
 """
 cartesianproduct(d...) = productdomain(d...)
 × = cartesianproduct
