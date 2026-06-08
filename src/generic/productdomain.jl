@@ -133,7 +133,7 @@ Alias for [`cartesianproduct`](@ref). Note that this differs from LinearAlgebra.
 !!! note
 	`×` requires at least v0.8.0 of DomainSets.jl.
 """
-× = cartesianproduct
+const × = cartesianproduct
 
 Base.:^(d::Domain, n::Int) = productdomain(ntuple(i->d, n)...)
 
