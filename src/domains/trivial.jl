@@ -5,7 +5,7 @@
 struct EmptySpace{T} <: Domain{T}
 end
 
-EmptySet = EmptySpace
+const EmptySet = EmptySpace
 
 const AnyEmptySpace = EmptySpace{Any}
 

@@ -57,8 +57,8 @@ closure(d::ProductDomain) = ProductDomain(map(closure, components(d)))
 
 center(d::ProductDomain) = toexternalpoint(d, map(center, components(d)))
 
-VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
-VcatEltype = Union{Type{<:Number},Type{<:StaticVector}}
+const VcatDomainElement = Union{Domain{<:Number},EuclideanDomain}
+const VcatEltype = Union{Type{<:Number},Type{<:StaticVector}}
 
 """
 	ProductDomain(domains...)
