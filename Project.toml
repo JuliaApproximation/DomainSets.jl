@@ -20,6 +20,7 @@ DomainSetsRandomExt = "Random"
 [compat]
 Aqua = "0.8"
 CompositeTypes = "0.1.4"
+ForwardDiff = "1"
 FunctionMaps = "0.1.2"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
