@@ -1,3 +1,5 @@
+using ForwardDiff, Test
+
 function test_balls()
     # Test UnitBall constructor
     @test UnitBall(2) isa VectorUnitBall{Float64}
@@ -393,4 +395,8 @@ function test_spheres()
     @test domain(p3) === UnitSphere()
     @test p3 ∈ UnitSphere()
     @test approx_in(DomainSets.point(p3), UnitSphere())
+
+    @testset "support in at origin with autodiff" begin
+        @test [ForwardDiff.Dual(0.,1.), ForwardDiff.Dual(0.,1.)] in UnitDisk()
+    end
 end

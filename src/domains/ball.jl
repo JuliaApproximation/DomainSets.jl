@@ -134,8 +134,8 @@ UnitBall{T,C}(dim::Int) where {T,C} = DynamicUnitBall{T,C}(dim)
 const ClosedUnitBall{T} = UnitBall{T,:closed}
 const OpenUnitBall{T} = UnitBall{T,:open}
 
-indomain(x, d::OpenUnitBall) = norm(x) < 1
-indomain(x, d::ClosedUnitBall) = norm(x) <= 1
+indomain(x, d::OpenUnitBall) = LinearAlgebra.norm_sqr(x) < 1
+indomain(x, d::ClosedUnitBall) = LinearAlgebra.norm_sqr(x) <= 1
 approx_indomain(x, d::OpenUnitBall, tolerance) = norm(x) < 1+tolerance
 approx_indomain(x, d::ClosedUnitBall, tolerance) = norm(x) <= 1+tolerance
 

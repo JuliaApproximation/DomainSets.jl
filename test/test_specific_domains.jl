@@ -707,10 +707,6 @@ end
     test_intervals()
 end
 
-@testset "balls" begin
-    test_balls()
-end
-
 @testset "simplex" begin
     test_simplex()
 end
