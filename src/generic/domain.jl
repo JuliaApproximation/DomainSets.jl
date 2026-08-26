@@ -148,3 +148,4 @@ choice(d) = error("Overload choice(::$(typeof(d)))")
 
 choice(d::AbstractSet) = first(d)
 choice(d::AbstractArray) = first(d)
+choice(d::Number) = d

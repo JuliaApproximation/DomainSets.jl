@@ -32,6 +32,7 @@ struct NonDomain end
     @test !(d3 isa Domain)
     @test DomainStyle(d3) == NotDomain()
     @test_throws ErrorException checkdomain(d3)
+    @test_throws ErrorException choice(d3)
 
     @test DomainStyle(2.0) == IsDomain()
     @test DomainStyle([1,2]) == IsDomain()
