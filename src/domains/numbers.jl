@@ -50,6 +50,8 @@ in(x::Complex{T}, d::ComplexNumbers) where {T<:Real} = true
 in(x, d::ComplexNumbers) = x ∈ RealNumbers()
 
 
+choice(d::Union{RealNumbers,Rationals,ComplexNumbers,NaturalNumbers,Integers}) = zero(eltype(d))
+
 "The set of natural numbers."
 const ℕ = NaturalNumbers()
 "The set of integers."

@@ -144,7 +144,7 @@ isapprox(d1::Domain, d2::Domain; kwds...) = d1 == d2
 isrealdomain(d::Domain) = isrealtype(domaineltype(d))
 
 "Return a point from the given domain."
-function choice(d) end
+choice(d) = error("Overload choice(::$(typeof(d)))")
 
 choice(d::AbstractSet) = first(d)
 choice(d::AbstractArray) = first(d)
