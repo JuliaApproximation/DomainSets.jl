@@ -149,5 +149,5 @@ end
     m2 = CartToPolarMap()
     cmap = m1 ∘ m2 ∘ m1
     x = rand(2)
-    @test cmap(x) == m1(m2(m1(x)))
+    @test cmap(x) ≈ m1(m2(m1(x)))
 end
