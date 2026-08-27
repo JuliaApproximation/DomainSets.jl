@@ -3,6 +3,7 @@ using DomainSets: unionbox, intersectbox
 function test_product_domains()
     @test productdomain() == ()
     @test productdomain(2) == 2
+    @test choice(productdomain(2)) ≡ 2
 
     @testset "VcatDomain" begin
         d1 = VcatDomain(-1.0..1.0, -1.0..1.0)

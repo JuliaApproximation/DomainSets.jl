@@ -697,6 +697,13 @@ include("test_domain_simplex.jl")
         @test (SVector(0.1,0.2),0.3) ∉ d7
         @test (SVector(1,2),3) ∉ d7
     end
+
+    @testset "choice" begin
+        @test choice(ℕ) ≡ 0
+        @test choice(ℝ) ≡ 0.0
+        @test choice(ℚ) ≡ 0//1
+        @test choice(ℂ) ≡ 0.0+0.0im
+    end
 end
 
 @testset "cartesian product" begin
