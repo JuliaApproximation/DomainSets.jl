@@ -178,6 +178,10 @@ StaticUnitBall{T,C}(dim::Int) where {T,C} =
 StaticUnitBall{T,C}(::Val{N}) where {N,T,C} =
     (@assert N == euclideandimension(T); StaticUnitBall{T,C}())
 
+# don't change the type
+promote_pair(x::T, d::StaticUnitBall{T}) where {T<:StaticVector} = x,d
+
+
 
 "The unit ball in a fixed N-dimensional space."
 const EuclideanUnitBall{N,T,C} = StaticUnitBall{SVector{N,T},C}
