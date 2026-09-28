@@ -3,8 +3,8 @@
 ## Regions of the complex plane
 
 A number of domains relate to the complex plane:
-- [ComplexUnitCircle](@ref)
-- [ComplexUnitDisk](@ref)
+- [`ComplexUnitCircle`](@ref)
+- [`ComplexUnitDisk`](@ref)
 
 For a more specific package dealing with complex regions, see [ComplexRegions.jl](https://github.com/complexvariables/ComplexRegions.jl).
 
