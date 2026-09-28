@@ -31,4 +31,5 @@ if isdefined(Base, :get_extension)
     println("#############################")
 
     include("test_makieext.jl")
+    include("test_recipesbaseext.jl")
 end
