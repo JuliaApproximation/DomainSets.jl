@@ -1,6 +1,6 @@
 name = "DomainSets"
 uuid = "5b8099bc-c8ec-5219-889f-1d9e522a28bf"
-version = "0.8.2"
+version = "0.8.3"
 
 [deps]
 CompositeTypes = "b152e2b5-7a66-4b01-a709-34e65c35f657"
@@ -12,10 +12,12 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [weakdeps]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [extensions]
 DomainSetsMakieExt = "Makie"
 DomainSetsRandomExt = "Random"
+DomainSetsRecipesBaseExt = "RecipesBase"
 
 [compat]
 Aqua = "0.8"
@@ -24,8 +26,9 @@ ForwardDiff = "1"
 FunctionMaps = "0.1.2"
 IntervalSets = "0.7.4"
 LinearAlgebra = "1"
-Makie = "0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
+Makie = "0.21, 0.22, 0.23, 0.24"
 Random = "1"
+RecipesBase = "1"
 StableRNGs = "1"
 StaticArrays = "1"
 Test = "1"
@@ -36,8 +39,9 @@ Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Aqua", "ForwardDiff", "Makie", "Random", "StableRNGs"]
+test = ["Test", "Aqua", "ForwardDiff", "Makie", "Random", "RecipesBase", "StableRNGs"]

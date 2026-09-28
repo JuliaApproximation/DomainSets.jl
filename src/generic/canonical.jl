@@ -257,5 +257,7 @@ isequaldomain(d1::BaseDomainType, d2::BaseDomainType) = d1 ⊆ d2 && d2 ⊆ d1
 # a fallback by invoking the implementation in Base.
 hash(d::Domain, h::UInt) = domainhash(simplify(d), h)
 
-domainhash(d) = domainhash(d, zero(UInt))
+# use the same seed as `hash(d)`, which is no longer zero in Julia ≥ 1.13
+const DEFAULT_HASH_SEED = isdefined(Base, :HASH_SEED) ? Base.HASH_SEED : zero(UInt)
+domainhash(d) = domainhash(d, DEFAULT_HASH_SEED)
 domainhash(d, h::UInt) = invoke(hash, Tuple{Any,UInt}, d, h)
