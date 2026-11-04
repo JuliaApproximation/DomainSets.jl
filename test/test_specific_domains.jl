@@ -206,6 +206,15 @@ include("test_domain_simplex.jl")
         @test approx_in(1.0+0.01im, ℝ, 0.05)
         @test !approx_in(1.0+0.01im, ℝ, 0.005)
         @test ℝ == ℝ
+        @test ℝ isa RealNumbers{Float64}
+        @test convert(Domain{Float32}, ℝ) ≡ RealNumbers{Float32}()
+        @test convert(Domain{BigFloat}, ℝ) ≡ RealNumbers{BigFloat}()
+        @test ℝ == RealNumbers{Float32}()
+        @test hash(ℝ) == hash(RealNumbers{Float32}())
+        @test 1.5f0 ∈ RealNumbers{Float32}()
+        @test choice(RealNumbers{Float32}()) ≡ 0f0
+        @test UnitDisk{Float32}() × ℝ == UnitDisk{Float32}() × RealNumbers{Float32}()
+        @test SVector(0.1f0, 0.2f0, 0.3f0) ∈ UnitDisk{Float32}() × ℝ
         # complex numbers
         @test 2 ∈ ℂ
         @test 0 ∈ ℂ
