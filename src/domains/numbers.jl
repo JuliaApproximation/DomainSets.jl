@@ -21,9 +21,16 @@ approx_in(x::Real, d::Integers, tol) =
     (abs(x-round(x)) < tol) && (round(Int, x) ∈ d)
 
 
-"The set of all real numbers."
-struct RealNumbers <: Domain{Float64}
+"The set of all real numbers, with elements of type `T` (default `Float64`)."
+struct RealNumbers{T<:Real} <: Domain{T}
 end
+
+RealNumbers() = RealNumbers{Float64}()
+
+similardomain(::RealNumbers, ::Type{T}) where {T<:Real} = RealNumbers{T}()
+
+isequaldomain(d1::RealNumbers, d2::RealNumbers) = true
+domainhash(d::RealNumbers, h::UInt) = hash("RealNumbers", h)
 
 in(x::Number, d::RealNumbers) = isreal(x)
 # isreal also allows real arrays, we want to disallow that here:
