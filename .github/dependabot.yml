@@ -1,0 +1,19 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+updates:
+  - package-ecosystem: ""
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 15
+  - package-ecosystem: "julia"
+    directories: ["/", "/docs"] # Location of Julia projects
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "DomainSets" # Ignore package itself
+    groups:
+      per-dependency:
+        group-by: dependency-name
