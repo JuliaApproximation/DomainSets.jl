@@ -1,5 +1,9 @@
 # Set operations
 
+```@meta
+DocTestSetup = :(using DomainSets, StaticArrays)
+```
+
 DomainSets implements a number of standard set operations. In some cases the
 operation can be performed analytically and a concrete domain is returned. More
 often than not, however, the operation results in a lazy structure.
@@ -17,7 +21,7 @@ The latter is the constructor of a type and hence always returns an instance of 
     For concrete subtypes of `Domain` one can use standard Julia operators and
     functions for common set operations. The relevant symbols and functions are
     `∪` (union), `∩` (intersect) and `∖` (setdiff). For example:
-    ```julia
+    ```jldoctest
     julia> UnitBall(3) ∩ Point([0,0,0])
     Point([0.0, 0.0, 0.0])
     ```
@@ -28,14 +32,15 @@ The latter is the constructor of a type and hence always returns an instance of 
     that is mathematically equivalent to the union of `d1` and `d2`. The union
     of two overlapping intervals is a single interval, but the union of
     non-overlapping intervals is a `UnionDomain`:
-    ```julia
+    ```jldoctest
     julia> uniondomain(1..3, 2..4)
     1 .. 4
+
     julia> uniondomain(1..3, 5..7)
     (1 .. 3) ∪ (5 .. 7)
     ```
     When type-safety is important, use the corresponding constructor:
-    ```julia
+    ```jldoctest
     julia> UnionDomain(1..3, 2..4)
     (1 .. 3) ∪ (2 .. 4)
     ```
@@ -62,12 +67,12 @@ one in which each factor has a scalar or statically-sized vector as element type
 specific one.
 
 
-```julia
+```jldoctest
 julia> ProductDomain(2..4.5, 3.0..5.0)
 (2.0 .. 4.5) × (3.0 .. 5.0)
 
 julia> eltype(ProductDomain(2..4.5, 3.0..5.0))
-SVector{2, Float64}
+SVector{2, Float64} (alias for SArray{Tuple{2}, Float64, 1, 2})
 
 julia> [2.4, 4] ∈ ProductDomain(2..4.5, 3.0..5.0)
 true
@@ -85,7 +90,7 @@ julia> ProductDomain([ i..i+1.0 for i in 1:10])
 (1.0 .. 2.0) × (2.0 .. 3.0) × (3.0 .. 4.0) × ... × (10.0 .. 11.0)
 
 julia> eltype(ProductDomain([ i..i+1.0 for i in 1:10]))
-Vector{Float64}
+Vector{Float64} (alias for Array{Float64, 1})
 
 julia> 1:10 ∈ ProductDomain([ i..i+1.0 for i in 1:10])
 true
@@ -94,14 +99,14 @@ true
 It is noteworthy that a `VcatDomain` can cope with the concatenation of scalars
 and vectors. In the example below, a cylinder is represented as the product of
 a two-dimensional disk with a one-dimensional interval.
-```julia
+```jldoctest
 julia> using DomainSets: ×
 
 julia> cylinder = UnitDisk() × UnitInterval()
 UnitDisk() × (0.0 .. 1.0 (Unit))
 
 julia> eltype(cylinder)
-SVector{3, Float64}
+SVector{3, Float64} (alias for SArray{Tuple{3}, Float64, 1, 3})
 
 julia> [0.4,0.2,0.6] ∈ cylinder
 true
@@ -122,13 +127,14 @@ union is returned by `UnionDomain`.
 
 For vectors and sets in Julia, `uniondomain` returns precisely what the standard
 `union` operation would do, while `UnionDomain` returns a lazy construct:
-```julia
+```jldoctest
 julia> uniondomain(1:3, 10)
 4-element Vector{Int64}:
   1
   2
   3
  10
+
 julia> UnionDomain(1:3, 10)
 1:3 ∪ 10
 

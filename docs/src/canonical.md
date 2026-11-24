@@ -1,5 +1,9 @@
 # Canonical domains
 
+```@meta
+DocTestSetup = :(using DomainSets)
+```
+
 The package favours the implementation of a small number of canonical domains,
 in terms of which other domains can be defined. The mechanism to associate domains with
 canonical domains, with various meanings of the word "canonical", turns out to be both flexible and productive.
@@ -11,7 +15,7 @@ the "why" of it.
 ## A representative of a class
 
 We will use a ball as a running example.
-```julia
+```jldoctest canonical
 julia> using DomainSets, StaticArrays
 
 julia> d = Ball(2.0, SA[0.3, 0.5])
@@ -26,7 +30,7 @@ The canonical domain is much simpler. In this case it is a unit ball or
 functionality is not specific to balls. For example, the boundary of a domain is the boundary of the canonical domain, mapped by the same map that takes points of the canonical domain to points of the domain.
 
 The map from the unit ball to a more general one is affine.
-```julia
+```jldoctest canonical
 julia> canonicaldomain(d)
 UnitDisk()
 
@@ -39,7 +43,7 @@ v = 2-element SVector{2, Float64} with indices SOneTo(2):
 ```
 
 The boundary of a unit ball is a unit sphere.
-```julia
+```jldoctest canonical
 julia> boundary(canonicaldomain(d))
 UnitCircle()
 
@@ -48,7 +52,7 @@ Sphere(2.0, [0.3, 0.5])
 ```
 The code does not "know" that the boundary of a generic ball is also a generic
 sphere. It simply applies the map to the unit circle:
-```julia
+```jldoctest canonical
 julia> map_domain(m, boundary(canonicaldomain(d)))
 Sphere(2.0, [0.3, 0.5])
 ```
@@ -74,7 +78,7 @@ Domains can be the same even if they have different types. This is hard to captu
 with a simpler "equal" domain, whenever that is possible.
 
 The unit ball in one dimension with scalar elements is the same as the interval $[-1,1]$.
-```julia
+```jldoctest
 julia> d = UnitBall{Float64}()
 UnitBall{Float64}()
 
@@ -91,7 +95,7 @@ The `equaldomain(d)` function is a convenience shorthand for `canonicaldomain(Eq
 
 Similarly, the one-dimensional unit simplex with scalar element type is really
 just the unit interval.
-```julia
+```jldoctest
 julia> equaldomain(UnitSimplex{Float64}())
 0.0 .. 1.0 (Unit)
 ```
@@ -111,21 +115,21 @@ isomorphism between numbers and vectors of length 1, namely $x ↔ [x]$.
 
 The unit ball with length 1 vector elements is isomorphic to the unit ball
 with scalar element type:
-```julia
+```jldoctest
 julia> eltype(UnitBall(Val(1)))
-SVector{1, Float64} (alias for SArray{Tuple{1}, Float64, 1, 1})
+SVector{1, Float64} (alias for StaticArraysCore.SArray{Tuple{1}, Float64, 1, 1})
 
 julia> canonicaldomain(DomainSets.Isomorphic(), UnitBall(Val(1)))
 UnitBall{Float64}()
 
 julia> mapfrom_canonical(DomainSets.Isomorphic(), UnitBall(Val(1)))
-x : Float64 -> x : SVector{1, Float64}
+x : Float64 -> x : StaticArraysCore.SVector{1, Float64}
 ```
 
 Another common example is the identification of a region of the complex plane
 with a domain in the 2D Euclidean plane, $[a;b] ↔ a+bi$. One such implementation
 in the package is the complex unit circle:
-```julia
+```jldoctest
 julia> canonicaldomain(DomainSets.Isomorphic(), ComplexUnitCircle())
 UnitCircle()
 
@@ -160,7 +164,7 @@ circle is the canonical domain. However, in turn, the unit circle can be
 parameterised from the unit interval. Consequently, by chaining maps, any other
 circle can be parameterised from the unit interval as well.
 
-```julia
+```jldoctest
 julia> parameterdomain(UnitCircle())
 0.0 .. 1.0 (Unit)
 
@@ -168,7 +172,7 @@ julia> canonicaldomain(DomainSets.Parameterization(), UnitCircle())
 0.0 .. 1.0 (Unit)
 
 julia> mapfrom_parameterdomain(UnitCircle())
-DomainSets.FunctionMaps.UnitCircleMap{Float64}()
+FunctionMaps.UnitCircleMap{Float64}()
 
 julia> using StaticArrays
 
@@ -178,7 +182,7 @@ julia> canonicaldomain(DomainSets.Parameterization(), Sphere(2.0, SA[1.0, 5.0]))
 julia> mapfrom_parameterdomain(Sphere(2.0, SA[1.0, 5.0]))
 (x -> 2.0 * x + v) ∘ UnitCircleMap{Float64}()
 
-v = 2-element Vector{Float64}:
+v = 2-element SVector{2, Float64} with indices SOneTo(2):
  1.0
  5.0
 ```
@@ -187,8 +191,10 @@ Note that `parameterdomain` is a convenience function similar to `equaldomain`.
 
 Another common case is a line segment in 2D, which can be described in terms of an
 interval and an affine map from ``ℝ`` to ``ℝ^2``.
-```julia
+```jldoctest
 julia> using StaticArrays
+
+julia> using DomainSets.FunctionMaps: AffineMap
 
 julia> m = AffineMap(SA[2.0, 3.0], SA[1.0, 2.0]);
 
@@ -230,7 +236,7 @@ also checks the latter property.
 
 Since a scalar unit ball is an interval, any affine map of that ball also
 corresponds to a similarly mapped interval.
-```julia
+```jldoctest
 julia> 2*UnitBall{Float64}()
 Ball(2.0, 0.0)
 
@@ -247,7 +253,7 @@ julia> DomainSets.simplify(2*UnitBall{Float64}())
 The simplification of a domain is used in `isequaldomain` to simplify the
 arguments before verifying equality. The mechanism above results in the following
 positive identification of equality between domains with very different types:
-```julia
+```jldoctest
 julia> isequaldomain(2*UnitBall{Float64}() .+ 1, -1..3)
 true
 ```
