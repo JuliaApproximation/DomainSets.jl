@@ -1,5 +1,9 @@
 # Euclidean geometry
 
+```@meta
+DocTestSetup = :(using DomainSets)
+```
+
 Domains appearing in geometry are an important special case. A small number of
 primitive domains are implemented.
 
@@ -47,7 +51,7 @@ or by invoking the `Rectangle` constructor.
 Two special cases are the `UnitSquare` and `UnitCube` types. These types have no state.
 
 Some examples:
-```julia
+```jldoctest
 julia> ProductDomain(1.5..2.5, 3.5..6.0)
 (1.5 .. 2.5) × (3.5 .. 6.0)
 
@@ -86,7 +90,7 @@ specified explicitly.
 The constructor of the abstract type `Ball` returns a suitable concrete type depending on the arguments.
 
 Types and syntax for spheres are analogous to those of balls.
-```julia
+```jldoctest
 julia> UnitBall()
 UnitBall()
 
@@ -96,11 +100,13 @@ Ball(3.0, [0.0, 0.0, 0.0])
 julia> Ball(3.0, [0.4, 2.0, 5.0])
 Ball(3.0, [0.4, 2.0, 5.0])
 
+julia> using StaticArrays
+
 julia> Ball{SVector{3,Float64}}(3, [0, 1, 2])
 Ball(3.0, [0.0, 1.0, 2.0])
 
 julia> eltype(ans)
-SVector{3, Float64}
+SVector{3, Float64} (alias for SArray{Tuple{3}, Float64, 1, 3})
 ```
 
 ##### Relevant functions

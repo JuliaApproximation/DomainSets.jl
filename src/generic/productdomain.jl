@@ -113,7 +113,7 @@ The function may simplify the result in some cases. Use the `ProductDomain`
 constructor to obtain an explicit representation as a product.
 
 # Examples
-```julia
+```jldoctest
 julia> using DomainSets: ×
 
 julia> (0..1) × (2..3)

@@ -1,5 +1,9 @@
 # Equality of domains
 
+```@meta
+DocTestSetup = :(using DomainSets)
+```
+
 A domain behaves as much as possible like the mathematical set it represents, irrespective of its type. Thus, for example, two domains are considered
 equal if their membership functions agree.
 
@@ -12,7 +16,7 @@ Still, the principle serves as a design goal.
 
 Equality of domains is decided by the `isequaldomain` function in general, and
 simply by `==` for subtypes of the `Domain` supertype.
-```julia
+```jldoctest
 julia> UnitInterval() == UnitSimplex{Float64}() == 0..1
 true
 

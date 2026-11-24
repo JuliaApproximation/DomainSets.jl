@@ -15,7 +15,7 @@ such that `y == x`.
     In principle, the function `in(x, domain)` should not throw an exception even
     if the types seem mathematically nonsensical. In that case, the correct return
     value is `false`. This mimicks the behaviour of `in` for finite sets in Julia:
-    ```julia
+    ```julia-repl
     julia> in(rand(3,3), 1:3)
     false
     ```
